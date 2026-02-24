@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜全組織管理狀況</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    h2{ margin:0; font-size:16px; font-weight:900; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x); border-radius:999px;
+      border:1px solid var(--line); background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .list{ display:grid; gap:12px; margin-top:12px; }
+    .item{
+      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+    }
+    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .pill{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:13px; background:#fff; }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>全組織管理狀況</h1>
+            <div class="sub">平台管理員可查看各校驗證狀態與管理員分布。</div>
+            <div class="small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn" id="reloadBtn">重新載入</button>
+        </div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const list = document.getElementById("list");
+
+    let myRole = "";
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+    async function doLogout(){ await firebase.auth().signOut(); }
+    logoutBtn.onclick = doLogout;
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+      if (showLogin){
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      return { ok:true, role };
+    }
+
+    async function loadOverview(){
+      list.innerHTML = `<div class="small">載入中…</div>`;
+
+      const schoolSnap = await db.collection("partnerSchools").orderBy("name").get();
+      if (schoolSnap.empty){
+        list.innerHTML = `<div class="small">目前沒有校園資料</div>`;
+        return;
+      }
+
+      // 簡單統計：把 users 全撈出來做統計（若未來很大要改成 counters）
+      const usersSnap = await db.collection("users").limit(2000).get();
+      const users = usersSnap.docs.map(d => ({ id:d.id, ...(d.data()||{}) }));
+
+      function countBySchool(sid, role){
+        return users.filter(u => String(u.schoolId||"")===sid && String(u.role||"")===role && u.enabled===true).length;
+      }
+
+      list.innerHTML = schoolSnap.docs.map(d=>{
+        const s = d.data() || {};
+        const sid = d.id;
+        const name = s.name || sid;
+
+        const verifyEnabled = s.verifyEnabled === true;
+        const verifyLocked = s.verifyLocked === true;
+        const recordsCount = Number(s.recordsCount || 0);
+
+        const orgSuper = countBySchool(sid, "org_super");
+        const orgAdmin = countBySchool(sid, "org_admin");
+        const orgStaff = countBySchool(sid, "org_staff");
+
+        return `
+          <div class="item">
+            <div class="item-top">
+              <div style="min-width:0;">
+                <div style="font-weight:900;">${esc(name)}</div>
+                <div class="small" style="margin-top:6px;">
+                  schoolId：<span class="mono">${esc(sid)}</span>
+                </div>
+
+                <div class="small" style="margin-top:8px;">
+                  verifyEnabled：<span class="pill">${verifyEnabled ? "true" : "false"}</span>
+                  verifyLocked：<span class="pill">${verifyLocked ? "true" : "false"}</span>
+                  recordsCount：<span class="pill">${esc(recordsCount)}</span>
+                </div>
+
+                <div class="small" style="margin-top:8px;">
+                  org_super：<span class="pill">${orgSuper}</span>
+                  org_admin：<span class="pill">${orgAdmin}</span>
+                  org_staff：<span class="pill">${orgStaff}</span>
+                </div>
+              </div>
+
+              <div class="row" style="justify-content:flex-end;">
+                <a class="btn btn-sm" href="admin-studentslist-import.html">名單匯入</a>
+                <a class="btn btn-sm" href="admin-member-lookup.html">會員查詢</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    reloadBtn.onclick = loadOverview;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user){
+        showGate("全組織管理狀況", "請先使用 Google 登入後台。", true);
+        return;
+      }
+
+      try{
+        const r = await loadMyRole(user.uid);
+        if (!r.ok){
+          showGate(r.reason, "你的帳號尚未被授權。", false);
+          return;
+        }
+
+        myRole = r.role;
+        if (!["platform_super","platform_admin"].includes(myRole)){
+          showGate("權限不足", "此頁僅限平台管理員使用。", false);
+          return;
+        }
+
+        whoEl.textContent = user.email || "-";
+        roleText.textContent = myRole;
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadOverview();
+
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

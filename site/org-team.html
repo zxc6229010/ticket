@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜組織團隊管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    h2{ margin:0; font-size:16px; font-weight:900; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x); border-radius:999px;
+      border:1px solid var(--line); background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .list{ display:grid; gap:12px; margin-top:12px; }
+    .item{
+      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+    }
+    label{ font-weight:900; display:block; margin:10px 0 6px; }
+    input[type="text"], select{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      background:#fff; font-size:16px;
+    }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+    .pill{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:13px; background:#fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>組織團隊管理</h1>
+            <div class="sub">管理同校的 org_admin / org_staff，並分配工作組別。</div>
+            <div class="small">登入：<span id="who" class="mono">-</span>｜校園：<span id="schoolIdText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>成員清單</h2>
+        <div class="sub">只顯示 <span class="mono">users</span> 中 schoolId 等於你的 schoolId 的帳號。</div>
+        <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <button class="btn" id="reloadBtn">重新載入</button>
+        </div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const schoolIdText = document.getElementById("schoolIdText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const reloadBtn = document.getElementById("reloadBtn");
+    const list = document.getElementById("list");
+
+    let me = null;
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    async function doLogout(){ await firebase.auth().signOut(); }
+    logoutBtn.onclick = doLogout;
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+      if (showLogin){
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function loadMe(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      const schoolId = String(u.schoolId || "").trim();
+      return { ok:true, role, schoolId, u };
+    }
+
+    async function loadMembers(){
+      list.innerHTML = `<div class="small">載入中…</div>`;
+
+      const schoolId = me.schoolId;
+      const snap = await db.collection("users")
+        .where("schoolId","==",schoolId)
+        .limit(200)
+        .get();
+
+      if (snap.empty){
+        list.innerHTML = `<div class="small">尚無成員</div>`;
+        return;
+      }
+
+      list.innerHTML = snap.docs.map(d=>{
+        const u = d.data() || {};
+        const uid = d.id;
+        const role = String(u.role || "").trim();
+        const enabled = u.enabled === true;
+        const group = String(u.orgGroup || "").trim();
+
+        // org_super 只能管 org_admin / org_staff（不動 platform_*、也不動 org_super 以外）
+        const canEdit = (role === "org_admin" || role === "org_staff");
+
+        return `
+          <div class="item">
+            <div style="font-weight:900;">${esc(u.email || "(no email)")}</div>
+            <div class="small" style="margin-top:6px;">
+              uid：<span class="mono">${esc(uid)}</span><br>
+              role：<span class="pill">${esc(role || "-")}</span>
+              enabled：<span class="pill">${enabled ? "true" : "false"}</span>
+            </div>
+
+            <div class="grid" style="margin-top:12px;">
+              <div>
+                <label>組別（orgGroup）</label>
+                <input type="text" id="g-${uid}" value="${esc(group)}" placeholder="例如：公關組" ${canEdit ? "" : "disabled"} />
+              </div>
+              <div>
+                <label>角色（只能在 org_admin / org_staff 之間）</label>
+                <select id="r-${uid}" ${canEdit ? "" : "disabled"}>
+                  <option value="org_admin" ${role==="org_admin"?"selected":""}>org_admin</option>
+                  <option value="org_staff" ${role==="org_staff"?"selected":""}>org_staff</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:12px; justify-content:flex-end;">
+              <button class="btn btn-sm btn-primary" onclick="saveUser('${uid}')" ${canEdit ? "" : "disabled"}>儲存</button>
+            </div>
+
+            ${!canEdit ? `<div class="small warn">此帳號角色不可由組織端修改</div>` : ``}
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.saveUser = async (uid) => {
+      const group = String(document.getElementById("g-"+uid)?.value || "").trim();
+      const role = String(document.getElementById("r-"+uid)?.value || "").trim();
+
+      try{
+        await db.collection("users").doc(uid).set({
+          orgGroup: group,
+          role,
+          updatedAt: new Date()
+        }, { merge:true });
+
+        alert("已儲存");
+      }catch(e){
+        console.error(e);
+        alert("儲存失敗：\n" + (e.message || e));
+      }
+    };
+
+    reloadBtn.onclick = loadMembers;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user){
+        showGate("組織團隊管理", "請先使用 Google 登入後台。", true);
+        return;
+      }
+
+      try{
+        const r = await loadMe(user.uid);
+        if (!r.ok){
+          showGate(r.reason, "你的帳號尚未被授權。", false);
+          return;
+        }
+
+        if (r.role !== "org_super"){
+          showGate("權限不足", "此頁僅限 org_super 使用。", false);
+          return;
+        }
+
+        if (!r.schoolId){
+          showGate("缺少校園", "你的帳號未綁定 schoolId，請洽平台管理員。", false);
+          return;
+        }
+
+        me = { ...r.u, schoolId:r.schoolId };
+
+        whoEl.textContent = user.email || "-";
+        schoolIdText.textContent = me.schoolId;
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadMembers();
+
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

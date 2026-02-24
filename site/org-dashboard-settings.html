@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜組織 Dashboard 顯示設定</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-h:44px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 24px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+
+    h1{ margin:0 0 6px; font-size:22px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111;
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:14px;
+      background:#fff;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+
+    .roleBox{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+      padding:16px;
+    }
+    .roleTitle{
+      margin:0 0 10px;
+      font-size:16px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .roleHint{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:-2px; }
+
+    .feat{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+    }
+    .feat:first-of-type{ border-top:none; }
+    .featName{
+      font-weight:900;
+      font-size:14px;
+      line-height:1.4;
+    }
+    .featDesc{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.4;
+      margin-top:4px;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      min-width:150px;
+      padding-top:2px;
+    }
+    .check{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 10px;
+      font-weight:900;
+      font-size:13px;
+      background:#fff;
+      user-select:none;
+    }
+    .check input{ width:18px; height:18px; margin:0; }
+
+    .disabledLine{
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    /* ✅ 小灰提示 */
+    .hintBox{
+      margin-top:10px;
+      background:#f1f2f6;
+      border:1px solid rgba(17,17,17,.12);
+      border-radius:14px;
+      padding:10px 12px;
+      color:rgba(17,17,17,.78);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    /* ✅ 轉場動畫 */
+    .page{
+      opacity:0;
+      transform: translateY(6px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .page.on{ opacity:1; transform: translateY(0); }
+    .page.leaving{ opacity:0; transform: translateY(6px); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap page" id="pageRoot">
+
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h1>組織 Dashboard 顯示設定</h1>
+            <div class="sub">
+              你設定的是「本組織」的顯示方式。<br/>
+              <span class="warn">你只能在平台允許的上限內勾選</span>（子集合），不能新增超過平台設定的功能。
+            </div>
+            <div class="sub" style="margin-top:8px;">
+              登入：<span id="email" class="mono">-</span>｜
+              角色：<span id="role" class="mono">-</span>｜
+              組織：<span id="orgId" class="mono">-</span>
+            </div>
+
+            <div class="hintBox">
+              ✅ 規則：<br/>
+              - 「顯示」必須先被平台允許，否則會被鎖住<br/>
+              - 「置頂」必須同時符合：平台允許置頂 + 你有勾顯示
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+            <a class="btn" href="dashboard.html">回 Dashboard</a>
+            <button class="btn" onclick="doLogout()">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="pill">本組織顯示設定</div>
+            <div class="sub" style="margin-top:8px;">
+              直接在下方勾選（一次看全部角色）。平台不允許的會鎖住。
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn" id="reloadBtn">重新載入</button>
+            <button class="btn btn-primary" id="saveBtn">儲存設定</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" id="rolesGrid"></div>
+
+      <div class="card">
+        <div class="sub">
+          <span class="ok">提示：</span>儲存後立刻生效（dashboard.html 的 org 身分會讀 organizations/{orgId}/system/dashboard）。<br/>
+          若平台上限有變動，你這裡超過上限的勾選會自動被忽略。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const pageRoot = document.getElementById("pageRoot");
+    const gate = document.getElementById("gate");
+    const app  = document.getElementById("app");
+    const rolesGrid = document.getElementById("rolesGrid");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    // ===== 轉場動畫 =====
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(()=> location.href = href, 140);
+    }
+    document.addEventListener("click", (e)=>{
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        </div>
+      `;
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+    }
+
+    window.doLogout = async () => {
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+    };
+
+    // ✅ 功能清單（要跟 dashboard.html 的 id 一致）
+    // 這邊只用來顯示名稱與說明，不管 href/ready
+    const FEATURES = [
+      { id:"admin-events",          title:"🎟️ 活動管理",              desc:"建立活動、票種、限制條件" },
+      { id:"partner-schools",       title:"🏫 特約校園管理",            desc:"新增 / 停用校園，設定認證方式" },
+      { id:"import-verify",         title:"📥 名單匯入 / 驗證設定",      desc:"匯入名單、暫停 / 恢復驗證" },
+      { id:"member-lookup",         title:"🔎 會員查詢",                desc:"email / verifyKey 查詢會員狀態" },
+      { id:"admin-orders",          title:"🧾 訂單 / 報名資料",          desc:"報名清單、匯出、入場狀態" },
+
+      { id:"admin-user-assign",     title:"🧑‍💼 人事派發 / 審核",        desc:"審核後台帳號、分派組織/學校/職位" },
+      { id:"admin-org-overview",    title:"🏢 全組織管理狀況",            desc:"查看各組織管理/服務人員狀態" },
+      { id:"org-team",              title:"👥 組織團隊 / 工作組別",        desc:"org_super 管理組織管理員/服務員與組別" },
+
+      { id:"staff-scan",            title:"✅ 核銷人員掃碼",              desc:"staff 只能掃碼核銷指定活動" },
+      { id:"service-checkin",       title:"🛠️ 服務中心查詢 / 核銷",        desc:"條碼槍輸入協助查詢與核銷" },
+
+      { id:"dash-settings",         title:"⚙️ Dashboard 顯示設定",        desc:"設定各角色顯示/置頂（平台上限）" },
+      { id:"admin-impersonate",     title:"🧪 身分/學校測試切換",          desc:"platform_super 假裝切換身分與學校測試" },
+      { id:"request-access",        title:"📝 後台帳號申請",              desc:"註冊後台後進入申請/等待審核" },
+      { id:"invite-code",           title:"🔑 邀請碼輸入",                desc:"無特定身分報名活動時使用" }
+    ];
+
+    const ORG_ROLES = [
+      { id:"org_super", name:"組織超級管理員" },
+      { id:"org_admin", name:"組織管理員" },
+      { id:"org_staff", name:"組織服務人員" }
+    ];
+
+    // ===== 讀平台上限 =====
+    async function readSystemDashboard(){
+      try{
+        const snap = await db.collection("system").doc("dashboard").get();
+        if (!snap.exists) return null;
+        return snap.data() || null;
+      }catch(e){
+        console.warn("read system/dashboard failed:", e);
+        return null;
+      }
+    }
+
+    // ===== 讀本組織設定 =====
+    async function readOrgDashboard(orgId){
+      try{
+        const snap = await db.collection("organizations").doc(orgId).collection("system").doc("dashboard").get();
+        if (!snap.exists) return { roles:{} };
+        return snap.data() || { roles:{} };
+      }catch(e){
+        console.warn("read org dashboard failed:", e);
+        return { roles:{} };
+      }
+    }
+
+    // A) roles[roleId] = ["a","b"]（舊）
+    // B) roles[roleId][featureId] = { visible:true, pinned:true }（新）
+    function normalizeToMap(roleCfg){
+      const m = {};
+      if (Array.isArray(roleCfg)){
+        roleCfg.forEach(id => {
+          const fid = String(id || "").trim();
+          if (!fid) return;
+          m[fid] = { visible:true, pinned:false };
+        });
+        return m;
+      }
+      if (!roleCfg || typeof roleCfg !== "object") return m;
+
+      for (const [fid, cfg] of Object.entries(roleCfg)){
+        m[fid] = {
+          visible: cfg && cfg.visible === true,
+          pinned:  cfg && cfg.pinned === true
+        };
+      }
+      return m;
+    }
+
+    function ensureCfgShape(cfg){
+      if (!cfg) cfg = {};
+      if (!cfg.roles) cfg.roles = {};
+      ORG_ROLES.forEach(r => {
+        if (!cfg.roles[r.id]) cfg.roles[r.id] = {};
+      });
+      return cfg;
+    }
+
+    // ===== state =====
+    let me = null;
+    let myRole = "";
+    let myOrgId = "";
+    let sys = null;      // 平台上限
+    let orgCfg = null;   // 本組織設定（要存的）
+
+    function setOrgRoleFeature(roleId, fid, patch){
+      orgCfg = ensureCfgShape(orgCfg);
+      if (!orgCfg.roles[roleId]) orgCfg.roles[roleId] = {};
+      if (!orgCfg.roles[roleId][fid]) orgCfg.roles[roleId][fid] = {};
+      orgCfg.roles[roleId][fid] = { ...orgCfg.roles[roleId][fid], ...patch };
+    }
+
+    function getSysAllowMapForRole(roleId){
+      const roles = (sys && sys.roles) ? sys.roles : {};
+      return normalizeToMap(roles[roleId]);
+    }
+
+    function getOrgMapForRole(roleId){
+      const roles = (orgCfg && orgCfg.roles) ? orgCfg.roles : {};
+      return normalizeToMap(roles[roleId]);
+    }
+
+    // 是否平台允許 visible / pinned
+    function isAllowedVisible(sysMap, fid){
+      return !!(sysMap[fid] && sysMap[fid].visible === true);
+    }
+    function isAllowedPinned(sysMap, fid){
+      return !!(sysMap[fid] && sysMap[fid].pinned === true);
+    }
+
+    function render(){
+      rolesGrid.innerHTML = "";
+
+      ORG_ROLES.forEach(r => {
+        const roleId = r.id;
+
+        const sysMap = getSysAllowMapForRole(roleId); // 平台上限
+        const orgMap = getOrgMapForRole(roleId);      // 組織設定
+
+        const html = `
+          <div class="roleBox" data-role="${esc(roleId)}">
+            <div class="roleTitle">
+              <span>${esc(r.name)} <span class="mono" style="font-size:12px; font-weight:900; color:rgba(17,17,17,.55);">${esc(roleId)}</span></span>
+              <span class="pill">可置頂</span>
+            </div>
+            <div class="roleHint">
+              你只能勾選平台允許的項目（子集合）。平台不允許的會鎖住。
+            </div>
+
+            <div style="margin-top:10px;">
+              ${FEATURES.map(f => {
+                const fid = f.id;
+
+                const allowVisible = isAllowedVisible(sysMap, fid);
+                const allowPinned  = isAllowedPinned(sysMap, fid);
+
+                const cur = orgMap[fid] || { visible:false, pinned:false };
+                const curVisible = cur.visible === true;
+                const curPinned  = cur.pinned === true;
+
+                // pinned 必須 visible
+                const pinnedDisabled = (!allowPinned) || (!curVisible);
+
+                // 若平台不允許 visible，就整條 disabled
+                const rowCls = allowVisible ? "" : "disabledLine";
+
+                return `
+                  <div class="feat ${rowCls}">
+                    <div style="min-width:0;">
+                      <div class="featName">${esc(f.title)}</div>
+                      <div class="featDesc">${esc(f.desc)}</div>
+                      ${!allowVisible ? `<div class="featDesc"><span class="warn">平台未允許</span>（本組織不可開啟）</div>` : ``}
+                      ${allowVisible && !allowPinned ? `<div class="featDesc">（平台未允許置頂）</div>` : ``}
+                    </div>
+
+                    <div class="controls">
+                      <label class="check">
+                        <input type="checkbox"
+                          data-kind="visible"
+                          data-role="${esc(roleId)}"
+                          data-fid="${esc(fid)}"
+                          ${allowVisible ? "" : "disabled"}
+                          ${curVisible ? "checked" : ""}>
+                        顯示
+                      </label>
+
+                      <label class="check">
+                        <input type="checkbox"
+                          data-kind="pinned"
+                          data-role="${esc(roleId)}"
+                          data-fid="${esc(fid)}"
+                          ${allowVisible ? "" : "disabled"}
+                          ${pinnedDisabled ? "disabled" : ""}
+                          ${curPinned ? "checked" : ""}>
+                        置頂
+                      </label>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+        rolesGrid.insertAdjacentHTML("beforeend", html);
+      });
+
+      // bind
+      rolesGrid.querySelectorAll("input[type=checkbox]").forEach(el => {
+        el.addEventListener("change", () => {
+          const kind = el.dataset.kind;
+          const roleId = el.dataset.role;
+          const fid = el.dataset.fid;
+          const checked = !!el.checked;
+
+          const sysMap = getSysAllowMapForRole(roleId);
+
+          // 平台不允許 visible -> 直接回滾
+          if (kind === "visible" && !isAllowedVisible(sysMap, fid)){
+            el.checked = false;
+            return;
+          }
+
+          if (kind === "visible"){
+            setOrgRoleFeature(roleId, fid, { visible: checked });
+
+            // visible 關掉就一定把 pinned 關掉
+            if (!checked){
+              setOrgRoleFeature(roleId, fid, { pinned:false });
+            }
+            render();
+            return;
+          }
+
+          if (kind === "pinned"){
+            // pinned 需要平台允許 pinned + 已 visible
+            const orgMap = getOrgMapForRole(roleId);
+            const visibleNow = !!(orgMap[fid] && orgMap[fid].visible === true);
+
+            if (!isAllowedPinned(sysMap, fid) || !visibleNow){
+              el.checked = false;
+              return;
+            }
+            setOrgRoleFeature(roleId, fid, { pinned: checked });
+            render();
+          }
+        });
+      });
+    }
+
+    async function loadAll(){
+      // 平台上限
+      sys = await readSystemDashboard();
+      if (!sys || !sys.roles){
+        // 沒平台上限就不讓組織設定（避免 org 越權）
+        showGate("平台尚未設定上限", "請先由平台超級管理員在「Dashboard 顯示設定」完成上限設定後再使用。", false);
+        return;
+      }
+
+      // 組織設定
+      orgCfg = await readOrgDashboard(myOrgId);
+      orgCfg = ensureCfgShape(orgCfg);
+
+      // 補齊：所有 FEATURES 都有物件，且 pinned/visible 都是 boolean
+      ORG_ROLES.forEach(r => {
+        const sysMap = getSysAllowMapForRole(r.id);
+        FEATURES.forEach(f => {
+          const fid = f.id;
+
+          if (!orgCfg.roles[r.id][fid]) orgCfg.roles[r.id][fid] = { visible:false, pinned:false };
+
+          // 若平台不允許 visible -> 強制 false
+          if (!isAllowedVisible(sysMap, fid)){
+            orgCfg.roles[r.id][fid].visible = false;
+            orgCfg.roles[r.id][fid].pinned = false;
+          }
+
+          // 若平台不允許 pinned -> pinned 強制 false
+          if (!isAllowedPinned(sysMap, fid)){
+            orgCfg.roles[r.id][fid].pinned = false;
+          }
+
+          // pinned 必須 visible
+          if (orgCfg.roles[r.id][fid].pinned === true && orgCfg.roles[r.id][fid].visible !== true){
+            orgCfg.roles[r.id][fid].pinned = false;
+          }
+        });
+      });
+
+      render();
+    }
+
+    async function save(){
+      saveBtn.disabled = true;
+      const old = saveBtn.textContent;
+      saveBtn.textContent = "儲存中…";
+
+      try{
+        // 最後保險：再套一次上限規則（避免被 console 亂改）
+        ORG_ROLES.forEach(r => {
+          const sysMap = getSysAllowMapForRole(r.id);
+          FEATURES.forEach(f => {
+            const fid = f.id;
+            if (!orgCfg.roles[r.id][fid]) orgCfg.roles[r.id][fid] = { visible:false, pinned:false };
+
+            if (!isAllowedVisible(sysMap, fid)){
+              orgCfg.roles[r.id][fid].visible = false;
+              orgCfg.roles[r.id][fid].pinned = false;
+            }
+
+            if (!isAllowedPinned(sysMap, fid)){
+              orgCfg.roles[r.id][fid].pinned = false;
+            }
+
+            if (orgCfg.roles[r.id][fid].pinned === true && orgCfg.roles[r.id][fid].visible !== true){
+              orgCfg.roles[r.id][fid].pinned = false;
+            }
+          });
+        });
+
+        await db.collection("organizations").doc(myOrgId).collection("system").doc("dashboard").set({
+          roles: orgCfg.roles,
+          updatedAt: new Date()
+        }, { merge:true });
+
+        alert("已儲存");
+      }catch(e){
+        console.error(e);
+        alert("儲存失敗（可能是 Rules 權限不足）");
+      }finally{
+        saveBtn.disabled = false;
+        saveBtn.textContent = old;
+      }
+    }
+
+    reloadBtn.onclick = loadAll;
+    saveBtn.onclick = save;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      me = user || null;
+
+      if (!user){
+        showGate("組織 Dashboard 顯示設定", "請先使用 Google 帳號登入後台。", true);
+        return;
+      }
+
+      try{
+        const snap = await db.collection("users").doc(user.uid).get();
+        if (!snap.exists){
+          showGate("等待授權", "你的帳號尚未被系統授權為管理者。", false);
+          return;
+        }
+
+        const u = snap.data() || {};
+        if (u.enabled !== true){
+          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          return;
+        }
+
+        myRole = String(u.role || "").trim();
+        myOrgId = String(u.orgId || u.organizationId || u.org || "").trim();
+
+        document.getElementById("email").textContent = (u.email || user.email || "-");
+        document.getElementById("role").textContent = myRole || "-";
+        document.getElementById("orgId").textContent = myOrgId || "-";
+
+        // ✅ 只有 org_super 可使用
+        if (myRole !== "org_super"){
+          showGate("權限不足", "此頁面僅限「組織超級管理員（org_super）」使用。", false);
+          return;
+        }
+
+        if (!myOrgId){
+          showGate("缺少組織資訊", "你的帳號沒有 orgId / organizationId，無法定位組織設定。請聯絡平台管理員補上。", false);
+          return;
+        }
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadAll();
+
+      }catch(err){
+        console.error(err);
+        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

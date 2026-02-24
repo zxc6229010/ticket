@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜活動管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+      --r:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    h2{ margin:0; font-size:16px; font-weight:900; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    label{ font-weight:900; display:block; margin:12px 0 6px; }
+    input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      font-size:16px; background:#fff;
+    }
+    textarea{ min-height:100px; resize:vertical; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-danger{ border-color:rgba(239,68,68,.35); color:#b91c1c; background:#fff; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+
+    .box{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+    .pill{
+      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
+      border-radius:999px; font-size:13px; background:#fff;
+    }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .list{ display:grid; gap:12px; margin-top:12px; }
+    .item{
+      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+    }
+    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .item-title{ font-weight:900; }
+    .item-meta{ margin-top:6px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .right{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .divider{ height:1px; background:var(--line); margin:12px 0; }
+
+    .disabled-wrap{ opacity:.65; pointer-events:none; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>活動管理</h1>
+            <div class="sub">建立 / 編輯活動。支援「校園活動」與「平台活動（__global__）」</div>
+            <div class="sub small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label>管理範圍</label>
+            <div class="box">
+              <div class="row" style="justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
+                  <div class="small">校方只能管理自己校園活動；平台端可管理全部與平台活動。</div>
+                </div>
+                <button class="btn btn-sm" id="reloadBtn">重新載入</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label>建立活動類型</label>
+            <div class="box">
+              <div class="row" style="justify-content:space-between;">
+                <div>
+                  <div>類型：<span id="typeText" class="mono">school</span></div>
+                  <div class="small">平台端可切換成平台活動（__global__）。</div>
+                </div>
+                <button class="btn btn-sm" id="toggleTypeBtn" disabled>平台活動</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="section" id="editorSection">
+        <h2>建立 / 編輯</h2>
+        <div class="sub small" id="editingHint">目前：<span class="mono">新增模式</span></div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label>活動標題（必填）</label>
+            <input id="title" type="text" placeholder="例：校園演唱會" />
+
+            <label>活動地點（選填）</label>
+            <input id="location" type="text" placeholder="例：活動中心" />
+
+            <label>活動說明（選填）</label>
+            <textarea id="description" placeholder="活動簡介、注意事項…"></textarea>
+          </div>
+
+          <div>
+            <label>活動歸屬（ownerSchoolId）</label>
+            <select id="ownerSchoolSel" disabled></select>
+            <div class="small" style="margin-top:8px;">
+              校園活動＝某校 docId；平台活動＝<span class="mono">__global__</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <label>是否公開（published）</label>
+            <select id="published">
+              <option value="false">false（不公開）</option>
+              <option value="true">true（公開）</option>
+            </select>
+
+            <label>名額（選填）</label>
+            <input id="capacity" type="number" min="0" placeholder="例：500" />
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label>搶票開始（saleStartAt）</label>
+            <input id="saleStartAt" type="datetime-local" />
+
+            <label>搶票結束（saleEndAt）</label>
+            <input id="saleEndAt" type="datetime-local" />
+          </div>
+
+          <div>
+            <label>活動開始（eventStartAt）</label>
+            <input id="eventStartAt" type="datetime-local" />
+
+            <label>活動結束（eventEndAt）</label>
+            <input id="eventEndAt" type="datetime-local" />
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:12px;">
+          <button class="btn" id="resetBtn">清空/取消編輯</button>
+          <button class="btn btn-primary" id="saveBtn" disabled>儲存</button>
+        </div>
+
+        <div class="small" id="editorMsg" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- List -->
+      <div class="section">
+        <h2>活動清單</h2>
+        <div class="sub">點「編輯」可載入到上方表單。平台端可看到所有活動；校方只看自己校園活動。</div>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase init =====
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+    const db = firebase.firestore();
+
+    // ===== DOM =====
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const mySchoolText = document.getElementById("mySchoolText");
+    const reloadBtn = document.getElementById("reloadBtn");
+
+    const typeText = document.getElementById("typeText");
+    const toggleTypeBtn = document.getElementById("toggleTypeBtn");
+
+    const ownerSchoolSel = document.getElementById("ownerSchoolSel");
+    const publishedEl = document.getElementById("published");
+    const capacityEl = document.getElementById("capacity");
+
+    const titleEl = document.getElementById("title");
+    const locationEl = document.getElementById("location");
+    const descriptionEl = document.getElementById("description");
+
+    const saleStartAtEl = document.getElementById("saleStartAt");
+    const saleEndAtEl = document.getElementById("saleEndAt");
+    const eventStartAtEl = document.getElementById("eventStartAt");
+    const eventEndAtEl = document.getElementById("eventEndAt");
+
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const editorMsg = document.getElementById("editorMsg");
+    const editingHint = document.getElementById("editingHint");
+
+    const listEl = document.getElementById("list");
+
+    // ===== State =====
+    let currentUser = null;
+    let currentRole = "";
+    let userData = null;
+
+    let mySchoolId = ""; // org users
+    let modeType = "school"; // "school" | "global"
+    let editingId = ""; // eventId if editing
+
+    // ===== Helpers =====
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+    function norm(v){ return String(v ?? "").trim(); }
+
+    function showGate(html){
+      gate.innerHTML = html;
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function doLogout(){
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
+    }
+    logoutBtn.onclick = doLogout;
+
+    async function loadUserRole(uid){
+      const doc = await db.collection("users").doc(uid).get();
+      if (!doc.exists) return { ok:false, reason:"尚未授權" };
+      const u = doc.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      return { ok:true, role, userData:u };
+    }
+
+    function isPlatform(){
+      return currentRole === "platform_super" || currentRole === "platform_admin";
+    }
+    function isPlatformSuper(){
+      return currentRole === "platform_super";
+    }
+    function isOrgRole(){
+      return ["org_super","org_admin","org_staff"].includes(currentRole);
+    }
+
+    function toInputDateTime(ts){
+      if (!ts) return "";
+      const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+      if (!d) return "";
+      const pad = (n)=> String(n).padStart(2,"0");
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth()+1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const mi = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    }
+
+    function parseInputDateTime(v){
+      const s = norm(v);
+      if (!s) return null;
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return null;
+      return d;
+    }
+
+    function updateSaveBtn(){
+      const ok = norm(titleEl.value).length > 0 && norm(ownerSchoolSel.value).length > 0;
+      saveBtn.disabled = !ok;
+    }
+
+    function setEditorMessage(html){
+      editorMsg.innerHTML = html || "";
+    }
+
+    function resetEditor(){
+      editingId = "";
+      editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
+      titleEl.value = "";
+      locationEl.value = "";
+      descriptionEl.value = "";
+      publishedEl.value = "false";
+      capacityEl.value = "";
+
+      saleStartAtEl.value = "";
+      saleEndAtEl.value = "";
+      eventStartAtEl.value = "";
+      eventEndAtEl.value = "";
+
+      setEditorMessage("");
+      updateSaveBtn();
+    }
+    resetBtn.onclick = resetEditor;
+
+    function setModeType(next){
+      modeType = next;
+      typeText.textContent = (modeType === "global") ? "global(__global__)" : "school";
+      if (modeType === "global") {
+        ownerSchoolSel.value = "__global__";
+        ownerSchoolSel.disabled = true;
+      } else {
+        ownerSchoolSel.disabled = isOrgRole(); // 校方固定自己學校
+        ownerSchoolSel.value = mySchoolId || ownerSchoolSel.value;
+      }
+      updateSaveBtn();
+    }
+
+    toggleTypeBtn.onclick = () => {
+      if (!isPlatform()) return;
+      setModeType(modeType === "school" ? "global" : "school");
+      toggleTypeBtn.textContent = (modeType === "school") ? "平台活動" : "校園活動";
+    };
+
+    // ===== Load school options into select =====
+    async function loadOwnerSchoolOptions(){
+      ownerSchoolSel.innerHTML = "";
+
+      // 平台活動固定選項（只有平台端會用到）
+      if (isPlatform()) {
+        ownerSchoolSel.insertAdjacentHTML("beforeend",
+          `<option value="__global__">__global__（平台活動）</option>`
+        );
+      }
+
+      // 校園清單
+      if (isPlatform()) {
+        const snap = await db.collection("partnerSchools").orderBy("name").get();
+        snap.forEach(d => {
+          const s = d.data() || {};
+          ownerSchoolSel.insertAdjacentHTML("beforeend",
+            `<option value="${esc(d.id)}">${esc(s.name || d.id)}（${esc(d.id)}）</option>`
+          );
+        });
+      } else {
+        // 校方只能看到自己的校園
+        if (mySchoolId) {
+          const doc = await db.collection("partnerSchools").doc(mySchoolId).get();
+          const s = doc.exists ? (doc.data() || {}) : {};
+          ownerSchoolSel.insertAdjacentHTML("beforeend",
+            `<option value="${esc(mySchoolId)}">${esc(s.name || mySchoolId)}（${esc(mySchoolId)}）</option>`
+          );
+        }
+      }
+
+      // 預設模式
+      if (isOrgRole()) {
+        setModeType("school");
+      } else {
+        setModeType("school");
+      }
+    }
+
+    // ===== Load events list =====
+    async function loadEvents(){
+      listEl.innerHTML = `<div class="small">載入中…</div>`;
+
+      let q = db.collection("events");
+
+      // 平台：全看
+      if (isPlatform()) {
+        q = q.orderBy("createdAt", "desc").limit(50);
+      } else {
+        // 校方：只看自己 ownerSchoolId
+        q = q.where("ownerSchoolId", "==", mySchoolId).orderBy("createdAt", "desc").limit(50);
+      }
+
+      const snap = await q.get();
+      if (snap.empty) {
+        listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
+        return;
+      }
+
+      listEl.innerHTML = snap.docs.map(doc => {
+        const e = doc.data() || {};
+        const id = doc.id;
+
+        const title = e.title || "(未命名)";
+        const owner = e.ownerSchoolId || "-";
+        const published = e.published === true;
+        const saleStart = toInputDateTime(e.saleStartAt);
+        const saleEnd = toInputDateTime(e.saleEndAt);
+        const eventStart = toInputDateTime(e.eventStartAt);
+
+        const tag = owner === "__global__"
+          ? `<span class="pill">平台活動</span>`
+          : `<span class="pill">校園活動</span>`;
+
+        return `
+          <div class="item">
+            <div class="item-top">
+              <div style="min-width:0;">
+                <div class="item-title">${esc(title)} ${tag}</div>
+                <div class="item-meta">
+                  eventId：<span class="mono">${esc(id)}</span><br>
+                  ownerSchoolId：<span class="mono">${esc(owner)}</span>｜
+                  published：<span class="mono">${published ? "true" : "false"}</span><br>
+                  搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
+                  活動開始：<span class="mono">${esc(eventStart || "-")}</span>
+                </div>
+              </div>
+
+              <div class="right">
+                <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
+                ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    reloadBtn.onclick = async () => {
+      resetEditor();
+      await loadEvents();
+    };
+
+    // ===== Edit event =====
+    window.editEvent = async (eventId) => {
+      try {
+        const doc = await db.collection("events").doc(eventId).get();
+        if (!doc.exists) return alert("找不到活動");
+
+        const e = doc.data() || {};
+        editingId = eventId;
+        editingHint.innerHTML = `目前：<span class="mono">編輯模式</span>（eventId：<span class="mono">${esc(eventId)}</span>）`;
+
+        titleEl.value = e.title || "";
+        locationEl.value = e.location || "";
+        descriptionEl.value = e.description || "";
+        publishedEl.value = (e.published === true) ? "true" : "false";
+        capacityEl.value = (e.capacity ?? "") === "" ? "" : String(e.capacity ?? "");
+
+        saleStartAtEl.value = toInputDateTime(e.saleStartAt);
+        saleEndAtEl.value = toInputDateTime(e.saleEndAt);
+        eventStartAtEl.value = toInputDateTime(e.eventStartAt);
+        eventEndAtEl.value = toInputDateTime(e.eventEndAt);
+
+        // ownerSchoolId
+        const owner = String(e.ownerSchoolId || "");
+        if (owner === "__global__") {
+          if (!isPlatform()) {
+            alert("你沒有權限編輯平台活動");
+            resetEditor();
+            return;
+          }
+          setModeType("global");
+        } else {
+          setModeType("school");
+          ownerSchoolSel.value = owner || mySchoolId;
+        }
+
+        setEditorMessage(`<span class="ok">已載入活動資料</span>`);
+        updateSaveBtn();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (err) {
+        console.error(err);
+        alert("載入失敗：\n" + (err.message || err));
+      }
+    };
+
+    // ===== Delete event (platform_super only) =====
+    window.deleteEvent = async (eventId, title) => {
+      const ok = confirm(`確定要刪除活動「${title}」嗎？\n此動作無法復原。`);
+      if (!ok) return;
+
+      try {
+        await db.collection("events").doc(eventId).delete();
+        resetEditor();
+        await loadEvents();
+        alert("已刪除");
+      } catch (err) {
+        console.error(err);
+        alert("刪除失敗：\n" + (err.message || err));
+      }
+    };
+
+    // ===== Save (create/update) =====
+    async function saveEvent(){
+      saveBtn.disabled = true;
+      const old = saveBtn.textContent;
+      saveBtn.textContent = "儲存中…";
+      setEditorMessage("");
+
+      try {
+        const ownerSchoolId = norm(ownerSchoolSel.value);
+        const title = norm(titleEl.value);
+        if (!title) throw new Error("請輸入活動標題");
+        if (!ownerSchoolId) throw new Error("缺少 ownerSchoolId");
+
+        // 權限保護（前端防呆，真正靠 rules）
+        if (!isPlatform() && ownerSchoolId === "__global__") {
+          throw new Error("校方不可建立/修改平台活動");
+        }
+        if (isOrgRole() && ownerSchoolId !== mySchoolId) {
+          throw new Error("校方只能管理自己校園活動");
+        }
+
+        const payload = {
+          title,
+          ownerSchoolId,
+          published: publishedEl.value === "true",
+          location: norm(locationEl.value),
+          description: norm(descriptionEl.value),
+          capacity: capacityEl.value === "" ? null : Number(capacityEl.value),
+
+          saleStartAt: parseInputDateTime(saleStartAtEl.value),
+          saleEndAt: parseInputDateTime(saleEndAtEl.value),
+          eventStartAt: parseInputDateTime(eventStartAtEl.value),
+          eventEndAt: parseInputDateTime(eventEndAtEl.value),
+
+          updatedAt: new Date(),
+          updatedBy: currentUser ? (currentUser.uid || "") : ""
+        };
+
+        // clean null/empty dates
+        Object.keys(payload).forEach(k => {
+          if (payload[k] === null) delete payload[k];
+        });
+
+        if (!editingId) {
+          payload.createdAt = new Date();
+          payload.createdBy = currentUser ? (currentUser.uid || "") : "";
+          await db.collection("events").add(payload);
+          setEditorMessage(`<span class="ok">建立成功</span>`);
+        } else {
+          await db.collection("events").doc(editingId).update(payload);
+          setEditorMessage(`<span class="ok">更新成功</span>`);
+        }
+
+        resetEditor();
+        await loadEvents();
+
+      } catch (err) {
+        console.error(err);
+        alert("儲存失敗：\n" + (err.message || err));
+      } finally {
+        saveBtn.textContent = old;
+        updateSaveBtn();
+      }
+    }
+
+    saveBtn.onclick = saveEvent;
+    [titleEl, ownerSchoolSel].forEach(el => el.addEventListener("input", updateSaveBtn));
+    ownerSchoolSel.addEventListener("change", updateSaveBtn);
+
+    // ===== Auth gate =====
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user) {
+        showGate(`
+          <h1>活動管理</h1>
+          <div class="sub">請先使用 Google 帳號登入後台。</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>
+          </div>
+        `);
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+        return;
+      }
+
+      try {
+        const r = await loadUserRole(user.uid);
+        if (!r.ok) {
+          showGate(`
+            <h1>無法進入</h1>
+            <div class="sub warn">${esc(r.reason)}</div>
+            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        currentRole = r.role;
+        userData = r.userData || {};
+        whoEl.textContent = user.email || "";
+        roleText.textContent = currentRole || "-";
+
+        // 允許進入：platform_super / platform_admin / org_super / org_admin
+        const allowed = ["platform_super","platform_admin","org_super","org_admin"];
+        if (!allowed.includes(currentRole)) {
+          showGate(`
+            <h1>權限不足</h1>
+            <div class="sub warn">你的角色無法使用此功能。</div>
+            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        // 我的 schoolId（校方必須有）
+        mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
+        mySchoolText.textContent = mySchoolId || "__none__";
+
+        // 平台端才可切換平台活動
+        toggleTypeBtn.disabled = !isPlatform();
+        toggleTypeBtn.textContent = "平台活動";
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadOwnerSchoolOptions();
+        resetEditor();
+        await loadEvents();
+
+      } catch (err) {
+        console.error(err);
+        showGate(`
+          <h1>發生錯誤</h1>
+          <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
+          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+    });
+  </script>
+</body>
+</html>

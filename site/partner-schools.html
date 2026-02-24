@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜特約校園管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow2:0 14px 40px rgba(0,0,0,.08);
+
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    .wrap{
+      max-width:960px;
+      margin:0 auto;
+      padding:48px 32px;
+    }
+    @media (max-width:640px){
+      .wrap{ padding:28px 16px; }
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow2);
+      padding:16px;
+      margin-bottom:22px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    label{
+      font-weight:900;
+      display:block;
+      margin-top:10px;
+      margin-bottom:6px;
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:16px;
+      background:#fff;
+    }
+
+    .form-box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1.2fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:640px){
+      .form-grid{ grid-template-columns:1fr; }
+    }
+
+    /* ✅ 修正：框內上面空太多 */
+    .switch{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:8px;
+    }
+    .switch:first-child{ margin-top:0; }
+    .switch input{
+      width:18px;
+      height:18px;
+      margin:0;
+      flex:0 0 auto;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      gap:10px;
+      line-height:1;
+    }
+    .btn:hover{
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transform:translateY(-1px);
+    }
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-sm{
+      height:40px;
+      padding:8px calc(var(--btn-b) * 1.25);
+      font-size:15px;
+    }
+
+    .btn-danger{
+      border-color:rgba(239,68,68,.35);
+      color:#b91c1c;
+      background:#fff;
+    }
+
+    .form-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .item-left{
+      display:flex;
+      gap:12px;
+      min-width:0;
+      align-items:flex-start;
+    }
+
+    .logo{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      object-fit:cover;
+      flex:0 0 auto;
+      background:#fff;
+    }
+
+    .logo-fallback{
+      width:44px;
+      height:44px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      flex:0 0 auto;
+      background:#fff;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      margin-top:6px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      background:#fff;
+    }
+
+    .right-actions{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    /* ✅ 編輯面板 */
+    .edit-panel{
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px dashed var(--line);
+      display:none;
+    }
+    .edit-grid{
+      display:grid;
+      grid-template-columns:1.2fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    @media (max-width:640px){
+      .edit-grid{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- 登入 Gate -->
+    <div id="loginGate" class="section"></div>
+
+    <!-- 主畫面 -->
+    <div id="adminApp" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>特約校園管理</h1>
+            <div class="sub">新增 / 停用特約校園、編輯設定、移除資料</div>
+          </div>
+
+          <div style="text-align:right;">
+            <div class="small" id="who"></div>
+            <div style="margin-top:8px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+              <a href="dashboard.html" class="btn btn-sm">回主選單</a>
+              <button class="btn btn-sm" id="logoutBtn" type="button">登出</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增表單 -->
+        <div id="editorWrap">
+          <div class="form-grid">
+            <div>
+              <label>學校名稱（必填）</label>
+              <input id="schoolName" type="text" placeholder="例：A學校" />
+
+              <label style="margin-top:12px;">校徽圖片網址（選填）</label>
+              <input id="schoolLogoUrl" type="text" placeholder="https://...（貼圖片網址）" />
+              <div class="small" style="margin-top:8px;">不會上傳圖片，只存網址。</div>
+            </div>
+
+            <div>
+              <label>允許認證方式（必選至少 1 種）</label>
+              <div class="form-box">
+                <div class="switch">
+                  <input type="checkbox" id="mStudentId" />
+                  <span>學號（student_id）</span>
+                </div>
+                <div class="switch">
+                  <input type="checkbox" id="mGoogle" />
+                  <span>Google（google）</span>
+                </div>
+              </div>
+
+              <div class="sub" style="margin-top:12px;">
+                提示：前台只會顯示 enabled=true 的學校。
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn" id="reloadBtn" type="button">重新載入</button>
+            <button class="btn btn-primary" id="addBtn" type="button" disabled>新增校園</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 清單 -->
+      <div class="section">
+        <h2>校園清單</h2>
+        <div class="list" id="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase =====
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+
+    const db = firebase.firestore();
+
+    // ===== DOM =====
+    const loginGate = document.getElementById("loginGate");
+    const adminApp  = document.getElementById("adminApp");
+    const whoEl     = document.getElementById("who");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const listEl    = document.getElementById("list");
+    const nameEl    = document.getElementById("schoolName");
+    const logoEl    = document.getElementById("schoolLogoUrl");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const addBtn    = document.getElementById("addBtn");
+
+    const mStudentId = document.getElementById("mStudentId");
+    const mGoogle    = document.getElementById("mGoogle");
+
+    // ===== Utils =====
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+    function escapeAttr(str){
+      return escapeHtml(str).replaceAll("\n", " ");
+    }
+
+    // ===== 登出 =====
+    async function doLogout(){
+      try {
+        await firebase.auth().signOut();
+      } catch (e) {
+        console.error(e);
+        alert("登出失敗（看 Console）");
+      }
+    }
+    logoutBtn.addEventListener("click", doLogout);
+
+    // ===== Gate UI =====
+    function showGate({ title, message, showLogin, showLogout }){
+      loginGate.innerHTML = `
+        <h1>${escapeHtml(title)}</h1>
+        <div class="sub">${escapeHtml(message)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="gateLoginBtn" type="button">使用 Google 登入</button>` : ``}
+          ${showLogout ? `<button class="btn" id="gateLogoutBtn" type="button">登出</button>` : ``}
+        </div>
+      `;
+
+      const gateLoginBtn = document.getElementById("gateLoginBtn");
+      if (gateLoginBtn) {
+        gateLoginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+
+      const gateLogoutBtn = document.getElementById("gateLogoutBtn");
+      if (gateLogoutBtn) gateLogoutBtn.onclick = doLogout;
+
+      loginGate.style.display = "block";
+      adminApp.style.display = "none";
+    }
+
+    // ===== 新增按鈕啟用條件（必填 + 至少勾一個）=====
+    function updateAddButtonState(){
+      const nameOK = (nameEl.value || "").trim().length > 0;
+      const methodsOK = !!(mStudentId.checked || mGoogle.checked);
+      addBtn.disabled = !(nameOK && methodsOK);
+    }
+
+    nameEl.addEventListener("input", updateAddButtonState);
+    logoEl.addEventListener("input", updateAddButtonState);
+    mStudentId.addEventListener("change", updateAddButtonState);
+    mGoogle.addEventListener("change", updateAddButtonState);
+
+    // ===== 清單 =====
+    async function loadList(){
+      listEl.innerHTML = `<div class="small">載入中…</div>`;
+
+      const snap = await db.collection("partnerSchools").orderBy("name").get();
+
+      if (snap.empty) {
+        listEl.innerHTML = `<div class="small">目前沒有資料</div>`;
+        return;
+      }
+
+      listEl.innerHTML = snap.docs.map(doc => {
+        const s = doc.data() || {};
+        const id = doc.id;
+
+        const name = s.name || "未命名學校";
+        const logoUrl = (s.logoUrl || "").trim();
+        const enabled = s.enabled === true;
+        const methods = Array.isArray(s.authMethods) ? s.authMethods : [];
+
+        const fallback = String(name).slice(0, 1);
+
+        return `
+          <div class="item" id="row-${id}">
+            <div class="item-top">
+              <div class="item-left">
+                ${
+                  logoUrl
+                    ? `<img class="logo" src="${escapeAttr(logoUrl)}" alt="logo"
+                        onerror="this.outerHTML='<div class=\\'logo-fallback\\'>${escapeHtml(fallback)}</div>'">`
+                    : `<div class="logo-fallback">${escapeHtml(fallback)}</div>`
+                }
+
+                <div style="min-width:0;">
+                  <div style="font-weight:900;">${escapeHtml(name)}</div>
+                  <div class="small" style="margin-top:4px;">狀態：${enabled ? "啟用" : "停用"}</div>
+                  <div class="badges">
+                    ${
+                      methods.length
+                        ? methods.map(m => `<span class="badge">${escapeHtml(m)}</span>`).join("")
+                        : `<span class="badge">（未設定）</span>`
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="right-actions">
+                <button class="btn btn-sm" type="button" onclick="toggleEnabled('${id}', ${enabled})">
+                  ${enabled ? "停用" : "啟用"}
+                </button>
+                <button class="btn btn-sm" type="button" onclick="toggleEdit('${id}')">編輯</button>
+                <button class="btn btn-sm btn-danger" type="button" onclick="removeSchool('${id}', '${escapeAttr(name)}')">移除</button>
+                <a class="btn btn-sm" href="partner-school-import.html?schoolId=${id}">匯入名單</a>
+                </div>
+            </div>
+
+            <div class="edit-panel" id="edit-${id}">
+              <div class="small">編輯校園設定（修改後按「儲存」）</div>
+
+              <div class="edit-grid">
+                <div>
+                  <label>學校名稱</label>
+                  <input type="text" id="editName-${id}" value="${escapeAttr(name)}" />
+
+                  <label style="margin-top:12px;">校徽圖片網址（選填）</label>
+                  <input type="text" id="editLogo-${id}" value="${escapeAttr(logoUrl)}" placeholder="https://..." />
+                </div>
+
+                <div>
+                  <label>允許認證方式</label>
+                  <div class="form-box">
+                    <div class="switch">
+                      <input type="checkbox" id="editMStudent-${id}" ${methods.includes("student_id") ? "checked" : ""} />
+                      <span>學號（student_id）</span>
+                    </div>
+                    <div class="switch">
+                      <input type="checkbox" id="editMGoogle-${id}" ${methods.includes("google") ? "checked" : ""} />
+                      <span>Google（google）</span>
+                    </div>
+                  </div>
+
+                  <div class="form-actions" style="justify-content:flex-end; margin-top:12px;">
+                    <button class="btn btn-sm" type="button" onclick="toggleEdit('${id}')">取消</button>
+                    <button class="btn btn-sm btn-primary" type="button" onclick="saveEdit('${id}')">儲存</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ===== 新增校園 =====
+    async function addSchool(){
+      const name = (nameEl.value || "").trim();
+      const logoUrl = (logoEl.value || "").trim();
+
+      if (!name) {
+        alert("請輸入學校名稱");
+        nameEl.focus();
+        return;
+      }
+
+      const methods = [];
+      if (mStudentId.checked) methods.push("student_id");
+      if (mGoogle.checked) methods.push("google");
+
+      if (methods.length === 0) {
+        alert("請至少選擇一種認證方式");
+        return;
+      }
+
+      addBtn.disabled = true;
+      const oldText = addBtn.textContent;
+      addBtn.textContent = "新增中…";
+
+      try {
+        await db.collection("partnerSchools").add({
+          name,
+          logoUrl,
+          enabled: true,
+          authMethods: methods,
+          createdAt: new Date()
+        });
+
+        nameEl.value = "";
+        logoEl.value = "";
+        mStudentId.checked = false;
+        mGoogle.checked = false;
+
+        updateAddButtonState();
+        await loadList();
+        alert("新增成功");
+      } catch (e) {
+        console.error(e);
+        alert(
+          "新增失敗\n" +
+          "code: " + (e.code || "(no code)") + "\n" +
+          "message: " + (e.message || e)
+        );
+      } finally {
+        addBtn.textContent = oldText;
+        updateAddButtonState();
+      }
+    }
+
+    // ===== 啟用/停用 =====
+    window.toggleEnabled = async (id, enabledNow) => {
+      try {
+        await db.collection("partnerSchools").doc(id).update({ enabled: !enabledNow });
+        await loadList();
+      } catch (e) {
+        console.error(e);
+        alert(
+          "變更失敗\n" +
+          "code: " + (e.code || "(no code)") + "\n" +
+          "message: " + (e.message || e)
+        );
+      }
+    };
+
+    // ===== 編輯：展開/收合 =====
+    window.toggleEdit = (id) => {
+      const el = document.getElementById(`edit-${id}`);
+      if (!el) return;
+      el.style.display = (el.style.display === "block") ? "none" : "block";
+    };
+
+    // ===== 編輯：儲存 =====
+    window.saveEdit = async (id) => {
+      const name = (document.getElementById(`editName-${id}`)?.value || "").trim();
+      const logoUrl = (document.getElementById(`editLogo-${id}`)?.value || "").trim();
+
+      const mS = !!document.getElementById(`editMStudent-${id}`)?.checked;
+      const mG = !!document.getElementById(`editMGoogle-${id}`)?.checked;
+
+      if (!name) {
+        alert("學校名稱不能為空");
+        return;
+      }
+      if (!mS && !mG) {
+        alert("請至少選擇一種認證方式");
+        return;
+      }
+
+      const methods = [];
+      if (mS) methods.push("student_id");
+      if (mG) methods.push("google");
+
+      try {
+        await db.collection("partnerSchools").doc(id).update({
+          name,
+          logoUrl,
+          authMethods: methods,
+          updatedAt: new Date()
+        });
+
+        await loadList();
+      } catch (e) {
+        console.error(e);
+        alert(
+          "儲存失敗\n" +
+          "code: " + (e.code || "(no code)") + "\n" +
+          "message: " + (e.message || e)
+        );
+      }
+    };
+
+    // ===== 移除（刪除）=====
+    window.removeSchool = async (id, name) => {
+      const ok = confirm(`確定要移除「${name}」嗎？\n此動作無法復原。`);
+      if (!ok) return;
+
+      try {
+        await db.collection("partnerSchools").doc(id).delete();
+        await loadList();
+      } catch (e) {
+        console.error(e);
+        alert(
+          "移除失敗\n" +
+          "code: " + (e.code || "(no code)") + "\n" +
+          "message: " + (e.message || e)
+        );
+      }
+    };
+
+    // ===== 事件 =====
+    reloadBtn.addEventListener("click", loadList);
+    addBtn.addEventListener("click", addSchool);
+
+    // ===== Auth Gate（只出現一次，修掉你原本三層巢狀）=====
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        showGate({
+          title: "特約校園管理",
+          message: "請先使用 Google 帳號登入後台。",
+          showLogin: true,
+          showLogout: false
+        });
+        return;
+      }
+
+      try {
+        const userDoc = await db.collection("users").doc(user.uid).get();
+
+        if (!userDoc.exists) {
+          showGate({
+            title: "尚未授權",
+            message: "你的帳號尚未被授權為後台管理員。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        const u = userDoc.data() || {};
+
+        if (u.enabled !== true) {
+          showGate({
+            title: "帳號已停用",
+            message: "此帳號已被停用，請聯絡系統管理員。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        const role = (u.role || "").trim();
+        if (!["platform_super", "platform_admin"].includes(role)) {
+          showGate({
+            title: "權限不足",
+            message: "你沒有權限管理特約校園。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        // ✅ 通過
+        whoEl.textContent = user.email || "";
+        loginGate.style.display = "none";
+        adminApp.style.display = "block";
+
+        updateAddButtonState();
+        await loadList();
+
+      } catch (err) {
+        console.error(err);
+        showGate({
+          title: "發生錯誤",
+          message: "無法讀取權限資料，請查看 Console。",
+          showLogin: false,
+          showLogout: true
+        });
+      }
+    });
+  </script>
+</body>
+</html>

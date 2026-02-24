@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜會員查詢</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow2:0 14px 40px rgba(0,0,0,.08);
+
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    .wrap{
+      max-width:960px;
+      margin:0 auto;
+      padding:48px 32px;
+    }
+    @media (max-width:640px){
+      .wrap{ padding:28px 16px; }
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow2);
+      padding:16px;
+      margin-bottom:22px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    label{
+      font-weight:900;
+      display:block;
+      margin-top:10px;
+      margin-bottom:6px;
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:16px;
+      background:#fff;
+      outline:none;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transform:translateY(-1px);
+    }
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .btn-sm{
+      height:40px;
+      padding:8px calc(var(--btn-b) * 1.25);
+      font-size:15px;
+    }
+
+    .form-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr 1fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width:640px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 140px 1fr;
+      gap:10px;
+      padding:10px 0;
+      border-top:1px solid var(--line);
+    }
+    .kv:first-child{ border-top:none; padding-top:0; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      background:#fff;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- Gate -->
+    <div id="loginGate" class="section"></div>
+
+    <!-- App -->
+    <div id="adminApp" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>會員查詢</h1>
+            <div class="sub">用 Email 或 校園身分碼（verifyKey）查詢會員驗證狀態。</div>
+          </div>
+
+          <div style="text-align:right;">
+            <div class="small" id="who"></div>
+            <div style="margin-top:8px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+              <a href="dashboard.html" class="btn btn-sm">回主選單</a>
+              <button class="btn btn-sm" id="logoutBtn">登出</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label>Email（擇一填）</label>
+            <input id="emailInput" type="text" placeholder="example@gmail.com" />
+
+            <label style="margin-top:12px;">校園身分碼 verifyKey（擇一填）</label>
+            <input id="keyInput" type="text" class="mono" placeholder="例如：112233｜A123456789" />
+
+            <div class="form-actions">
+              <button class="btn" id="clearBtn">清除</button>
+              <button class="btn btn-primary" id="searchBtn">查詢</button>
+            </div>
+
+            <div class="small" style="margin-top:10px;">
+              提醒：若 Firestore Rules 尚未放行平台端讀取 users，會查不到資料。
+            </div>
+          </div>
+
+          <div>
+            <label>快速提示</label>
+            <div class="small" style="line-height:1.7;">
+              1. Email 建議全小寫<br>
+              2. verifyKey 要完全一致（包含分隔符號）<br>
+              3. 查不到時，可能是尚未驗證或欄位未寫入<br>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>查詢結果</h2>
+        <div id="resultBox" class="small" style="margin-top:10px;">尚未查詢</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase Init =====
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+
+    const db = firebase.firestore();
+
+    // ===== DOM =====
+    const loginGate = document.getElementById("loginGate");
+    const adminApp  = document.getElementById("adminApp");
+    const whoEl     = document.getElementById("who");
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const emailInput= document.getElementById("emailInput");
+    const keyInput  = document.getElementById("keyInput");
+
+    const clearBtn  = document.getElementById("clearBtn");
+    const searchBtn = document.getElementById("searchBtn");
+
+    const resultBox = document.getElementById("resultBox");
+
+    // ===== Utils =====
+    function norm(s){ return String(s ?? "").trim(); }
+    function lower(s){ return norm(s).toLowerCase(); }
+
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#39;");
+    }
+
+    function showGate({ title, message, showLogin, showLogout }){
+      loginGate.innerHTML = `
+        <h1>${escapeHtml(title)}</h1>
+        <div class="sub">${escapeHtml(message)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="gateLoginBtn">使用 Google 登入</button>` : ``}
+          ${showLogout ? `<button class="btn" id="gateLogoutBtn">登出</button>` : ``}
+        </div>
+      `;
+
+      const gateLoginBtn = document.getElementById("gateLoginBtn");
+      if (gateLoginBtn) {
+        gateLoginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+
+      const gateLogoutBtn = document.getElementById("gateLogoutBtn");
+      if (gateLogoutBtn) gateLogoutBtn.onclick = doLogout;
+
+      loginGate.style.display = "block";
+      adminApp.style.display = "none";
+    }
+
+    async function doLogout(){
+      try { await firebase.auth().signOut(); }
+      catch (e){ console.error(e); alert("登出失敗（看 Console）"); }
+    }
+    logoutBtn.onclick = doLogout;
+
+    function setResult(html){
+      resultBox.innerHTML = html;
+    }
+
+    function renderUser(u){
+      const email = norm(u.email);
+      const verified = u.verified === true;
+      const schoolName = norm(u.verifiedSchoolName);
+      const schoolId = norm(u.verifiedSchoolId);
+      const verifyKey = norm(u.verifyKey);
+      const verifiedAt = u.verifiedAt ? u.verifiedAt.toDate?.() : null;
+
+      const timeText = verifiedAt ? verifiedAt.toLocaleString() : "-";
+
+      return `
+        <div class="row" style="margin-bottom:10px;">
+          <span class="pill">${verified ? `<span class="ok">已驗證</span>` : `<span class="warn">未驗證</span>`}</span>
+        </div>
+
+        <div class="kv">
+          <div class="small">Email</div>
+          <div><span class="mono">${escapeHtml(email || "-")}</span></div>
+        </div>
+
+        <div class="kv">
+          <div class="small">學校</div>
+          <div>${escapeHtml(schoolName || "-")}</div>
+        </div>
+
+        <div class="kv">
+          <div class="small">schoolId</div>
+          <div><span class="mono">${escapeHtml(schoolId || "-")}</span></div>
+        </div>
+
+        <div class="kv">
+          <div class="small">verifyKey</div>
+          <div><span class="mono">${escapeHtml(verifyKey || "-")}</span></div>
+        </div>
+
+        <div class="kv">
+          <div class="small">驗證時間</div>
+          <div>${escapeHtml(timeText)}</div>
+        </div>
+      `;
+    }
+
+    async function lookupByEmail(email){
+      const q = await db.collection("users")
+        .where("email", "==", email)
+        .limit(5)
+        .get();
+      return q;
+    }
+
+    async function lookupByVerifyKey(verifyKey){
+      const q = await db.collection("users")
+        .where("verifyKey", "==", verifyKey)
+        .limit(5)
+        .get();
+      return q;
+    }
+
+    async function doSearch(){
+      const email = lower(emailInput.value);
+      const verifyKey = norm(keyInput.value);
+
+      if (!email && !verifyKey) {
+        alert("請輸入 Email 或 verifyKey 擇一");
+        return;
+      }
+      if (email && verifyKey) {
+        alert("一次只查一個條件：Email 或 verifyKey（擇一）");
+        return;
+      }
+
+      searchBtn.disabled = true;
+      searchBtn.textContent = "查詢中…";
+      setResult(`<div class="small">查詢中…</div>`);
+
+      try {
+        const snap = email ? await lookupByEmail(email) : await lookupByVerifyKey(verifyKey);
+
+        if (snap.empty) {
+          setResult(`<div class="warn">查無資料</div><div class="small" style="margin-top:6px;">可能尚未驗證、或欄位未寫入。</div>`);
+          return;
+        }
+
+        // 多筆時也顯示（避免 email 重複寫入造成混亂）
+        const blocks = snap.docs.map((d) => {
+          const u = d.data() || {};
+          return `<div class="section" style="box-shadow:none; margin:12px 0 0; padding:14px;">${renderUser(u)}</div>`;
+        });
+
+        setResult(blocks.join(""));
+
+      } catch (e) {
+        console.error(e);
+        setResult(
+          `<div class="warn">查詢失敗</div>
+           <div class="small" style="margin-top:6px;">
+             code: <span class="mono">${escapeHtml(e.code || "(no code)")}</span><br>
+             message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
+           </div>`
+        );
+      } finally {
+        searchBtn.disabled = false;
+        searchBtn.textContent = "查詢";
+      }
+    }
+
+    clearBtn.onclick = () => {
+      emailInput.value = "";
+      keyInput.value = "";
+      setResult("尚未查詢");
+    };
+    searchBtn.onclick = doSearch;
+
+    // Enter 直接查
+    emailInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+    keyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+
+    // ===== Auth Gate + Role Gate =====
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        whoEl.textContent = "";
+        showGate({
+          title: "會員查詢",
+          message: "請先使用 Google 帳號登入後台。",
+          showLogin: true,
+          showLogout: false
+        });
+        return;
+      }
+
+      try {
+        // 讀取使用者權限
+        const userDoc = await db.collection("users").doc(user.uid).get();
+
+        if (!userDoc.exists) {
+          showGate({
+            title: "尚未授權",
+            message: "你的帳號尚未被授權為後台管理員。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        const u = userDoc.data() || {};
+        if (u.enabled !== true) {
+          showGate({
+            title: "帳號已停用",
+            message: "此帳號已被停用，請聯絡系統管理員。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        // ✅ 只允許 platform_super / platform_admin
+        const role = String(u.role || "").trim();
+        if (!["platform_super", "platform_admin"].includes(role)) {
+          showGate({
+            title: "權限不足",
+            message: "你沒有權限使用會員查詢功能。",
+            showLogin: false,
+            showLogout: true
+          });
+          return;
+        }
+
+        whoEl.textContent = (user.email || "").toLowerCase();
+        loginGate.style.display = "none";
+        adminApp.style.display = "block";
+        setResult("尚未查詢");
+
+      } catch (e) {
+        console.error(e);
+        showGate({
+          title: "發生錯誤",
+          message: "無法讀取權限資料，請查看 Console。",
+          showLogin: false,
+          showLogout: true
+        });
+      }
+    });
+  </script>
+</body>
+</html>

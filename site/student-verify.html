@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>學生身分驗證</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+      --r:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:720px; margin:0 auto; padding:40px 18px; }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    h1{ margin:0; font-size:20px; letter-spacing:.2px; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+
+    label{ font-weight:900; display:block; margin:12px 0 6px; }
+    input{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      background:#fff; font-size:16px;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .hint{ margin-top:10px; color:var(--muted); font-size:13px; line-height:1.7; }
+
+    .pill{
+      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
+      border-radius:999px; font-size:13px; background:#fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>學生身分驗證</h1>
+      <div class="sub" id="schoolTitle">載入中…</div>
+      <div class="sub small">登入：<span id="who" class="mono">-</span></div>
+    </div>
+
+    <div id="gate" class="card"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div id="form"></div>
+
+        <div class="row" style="margin-top:14px;">
+          <button class="btn btn-primary" id="verifyBtn" disabled>確認驗證</button>
+          <button class="btn" id="logoutBtn">登出</button>
+        </div>
+
+        <div id="result" class="hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase init =====
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+    const db = firebase.firestore();
+
+    // ===== Query =====
+    const sp = new URLSearchParams(location.search);
+    const schoolId = (sp.get("schoolId") || "").trim();
+
+    // ===== DOM =====
+    const whoEl = document.getElementById("who");
+    const schoolTitle = document.getElementById("schoolTitle");
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const formEl = document.getElementById("form");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const resultEl = document.getElementById("result");
+
+    // ===== State =====
+    let cfg = null;         // partnerSchools config
+    let currentUser = null; // firebase user
+
+    // ===== helpers =====
+    function norm(v){ return String(v ?? "").trim(); }
+
+    function showGate(html){
+      gate.innerHTML = html;
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function doLogout(){
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
+    }
+    logoutBtn.onclick = doLogout;
+
+    function buildForm(verifyFields){
+      formEl.innerHTML = "";
+      verifyFields.forEach(f => {
+        const id = "f_" + f;
+        const wrap = document.createElement("div");
+        wrap.innerHTML = `
+          <label>${f}</label>
+          <input id="${id}" placeholder="請輸入 ${f}" />
+        `;
+        formEl.appendChild(wrap);
+      });
+
+      // 監聽輸入 → 決定 verifyBtn 是否可按
+      verifyFields.forEach(f => {
+        const el = document.getElementById("f_" + f);
+        if (el) el.addEventListener("input", () => updateVerifyBtnState(verifyFields));
+      });
+
+      updateVerifyBtnState(verifyFields);
+    }
+
+    function readForm(verifyFields){
+      const input = {};
+      verifyFields.forEach(f => {
+        const el = document.getElementById("f_" + f);
+        input[f] = norm(el ? el.value : "");
+      });
+      return input;
+    }
+
+    function updateVerifyBtnState(verifyFields){
+      // 所有 verifyFields 都必填
+      const input = readForm(verifyFields);
+      const ok = verifyFields.every(f => !!norm(input[f]));
+      verifyBtn.disabled = !ok;
+    }
+
+    function makeVerifyKey(input, keyFields){
+      const parts = keyFields.map(f => norm(input[f]));
+      return parts.join("｜");
+    }
+
+    async function loadSchoolConfig(){
+      if (!schoolId) {
+        schoolTitle.textContent = "缺少 schoolId";
+        showGate(`
+          <div class="warn">缺少 schoolId</div>
+          <div class="hint">請用網址帶上：<span class="mono">student-verify.html?schoolId=xxxx</span></div>
+        `);
+        return false;
+      }
+
+      const doc = await db.collection("partnerSchools").doc(schoolId).get();
+      if (!doc.exists) {
+        schoolTitle.textContent = "學校不存在";
+        showGate(`<div class="warn">找不到這間學校（schoolId=${schoolId}）</div>`);
+        return false;
+      }
+
+      cfg = doc.data() || {};
+      const name = cfg.name || "(未命名學校)";
+      schoolTitle.textContent = `學校：${name}`;
+
+      if (cfg.enabled !== true) {
+        showGate(`<div class="warn">此校園目前停用，無法驗證。</div>`);
+        return false;
+      }
+
+      // ✅ 校方可以暫停驗證
+      if (cfg.verifyEnabled !== true) {
+        showGate(`
+          <div class="warn">目前暫停驗證</div>
+          <div class="hint">此校園目前已暫停學生身分驗證，請稍後再試或洽貴校承辦單位。</div>
+          <div style="margin-top:12px;"><button class="btn" id="outBtn">登出</button></div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+        return false;
+      }
+
+      // 必要設定
+      const verifyFields = Array.isArray(cfg.verifyFields) ? cfg.verifyFields.map(norm).filter(Boolean) : [];
+      const verifyKeyFields = Array.isArray(cfg.verifyKeyFields) ? cfg.verifyKeyFields.map(norm).filter(Boolean) : [];
+
+      if (!verifyFields.length || !verifyKeyFields.length) {
+        showGate(`
+          <div class="warn">此校園驗證設定不完整</div>
+          <div class="hint">請聯絡系統管理員或貴校承辦單位完成設定後再驗證。</div>
+        `);
+        return false;
+      }
+
+      buildForm(verifyFields);
+      return true;
+    }
+
+    // ===== 核對名單 + 綁定（每筆只能配對一個帳號）=====
+    async function verifyAndBind(){
+      resultEl.textContent = "";
+      verifyBtn.disabled = true;
+      const oldText = verifyBtn.textContent;
+      verifyBtn.textContent = "驗證中…";
+
+      try {
+        const verifyFields = cfg.verifyFields.map(norm).filter(Boolean);
+        const verifyKeyFields = cfg.verifyKeyFields.map(norm).filter(Boolean);
+
+        const input = readForm(verifyFields);
+
+        // 基本檢查：必填不得空
+        for (const f of verifyFields) {
+          if (!norm(input[f])) {
+            alert(`請輸入「${f}」`);
+            verifyBtn.textContent = oldText;
+            updateVerifyBtnState(verifyFields);
+            return;
+          }
+        }
+
+        const verifyKey = makeVerifyKey(input, verifyKeyFields);
+        if (!verifyKey || verifyKey.split("｜").every(x => !x)) {
+          alert("驗證資料不足，請確認輸入內容");
+          verifyBtn.textContent = oldText;
+          updateVerifyBtnState(verifyFields);
+          return;
+        }
+
+        // ✅ records 用 docId=verifyKey（配合你的匯入頁）
+        const recRef = db.collection("partnerSchools").doc(schoolId).collection("records").doc(verifyKey);
+        const snap = await recRef.get();
+
+        if (!snap.exists) {
+          // ✅ 你指定的新文案
+          resultEl.innerHTML = `
+            <div class="warn">驗證失敗</div>
+            <div class="hint">
+              1. 請確認您輸入的資料無誤（與貴校校務系統之資料一致）。<br>
+              2. 請確認您的身分是否符合貴校所規範之參與資格。<br>
+              如有疑問，請洽貴校承辦單位。
+            </div>
+          `;
+          return;
+        }
+
+        // Transaction：保證一筆只能綁一個帳號
+        await db.runTransaction(async (tx) => {
+          const nowSnap = await tx.get(recRef);
+          if (!nowSnap.exists) throw new Error("資料不存在或被刪除");
+
+          const nowData = nowSnap.data() || {};
+          const usedByUid = norm(nowData.usedByUid || "");
+
+          if (usedByUid && usedByUid !== currentUser.uid) {
+            throw new Error("此資料已被其他帳號認證使用");
+          }
+
+          tx.update(recRef, {
+            usedByUid: currentUser.uid,
+            usedAt: new Date()
+          });
+
+          // ✅ 寫回 users/{uid}，只存 verifyKey + schoolId（你後面會員中心顯示用）
+          tx.set(db.collection("users").doc(currentUser.uid), {
+            email: currentUser.email || "",
+            verifiedSchoolId: schoolId,
+            verifyKey: verifyKey,
+            verifiedAt: new Date()
+          }, { merge:true });
+        });
+
+        resultEl.innerHTML = `<div class="ok">✅ 驗證成功！你的帳號已完成校園認證。</div>`;
+
+      } catch (e) {
+        console.error(e);
+
+        if ((e.message || "").includes("其他帳號")) {
+          resultEl.innerHTML = `<div class="warn">此資料已被其他帳號認證使用。</div>`;
+        } else {
+          alert("驗證失敗：\n" + (e.message || e));
+        }
+      } finally {
+        verifyBtn.textContent = oldText;
+        // 重新讓按鈕依輸入狀態變化
+        const verifyFields = cfg?.verifyFields ? cfg.verifyFields.map(norm).filter(Boolean) : [];
+        if (verifyFields.length) updateVerifyBtnState(verifyFields);
+      }
+    }
+
+    verifyBtn.onclick = verifyAndBind;
+
+    // ===== Auth gate =====
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user) {
+        whoEl.textContent = "-";
+        showGate(`
+          <div class="warn">尚未登入</div>
+          <div class="hint">請先登入帳號後再進行驗證。</div>
+        `);
+        return;
+      }
+
+      whoEl.textContent = user.email || "";
+      gate.style.display = "none";
+      app.style.display = "block";
+
+      try {
+        await loadSchoolConfig();
+      } catch (e) {
+        console.error(e);
+        showGate(`<div class="warn">載入設定失敗：${e.message || e}</div>`);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜活動報名狀況</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px; --r:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    h2{ margin:0; font-size:16px; font-weight:900; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    label{ font-weight:900; display:block; margin:12px 0 6px; }
+    input[type="text"], select{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      font-size:16px; background:#fff;
+    }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+
+    .box{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+    .pill{
+      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
+      border-radius:999px; font-size:13px; background:#fff;
+    }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    table{ width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td{ border-bottom:1px solid var(--line); padding:10px 6px; text-align:left; vertical-align:top; }
+    th{ font-size:13px; color:var(--muted); font-weight:900; }
+    td{ font-size:14px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>活動報名狀況</h1>
+            <div class="sub">查看各活動報名數量與入場核銷狀況（即時更新）。</div>
+            <div class="sub small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label>選擇活動</label>
+            <select id="eventSel"></select>
+            <div class="small" id="eventMeta" style="margin-top:8px;"></div>
+          </div>
+
+          <div>
+            <label>統計</label>
+            <div class="box">
+              <div>總訂單：<span id="totalText" class="mono">0</span></div>
+              <div>已入場：<span id="checkedText" class="mono">0</span></div>
+              <div>未入場：<span id="uncheckedText" class="mono">0</span></div>
+              <div class="small" style="margin-top:8px;">提示：若訂單欄位你之後要加「付款狀態」也可以，我再幫你補統計。</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:12px;">
+          <button class="btn" id="reloadBtn">重新載入</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>訂單列表</h2>
+        <div class="sub">這裡以 orders 集合的 <span class="mono">eventId</span> 過濾。</div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>orderId</th>
+              <th>email</th>
+              <th>狀態</th>
+              <th>核銷</th>
+              <th>建立時間</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+
+        <div id="empty" class="small" style="margin-top:10px; display:none;">目前沒有訂單</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const eventSel = document.getElementById("eventSel");
+    const eventMeta = document.getElementById("eventMeta");
+    const reloadBtn = document.getElementById("reloadBtn");
+
+    const totalText = document.getElementById("totalText");
+    const checkedText = document.getElementById("checkedText");
+    const uncheckedText = document.getElementById("uncheckedText");
+
+    const rowsEl = document.getElementById("rows");
+    const emptyEl = document.getElementById("empty");
+
+    let currentUser = null;
+    let currentRole = "";
+    let userData = null;
+    let mySchoolId = "";
+
+    let unsubscribe = null;
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[m]));
+    }
+    function norm(v){ return String(v ?? "").trim(); }
+
+    function showGate(html){
+      gate.innerHTML = html;
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function doLogout(){
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
+    }
+    logoutBtn.onclick = doLogout;
+
+    async function loadUserRole(uid){
+      const doc = await db.collection("users").doc(uid).get();
+      if (!doc.exists) return { ok:false, reason:"尚未授權" };
+      const u = doc.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      return { ok:true, role, userData:u };
+    }
+
+    function isPlatform(){
+      return currentRole === "platform_super" || currentRole === "platform_admin";
+    }
+    function isOrgRole(){
+      return ["org_super","org_admin","org_staff"].includes(currentRole);
+    }
+
+    function fmtTime(ts){
+      if (!ts) return "-";
+      const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+      if (!d) return "-";
+      return d.toLocaleString();
+    }
+
+    async function loadEventOptions(){
+      eventSel.innerHTML = "";
+
+      let q = db.collection("events");
+
+      if (isPlatform()) {
+        q = q.orderBy("createdAt", "desc").limit(100);
+      } else {
+        q = q.where("ownerSchoolId", "==", mySchoolId).orderBy("createdAt", "desc").limit(100);
+      }
+
+      const snap = await q.get();
+      if (snap.empty) {
+        eventSel.innerHTML = `<option value="">（目前沒有活動）</option>`;
+        return;
+      }
+
+      snap.forEach(d => {
+        const e = d.data() || {};
+        const owner = String(e.ownerSchoolId || "");
+        const tag = owner === "__global__" ? "平台" : "校園";
+        eventSel.insertAdjacentHTML("beforeend",
+          `<option value="${esc(d.id)}">${esc(e.title || d.id)}（${tag}）</option>`
+        );
+      });
+    }
+
+    function clearStats(){
+      totalText.textContent = "0";
+      checkedText.textContent = "0";
+      uncheckedText.textContent = "0";
+    }
+
+    async function bindOrdersRealtime(eventId){
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+
+      rowsEl.innerHTML = "";
+      emptyEl.style.display = "none";
+      clearStats();
+
+      const id = norm(eventId);
+      if (!id) {
+        eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      const eventDoc = await db.collection("events").doc(id).get();
+      if (!eventDoc.exists) {
+        eventMeta.innerHTML = `<span class="warn">找不到活動</span>`;
+        emptyEl.style.display = "block";
+        return;
+      }
+
+      const e = eventDoc.data() || {};
+      eventMeta.innerHTML = `
+        eventId：<span class="mono">${esc(id)}</span>｜
+        ownerSchoolId：<span class="mono">${esc(e.ownerSchoolId || "-")}</span>｜
+        published：<span class="mono">${e.published === true ? "true" : "false"}</span>
+      `;
+
+      // orders where eventId == id
+      const q = db.collection("orders").where("eventId", "==", id);
+
+      unsubscribe = q.onSnapshot((snap) => {
+        if (snap.empty) {
+          rowsEl.innerHTML = "";
+          emptyEl.style.display = "block";
+          clearStats();
+          return;
+        }
+
+        let total = 0;
+        let checked = 0;
+
+        const html = [];
+        snap.forEach(doc => {
+          total++;
+          const o = doc.data() || {};
+          const checkedIn = o.checkedIn === true;
+          if (checkedIn) checked++;
+
+          html.push(`
+            <tr>
+              <td class="mono">${esc(doc.id)}</td>
+              <td>${esc(o.userEmail || o.email || "-")}</td>
+              <td class="mono">${esc(o.status || "-")}</td>
+              <td>${checkedIn ? `<span class="ok">已入場</span>` : `<span class="warn">未入場</span>`}</td>
+              <td class="mono">${esc(fmtTime(o.createdAt))}</td>
+            </tr>
+          `);
+        });
+
+        rowsEl.innerHTML = html.join("");
+        emptyEl.style.display = "none";
+
+        totalText.textContent = String(total);
+        checkedText.textContent = String(checked);
+        uncheckedText.textContent = String(Math.max(0, total - checked));
+      }, (err) => {
+        console.error(err);
+        alert("即時讀取失敗：\n" + (err.message || err));
+      });
+    }
+
+    reloadBtn.onclick = async () => {
+      await loadEventOptions();
+      await bindOrdersRealtime(eventSel.value);
+    };
+
+    eventSel.onchange = async () => {
+      await bindOrdersRealtime(eventSel.value);
+    };
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user) {
+        showGate(`
+          <h1>活動報名狀況</h1>
+          <div class="sub">請先使用 Google 帳號登入後台。</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>
+          </div>
+        `);
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+        return;
+      }
+
+      try {
+        const r = await loadUserRole(user.uid);
+        if (!r.ok) {
+          showGate(`
+            <h1>無法進入</h1>
+            <div class="sub warn">${esc(r.reason)}</div>
+            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        currentRole = r.role;
+        userData = r.userData || {};
+        mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
+
+        whoEl.textContent = user.email || "";
+        roleText.textContent = currentRole || "-";
+
+        // 允許進入：platform_* / org_*（活動當天工作人員也會用）
+        if (![ "platform_super","platform_admin","org_super","org_admin","org_staff" ].includes(currentRole)) {
+          showGate(`
+            <h1>權限不足</h1>
+            <div class="sub warn">你的角色無法使用此功能。</div>
+            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        // 校方至少要有 schoolId
+        if (isOrgRole() && !mySchoolId) {
+          showGate(`
+            <h1>尚未綁定校園</h1>
+            <div class="sub warn">你的帳號沒有 schoolId，無法載入校園活動。</div>
+            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadEventOptions();
+
+        // auto bind first
+        const first = eventSel.value || (eventSel.options[0] ? eventSel.options[0].value : "");
+        eventSel.value = first;
+        await bindOrdersRealtime(first);
+
+      } catch (err) {
+        console.error(err);
+        showGate(`
+          <h1>發生錯誤</h1>
+          <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
+          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+    });
+  </script>
+</body>
+</html>

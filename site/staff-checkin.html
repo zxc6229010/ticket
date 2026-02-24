@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>核銷｜掃描入場</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow2:0 14px 40px rgba(0,0,0,.08);
+
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow2);
+      padding:16px;
+      margin-bottom:22px;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      gap:10px;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b) * 1.25); font-size:15px; }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+
+    .scannerWrap{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+      background:#fff;
+    }
+    #reader{
+      width:100%;
+      border-radius:14px;
+      overflow:hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="section">
+      <div class="header">
+        <div>
+          <h1>入場核銷</h1>
+          <div class="sub">請使用手機鏡頭掃描票券 QR Code／條碼。</div>
+          <div class="sub small">登入：<span id="who" class="mono">-</span>｜指派活動：<span id="assignedEvent" class="mono">-</span></div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+          <button class="btn btn-sm" id="logoutBtn">登出</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="row" style="justify-content:space-between;">
+          <div class="small">掃描器</div>
+          <div class="row">
+            <button class="btn btn-sm" id="startBtn">開始掃描</button>
+            <button class="btn btn-sm" id="stopBtn" disabled>停止</button>
+          </div>
+        </div>
+
+        <div class="scannerWrap" style="margin-top:10px;">
+          <div id="reader"></div>
+        </div>
+
+        <div id="result" class="sub" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <!-- Scanner lib -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+
+  <script>
+    // ===== Firebase init =====
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
+    const db = firebase.firestore();
+
+    // ===== DOM =====
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const assignedEventEl = document.getElementById("assignedEvent");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const resultEl = document.getElementById("result");
+
+    function showGate(html){
+      gate.innerHTML = html;
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function doLogout(){
+      await firebase.auth().signOut();
+    }
+    logoutBtn.onclick = doLogout;
+
+    // ===== Role / assignment =====
+    let currentUser = null;
+    let myAssignedEventId = "";
+
+    async function loadMe(uid){
+      const doc = await db.collection("users").doc(uid).get();
+      if (!doc.exists) return { ok:false, reason:"尚未授權" };
+      const u = doc.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      const assignedEventId = String(u.assignedEventId || "").trim();
+      return { ok:true, role, assignedEventId, userData:u };
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function setResult(html){
+      resultEl.innerHTML = html;
+    }
+
+    function serviceCenterHint(){
+      return `
+        <div class="warn">無法完成核銷</div>
+        <div class="small">
+          若條碼掃描失敗或資料查詢不到，請引導至「服務中心」。<br>
+          由平台管理員或校方管理員在「查詢資料」頁面協助查詢並人工核銷入場。
+        </div>
+      `;
+    }
+
+    // ===== Scanner =====
+    let qr = null;
+    let scanning = false;
+    let busy = false; // 防止連續觸發
+
+    async function startScan(){
+      if (scanning) return;
+
+      if (!myAssignedEventId){
+        setResult(`
+          <div class="warn">你尚未被指派活動</div>
+          <div class="small">請聯絡管理員派發活動後再核銷。</div>
+        `);
+        return;
+      }
+
+      setResult(`<span class="small">啟動相機中…</span>`);
+
+      try{
+        if (!qr) qr = new Html5Qrcode("reader");
+
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || !cameras.length) {
+          setResult(`<div class="warn">找不到相機</div>` + serviceCenterHint());
+          return;
+        }
+
+        const camId = cameras[cameras.length - 1].id;
+
+        scanning = true;
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        await qr.start(
+          camId,
+          { fps: 12, qrbox: { width: 260, height: 260 } },
+          async (decodedText) => {
+            if (busy) return;
+            busy = true;
+            try{
+              await handleTicketId(decodedText);
+            } finally {
+              // 讓下一次掃描隔一小段時間再接受
+              setTimeout(() => { busy = false; }, 900);
+            }
+          },
+          () => {}
+        );
+
+        setResult(`<span class="small">相機已啟動，請對準票券 QR Code／條碼。</span>`);
+      }catch(e){
+        console.error(e);
+        scanning = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
+        setResult(`
+          <div class="warn">相機啟動失敗</div>
+          <div class="small">請確認：使用 https 網址、已允許相機權限。</div>
+        ` + serviceCenterHint());
+      }
+    }
+
+    async function stopScan(){
+      if (!qr || !scanning) return;
+      try{
+        await qr.stop();
+        await qr.clear();
+      }catch(e){
+        console.error(e);
+      }finally{
+        scanning = false;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        setResult(`<span class="small">已停止掃描。</span>`);
+      }
+    }
+
+    startBtn.onclick = startScan;
+    stopBtn.onclick = stopScan;
+
+    // ===== Check-in logic (B) =====
+    // QR 內容 = ticketId
+    // Firestore: orders/{orderId}/tickets/{ticketId}
+    async function handleTicketId(raw){
+      const ticketId = String(raw || "").trim();
+      if (!ticketId) return;
+
+      setResult(`<span class="small">讀取票券：<span class="mono">${escapeHtml(ticketId)}</span>…</span>`);
+
+      try{
+        // 用 collectionGroup 直接找 docId == ticketId
+        const q = await db
+          .collectionGroup("tickets")
+          .where(firebase.firestore.FieldPath.documentId(), "==", ticketId)
+          .limit(1)
+          .get();
+
+        if (q.empty){
+          setResult(`<div class="warn">找不到票券資料</div>` + serviceCenterHint());
+          return;
+        }
+
+        const doc = q.docs[0];
+        const data = doc.data() || {};
+
+        // 票上一定要有 eventId（建議你在出票時寫入 tickets.eventId）
+        const eventId = String(data.eventId || "").trim();
+        if (!eventId){
+          setResult(`<div class="warn">票券資料缺少 eventId，無法核對活動</div>` + serviceCenterHint());
+          return;
+        }
+
+        if (myAssignedEventId && eventId !== myAssignedEventId){
+          setResult(`<div class="warn">此票券不屬於你被指派的活動</div>` + serviceCenterHint());
+          return;
+        }
+
+        if (data.checkedIn === true){
+          setResult(`
+            <div class="warn">已核銷</div>
+            <div class="small">核銷時間：<span class="mono">${escapeHtml(String(data.checkedInAt || "-"))}</span></div>
+          `);
+          return;
+        }
+
+        await doc.ref.update({
+          checkedIn: true,
+          checkedInAt: new Date(),
+          checkedInBy: currentUser.uid,
+          checkedInByEmail: currentUser.email || ""
+        });
+
+        setResult(`
+          <div class="ok">✅ 核銷成功</div>
+          <div class="small">票券：<span class="mono">${escapeHtml(ticketId)}</span></div>
+        `);
+
+      }catch(e){
+        console.error(e);
+        setResult(`
+          <div class="warn">核銷失敗</div>
+          <div class="small">可能原因：權限不足 / rules 擋住 / 活動未指派。</div>
+          <div class="small mono">${escapeHtml(e.code || "")} ${escapeHtml(e.message || String(e))}</div>
+        ` + serviceCenterHint());
+      }
+    }
+
+    // ===== Auth gate =====
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user){
+        whoEl.textContent = "-";
+        assignedEventEl.textContent = "-";
+        showGate(`
+          <h1>入場核銷</h1>
+          <div class="sub">請先使用 Google 帳號登入後台。</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>
+          </div>
+        `);
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+        return;
+      }
+
+      whoEl.textContent = user.email || "";
+
+      const r = await loadMe(user.uid);
+      if (!r.ok){
+        showGate(`
+          <h1>無法進入</h1>
+          <div class="sub warn">${escapeHtml(r.reason)}</div>
+          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+        return;
+      }
+
+      const role = r.role;
+      if (!["platform_super","platform_admin","org_super","org_admin","org_staff"].includes(role)){
+        showGate(`
+          <h1>權限不足</h1>
+          <div class="sub warn">你的角色無法使用核銷功能。</div>
+          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+        return;
+      }
+
+      myAssignedEventId = r.assignedEventId || "";
+      assignedEventEl.textContent = myAssignedEventId || "(未指派)";
+
+      gate.style.display = "none";
+      app.style.display = "block";
+
+      if (!myAssignedEventId){
+        setResult(`<div class="warn">你尚未被指派活動</div><div class="small">請聯絡管理員派發活動後再核銷。</div>`);
+      } else {
+        setResult(`<div class="small">請按「開始掃描」並對準票券。</div>`);
+        // 你要「一進來就直接掃」的話，把下一行取消註解
+        // startScan();
+      }
+    });
+  </script>
+</body>
+</html>

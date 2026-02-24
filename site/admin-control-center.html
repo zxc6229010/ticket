@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜平台全控中心</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:12px;
+      flex-wrap:wrap;
+    }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+    }
+    .tile{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+      min-height:130px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      justify-content:space-between;
+    }
+    .tile h3{ margin:0; font-size:16px; }
+    .tile p{ margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:14px;
+      background:#fff;
+    }
+    .warn{ color:#b91c1c; font-weight:900; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="gate" class="section" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>平台全控中心</h1>
+            <div class="sub">平台超級管理員專用。集中管理：人事派發、組織狀況、Dashboard 顯示設定與核心功能入口。</div>
+            <div class="small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="row" style="justify-content:space-between;">
+          <div class="pill">只顯示給 platform_super</div>
+          <div class="small">※ 這頁不做任何資料修改，只提供入口與統整。</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="tile">
+          <div>
+            <h3>🧑‍💼 人事派發與審核</h3>
+            <p>審核申請、派發到校園、設定角色/啟用、分配組別欄位</p>
+          </div>
+          <a class="btn btn-primary" href="admin-user-assign.html">進入</a>
+        </div>
+
+        <div class="tile">
+          <div>
+            <h3>📊 全組織管理狀況</h3>
+            <p>查看各校驗證狀態、管理員分布與快速入口</p>
+          </div>
+          <a class="btn" href="admin-org-overview.html">進入</a>
+        </div>
+
+        <div class="tile">
+          <div>
+            <h3>⚙️ Dashboard 顯示設定</h3>
+            <p>設定各角色在 Dashboard 會看到哪些功能格子</p>
+          </div>
+          <a class="btn" href="admin-dashboard-settings.html">進入</a>
+        </div>
+
+        <div class="tile">
+          <div>
+            <h3>🏫 特約校園管理</h3>
+            <p>新增/停用校園、查看校園設定（驗證狀態等）</p>
+          </div>
+          <a class="btn" href="partner-schools.html">進入</a>
+        </div>
+
+        <div class="tile">
+          <div>
+            <h3>📥 名單匯入／驗證設定</h3>
+            <p>匯入名單、設定/鎖定欄位、暫停/恢復驗證</p>
+          </div>
+          <a class="btn" href="admin-studentslist-import.html">進入</a>
+        </div>
+
+        <div class="tile">
+          <div>
+            <h3>🔎 會員查詢</h3>
+            <p>用 email / verifyKey 查詢會員與綁定狀態</p>
+          </div>
+          <a class="btn" href="admin-member-lookup.html">進入</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app  = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = () => firebase.auth().signOut();
+      }
+    }
+
+    async function doLogout(){ await firebase.auth().signOut(); }
+    logoutBtn.onclick = doLogout;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user){
+        showGate("平台全控中心", "請先登入管理帳號以繼續。", true);
+        return;
+      }
+
+      try{
+        const snap = await db.collection("users").doc(user.uid).get();
+        if (!snap.exists){
+          showGate("等待授權", "你的帳號尚未被系統授權為管理者。", false);
+          return;
+        }
+
+        const u = snap.data() || {};
+        if (u.enabled !== true){
+          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          return;
+        }
+
+        const role = String(u.role || "unknown").trim();
+        whoEl.textContent = (u.email || user.email || "-");
+        roleText.textContent = role;
+
+        if (role !== "platform_super"){
+          showGate("權限不足", "此頁僅限 platform_super 使用。", false);
+          return;
+        }
+
+        gate.style.display = "none";
+        app.style.display = "block";
+      }catch(err){
+        console.error(err);
+        showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

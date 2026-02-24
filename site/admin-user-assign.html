@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜人事派發與審核</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    .section{
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+    }
+    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    h2{ margin:0; font-size:16px; font-weight:900; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x); border-radius:999px;
+      border:1px solid var(--line); background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+    .btn-danger{ border-color:rgba(239,68,68,.35); color:#b91c1c; background:#fff; }
+
+    input[type="text"], select{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      background:#fff; font-size:16px;
+    }
+    label{ font-weight:900; display:block; margin:10px 0 6px; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+
+    .list{ display:grid; gap:12px; margin-top:12px; }
+    .item{
+      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+    }
+    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+    .pill{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:13px; background:#fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>人事派發與審核</h1>
+            <div class="sub">審核申請、派發到校園、設定角色與啟用狀態。</div>
+            <div class="small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 待審核 -->
+      <div class="section">
+        <h2>待審核申請</h2>
+        <div class="sub">申請會寫入 <span class="mono">accessRequests</span>，由平台超級管理員核准後寫回 <span class="mono">users/{uid}</span>。</div>
+        <div class="row" style="margin-top:12px; justify-content:flex-end;">
+          <button class="btn" id="reloadReqBtn">重新載入</button>
+        </div>
+        <div class="list" id="reqList"></div>
+      </div>
+
+      <!-- 使用者查找 / 派發 -->
+      <div class="section">
+        <h2>使用者查找與派發</h2>
+        <div class="sub">用 email 查找對應的 users 文件（需平台端已建立/或先用申請核准建立）。</div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label>email</label>
+            <input id="emailQ" type="text" placeholder="someone@example.com" />
+          </div>
+          <div class="row" style="align-items:flex-end;">
+            <button class="btn btn-primary" id="searchBtn">查詢</button>
+          </div>
+        </div>
+
+        <div id="userBox" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const reqList = document.getElementById("reqList");
+    const reloadReqBtn = document.getElementById("reloadReqBtn");
+
+    const emailQ = document.getElementById("emailQ");
+    const searchBtn = document.getElementById("searchBtn");
+    const userBox = document.getElementById("userBox");
+
+    let currentRole = "";
+    let currentUser = null;
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    async function doLogout(){ await firebase.auth().signOut(); }
+    logoutBtn.onclick = doLogout;
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+      if (showLogin){
+        document.getElementById("loginBtn").onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+      const role = String(u.role || "").trim();
+      return { ok:true, role, me:u };
+    }
+
+    function tsToText(v){
+      try{
+        if (!v) return "-";
+        if (typeof v.toDate === "function") return v.toDate().toLocaleString();
+        if (v instanceof Date) return v.toLocaleString();
+        return String(v);
+      }catch{ return "-"; }
+    }
+
+    async function loadRequests(){
+      reqList.innerHTML = `<div class="small">載入中…</div>`;
+
+      const snap = await db.collection("accessRequests")
+        .where("status","==","pending")
+        .orderBy("createdAt","desc")
+        .limit(50)
+        .get();
+
+      if (snap.empty){
+        reqList.innerHTML = `<div class="small">目前沒有待審核申請</div>`;
+        return;
+      }
+
+      reqList.innerHTML = snap.docs.map(d=>{
+        const r = d.data() || {};
+        return `
+          <div class="item" id="req-${d.id}">
+            <div class="item-top">
+              <div style="min-width:0;">
+                <div style="font-weight:900;">${esc(r.email || "(no email)")}</div>
+                <div class="small" style="margin-top:4px;">
+                  申請角色：<span class="pill">${esc(r.requestedRole || "-")}</span>
+                  校園：<span class="pill">${esc(r.requestedSchoolId || "(空)")}</span>
+                </div>
+                <div class="small" style="margin-top:6px;">備註：${esc(r.note || "-")}</div>
+                <div class="small" style="margin-top:6px;">申請時間：${esc(tsToText(r.createdAt))}</div>
+                <div class="small">uid：<span class="mono">${esc(r.uid || "-")}</span></div>
+              </div>
+              <div class="row" style="justify-content:flex-end;">
+                <button class="btn btn-sm" onclick="approveReq('${d.id}')">核准</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectReq('${d.id}')">拒絕</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.approveReq = async (reqId) => {
+      if (currentRole !== "platform_super"){
+        alert("只有 platform_super 可核准");
+        return;
+      }
+      const ref = db.collection("accessRequests").doc(reqId);
+      const snap = await ref.get();
+      if (!snap.exists) return alert("申請不存在");
+
+      const r = snap.data() || {};
+      const ok = confirm(
+        `核准申請？\n\nemail：${r.email || "-"}\nrole：${r.requestedRole || "-"}\nschoolId：${r.requestedSchoolId || "(空)"}`
+      );
+      if (!ok) return;
+
+      try{
+        await db.runTransaction(async (tx) => {
+          const now = await tx.get(ref);
+          if (!now.exists) throw new Error("申請已不存在");
+          const data = now.data() || {};
+          if (data.status !== "pending") throw new Error("申請已被處理");
+
+          const uid = String(data.uid || "").trim();
+          if (!uid) throw new Error("缺少 uid");
+
+          // ✅ 寫回 users/{uid}
+          tx.set(db.collection("users").doc(uid), {
+            email: data.email || "",
+            enabled: true,
+            role: data.requestedRole || "org_staff",
+            schoolId: data.requestedSchoolId || "",
+            updatedAt: new Date()
+          }, { merge:true });
+
+          // ✅ 更新申請狀態
+          tx.update(ref, {
+            status: "approved",
+            handledAt: new Date(),
+            handledByUid: currentUser.uid
+          });
+        });
+
+        alert("已核准並派發");
+        await loadRequests();
+      }catch(e){
+        console.error(e);
+        alert("核准失敗：\n" + (e.message || e));
+      }
+    };
+
+    window.rejectReq = async (reqId) => {
+      if (currentRole !== "platform_super"){
+        alert("只有 platform_super 可拒絕");
+        return;
+      }
+      const ok = confirm("確定要拒絕此申請嗎？");
+      if (!ok) return;
+
+      try{
+        await db.collection("accessRequests").doc(reqId).update({
+          status: "rejected",
+          handledAt: new Date(),
+          handledByUid: currentUser.uid
+        });
+        await loadRequests();
+      }catch(e){
+        console.error(e);
+        alert("拒絕失敗：\n" + (e.message || e));
+      }
+    };
+
+    async function findUserByEmail(email){
+      const q = await db.collection("users").where("email","==",email).limit(10).get();
+      if (q.empty) return null;
+      // 理論上 email 應該唯一；先取第一筆
+      const d = q.docs[0];
+      return { id:d.id, data:d.data() || {} };
+    }
+
+    function renderUserEditor(uid, u){
+      const role = String(u.role || "").trim();
+      const enabled = u.enabled === true;
+      const schoolId = String(u.schoolId || "").trim();
+      const orgGroup = String(u.orgGroup || "").trim();
+
+      userBox.innerHTML = `
+        <div class="item">
+          <div style="font-weight:900;">查詢結果</div>
+          <div class="small" style="margin-top:6px;">
+            uid：<span class="mono">${esc(uid)}</span><br>
+            email：<span class="mono">${esc(u.email || "-")}</span>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label>enabled</label>
+              <select id="uEnabled">
+                <option value="true" ${enabled ? "selected" : ""}>true</option>
+                <option value="false" ${!enabled ? "selected" : ""}>false</option>
+              </select>
+            </div>
+
+            <div>
+              <label>role</label>
+              <select id="uRole">
+                <option value="platform_super" ${role==="platform_super"?"selected":""}>platform_super</option>
+                <option value="platform_admin" ${role==="platform_admin"?"selected":""}>platform_admin</option>
+                <option value="org_super" ${role==="org_super"?"selected":""}>org_super</option>
+                <option value="org_admin" ${role==="org_admin"?"selected":""}>org_admin</option>
+                <option value="org_staff" ${role==="org_staff"?"selected":""}>org_staff</option>
+              </select>
+              <div class="small">※ 建議只給 platform_super 調整平台角色</div>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px;">
+            <div>
+              <label>schoolId（可留空＝平台人員）</label>
+              <input id="uSchoolId" type="text" value="${esc(schoolId)}" />
+            </div>
+            <div>
+              <label>orgGroup（例：公關組／事務組）</label>
+              <input id="uOrgGroup" type="text" value="${esc(orgGroup)}" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:14px; justify-content:flex-end;">
+            <button class="btn btn-primary" id="saveUserBtn">儲存</button>
+          </div>
+
+          <div class="small" id="saveMsg" style="margin-top:10px;"></div>
+        </div>
+      `;
+
+      document.getElementById("saveUserBtn").onclick = async () => {
+        if (currentRole !== "platform_super"){
+          alert("只有 platform_super 可儲存修改");
+          return;
+        }
+        const newEnabled = document.getElementById("uEnabled").value === "true";
+        const newRole = document.getElementById("uRole").value;
+        const newSchoolId = String(document.getElementById("uSchoolId").value || "").trim();
+        const newOrgGroup = String(document.getElementById("uOrgGroup").value || "").trim();
+
+        const msg = document.getElementById("saveMsg");
+        msg.textContent = "儲存中…";
+
+        try{
+          await db.collection("users").doc(uid).set({
+            enabled: newEnabled,
+            role: newRole,
+            schoolId: newSchoolId,
+            orgGroup: newOrgGroup,
+            updatedAt: new Date()
+          }, { merge:true });
+
+          msg.innerHTML = `<span class="ok">✅ 已儲存</span>`;
+        }catch(e){
+          console.error(e);
+          msg.innerHTML = `<span class="warn">儲存失敗：</span> ${esc(e.message || e)}`;
+        }
+      };
+    }
+
+    searchBtn.onclick = async () => {
+      const email = String(emailQ.value || "").trim();
+      if (!email) return alert("請輸入 email");
+      userBox.innerHTML = `<div class="small">查詢中…</div>`;
+
+      try{
+        const res = await findUserByEmail(email);
+        if (!res){
+          userBox.innerHTML = `<div class="item"><span class="warn">找不到此 email 的 users 文件</span></div>`;
+          return;
+        }
+        renderUserEditor(res.id, res.data);
+      }catch(e){
+        console.error(e);
+        userBox.innerHTML = `<div class="item"><span class="warn">查詢失敗：</span>${esc(e.message || e)}</div>`;
+      }
+    };
+
+    reloadReqBtn.onclick = loadRequests;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+      if (!user){
+        showGate("人事派發與審核", "請先使用 Google 登入後台。", true);
+        return;
+      }
+
+      try{
+        const r = await loadMyRole(user.uid);
+        if (!r.ok){
+          showGate(r.reason, "你的帳號尚未被授權為管理者。", false);
+          return;
+        }
+
+        currentRole = r.role;
+        whoEl.textContent = user.email || "-";
+        roleText.textContent = currentRole || "-";
+
+        // ✅ 只有 platform_super / platform_admin 可進
+        if (!["platform_super","platform_admin"].includes(currentRole)){
+          showGate("權限不足", "此頁僅限平台管理員使用。", false);
+          return;
+        }
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadRequests();
+
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

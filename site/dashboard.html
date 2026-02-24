@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 24px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+
+    h1{ margin:0 0 6px; font-size:22px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111;
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
+    .btn[aria-disabled="true"]{ opacity:.55; cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none; }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:14px;
+    }
+    .tile{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+      min-height:120px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      justify-content:space-between;
+    }
+    .tile h3{ margin:0; font-size:16px; }
+    .tile p{ margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:14px;
+      background:#fff;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    /* ✅ 置頂區（灰一點點） */
+    .pinned-wrap{
+      background:#f1f2f6;
+      border:1px solid rgba(17,17,17,.12);
+    }
+    .pinned-title{
+      font-weight:900;
+      font-size:16px;
+      margin:0 0 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .hint{
+      color:rgba(17,17,17,.72);
+      font-size:13px;
+      line-height:1.6;
+      margin-top:6px;
+    }
+
+    /* ✅ 轉場動畫（不改風格，只淡入淡出） */
+    .page{
+      opacity:0;
+      transform: translateY(6px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .page.on{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .page.leaving{
+      opacity:0;
+      transform: translateY(6px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap page" id="pageRoot">
+
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h1>後台管理系統</h1>
+            <div class="sub">
+              依你的身分顯示可用功能（平台上限＋組織自訂子集合）。<br/>
+              登入帳號：<span id="email">-</span><br />
+              角色身分：<span id="role">-</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <span class="pill" id="rolePill">Role</span>
+            <button class="btn" onclick="doLogout()">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ 所有人都可能有置頂（灰一點點） -->
+      <div id="pinnedSection" class="card pinned-wrap" style="display:none;">
+        <div class="pinned-title">
+          <span>📌 置頂功能</span>
+          <span class="pill mono" id="pinnedRoleTag" style="font-size:12px;">-</span>
+        </div>
+        <div class="hint">你被設定為「置頂」的功能會顯示在這裡。</div>
+        <div style="height:10px;"></div>
+        <div class="grid" id="pinnedTiles"></div>
+      </div>
+
+      <div class="grid" id="tiles"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const pageRoot = document.getElementById("pageRoot");
+    const gate = document.getElementById("gate");
+    const app  = document.getElementById("app");
+
+    const tiles = document.getElementById("tiles");
+    const pinnedSection = document.getElementById("pinnedSection");
+    const pinnedTiles = document.getElementById("pinnedTiles");
+    const pinnedRoleTag = document.getElementById("pinnedRoleTag");
+
+    // ===== 轉場動畫 =====
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(()=> location.href = href, 140);
+    }
+    document.addEventListener("click", (e)=>{
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      if (a.getAttribute("aria-disabled") === "true") return;
+      e.preventDefault();
+      go(href);
+    });
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        </div>
+      `;
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+    }
+
+    window.doLogout = async () => {
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+    };
+
+    // ✅ 功能清單：固定順序來源（排序永遠以此為準，不會被打散）
+    const FEATURES = [
+      { id:"admin-events",            title:"🎟️ 活動管理",              desc:"建立活動、票種、限制條件",             ready:true,  href:"admin-events.html" },
+      { id:"partner-schools",         title:"🏫 特約校園管理",            desc:"新增 / 停用校園，設定認證方式",         ready:true,  href:"partner-schools.html" },
+      { id:"import-verify",           title:"📥 名單匯入 / 驗證設定",      desc:"匯入名單、暫停 / 恢復驗證",            ready:true,  href:"admin-studentslist-import.html" },
+      { id:"member-lookup",           title:"🔎 會員查詢",                desc:"email / verifyKey 查詢會員狀態",       ready:true,  href:"admin-member-lookup.html" },
+      { id:"admin-orders",            title:"🧾 訂單 / 報名資料",          desc:"報名清單、匯出、入場狀態",             ready:true,  href:"admin-event-orders.html" },
+
+      { id:"admin-user-assign",       title:"🧑‍💼 人事派發 / 審核",         desc:"審核後台帳號、分派組織/學校/職位",     ready:true,  href:"admin-user-assign.html" },
+      { id:"admin-org-overview",      title:"🏢 全組織管理狀況",            desc:"查看各組織管理/服務人員狀態",           ready:true,  href:"admin-org-overview.html" },
+      { id:"org-team",                title:"👥 組織團隊 / 工作組別",        desc:"org_super 管理組織管理員/服務員與組別", ready:true, href:"org-team.html" },
+
+      { id:"staff-scan",              title:"✅ 核銷人員掃碼",              desc:"staff 只能掃碼核銷指定活動",           ready:true,  href:"staff-checkin.html" },
+      { id:"service-checkin",         title:"🛠️ 服務中心查詢 / 核銷",        desc:"條碼槍輸入協助查詢與核銷",             ready:true,  href:"admin-checkin-assist.html" },
+
+      { id:"dash-settings",           title:"⚙️ Dashboard 顯示設定",        desc:"設定各角色顯示/置頂（平台上限）",       ready:true,  href:"admin-dashboard-settings.html" },
+
+      { id:"admin-impersonate",       title:"🧪 身分/學校測試切換",          desc:"platform_super 假裝切換身分與學校測試", ready:false, href:"admin-impersonate.html" },
+      { id:"request-access",          title:"📝 後台帳號申請",              desc:"註冊後台後進入申請/等待審核",           ready:true,  href:"request-access.html" },
+      { id:"invite-code",             title:"🔑 邀請碼輸入",                desc:"無特定身分報名活動時使用",               ready:false, href:"guest.html" }
+    ];
+
+    const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
+    const FEATURE_ORDER = new Map(FEATURES.map((x, i) => [x.id, i]));
+
+    function sortByFeatureOrder(ids){
+      return (ids || []).slice().sort((a,b)=>{
+        const ia = FEATURE_ORDER.has(a) ? FEATURE_ORDER.get(a) : 9999;
+        const ib = FEATURE_ORDER.has(b) ? FEATURE_ORDER.get(b) : 9999;
+        return ia - ib;
+      });
+    }
+
+    // ====== 設定：監聽用快取（不用手動刷新） ======
+    let currentUserData = null;
+    let currentRole = "";
+    let sysCfgCache = null;
+    let orgCfgCache = null;
+
+    let unsubSys = null;
+    let unsubOrg = null;
+
+    function roleIsOrg(role){
+      return ["org_super","org_admin","org_staff"].includes(role);
+    }
+
+    // ✅ Map 格式：roles[roleId][featureId] = { visible:true/false, pinned:true/false }
+    function parseRoleCfg(roleCfg){
+      const visible = [];
+      const pinned = [];
+      if (!roleCfg || typeof roleCfg !== "object") return { visible, pinned };
+
+      for (const [fid, cfg] of Object.entries(roleCfg)){
+        if (cfg && cfg.visible === true) visible.push(fid);
+        if (cfg && cfg.pinned === true)  pinned.push(fid);
+      }
+      return { visible, pinned };
+    }
+
+    function renderTiles(containerEl, featureIds){
+      const ids = sortByFeatureOrder(featureIds)
+        .map(id => FEATURE_MAP.get(id))
+        .filter(Boolean);
+
+      if (!ids.length){
+        containerEl.innerHTML = `
+          <div class="tile">
+            <div>
+              <h3>⚠️ 無可用功能</h3>
+              <p>此角色目前沒有可用的後台功能，請洽平台管理員。</p>
+            </div>
+            <span class="btn" aria-disabled="true">尚未開放</span>
+          </div>
+        `;
+        return;
+      }
+
+      containerEl.innerHTML = ids.map((it) => {
+        const canEnter = (it.ready === true && it.href);
+        if (canEnter){
+          return `
+            <div class="tile">
+              <div>
+                <h3>${esc(it.title)}</h3>
+                <p>${esc(it.desc || "")}</p>
+              </div>
+              <a class="btn" href="${esc(it.href)}">進入</a>
+            </div>
+          `;
+        }
+        return `
+          <div class="tile">
+            <div>
+              <h3>${esc(it.title)}</h3>
+              <p>${esc(it.desc || "")}</p>
+            </div>
+            <span class="btn" aria-disabled="true">未製作</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // ====== 核心：用「快取 cfg」即時重算 ======
+    function computeAndRenderFromCache(){
+      if (!currentUserData || !currentRole) return;
+
+      const role = currentRole;
+      const userData = currentUserData;
+
+      // 1) 平台上限（system/dashboard）
+      const sys = sysCfgCache || null;
+      const sysRoles = (sys && sys.roles) ? sys.roles : {};
+      const sysParsed = parseRoleCfg(sysRoles[role] || {});
+
+      // fallback：至少 platform_super 看得到 dash-settings
+      const fallbackVisible = (role === "platform_super") ? ["dash-settings"] : [];
+      const maxVisible = sysParsed.visible.length ? sysParsed.visible : fallbackVisible;
+      const maxPinned  = sysParsed.pinned.length  ? sysParsed.pinned  : [];
+
+      // 2) 組織覆蓋（只能子集合）
+      let finalVisible = maxVisible.slice();
+      let finalPinned  = maxPinned.slice();
+
+      if (roleIsOrg(role)) {
+        const orgCfg = orgCfgCache || null;
+        const orgRoles = (orgCfg && orgCfg.roles) ? orgCfg.roles : {};
+        const orgParsed = parseRoleCfg(orgRoles[role] || {});
+
+        if (orgParsed.visible.length){
+          const allowSet = new Set(maxVisible);
+          finalVisible = orgParsed.visible.filter(id => allowSet.has(id));
+        }
+
+        // pinned：組織有設定就用（但必須在 finalVisible 內）；沒設定就沿用平台 pinned
+        if (orgParsed.pinned.length){
+          const allowSet2 = new Set(finalVisible);
+          finalPinned = orgParsed.pinned.filter(id => allowSet2.has(id));
+        } else {
+          const allowSet2 = new Set(finalVisible);
+          finalPinned = finalPinned.filter(id => allowSet2.has(id));
+        }
+      } else {
+        const allowSet2 = new Set(finalVisible);
+        finalPinned = finalPinned.filter(id => allowSet2.has(id));
+      }
+
+      // 3) 渲染 pinned + normal（都照 FEATURES 順序）
+      pinnedRoleTag.textContent = role;
+
+      if (finalPinned.length){
+        pinnedSection.style.display = "block";
+        renderTiles(pinnedTiles, finalPinned);
+      } else {
+        pinnedSection.style.display = "none";
+        pinnedTiles.innerHTML = "";
+      }
+
+      const pinSet = new Set(finalPinned);
+      const normalIds = finalVisible.filter(id => !pinSet.has(id));
+      renderTiles(tiles, normalIds);
+    }
+
+    function startSysListener(){
+      if (unsubSys) unsubSys();
+      unsubSys = db.collection("system").doc("dashboard").onSnapshot((snap)=>{
+        sysCfgCache = snap.exists ? (snap.data() || {}) : null;
+        computeAndRenderFromCache();
+      }, (err)=>{
+        console.warn("system/dashboard snapshot error:", err);
+        // snapshot 失敗也先照現有 cache/空資料 render（避免整頁空）
+        computeAndRenderFromCache();
+      });
+    }
+
+    function startOrgListener(orgId){
+      if (unsubOrg) unsubOrg();
+      orgCfgCache = null;
+
+      if (!orgId){
+        computeAndRenderFromCache();
+        return;
+      }
+
+      unsubOrg = db.collection("organizations").doc(orgId)
+        .collection("system").doc("dashboard")
+        .onSnapshot((snap)=>{
+          orgCfgCache = snap.exists ? (snap.data() || {}) : null;
+          computeAndRenderFromCache();
+        }, (err)=>{
+          console.warn("org dashboard snapshot error:", err);
+          computeAndRenderFromCache();
+        });
+    }
+
+    // ✅ 回到這頁時也重新渲染一次（避免返回快取）
+    window.addEventListener("pageshow", () => computeAndRenderFromCache());
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) computeAndRenderFromCache();
+    });
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user){
+        currentUserData = null;
+        currentRole = "";
+        if (unsubSys) unsubSys(); unsubSys = null;
+        if (unsubOrg) unsubOrg(); unsubOrg = null;
+        sysCfgCache = null;
+        orgCfgCache = null;
+
+        showGate("後台管理", "請先登入管理帳號以繼續。", true);
+        return;
+      }
+
+      try{
+        const snap = await db.collection("users").doc(user.uid).get();
+        if (!snap.exists){
+          showGate("等待授權", "你的帳號尚未被系統授權為管理者。", false);
+          return;
+        }
+
+        const u = snap.data() || {};
+        if (u.enabled !== true){
+          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          return;
+        }
+
+        const role = String(u.role || "unknown").trim();
+        currentUserData = u;
+        currentRole = role;
+
+        document.getElementById("email").textContent = (u.email || user.email || "-");
+        document.getElementById("role").textContent = role;
+        document.getElementById("rolePill").textContent = role;
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        // ✅ 啟動即時監聽：回來不用重新整理
+        startSysListener();
+
+        // org 角色才監聽 org dashboard
+        const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
+        if (roleIsOrg(role)) startOrgListener(orgId);
+        else startOrgListener(""); // 關掉 org listener
+
+        // 先用目前 cache（可能還沒 snapshot 回來）渲染一次
+        computeAndRenderFromCache();
+
+      }catch(err){
+        console.error(err);
+        showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜後台帳號申請</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 24px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:var(--shadow); padding:18px; margin-bottom:18px;
+    }
+    h1{ margin:0 0 6px; font-size:22px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:44px; padding:10px 18px; border-radius:999px;
+      border:1px solid var(--line); background:#fff; color:#111;
+      font-weight:900; font-size:16px; cursor:pointer;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    label{ font-weight:900; display:block; margin:12px 0 6px; }
+    input[type="text"], textarea, select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:16px;
+      background:#fff;
+      outline:none;
+    }
+    textarea{ min-height:110px; resize:vertical; }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line); border-radius:999px;
+      padding:8px 12px; font-weight:900; font-size:14px; background:#fff;
+    }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+
+    /* 轉場動畫（淡入淡出，不改風格） */
+    .page{ opacity:0; transform: translateY(6px); transition: opacity .22s ease, transform .22s ease; }
+    .page.on{ opacity:1; transform: translateY(0); }
+    .page.leaving{ opacity:0; transform: translateY(6px); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap page" id="pageRoot">
+
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h1>後台帳號申請</h1>
+            <div class="sub">
+              填寫申請後會進入審核流程。<br/>
+              <span class="mono">申請資料會永久留存</span>，審核結果也會記錄。
+            </div>
+            <div class="sub" style="margin-top:8px;">
+              登入：<span id="email" class="mono">-</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+            <a class="btn" href="dashboard.html">回主選單</a>
+            <button class="btn" onclick="doLogout()">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="statusCard" style="display:none;"></div>
+
+      <div class="card" id="formCard" style="display:none;">
+        <div class="row">
+          <div>
+            <div class="pill">申請資料</div>
+            <div class="sub" style="margin-top:8px;">
+              你可以先選擇想申請的身分（管理員 / 服務人員），並回答平台管理員的提問。
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn" id="reloadBtn">重新載入</button>
+            <button class="btn" id="submitBtn">送出申請</button>
+          </div>
+        </div>
+
+        <label>想申請的角色</label>
+        <select id="desiredRole">
+          <option value="org_admin">組織管理員（org_admin）</option>
+          <option value="org_staff">組織服務人員（org_staff）</option>
+          <option value="org_super">組織超級管理員（org_super）</option>
+        </select>
+        <div class="sub" style="margin-top:6px;">※ 是否通過與角色分派以平台審核結果為準。</div>
+
+        <label style="margin-top:14px;">希望加入的組織 / 校園（可不填）</label>
+        <input id="desiredOrg" type="text" placeholder="例如：KMHS / 你們組織代號（選填）" />
+        <div class="sub" style="margin-top:6px;">你也可以先不填，讓平台管理員在審核時分派。</div>
+
+        <div id="questions"></div>
+
+        <div class="sub" style="margin-top:12px;">
+          <span class="ok">提醒：</span>送出後可再次申請（每次申請都會留存紀錄）。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== 轉場動畫 =====
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(()=> location.href = href, 140);
+    }
+    document.addEventListener("click", (e)=>{
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
+
+    // ===== Firebase init =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app  = document.getElementById("app");
+    const statusCard = document.getElementById("statusCard");
+    const formCard = document.getElementById("formCard");
+
+    const emailEl = document.getElementById("email");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const desiredRoleEl = document.getElementById("desiredRole");
+    const desiredOrgEl = document.getElementById("desiredOrg");
+    const questionsEl = document.getElementById("questions");
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        </div>
+      `;
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+    }
+
+    window.doLogout = async () => {
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+    };
+
+    // ===== Questions: system/adminAccessQuestions =====
+    // 你之後可讓平台管理員在後台設定這些問題
+    const Q_REF = db.collection("system").doc("adminAccessQuestions");
+    const DEFAULT_Q = [
+      { id:"q1", label:"你是誰？（姓名/單位）", placeholder:"例如：王小明／公關組", required:true },
+      { id:"q2", label:"你為什麼需要後台權限？", placeholder:"請簡述用途", required:true },
+      { id:"q3", label:"你希望負責的工作內容", placeholder:"例如：核銷、服務台、名單管理…", required:false }
+    ];
+
+    async function loadQuestions(){
+      try{
+        const snap = await Q_REF.get();
+        if (!snap.exists) return DEFAULT_Q;
+        const d = snap.data() || {};
+        if (!Array.isArray(d.questions) || !d.questions.length) return DEFAULT_Q;
+        return d.questions;
+      }catch(e){
+        console.warn("load questions failed:", e);
+        return DEFAULT_Q;
+      }
+    }
+
+    function renderQuestions(qs){
+      questionsEl.innerHTML = `<div class="sub" style="margin-top:14px;"><span class="pill">提問</span></div>`;
+      qs.forEach(q=>{
+        questionsEl.insertAdjacentHTML("beforeend", `
+          <label>${esc(q.label || q.id)}${q.required ? ' <span class="warn">*</span>' : ''}</label>
+          <textarea data-qid="${esc(q.id)}" placeholder="${esc(q.placeholder || '')}"></textarea>
+        `);
+      });
+    }
+
+    function readAnswers(qs){
+      const answers = {};
+      for (const q of qs){
+        const el = questionsEl.querySelector(`textarea[data-qid="${CSS.escape(q.id)}"]`);
+        answers[q.id] = String(el ? el.value : "").trim();
+      }
+      return answers;
+    }
+
+    function validate(qs, answers){
+      for (const q of qs){
+        if (q.required && !String(answers[q.id] || "").trim()){
+          return `請填寫：${q.label || q.id}`;
+        }
+      }
+      return "";
+    }
+
+    function showStatusBox(html){
+      statusCard.style.display = "block";
+      statusCard.innerHTML = html;
+    }
+
+    // ===== Submit: adminAccessRequests (每次申請都留存) =====
+    async function submitRequest(user, qs){
+      const answers = readAnswers(qs);
+      const err = validate(qs, answers);
+      if (err) return alert(err);
+
+      submitBtn.disabled = true;
+      const old = submitBtn.textContent;
+      submitBtn.textContent = "送出中…";
+
+      try{
+        const payload = {
+          uid: user.uid,
+          email: user.email || "",
+          createdAt: new Date(),
+          status: "pending", // pending / approved / rejected
+          desiredRole: String(desiredRoleEl.value || "").trim(),
+          desiredOrg: String(desiredOrgEl.value || "").trim(),
+          answers
+        };
+
+        // ✅ 每次申請都留存 → 用 auto id
+        const ref = await db.collection("adminAccessRequests").add(payload);
+
+        showStatusBox(`
+          <h1 style="margin:0 0 6px; font-size:22px;">已送出申請</h1>
+          <div class="sub">
+            狀態：<span class="pill">pending</span><br/>
+            申請編號：<span class="mono">${esc(ref.id)}</span><br/>
+            你可以回主選單，等待平台管理員審核。
+          </div>
+        `);
+
+        // 清空輸入（保留角色/組織）
+        qs.forEach(q=>{
+          const el = questionsEl.querySelector(`textarea[data-qid="${CSS.escape(q.id)}"]`);
+          if (el) el.value = "";
+        });
+
+      }catch(e){
+        console.error(e);
+        alert("送出失敗（可能是 Firestore Rules 權限不足）");
+      }finally{
+        submitBtn.disabled = false;
+        submitBtn.textContent = old;
+      }
+    }
+
+    async function boot(){
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      emailEl.textContent = user.email || "-";
+
+      // 顯示表單
+      formCard.style.display = "block";
+
+      // 讀問題並渲染
+      const qs = await loadQuestions();
+      renderQuestions(qs);
+
+      // 綁事件
+      reloadBtn.onclick = async () => {
+        const qs2 = await loadQuestions();
+        renderQuestions(qs2);
+      };
+      submitBtn.onclick = () => submitRequest(user, qs);
+
+      // 顯示說明（不強制查 pending，避免規則沒開造成整頁壞掉）
+      showStatusBox(`
+        <h1 style="margin:0 0 6px; font-size:22px;">申請說明</h1>
+        <div class="sub">
+          送出後會進入審核。審核紀錄與申請內容都會留存。<br/>
+          若急需處理，請到服務中心或聯絡平台管理員。
+        </div>
+      `);
+    }
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user){
+        showGate("後台帳號申請", "請先登入後再填寫申請。", true);
+        return;
+      }
+      gate.style.display = "none";
+      app.style.display = "block";
+      await boot();
+    });
+  </script>
+</body>
+</html>
