@@ -13,6 +13,7 @@
       --muted:rgba(17,17,17,.65);
       --line:rgba(17,17,17,.10);
       --shadow:0 14px 40px rgba(0,0,0,.08);
+      --danger:#b91c1c;
     }
     *{ box-sizing:border-box; }
     body{
@@ -56,7 +57,19 @@
     }
     .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
     .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
-    .btn[aria-disabled="true"]{ opacity:.55; cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none; }
+    .btn[aria-disabled="true"],
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none; }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+      border-color:var(--danger);
+    }
 
     .grid{
       display:grid;
@@ -93,7 +106,6 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
-    /* ✅ 置頂區（灰一點點） */
     .pinned-wrap{
       background:#f1f2f6;
       border:1px solid rgba(17,17,17,.12);
@@ -114,7 +126,11 @@
       margin-top:6px;
     }
 
-    /* ✅ 轉場動畫（不改風格，只淡入淡出） */
+    .impersonate-wrap{
+      background:#fff5f5;
+      border:1px solid rgba(185,28,28,.18);
+    }
+
     .page{
       opacity:0;
       transform: translateY(6px);
@@ -137,6 +153,19 @@
     <div id="gate" class="card" style="display:none;"></div>
 
     <div id="app" style="display:none;">
+      <!-- impersonation banner -->
+      <div id="impersonateBanner" class="card impersonate-wrap" style="display:none;">
+        <div class="row">
+          <div>
+            <div style="font-weight:900; color:#b91c1c;">⚠ 目前正在模擬帳號</div>
+            <div class="sub" id="impersonateText" style="margin-top:6px;"></div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-danger" id="stopImpersonateBtn">結束模擬</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="row">
           <div>
@@ -154,7 +183,6 @@
         </div>
       </div>
 
-      <!-- ✅ 所有人都可能有置頂（灰一點點） -->
       <div id="pinnedSection" class="card pinned-wrap" style="display:none;">
         <div class="pinned-title">
           <span>📌 置頂功能</span>
@@ -195,12 +223,17 @@
     const pinnedTiles = document.getElementById("pinnedTiles");
     const pinnedRoleTag = document.getElementById("pinnedRoleTag");
 
-    // ===== 轉場動畫 =====
+    const impersonateBanner = document.getElementById("impersonateBanner");
+    const impersonateText = document.getElementById("impersonateText");
+    const stopImpersonateBtn = document.getElementById("stopImpersonateBtn");
+
     requestAnimationFrame(() => pageRoot.classList.add("on"));
+
     function go(href){
       pageRoot.classList.add("leaving");
       setTimeout(()=> location.href = href, 140);
     }
+
     document.addEventListener("click", (e)=>{
       const a = e.target.closest("a");
       if (!a) return;
@@ -217,108 +250,111 @@
       }[m]));
     }
 
-  function showGate(title, msg, showLogin, extraButtonsHtml = ""){
-    gate.style.display = "block";
-    app.style.display = "none";
+    function showGate(title, msg, showLogin, extraButtonsHtml = ""){
+      gate.style.display = "block";
+      app.style.display = "none";
 
-    gate.innerHTML = `
-      <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
-      <div class="sub">${msg}</div>
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${msg}</div>
 
-      ${
-        showLogin ? `
-          <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
-            <input
-              id="loginEmail"
-              type="text"
-              placeholder="帳號（建議用 email）"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid var(--line); font-size:16px; background:#fff; outline:none;"
-            />
-            <input
-              id="loginPassword"
-              type="password"
-              placeholder="密碼"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid var(--line); font-size:16px; background:#fff; outline:none;"
-            />
-            <button class="btn btn-primary" id="loginBtn">登入</button>
-          </div>
-        ` : ``
+        ${
+          showLogin ? `
+            <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
+              <input
+                id="loginEmail"
+                type="text"
+                placeholder="帳號（建議用 email）"
+                style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.10); font-size:16px; background:#fff; outline:none;"
+              />
+              <input
+                id="loginPassword"
+                type="password"
+                placeholder="密碼"
+                style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.10); font-size:16px; background:#fff; outline:none;"
+              />
+              <button class="btn btn-primary" id="loginBtn">登入</button>
+            </div>
+          ` : ``
+        }
+
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${extraButtonsHtml || ``}
+          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        </div>
+      `;
+
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const email = String(document.getElementById("loginEmail")?.value || "").trim();
+          const password = String(document.getElementById("loginPassword")?.value || "");
+
+          if (!email || !password){
+            alert("請輸入帳號與密碼");
+            return;
+          }
+
+          loginBtn.disabled = true;
+          const oldText = loginBtn.textContent;
+          loginBtn.textContent = "登入中…";
+
+          try{
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+          }catch(e){
+            console.error(e);
+            alert("登入失敗，請確認帳號密碼是否正確");
+          }finally{
+            loginBtn.disabled = false;
+            loginBtn.textContent = oldText;
+          }
+        };
+
+        const loginEmail = document.getElementById("loginEmail");
+        const loginPassword = document.getElementById("loginPassword");
+
+        const trySubmit = (ev) => {
+          if (ev.key === "Enter") loginBtn.click();
+        };
+
+        loginEmail?.addEventListener("keydown", trySubmit);
+        loginPassword?.addEventListener("keydown", trySubmit);
       }
 
-      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-        ${extraButtonsHtml || ``}
-        ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
-      </div>
-    `;
-
-    const loginBtn = document.getElementById("loginBtn");
-    if (loginBtn){
-      loginBtn.onclick = async () => {
-        const email = String(document.getElementById("loginEmail")?.value || "").trim();
-        const password = String(document.getElementById("loginPassword")?.value || "");
-
-        if (!email || !password){
-          alert("請輸入帳號與密碼");
-          return;
-        }
-
-        loginBtn.disabled = true;
-        const oldText = loginBtn.textContent;
-        loginBtn.textContent = "登入中…";
-
-        try{
-          await firebase.auth().signInWithEmailAndPassword(email, password);
-        }catch(e){
-          console.error(e);
-          alert("登入失敗，請確認帳號密碼是否正確");
-        }finally{
-          loginBtn.disabled = false;
-          loginBtn.textContent = oldText;
-        }
-      };
-
-      const loginEmail = document.getElementById("loginEmail");
-      const loginPassword = document.getElementById("loginPassword");
-
-      const trySubmit = (ev) => {
-        if (ev.key === "Enter") loginBtn.click();
-      };
-
-      loginEmail?.addEventListener("keydown", trySubmit);
-      loginPassword?.addEventListener("keydown", trySubmit);
+      const applyBtn = document.getElementById("applyAccessBtn");
+      if (applyBtn){
+        applyBtn.onclick = () => go("request-access.html");
+      }
     }
-
-    const applyBtn = document.getElementById("applyAccessBtn");
-    if (applyBtn){
-      applyBtn.onclick = () => go("request-access.html");
-    }
-  }
 
     window.doLogout = async () => {
-      try { await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+      try {
+        await firebase.auth().signOut();
+      } catch(e){
+        console.error(e);
+        alert("登出失敗（請看 Console）");
+      }
     };
 
-    // ✅ 功能清單：固定順序來源（排序永遠以此為準，不會被打散）
     const FEATURES = [
-      { id:"admin-events",            title:"🎟️ 活動管理",              desc:"建立活動、票種、限制條件",             ready:true,  href:"admin-events.html" },
-      { id:"partner-schools",         title:"🏫 特約校園管理",            desc:"新增 / 停用校園，設定認證方式",         ready:true,  href:"partner-schools.html" },
-      { id:"import-verify",           title:"📥 名單匯入 / 驗證設定",      desc:"匯入名單、暫停 / 恢復驗證",            ready:true,  href:"admin-studentslist-import.html" },
-      { id:"member-lookup",           title:"🔎 會員查詢",                desc:"email / verifyKey 查詢會員狀態",       ready:true,  href:"admin-member-lookup.html" },
-      { id:"admin-orders",            title:"🧾 訂單 / 報名資料",          desc:"報名清單、匯出、入場狀態",             ready:true,  href:"admin-event-orders.html" },
+      { id:"admin-events",       title:"🎟️ 活動管理",           desc:"建立活動、票種、限制條件", ready:true, href:"admin-events.html" },
+      { id:"partner-schools",    title:"🏫 特約校園管理",         desc:"新增 / 停用校園，設定認證方式", ready:true, href:"partner-schools.html" },
+      { id:"import-verify",      title:"📥 名單匯入 / 驗證設定",   desc:"匯入名單、暫停 / 恢復驗證", ready:true, href:"admin-studentslist-import.html" },
+      { id:"member-lookup",      title:"🔎 會員查詢",             desc:"email / verifyKey 查詢會員狀態", ready:true, href:"admin-member-lookup.html" },
+      { id:"admin-orders",       title:"🧾 訂單 / 報名資料",       desc:"報名清單、匯出、入場狀態", ready:true, href:"admin-event-orders.html" },
 
-      { id:"admin-user-assign", title:"🧑‍💼 人事派發 / 審核", desc:"審核後台帳號、分派組織/學校/職位", ready:true, href:"admin-staff-users.html" },
-      { id:"admin-org-overview",      title:"🏢 全組織管理狀況",            desc:"查看各組織管理/服務人員狀態",           ready:true,  href:"admin-org-overview.html" },
-      { id:"org-team",                title:"👥 組織團隊 / 工作組別",        desc:"org_super 管理組織管理員/服務員與組別", ready:true, href:"org-team.html" },
+      { id:"admin-user-assign",  title:"🧑‍💼 人事派發 / 審核",      desc:"審核後台帳號、分派組織/學校/職位", ready:true, href:"admin-staff-users.html" },
+      { id:"admin-org-overview", title:"🏢 全組織管理狀況",         desc:"查看各組織管理/服務人員狀態", ready:true, href:"admin-org-overview.html" },
+      { id:"org-team",           title:"👥 組織團隊 / 工作組別",     desc:"org_super 管理組織管理員/服務員與組別", ready:true, href:"org-team.html" },
 
-      { id:"staff-scan",              title:"✅ 核銷人員掃碼",              desc:"staff 只能掃碼核銷指定活動",           ready:true,  href:"staff-checkin.html" },
-      { id:"service-checkin",         title:"🛠️ 服務中心查詢 / 核銷",        desc:"條碼槍輸入協助查詢與核銷",             ready:true,  href:"admin-checkin-assist.html" },
+      { id:"staff-scan",         title:"✅ 核銷人員掃碼",           desc:"staff 只能掃碼核銷指定活動", ready:true, href:"staff-checkin.html" },
+      { id:"service-checkin",    title:"🛠️ 服務中心查詢 / 核銷",     desc:"條碼槍輸入協助查詢與核銷", ready:true, href:"admin-checkin-assist.html" },
 
-      { id:"dash-settings",           title:"⚙️ Dashboard 顯示設定",        desc:"設定各角色顯示/置頂（平台上限）",       ready:true,  href:"admin-dashboard-settings.html" },
+      { id:"dash-settings",      title:"⚙️ Dashboard 顯示設定",     desc:"設定各角色顯示/置頂（平台上限）", ready:true, href:"admin-dashboard-settings.html" },
 
-      { id:"admin-impersonate",       title:"🧪 身分/學校測試切換",          desc:"platform_super 假裝切換身分與學校測試", ready:false, href:"admin-impersonate.html" },
-      { id:"request-access",          title:"📝 後台帳號申請",              desc:"註冊後台後進入申請/等待審核",           ready:true,  href:"request-access.html" },
-      { id:"invite-code",             title:"🔑 邀請碼輸入",                desc:"無特定身分報名活動時使用",               ready:false, href:"guest.html" }
+      { id:"admin-impersonate",  title:"🧪 身分/學校測試切換",       desc:"platform_super 模擬其他帳號測試", ready:true, href:"admin-control-center.html" },
+      { id:"request-access",     title:"📝 後台帳號申請",           desc:"註冊後台後進入申請/等待審核", ready:true, href:"request-access.html" },
+      { id:"invite-code",        title:"🔑 邀請碼輸入",             desc:"無特定身分報名活動時使用", ready:false, href:"guest.html" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -332,7 +368,6 @@
       });
     }
 
-    // ====== 設定：監聽用快取（不用手動刷新） ======
     let currentUserData = null;
     let currentRole = "";
     let sysCfgCache = null;
@@ -345,7 +380,6 @@
       return ["org_super","org_admin","org_staff"].includes(role);
     }
 
-    // ✅ Map 格式：roles[roleId][featureId] = { visible:true/false, pinned:true/false }
     function parseRoleCfg(roleCfg){
       const visible = [];
       const pinned = [];
@@ -353,7 +387,7 @@
 
       for (const [fid, cfg] of Object.entries(roleCfg)){
         if (cfg && cfg.visible === true) visible.push(fid);
-        if (cfg && cfg.pinned === true)  pinned.push(fid);
+        if (cfg && cfg.pinned === true) pinned.push(fid);
       }
       return { visible, pinned };
     }
@@ -401,24 +435,18 @@
       }).join("");
     }
 
-    // ====== 核心：用「快取 cfg」即時重算 ======
     function computeAndRenderFromCache(){
       if (!currentUserData || !currentRole) return;
 
       const role = currentRole;
-      const userData = currentUserData;
-
-      // 1) 平台上限（system/dashboard）
       const sys = sysCfgCache || null;
       const sysRoles = (sys && sys.roles) ? sys.roles : {};
       const sysParsed = parseRoleCfg(sysRoles[role] || {});
 
-      // fallback：至少 platform_super 看得到 dash-settings
       const fallbackVisible = (role === "platform_super") ? ["dash-settings"] : [];
       const maxVisible = sysParsed.visible.length ? sysParsed.visible : fallbackVisible;
-      const maxPinned  = sysParsed.pinned.length  ? sysParsed.pinned  : [];
+      const maxPinned  = sysParsed.pinned.length ? sysParsed.pinned : [];
 
-      // 2) 組織覆蓋（只能子集合）
       let finalVisible = maxVisible.slice();
       let finalPinned  = maxPinned.slice();
 
@@ -432,7 +460,6 @@
           finalVisible = orgParsed.visible.filter(id => allowSet.has(id));
         }
 
-        // pinned：組織有設定就用（但必須在 finalVisible 內）；沒設定就沿用平台 pinned
         if (orgParsed.pinned.length){
           const allowSet2 = new Set(finalVisible);
           finalPinned = orgParsed.pinned.filter(id => allowSet2.has(id));
@@ -445,7 +472,6 @@
         finalPinned = finalPinned.filter(id => allowSet2.has(id));
       }
 
-      // 3) 渲染 pinned + normal（都照 FEATURES 順序）
       pinnedRoleTag.textContent = role;
 
       if (finalPinned.length){
@@ -468,7 +494,6 @@
         computeAndRenderFromCache();
       }, (err)=>{
         console.warn("system/dashboard snapshot error:", err);
-        // snapshot 失敗也先照現有 cache/空資料 render（避免整頁空）
         computeAndRenderFromCache();
       });
     }
@@ -493,30 +518,59 @@
         });
     }
 
-    // ✅ 回到這頁時也重新渲染一次（避免返回快取）
-    window.addEventListener("pageshow", () => computeAndRenderFromCache());
+    function getActingUid(user){
+      return sessionStorage.getItem("impersonateUid") || user.uid;
+    }
+
+    function updateImpersonateBanner(){
+      const impersonateUid = sessionStorage.getItem("impersonateUid");
+      const impersonateEmail = sessionStorage.getItem("impersonateEmail");
+      const impersonateRole = sessionStorage.getItem("impersonateRole");
+      const impersonateOrgId = sessionStorage.getItem("impersonateOrgId");
+      const impersonateSchoolId = sessionStorage.getItem("impersonateSchoolId");
+
+      if (!impersonateUid){
+        impersonateBanner.style.display = "none";
+        impersonateText.innerHTML = "";
+        return;
+      }
+
+      impersonateBanner.style.display = "block";
+      impersonateText.innerHTML = `
+        目前模擬：<span class="mono">${esc(impersonateEmail || impersonateUid)}</span><br/>
+        role：<span class="mono">${esc(impersonateRole || "-")}</span>｜
+        orgId：<span class="mono">${esc(impersonateOrgId || "-")}</span>｜
+        schoolId：<span class="mono">${esc(impersonateSchoolId || "-")}</span>
+      `;
+    }
+
+    function stopImpersonate(){
+      sessionStorage.removeItem("impersonateUid");
+      sessionStorage.removeItem("impersonateEmail");
+      sessionStorage.removeItem("impersonateRole");
+      sessionStorage.removeItem("impersonateOrgId");
+      sessionStorage.removeItem("impersonateSchoolId");
+      sessionStorage.removeItem("impersonateTeam");
+      sessionStorage.removeItem("impersonateStartedAt");
+      location.reload();
+    }
+
+    stopImpersonateBtn.onclick = stopImpersonate;
+
+    window.addEventListener("pageshow", () => {
+      updateImpersonateBanner();
+      computeAndRenderFromCache();
+    });
+
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) computeAndRenderFromCache();
+      if (!document.hidden) {
+        updateImpersonateBanner();
+        computeAndRenderFromCache();
+      }
     });
 
     firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user){
-      currentUserData = null;
-      currentRole = "";
-      if (unsubSys) unsubSys(); unsubSys = null;
-      if (unsubOrg) unsubOrg(); unsubOrg = null;
-      sysCfgCache = null;
-      orgCfgCache = null;
-
-      showGate("後台管理", "請先登入管理帳號以繼續。", true);
-      return;
-    }
-
-    try{
-      const snap = await db.collection("users").doc(user.uid).get();
-
-      // ✅ 已登入，但沒有後台帳號 → 導去申請邏輯
-      if (!snap.exists){
+      if (!user){
         currentUserData = null;
         currentRole = "";
         if (unsubSys) unsubSys(); unsubSys = null;
@@ -524,80 +578,99 @@
         sysCfgCache = null;
         orgCfgCache = null;
 
-        showGate(
-          "尚未擁有後台權限",
-          `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前你的帳號尚未被授權為後台管理人員。若你需要使用後台功能，請先提出申請。`,
-          false,
-          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
-        );
+        updateImpersonateBanner();
+        showGate("後台管理", "請先登入管理帳號以繼續。", true);
         return;
       }
 
-      const u = snap.data() || {};
+      try{
+        const actingUid = getActingUid(user);
+        const snap = await db.collection("users").doc(actingUid).get();
 
-      // ✅ 有文件但被停用
-      if (u.enabled !== true){
-        currentUserData = null;
-        currentRole = "";
-        if (unsubSys) unsubSys(); unsubSys = null;
-        if (unsubOrg) unsubOrg(); unsubOrg = null;
-        sysCfgCache = null;
-        orgCfgCache = null;
+        if (!snap.exists){
+          currentUserData = null;
+          currentRole = "";
+          if (unsubSys) unsubSys(); unsubSys = null;
+          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          sysCfgCache = null;
+          orgCfgCache = null;
 
-        showGate(
-          "後台權限未啟用",
-          `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前尚未啟用後台權限，或已被停用。若你需要使用後台功能，可重新提出申請或聯絡平台管理員。`,
-          false,
-          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
-        );
-        return;
+          updateImpersonateBanner();
+          showGate(
+            "尚未擁有後台權限",
+            `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前你的帳號尚未被授權為後台管理人員。若你需要使用後台功能，請先提出申請。`,
+            false,
+            `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+          );
+          return;
+        }
+
+        const u = snap.data() || {};
+
+        if (u.enabled !== true){
+          currentUserData = null;
+          currentRole = "";
+          if (unsubSys) unsubSys(); unsubSys = null;
+          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          sysCfgCache = null;
+          orgCfgCache = null;
+
+          updateImpersonateBanner();
+          showGate(
+            "後台權限未啟用",
+            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前尚未啟用後台權限，或已被停用。若你需要使用後台功能，可重新提出申請或聯絡平台管理員。`,
+            false,
+            `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+          );
+          return;
+        }
+
+        const role = String(u.role || "").trim();
+
+        if (!role){
+          currentUserData = null;
+          currentRole = "";
+          if (unsubSys) unsubSys(); unsubSys = null;
+          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          sysCfgCache = null;
+          orgCfgCache = null;
+
+          updateImpersonateBanner();
+          showGate(
+            "尚未完成後台指派",
+            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>你的帳號目前尚未完成角色指派，因此無法進入後台。若你需要使用後台功能，請先提出申請。`,
+            false,
+            `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+          );
+          return;
+        }
+
+        currentUserData = u;
+        currentRole = role;
+
+        document.getElementById("email").textContent = (u.email || user.email || "-");
+        document.getElementById("role").textContent = role;
+        document.getElementById("rolePill").textContent = role;
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        updateImpersonateBanner();
+
+        startSysListener();
+
+        const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
+        if (roleIsOrg(role)) startOrgListener(orgId);
+        else startOrgListener("");
+
+        computeAndRenderFromCache();
+
+      }catch(err){
+        console.error(err);
+        updateImpersonateBanner();
+        showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
       }
-
-      const role = String(u.role || "").trim();
-
-      // ✅ 有 users 文件，但沒有 role
-      if (!role){
-        currentUserData = null;
-        currentRole = "";
-        if (unsubSys) unsubSys(); unsubSys = null;
-        if (unsubOrg) unsubOrg(); unsubOrg = null;
-        sysCfgCache = null;
-        orgCfgCache = null;
-
-        showGate(
-          "尚未完成後台指派",
-          `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>你的帳號目前尚未完成角色指派，因此無法進入後台。若你需要使用後台功能，請先提出申請。`,
-          false,
-          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
-        );
-        return;
-      }
-
-      // ✅ 有完整後台權限 → 正常進 dashboard
-      currentUserData = u;
-      currentRole = role;
-
-      document.getElementById("email").textContent = (u.email || user.email || "-");
-      document.getElementById("role").textContent = role;
-      document.getElementById("rolePill").textContent = role;
-
-      gate.style.display = "none";
-      app.style.display = "block";
-
-      // 啟動即時監聽
-      startSysListener();
-
-      const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
-      if (roleIsOrg(role)) startOrgListener(orgId);
-      else startOrgListener("");
-
-      computeAndRenderFromCache();
-
-    }catch(err){
-      console.error(err);
-      showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
-    }
-  });
+    });
   </script>
 </body>
 </html>
