@@ -220,11 +220,32 @@
   function showGate(title, msg, showLogin, extraButtonsHtml = ""){
     gate.style.display = "block";
     app.style.display = "none";
+
     gate.innerHTML = `
       <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
       <div class="sub">${msg}</div>
+
+      ${
+        showLogin ? `
+          <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
+            <input
+              id="loginEmail"
+              type="text"
+              placeholder="帳號（建議用 email）"
+              style="width:100%; padding:12px; border-radius:14px; border:1px solid var(--line); font-size:16px; background:#fff; outline:none;"
+            />
+            <input
+              id="loginPassword"
+              type="password"
+              placeholder="密碼"
+              style="width:100%; padding:12px; border-radius:14px; border:1px solid var(--line); font-size:16px; background:#fff; outline:none;"
+            />
+            <button class="btn btn-primary" id="loginBtn">登入</button>
+          </div>
+        ` : ``
+      }
+
       <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-        ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
         ${extraButtonsHtml || ``}
         ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
       </div>
@@ -233,9 +254,38 @@
     const loginBtn = document.getElementById("loginBtn");
     if (loginBtn){
       loginBtn.onclick = async () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await firebase.auth().signInWithPopup(provider);
+        const email = String(document.getElementById("loginEmail")?.value || "").trim();
+        const password = String(document.getElementById("loginPassword")?.value || "");
+
+        if (!email || !password){
+          alert("請輸入帳號與密碼");
+          return;
+        }
+
+        loginBtn.disabled = true;
+        const oldText = loginBtn.textContent;
+        loginBtn.textContent = "登入中…";
+
+        try{
+          await firebase.auth().signInWithEmailAndPassword(email, password);
+        }catch(e){
+          console.error(e);
+          alert("登入失敗，請確認帳號密碼是否正確");
+        }finally{
+          loginBtn.disabled = false;
+          loginBtn.textContent = oldText;
+        }
       };
+
+      const loginEmail = document.getElementById("loginEmail");
+      const loginPassword = document.getElementById("loginPassword");
+
+      const trySubmit = (ev) => {
+        if (ev.key === "Enter") loginBtn.click();
+      };
+
+      loginEmail?.addEventListener("keydown", trySubmit);
+      loginPassword?.addEventListener("keydown", trySubmit);
     }
 
     const applyBtn = document.getElementById("applyAccessBtn");
