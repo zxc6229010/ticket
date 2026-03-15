@@ -217,25 +217,32 @@
       }[m]));
     }
 
-    function showGate(title, msg, showLogin){
-      gate.style.display = "block";
-      app.style.display = "none";
-      gate.innerHTML = `
-        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
-        <div class="sub">${esc(msg)}</div>
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
-          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
-        </div>
-      `;
-      const loginBtn = document.getElementById("loginBtn");
-      if (loginBtn){
-        loginBtn.onclick = async () => {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
-        };
-      }
+  function showGate(title, msg, showLogin, extraButtonsHtml = ""){
+    gate.style.display = "block";
+    app.style.display = "none";
+    gate.innerHTML = `
+      <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+      <div class="sub">${msg}</div>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
+        ${extraButtonsHtml || ``}
+        ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+      </div>
+    `;
+
+    const loginBtn = document.getElementById("loginBtn");
+    if (loginBtn){
+      loginBtn.onclick = async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().signInWithPopup(provider);
+      };
     }
+
+    const applyBtn = document.getElementById("applyAccessBtn");
+    if (applyBtn){
+      applyBtn.onclick = () => go("request-access.html");
+    }
+  }
 
     window.doLogout = async () => {
       try { await firebase.auth().signOut(); }
@@ -443,7 +450,23 @@
     });
 
     firebase.auth().onAuthStateChanged(async (user) => {
-      if (!user){
+    if (!user){
+      currentUserData = null;
+      currentRole = "";
+      if (unsubSys) unsubSys(); unsubSys = null;
+      if (unsubOrg) unsubOrg(); unsubOrg = null;
+      sysCfgCache = null;
+      orgCfgCache = null;
+
+      showGate("後台管理", "請先登入管理帳號以繼續。", true);
+      return;
+    }
+
+    try{
+      const snap = await db.collection("users").doc(user.uid).get();
+
+      // ✅ 已登入，但沒有後台帳號 → 導去申請邏輯
+      if (!snap.exists){
         currentUserData = null;
         currentRole = "";
         if (unsubSys) unsubSys(); unsubSys = null;
@@ -451,50 +474,80 @@
         sysCfgCache = null;
         orgCfgCache = null;
 
-        showGate("後台管理", "請先登入管理帳號以繼續。", true);
+        showGate(
+          "尚未擁有後台權限",
+          `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前你的帳號尚未被授權為後台管理人員。若你需要使用後台功能，請先提出申請。`,
+          false,
+          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+        );
         return;
       }
 
-      try{
-        const snap = await db.collection("users").doc(user.uid).get();
-        if (!snap.exists){
-          showGate("等待授權", "你的帳號尚未被系統授權為管理者。", false);
-          return;
-        }
+      const u = snap.data() || {};
 
-        const u = snap.data() || {};
-        if (u.enabled !== true){
-          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
-          return;
-        }
+      // ✅ 有文件但被停用
+      if (u.enabled !== true){
+        currentUserData = null;
+        currentRole = "";
+        if (unsubSys) unsubSys(); unsubSys = null;
+        if (unsubOrg) unsubOrg(); unsubOrg = null;
+        sysCfgCache = null;
+        orgCfgCache = null;
 
-        const role = String(u.role || "unknown").trim();
-        currentUserData = u;
-        currentRole = role;
-
-        document.getElementById("email").textContent = (u.email || user.email || "-");
-        document.getElementById("role").textContent = role;
-        document.getElementById("rolePill").textContent = role;
-
-        gate.style.display = "none";
-        app.style.display = "block";
-
-        // ✅ 啟動即時監聽：回來不用重新整理
-        startSysListener();
-
-        // org 角色才監聽 org dashboard
-        const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
-        if (roleIsOrg(role)) startOrgListener(orgId);
-        else startOrgListener(""); // 關掉 org listener
-
-        // 先用目前 cache（可能還沒 snapshot 回來）渲染一次
-        computeAndRenderFromCache();
-
-      }catch(err){
-        console.error(err);
-        showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
+        showGate(
+          "後台權限未啟用",
+          `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前尚未啟用後台權限，或已被停用。若你需要使用後台功能，可重新提出申請或聯絡平台管理員。`,
+          false,
+          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+        );
+        return;
       }
-    });
+
+      const role = String(u.role || "").trim();
+
+      // ✅ 有 users 文件，但沒有 role
+      if (!role){
+        currentUserData = null;
+        currentRole = "";
+        if (unsubSys) unsubSys(); unsubSys = null;
+        if (unsubOrg) unsubOrg(); unsubOrg = null;
+        sysCfgCache = null;
+        orgCfgCache = null;
+
+        showGate(
+          "尚未完成後台指派",
+          `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>你的帳號目前尚未完成角色指派，因此無法進入後台。若你需要使用後台功能，請先提出申請。`,
+          false,
+          `<button class="btn btn-primary" id="applyAccessBtn">申請後台帳號</button>`
+        );
+        return;
+      }
+
+      // ✅ 有完整後台權限 → 正常進 dashboard
+      currentUserData = u;
+      currentRole = role;
+
+      document.getElementById("email").textContent = (u.email || user.email || "-");
+      document.getElementById("role").textContent = role;
+      document.getElementById("rolePill").textContent = role;
+
+      gate.style.display = "none";
+      app.style.display = "block";
+
+      // 啟動即時監聽
+      startSysListener();
+
+      const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
+      if (roleIsOrg(role)) startOrgListener(orgId);
+      else startOrgListener("");
+
+      computeAndRenderFromCache();
+
+    }catch(err){
+      console.error(err);
+      showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
+    }
+  });
   </script>
 </body>
 </html>
