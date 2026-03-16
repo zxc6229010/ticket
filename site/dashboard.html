@@ -352,8 +352,7 @@
 
       { id:"dash-settings",      title:"⚙️ Dashboard 顯示設定",     desc:"設定各角色顯示/置頂（平台上限）", ready:true, href:"admin-dashboard-settings.html" },
 
-      { id:"admin-impersonate",  title:"🧪 身分/學校測試切換",       desc:"platform_super 模擬其他帳號測試", ready:true, href:"admin-control-center.html" },
-      { id:"request-access",     title:"📝 後台帳號申請",           desc:"註冊後台後進入申請/等待審核", ready:true, href:"request-access.html" },
+{ id:"admin-impersonate", title:"🧪 身分/學校測試切換", desc:"platform_super 模擬其他帳號測試", ready:true, href:"admin-impersonate.html" },      { id:"request-access",     title:"📝 後台帳號申請",           desc:"註冊後台後進入申請/等待審核", ready:true, href:"request-access.html" },
       { id:"invite-code",        title:"🔑 邀請碼輸入",             desc:"無特定身分報名活動時使用", ready:false, href:"guest.html" }
     ];
 
@@ -443,7 +442,24 @@
       const sysRoles = (sys && sys.roles) ? sys.roles : {};
       const sysParsed = parseRoleCfg(sysRoles[role] || {});
 
-      const fallbackVisible = (role === "platform_super") ? ["dash-settings"] : [];
+      // fallback：至少 platform_super 不會只剩一格
+const fallbackVisible = (role === "platform_super")
+  ? [
+      "admin-events",
+      "partner-schools",
+      "import-verify",
+      "member-lookup",
+      "admin-orders",
+      "admin-user-assign",
+      "admin-org-overview",
+      "org-team",
+      "staff-scan",
+      "service-checkin",
+      "dash-settings",
+      "admin-impersonate",
+      "request-access"
+    ]
+  : [];
       const maxVisible = sysParsed.visible.length ? sysParsed.visible : fallbackVisible;
       const maxPinned  = sysParsed.pinned.length ? sysParsed.pinned : [];
 
