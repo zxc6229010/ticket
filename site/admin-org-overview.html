@@ -12,9 +12,11 @@
       --btn-h:46px; --btn-fs:16px;
     }
     *{ box-sizing:border-box; }
-    body{ margin:0; background:var(--bg); color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
-    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:1080px; margin:0 auto; padding:48px 16px; }
     .section{
       background:var(--card); border:1px solid var(--line); border-radius:18px;
       box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
@@ -22,10 +24,14 @@
     .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
     h1{ margin:0; font-size:22px; letter-spacing:.2px; }
     h2{ margin:0; font-size:16px; font-weight:900; }
+    h3{ margin:0; font-size:15px; font-weight:900; }
     .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
     .small{ font-size:13px; color:var(--muted); }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media (max-width:780px){ .grid{ grid-template-columns:1fr; } }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center;
       height:var(--btn-h); padding:var(--btn-a) var(--btn-x); border-radius:999px;
@@ -37,7 +43,20 @@
     .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
     .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
     .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
     .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .pill{
+      display:inline-flex; border:1px solid var(--line); border-radius:999px;
+      padding:6px 10px; font-size:13px; background:#fff;
+    }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{ color:#166534; font-weight:900; }
+
+    input[type="text"], select{
+      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
+      font-size:16px; background:#fff;
+    }
 
     .list{ display:grid; gap:12px; margin-top:12px; }
     .item{
@@ -45,9 +64,34 @@
       box-shadow:0 10px 26px rgba(0,0,0,.05);
     }
     .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .pill{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:13px; background:#fff; }
-    .ok{ color:#166534; font-weight:900; }
-    .warn{ color:#b91c1c; font-weight:900; }
+    .divider{ height:1px; background:var(--line); margin:12px 0; }
+
+    .stats{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+    }
+
+    .memberList{
+      display:grid; gap:10px; margin-top:12px;
+    }
+    .memberItem{
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+    }
+    .memberMeta{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:14px;
+      padding:8px 0;
+    }
   </style>
 </head>
 <body>
@@ -59,7 +103,7 @@
         <div class="header">
           <div>
             <h1>全組織管理狀況</h1>
-            <div class="sub">平台管理員可查看各校驗證狀態與管理員分布。</div>
+            <div class="sub">平台管理員可查看各校驗證狀態、後台人員分布與角色配置。</div>
             <div class="small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
           </div>
           <div class="row" style="justify-content:flex-end;">
@@ -70,9 +114,26 @@
       </div>
 
       <div class="section">
-        <div class="row" style="justify-content:flex-end;">
+        <div class="grid">
+          <div>
+            <label style="font-weight:900; display:block; margin-bottom:6px;">搜尋</label>
+            <input id="searchInput" type="text" placeholder="搜尋 schoolId、校名、email、team…" />
+          </div>
+          <div>
+            <label style="font-weight:900; display:block; margin-bottom:6px;">人員篩選</label>
+            <select id="roleFilter">
+              <option value="all">全部角色</option>
+              <option value="org_super">org_super</option>
+              <option value="org_admin">org_admin</option>
+              <option value="org_staff">org_staff</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:12px;">
           <button class="btn" id="reloadBtn">重新載入</button>
         </div>
+
         <div class="list" id="list"></div>
       </div>
     </div>
@@ -101,15 +162,23 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const reloadBtn = document.getElementById("reloadBtn");
     const list = document.getElementById("list");
+    const searchInput = document.getElementById("searchInput");
+    const roleFilter = document.getElementById("roleFilter");
 
     let myRole = "";
+    let schoolCache = [];
+    let userCache = [];
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
       }[m]));
     }
-    async function doLogout(){ await firebase.auth().signOut(); }
+    function norm(s){ return String(s ?? "").trim(); }
+
+    async function doLogout(){
+      await firebase.auth().signOut();
+    }
     logoutBtn.onclick = doLogout;
 
     function showGate(title, msg, showLogin){
@@ -142,55 +211,88 @@
       return { ok:true, role };
     }
 
-    async function loadOverview(){
-      list.innerHTML = `<div class="small">載入中…</div>`;
+    function getSchoolMembers(sid){
+      return userCache.filter(u =>
+        String(u.schoolId || "") === sid &&
+        ["org_super","org_admin","org_staff"].includes(String(u.role || ""))
+      );
+    }
 
-      const schoolSnap = await db.collection("partnerSchools").orderBy("name").get();
-      if (schoolSnap.empty){
-        list.innerHTML = `<div class="small">目前沒有校園資料</div>`;
+    function schoolMatches(item){
+      const q = norm(searchInput.value).toLowerCase();
+      const rf = roleFilter.value;
+
+      const members = getSchoolMembers(item.id);
+
+      if (rf !== "all" && !members.some(m => String(m.role || "") === rf)) {
+        return false;
+      }
+
+      if (!q) return true;
+
+      const schoolFields = [
+        item.id,
+        item.name,
+        item.verifyEnabled ? "true" : "false",
+        item.verifyLocked ? "true" : "false"
+      ].map(x => norm(x).toLowerCase());
+
+      const memberHit = members.some(m => {
+        const fields = [
+          m.id,
+          m.email,
+          m.role,
+          m.team,
+          m.orgId,
+          m.schoolId
+        ].map(x => norm(x).toLowerCase());
+        return fields.some(x => x.includes(q));
+      });
+
+      return schoolFields.some(x => x.includes(q)) || memberHit;
+    }
+
+    function renderOverview(){
+      const rows = schoolCache.filter(schoolMatches);
+
+      if (!rows.length){
+        list.innerHTML = `<div class="empty">目前沒有符合條件的校園資料。</div>`;
         return;
       }
 
-      // 簡單統計：把 users 全撈出來做統計（若未來很大要改成 counters）
-      const usersSnap = await db.collection("users").limit(2000).get();
-      const users = usersSnap.docs.map(d => ({ id:d.id, ...(d.data()||{}) }));
+      list.innerHTML = rows.map(item => {
+        const sid = item.id;
+        const members = getSchoolMembers(sid);
 
-      function countBySchool(sid, role){
-        return users.filter(u => String(u.schoolId||"")===sid && String(u.role||"")===role && u.enabled===true).length;
-      }
+        const enabledMembers = members.filter(m => m.enabled === true);
+        const disabledMembers = members.filter(m => m.enabled !== true);
 
-      list.innerHTML = schoolSnap.docs.map(d=>{
-        const s = d.data() || {};
-        const sid = d.id;
-        const name = s.name || sid;
-
-        const verifyEnabled = s.verifyEnabled === true;
-        const verifyLocked = s.verifyLocked === true;
-        const recordsCount = Number(s.recordsCount || 0);
-
-        const orgSuper = countBySchool(sid, "org_super");
-        const orgAdmin = countBySchool(sid, "org_admin");
-        const orgStaff = countBySchool(sid, "org_staff");
+        const orgSuper = enabledMembers.filter(m => m.role === "org_super").length;
+        const orgAdmin = enabledMembers.filter(m => m.role === "org_admin").length;
+        const orgStaff = enabledMembers.filter(m => m.role === "org_staff").length;
 
         return `
           <div class="item">
             <div class="item-top">
-              <div style="min-width:0;">
-                <div style="font-weight:900;">${esc(name)}</div>
+              <div style="min-width:0; flex:1;">
+                <h3>${esc(item.name || item.id)}</h3>
                 <div class="small" style="margin-top:6px;">
                   schoolId：<span class="mono">${esc(sid)}</span>
                 </div>
 
-                <div class="small" style="margin-top:8px;">
-                  verifyEnabled：<span class="pill">${verifyEnabled ? "true" : "false"}</span>
-                  verifyLocked：<span class="pill">${verifyLocked ? "true" : "false"}</span>
-                  recordsCount：<span class="pill">${esc(recordsCount)}</span>
+                <div class="stats">
+                  <span class="pill">verifyEnabled：${item.verifyEnabled ? "true" : "false"}</span>
+                  <span class="pill">verifyLocked：${item.verifyLocked ? "true" : "false"}</span>
+                  <span class="pill">recordsCount：${esc(item.recordsCount)}</span>
+                  <span class="pill">後台人員：${members.length}</span>
+                  <span class="pill">啟用：${enabledMembers.length}</span>
+                  <span class="pill">停用：${disabledMembers.length}</span>
                 </div>
 
-                <div class="small" style="margin-top:8px;">
-                  org_super：<span class="pill">${orgSuper}</span>
-                  org_admin：<span class="pill">${orgAdmin}</span>
-                  org_staff：<span class="pill">${orgStaff}</span>
+                <div class="stats">
+                  <span class="pill">org_super：${orgSuper}</span>
+                  <span class="pill">org_admin：${orgAdmin}</span>
+                  <span class="pill">org_staff：${orgStaff}</span>
                 </div>
               </div>
 
@@ -199,12 +301,66 @@
                 <a class="btn btn-sm" href="admin-member-lookup.html">會員查詢</a>
               </div>
             </div>
+
+            <div class="divider"></div>
+
+            <h3>後台人員明細</h3>
+            ${
+              members.length
+                ? `<div class="memberList">
+                    ${members.map(m => `
+                      <div class="memberItem">
+                        <div style="font-weight:900;">
+                          ${esc(m.email || m.id)}
+                          <span class="pill">${esc(m.role || "-")}</span>
+                          ${m.enabled === true ? `<span class="ok">啟用中</span>` : `<span class="warn">已停用</span>`}
+                        </div>
+                        <div class="memberMeta">
+                          uid：<span class="mono">${esc(m.id)}</span><br/>
+                          orgId：<span class="mono">${esc(m.orgId || "-")}</span>｜
+                          schoolId：<span class="mono">${esc(m.schoolId || "-")}</span>｜
+                          team：<span class="mono">${esc(m.team || "-")}</span>
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>`
+                : `<div class="empty">此校目前沒有後台人員。</div>`
+            }
           </div>
         `;
       }).join("");
     }
 
+    async function loadOverview(){
+      list.innerHTML = `<div class="small">載入中…</div>`;
+
+      const [schoolSnap, usersSnap] = await Promise.all([
+        db.collection("partnerSchools").orderBy("name").get(),
+        db.collection("users").limit(3000).get()
+      ]);
+
+      schoolCache = schoolSnap.docs.map(d => {
+        const s = d.data() || {};
+        return {
+          id: d.id,
+          name: s.name || d.id,
+          verifyEnabled: s.verifyEnabled === true,
+          verifyLocked: s.verifyLocked === true,
+          recordsCount: Number(s.recordsCount || 0)
+        };
+      });
+
+      userCache = usersSnap.docs.map(d => ({
+        id: d.id,
+        ...(d.data() || {})
+      }));
+
+      renderOverview();
+    }
+
     reloadBtn.onclick = loadOverview;
+    searchInput.oninput = renderOverview;
+    roleFilter.onchange = renderOverview;
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user){
