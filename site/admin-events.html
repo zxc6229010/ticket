@@ -73,7 +73,27 @@
     .right{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .divider{ height:1px; background:var(--line); margin:12px 0; }
 
-    .disabled-wrap{ opacity:.65; pointer-events:none; }
+    .inviteItem{
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+      margin-top:10px;
+    }
+    .inviteTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .switchRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
   </style>
 </head>
 
@@ -181,6 +201,31 @@
           </div>
         </div>
 
+        <!-- Invite Code Setting -->
+        <div class="divider" style="margin-top:16px;"></div>
+
+        <h2>邀請碼設定</h2>
+        <div class="sub">邀請碼屬於此活動本身，可設定是否啟用，並新增多組邀請碼。</div>
+
+        <div class="box" style="margin-top:12px;">
+          <div class="switchRow">
+            <span class="pill">邀請碼功能</span>
+            <select id="inviteCodeEnabled" style="max-width:220px;">
+              <option value="false">false（不啟用）</option>
+              <option value="true">true（啟用）</option>
+            </select>
+          </div>
+          <div class="small" style="margin-top:8px;">啟用後，可在報名流程中要求輸入對應邀請碼。</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="row" style="justify-content:space-between;">
+            <label style="margin:0;">邀請碼清單</label>
+            <button class="btn btn-sm" id="addInviteBtn" type="button">＋新增邀請碼</button>
+          </div>
+          <div id="inviteList"></div>
+        </div>
+
         <div class="row" style="justify-content:flex-end; margin-top:12px;">
           <button class="btn" id="resetBtn">清空/取消編輯</button>
           <button class="btn btn-primary" id="saveBtn" disabled>儲存</button>
@@ -204,7 +249,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    // ===== Firebase init =====
     firebase.initializeApp({
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
@@ -212,7 +256,6 @@
     });
     const db = firebase.firestore();
 
-    // ===== DOM =====
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
     const whoEl = document.getElementById("who");
@@ -238,6 +281,10 @@
     const eventStartAtEl = document.getElementById("eventStartAt");
     const eventEndAtEl = document.getElementById("eventEndAt");
 
+    const inviteCodeEnabledEl = document.getElementById("inviteCodeEnabled");
+    const addInviteBtn = document.getElementById("addInviteBtn");
+    const inviteList = document.getElementById("inviteList");
+
     const saveBtn = document.getElementById("saveBtn");
     const resetBtn = document.getElementById("resetBtn");
     const editorMsg = document.getElementById("editorMsg");
@@ -245,16 +292,15 @@
 
     const listEl = document.getElementById("list");
 
-    // ===== State =====
     let currentUser = null;
     let currentRole = "";
     let userData = null;
 
-    let mySchoolId = ""; // org users
-    let modeType = "school"; // "school" | "global"
-    let editingId = ""; // eventId if editing
+    let mySchoolId = "";
+    let modeType = "school";
+    let editingId = "";
+    let inviteCodesState = [];
 
-    // ===== Helpers =====
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
@@ -323,6 +369,39 @@
       editorMsg.innerHTML = html || "";
     }
 
+    function renderInviteCodes(){
+      if (!inviteCodesState.length){
+        inviteList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有邀請碼。</div>`;
+        return;
+      }
+
+      inviteList.innerHTML = inviteCodesState.map((item, idx) => `
+        <div class="inviteItem">
+          <div class="inviteTop">
+            <div class="pill">邀請碼 ${idx + 1}</div>
+            <button class="btn btn-sm btn-danger" type="button" onclick="removeInviteCode(${idx})">刪除</button>
+          </div>
+
+          <div class="grid">
+            <div>
+              <label style="margin-top:0;">code</label>
+              <input type="text" value="${esc(item.code || "")}" oninput="updateInviteCode(${idx}, 'code', this.value)" placeholder="例如：VIP2026" />
+            </div>
+            <div>
+              <label style="margin-top:0;">是否啟用</label>
+              <select onchange="updateInviteCode(${idx}, 'enabled', this.value)" >
+                <option value="true" ${item.enabled === true ? "selected" : ""}>true</option>
+                <option value="false" ${item.enabled === true ? "" : "selected"}>false</option>
+              </select>
+            </div>
+          </div>
+
+          <label>備註（note）</label>
+          <input type="text" value="${esc(item.note || "")}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />
+        </div>
+      `).join("");
+    }
+
     function resetEditor(){
       editingId = "";
       editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
@@ -337,6 +416,10 @@
       eventStartAtEl.value = "";
       eventEndAtEl.value = "";
 
+      inviteCodeEnabledEl.value = "false";
+      inviteCodesState = [];
+      renderInviteCodes();
+
       setEditorMessage("");
       updateSaveBtn();
     }
@@ -349,7 +432,7 @@
         ownerSchoolSel.value = "__global__";
         ownerSchoolSel.disabled = true;
       } else {
-        ownerSchoolSel.disabled = isOrgRole(); // 校方固定自己學校
+        ownerSchoolSel.disabled = isOrgRole();
         ownerSchoolSel.value = mySchoolId || ownerSchoolSel.value;
       }
       updateSaveBtn();
@@ -361,18 +444,38 @@
       toggleTypeBtn.textContent = (modeType === "school") ? "平台活動" : "校園活動";
     };
 
-    // ===== Load school options into select =====
+    window.updateInviteCode = (idx, key, value) => {
+      if (!inviteCodesState[idx]) return;
+      if (key === "enabled") {
+        inviteCodesState[idx][key] = value === "true";
+      } else {
+        inviteCodesState[idx][key] = value;
+      }
+    };
+
+    window.removeInviteCode = (idx) => {
+      inviteCodesState.splice(idx, 1);
+      renderInviteCodes();
+    };
+
+    addInviteBtn.onclick = () => {
+      inviteCodesState.push({
+        code: "",
+        note: "",
+        enabled: true
+      });
+      renderInviteCodes();
+    };
+
     async function loadOwnerSchoolOptions(){
       ownerSchoolSel.innerHTML = "";
 
-      // 平台活動固定選項（只有平台端會用到）
       if (isPlatform()) {
         ownerSchoolSel.insertAdjacentHTML("beforeend",
           `<option value="__global__">__global__（平台活動）</option>`
         );
       }
 
-      // 校園清單
       if (isPlatform()) {
         const snap = await db.collection("partnerSchools").orderBy("name").get();
         snap.forEach(d => {
@@ -382,7 +485,6 @@
           );
         });
       } else {
-        // 校方只能看到自己的校園
         if (mySchoolId) {
           const doc = await db.collection("partnerSchools").doc(mySchoolId).get();
           const s = doc.exists ? (doc.data() || {}) : {};
@@ -392,25 +494,17 @@
         }
       }
 
-      // 預設模式
-      if (isOrgRole()) {
-        setModeType("school");
-      } else {
-        setModeType("school");
-      }
+      if (isOrgRole()) setModeType("school");
+      else setModeType("school");
     }
 
-    // ===== Load events list =====
     async function loadEvents(){
       listEl.innerHTML = `<div class="small">載入中…</div>`;
 
       let q = db.collection("events");
-
-      // 平台：全看
       if (isPlatform()) {
         q = q.orderBy("createdAt", "desc").limit(50);
       } else {
-        // 校方：只看自己 ownerSchoolId
         q = q.where("ownerSchoolId", "==", mySchoolId).orderBy("createdAt", "desc").limit(50);
       }
 
@@ -430,6 +524,8 @@
         const saleStart = toInputDateTime(e.saleStartAt);
         const saleEnd = toInputDateTime(e.saleEndAt);
         const eventStart = toInputDateTime(e.eventStartAt);
+        const inviteEnabled = e.inviteCodeEnabled === true;
+        const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
 
         const tag = owner === "__global__"
           ? `<span class="pill">平台活動</span>`
@@ -445,7 +541,9 @@
                   ownerSchoolId：<span class="mono">${esc(owner)}</span>｜
                   published：<span class="mono">${published ? "true" : "false"}</span><br>
                   搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
-                  活動開始：<span class="mono">${esc(eventStart || "-")}</span>
+                  活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
+                  inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
+                  邀請碼數量：<span class="mono">${inviteCount}</span>
                 </div>
               </div>
 
@@ -464,7 +562,6 @@
       await loadEvents();
     };
 
-    // ===== Edit event =====
     window.editEvent = async (eventId) => {
       try {
         const doc = await db.collection("events").doc(eventId).get();
@@ -485,7 +582,16 @@
         eventStartAtEl.value = toInputDateTime(e.eventStartAt);
         eventEndAtEl.value = toInputDateTime(e.eventEndAt);
 
-        // ownerSchoolId
+        inviteCodeEnabledEl.value = e.inviteCodeEnabled === true ? "true" : "false";
+        inviteCodesState = Array.isArray(e.inviteCodes)
+          ? e.inviteCodes.map(x => ({
+              code: norm(x.code || ""),
+              note: norm(x.note || ""),
+              enabled: x.enabled === true
+            }))
+          : [];
+        renderInviteCodes();
+
         const owner = String(e.ownerSchoolId || "");
         if (owner === "__global__") {
           if (!isPlatform()) {
@@ -508,7 +614,6 @@
       }
     };
 
-    // ===== Delete event (platform_super only) =====
     window.deleteEvent = async (eventId, title) => {
       const ok = confirm(`確定要刪除活動「${title}」嗎？\n此動作無法復原。`);
       if (!ok) return;
@@ -524,7 +629,27 @@
       }
     };
 
-    // ===== Save (create/update) =====
+    function buildInviteCodesPayload(){
+      const cleaned = inviteCodesState
+        .map(x => ({
+          code: norm(x.code),
+          note: norm(x.note),
+          enabled: x.enabled === true
+        }))
+        .filter(x => x.code);
+
+      const unique = [];
+      const seen = new Set();
+
+      for (const item of cleaned){
+        const key = item.code.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(item);
+      }
+      return unique;
+    }
+
     async function saveEvent(){
       saveBtn.disabled = true;
       const old = saveBtn.textContent;
@@ -537,13 +662,14 @@
         if (!title) throw new Error("請輸入活動標題");
         if (!ownerSchoolId) throw new Error("缺少 ownerSchoolId");
 
-        // 權限保護（前端防呆，真正靠 rules）
         if (!isPlatform() && ownerSchoolId === "__global__") {
           throw new Error("校方不可建立/修改平台活動");
         }
         if (isOrgRole() && ownerSchoolId !== mySchoolId) {
           throw new Error("校方只能管理自己校園活動");
         }
+
+        const inviteCodes = buildInviteCodesPayload();
 
         const payload = {
           title,
@@ -558,11 +684,13 @@
           eventStartAt: parseInputDateTime(eventStartAtEl.value),
           eventEndAt: parseInputDateTime(eventEndAtEl.value),
 
+          inviteCodeEnabled: inviteCodeEnabledEl.value === "true",
+          inviteCodes,
+
           updatedAt: new Date(),
           updatedBy: currentUser ? (currentUser.uid || "") : ""
         };
 
-        // clean null/empty dates
         Object.keys(payload).forEach(k => {
           if (payload[k] === null) delete payload[k];
         });
@@ -593,7 +721,6 @@
     [titleEl, ownerSchoolSel].forEach(el => el.addEventListener("input", updateSaveBtn));
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
 
-    // ===== Auth gate =====
     firebase.auth().onAuthStateChanged(async (user) => {
       currentUser = user || null;
 
@@ -629,7 +756,6 @@
         whoEl.textContent = user.email || "";
         roleText.textContent = currentRole || "-";
 
-        // 允許進入：platform_super / platform_admin / org_super / org_admin
         const allowed = ["platform_super","platform_admin","org_super","org_admin"];
         if (!allowed.includes(currentRole)) {
           showGate(`
@@ -641,11 +767,9 @@
           return;
         }
 
-        // 我的 schoolId（校方必須有）
         mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
         mySchoolText.textContent = mySchoolId || "__none__";
 
-        // 平台端才可切換平台活動
         toggleTypeBtn.disabled = !isPlatform();
         toggleTypeBtn.textContent = "平台活動";
 
