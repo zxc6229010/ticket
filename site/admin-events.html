@@ -146,7 +146,6 @@
         </div>
       </div>
 
-      <!-- Editor -->
       <div class="section" id="editorSection">
         <h2>建立 / 編輯</h2>
         <div class="sub small" id="editingHint">目前：<span class="mono">新增模式</span></div>
@@ -201,11 +200,10 @@
           </div>
         </div>
 
-        <!-- Invite Code Setting -->
         <div class="divider" style="margin-top:16px;"></div>
 
         <h2>邀請碼設定</h2>
-        <div class="sub">邀請碼屬於此活動本身，可設定是否啟用，並新增多組邀請碼。</div>
+        <div class="sub">可選手動輸入或隨機產生，並可設定每組邀請碼可用次數。</div>
 
         <div class="box" style="margin-top:12px;">
           <div class="switchRow">
@@ -215,7 +213,9 @@
               <option value="true">true（啟用）</option>
             </select>
           </div>
-          <div class="small" style="margin-top:8px;">啟用後，可在報名流程中要求輸入對應邀請碼。</div>
+          <div class="small" style="margin-top:8px;">
+            啟用後，可在報名流程中要求輸入對應邀請碼。
+          </div>
         </div>
 
         <div style="margin-top:12px;">
@@ -234,7 +234,6 @@
         <div class="small" id="editorMsg" style="margin-top:10px;"></div>
       </div>
 
-      <!-- List -->
       <div class="section">
         <h2>活動清單</h2>
         <div class="sub">點「編輯」可載入到上方表單。平台端可看到所有活動；校方只看自己校園活動。</div>
@@ -243,7 +242,6 @@
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -369,37 +367,113 @@
       editorMsg.innerHTML = html || "";
     }
 
+    function randomInviteCode(length = 8){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let out = "";
+      for (let i = 0; i < length; i++){
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return out;
+    }
+
+    function normalizeInviteItem(x){
+      const mode = (norm(x.mode) === "random") ? "random" : "manual";
+      const randomLength = Math.max(4, Math.min(20, Number(x.randomLength || 8) || 8));
+      return {
+        code: norm(x.code || ""),
+        note: norm(x.note || ""),
+        enabled: x.enabled === true,
+        mode,
+        randomLength,
+        maxUses: Math.max(0, Number(x.maxUses || 0) || 0),
+        usedCount: Math.max(0, Number(x.usedCount || 0) || 0)
+      };
+    }
+
     function renderInviteCodes(){
       if (!inviteCodesState.length){
         inviteList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有邀請碼。</div>`;
         return;
       }
 
-      inviteList.innerHTML = inviteCodesState.map((item, idx) => `
-        <div class="inviteItem">
-          <div class="inviteTop">
-            <div class="pill">邀請碼 ${idx + 1}</div>
-            <button class="btn btn-sm btn-danger" type="button" onclick="removeInviteCode(${idx})">刪除</button>
-          </div>
+      inviteList.innerHTML = inviteCodesState.map((rawItem, idx) => {
+        const item = normalizeInviteItem(rawItem);
+        const isRandom = item.mode === "random";
 
-          <div class="grid">
-            <div>
-              <label style="margin-top:0;">code</label>
-              <input type="text" value="${esc(item.code || "")}" oninput="updateInviteCode(${idx}, 'code', this.value)" placeholder="例如：VIP2026" />
+        return `
+          <div class="inviteItem">
+            <div class="inviteTop">
+              <div class="pill">邀請碼 ${idx + 1}</div>
+              <div class="row">
+                ${isRandom ? `<button class="btn btn-sm" type="button" onclick="regenerateInviteCode(${idx})">重新產生</button>` : ``}
+                <button class="btn btn-sm btn-danger" type="button" onclick="removeInviteCode(${idx})">刪除</button>
+              </div>
             </div>
-            <div>
-              <label style="margin-top:0;">是否啟用</label>
-              <select onchange="updateInviteCode(${idx}, 'enabled', this.value)" >
-                <option value="true" ${item.enabled === true ? "selected" : ""}>true</option>
-                <option value="false" ${item.enabled === true ? "" : "selected"}>false</option>
-              </select>
-            </div>
-          </div>
 
-          <label>備註（note）</label>
-          <input type="text" value="${esc(item.note || "")}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />
-        </div>
-      `).join("");
+            <div class="grid">
+              <div>
+                <label style="margin-top:0;">模式</label>
+                <select onchange="updateInviteCode(${idx}, 'mode', this.value)">
+                  <option value="manual" ${item.mode === "manual" ? "selected" : ""}>manual（手動）</option>
+                  <option value="random" ${item.mode === "random" ? "selected" : ""}>random（隨機）</option>
+                </select>
+              </div>
+              <div>
+                <label style="margin-top:0;">是否啟用</label>
+                <select onchange="updateInviteCode(${idx}, 'enabled', this.value)">
+                  <option value="true" ${item.enabled === true ? "selected" : ""}>true</option>
+                  <option value="false" ${item.enabled === true ? "" : "selected"}>false</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div>
+                <label>code</label>
+                <input
+                  type="text"
+                  value="${esc(item.code)}"
+                  ${isRandom ? "readonly" : ""}
+                  oninput="updateInviteCode(${idx}, 'code', this.value)"
+                  placeholder="${isRandom ? "隨機產生" : "例如：VIP2026"}"
+                />
+              </div>
+              <div>
+                <label>${isRandom ? "亂數長度" : "可用次數（maxUses）"}</label>
+                ${
+                  isRandom
+                    ? `<input type="number" min="4" max="20" value="${item.randomLength}" onchange="updateInviteCode(${idx}, 'randomLength', this.value)" />`
+                    : `<input type="number" min="0" value="${item.maxUses}" onchange="updateInviteCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
+                }
+              </div>
+            </div>
+
+            <div class="grid">
+              <div>
+                <label>${isRandom ? "可用次數（maxUses）" : "已使用次數（usedCount）"}</label>
+                ${
+                  isRandom
+                    ? `<input type="number" min="0" value="${item.maxUses}" onchange="updateInviteCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
+                    : `<input type="number" value="${item.usedCount}" readonly />`
+                }
+              </div>
+              <div>
+                <label>${isRandom ? "已使用次數（usedCount）" : "備註（note）"}</label>
+                ${
+                  isRandom
+                    ? `<input type="number" value="${item.usedCount}" readonly />`
+                    : `<input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />`
+                }
+              </div>
+            </div>
+
+            ${isRandom ? `
+              <label>備註（note）</label>
+              <input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />
+            ` : ``}
+          </div>
+        `;
+      }).join("");
     }
 
     function resetEditor(){
@@ -446,10 +520,27 @@
 
     window.updateInviteCode = (idx, key, value) => {
       if (!inviteCodesState[idx]) return;
+
       if (key === "enabled") {
         inviteCodesState[idx][key] = value === "true";
+      } else if (key === "maxUses" || key === "usedCount" || key === "randomLength") {
+        inviteCodesState[idx][key] = Number(value || 0);
+      } else if (key === "mode") {
+        inviteCodesState[idx][key] = value === "random" ? "random" : "manual";
+        if (inviteCodesState[idx][key] === "random") {
+          const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
+          inviteCodesState[idx].randomLength = len;
+          inviteCodesState[idx].code = randomInviteCode(len);
+        }
+        renderInviteCodes();
+        return;
       } else {
         inviteCodesState[idx][key] = value;
+      }
+
+      if (key === "randomLength") {
+        const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
+        inviteCodesState[idx].randomLength = len;
       }
     };
 
@@ -458,11 +549,22 @@
       renderInviteCodes();
     };
 
+    window.regenerateInviteCode = (idx) => {
+      if (!inviteCodesState[idx]) return;
+      const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
+      inviteCodesState[idx].code = randomInviteCode(len);
+      renderInviteCodes();
+    };
+
     addInviteBtn.onclick = () => {
       inviteCodesState.push({
         code: "",
         note: "",
-        enabled: true
+        enabled: true,
+        mode: "manual",
+        randomLength: 8,
+        maxUses: 0,
+        usedCount: 0
       });
       renderInviteCodes();
     };
@@ -584,11 +686,7 @@
 
         inviteCodeEnabledEl.value = e.inviteCodeEnabled === true ? "true" : "false";
         inviteCodesState = Array.isArray(e.inviteCodes)
-          ? e.inviteCodes.map(x => ({
-              code: norm(x.code || ""),
-              note: norm(x.note || ""),
-              enabled: x.enabled === true
-            }))
+          ? e.inviteCodes.map(x => normalizeInviteItem(x))
           : [];
         renderInviteCodes();
 
@@ -631,11 +729,7 @@
 
     function buildInviteCodesPayload(){
       const cleaned = inviteCodesState
-        .map(x => ({
-          code: norm(x.code),
-          note: norm(x.note),
-          enabled: x.enabled === true
-        }))
+        .map(normalizeInviteItem)
         .filter(x => x.code);
 
       const unique = [];
