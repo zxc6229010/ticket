@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜模擬頁面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --danger:#b91c1c;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{ max-width:1040px; margin:0 auto; padding:48px 24px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+
+    h1{ margin:0 0 6px; font-size:22px; }
+    h2{ margin:0; font-size:16px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111;
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      text-decoration:none;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-danger{ background:var(--danger); color:#fff; border-color:var(--danger); }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:14px;
+      background:#fff;
+    }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .soft{
+      background:#f1f2f6;
+      border:1px solid rgba(17,17,17,.12);
+    }
+
+    .warnBox{
+      background:#fff5f5;
+      border:1px solid rgba(185,28,28,.18);
+    }
+
+    label{
+      font-weight:900;
+      display:block;
+      margin:12px 0 6px;
+    }
+    input[type="text"], select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:16px;
+      outline:none;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width:900px){
+      .grid2{ grid-template-columns:1fr; }
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+    .item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+      padding:14px;
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .title{
+      font-weight:900;
+      font-size:15px;
+      line-height:1.45;
+      margin:0;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-top:6px;
+      word-break:break-word;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:12px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:130px 1fr;
+      gap:8px 12px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+    }
+    .kv:first-child{ border-top:none; }
+    .k{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+    .v{
+      font-weight:900;
+      font-size:13px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+
+    .page{
+      opacity:0;
+      transform: translateY(6px);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .page.on{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .page.leaving{
+      opacity:0;
+      transform: translateY(6px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap page" id="pageRoot">
+
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="row">
+          <div>
+            <h1>模擬頁面</h1>
+            <div class="sub">
+              只有 <span class="mono">platform_super</span> 可以使用。<br/>
+              你可以用自己的登入狀態，直接模擬其他後台帳號的權限與視角，不需要知道對方密碼。
+            </div>
+            <div class="sub" style="margin-top:8px;">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="myRole" class="mono">-</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="dashboard.html">回主選單</a>
+            <button class="btn" onclick="doLogout()">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card warnBox">
+        <div class="row">
+          <div>
+            <h2>目前模擬狀態</h2>
+            <div class="sub" id="statusText">尚未啟用模擬。</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-danger" id="endBtn" disabled>結束模擬</button>
+            <button class="btn btn-primary" id="goDashBtn">前往 Dashboard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="row">
+            <div>
+              <h2>搜尋要模擬的帳號</h2>
+              <div class="sub">從 <span class="mono">users</span> 讀取真實後台帳號。</div>
+            </div>
+            <div>
+              <button class="btn" id="reloadBtn">重新載入</button>
+            </div>
+          </div>
+
+          <label>搜尋（email / uid / role / orgId / schoolId / team）</label>
+          <input type="text" id="q" placeholder="輸入關鍵字…" />
+
+          <label>角色篩選</label>
+          <select id="roleFilter">
+            <option value="all">全部角色</option>
+            <option value="platform_super">platform_super</option>
+            <option value="platform_admin">platform_admin</option>
+            <option value="org_super">org_super</option>
+            <option value="org_admin">org_admin</option>
+            <option value="org_staff">org_staff</option>
+          </select>
+
+          <div class="list" id="list"></div>
+        </div>
+
+        <div class="card">
+          <div class="row">
+            <div>
+              <h2>目前選取</h2>
+              <div class="sub">開始模擬前先確認帳號資料。</div>
+            </div>
+          </div>
+
+          <div id="emptyPreview" class="sub" style="margin-top:12px;">尚未選取任何帳號。</div>
+
+          <div id="previewBox" style="display:none; margin-top:12px;">
+            <div class="kv">
+              <div class="k">uid</div><div class="v mono" id="pUid">-</div>
+              <div class="k">email</div><div class="v mono" id="pEmail">-</div>
+              <div class="k">role</div><div class="v mono" id="pRole">-</div>
+              <div class="k">enabled</div><div class="v mono" id="pEnabled">-</div>
+              <div class="k">orgId</div><div class="v mono" id="pOrg">-</div>
+              <div class="k">schoolId</div><div class="v mono" id="pSchool">-</div>
+              <div class="k">team</div><div class="v mono" id="pTeam">-</div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-primary" id="startBtn">開始模擬這個帳號</button>
+            </div>
+          </div>
+
+          <div class="card soft" style="margin-top:14px;">
+            <div class="sub">
+              <span style="font-weight:900;">說明：</span>
+              模擬時不會改變 Firebase Auth 真正登入身份，仍然是你自己的帳號登入。<br/>
+              只是後台頁面會暫時改讀目標帳號的 <span class="mono">users/{uid}</span> 資料。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(()=> location.href = href, 140);
+    }
+
+    document.addEventListener("click", (e)=>{
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const myRoleEl = document.getElementById("myRole");
+    const statusText = document.getElementById("statusText");
+    const endBtn = document.getElementById("endBtn");
+    const goDashBtn = document.getElementById("goDashBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const qEl = document.getElementById("q");
+    const roleFilterEl = document.getElementById("roleFilter");
+    const listEl = document.getElementById("list");
+
+    const emptyPreview = document.getElementById("emptyPreview");
+    const previewBox = document.getElementById("previewBox");
+    const pUid = document.getElementById("pUid");
+    const pEmail = document.getElementById("pEmail");
+    const pRole = document.getElementById("pRole");
+    const pEnabled = document.getElementById("pEnabled");
+    const pOrg = document.getElementById("pOrg");
+    const pSchool = document.getElementById("pSchool");
+    const pTeam = document.getElementById("pTeam");
+    const startBtn = document.getElementById("startBtn");
+
+    let currentUser = null;
+    let myUserDoc = null;
+    let userCache = [];
+    let selectedUser = null;
+
+    const STAFF_ROLES = new Set([
+      "platform_super",
+      "platform_admin",
+      "org_super",
+      "org_admin",
+      "org_staff"
+    ]);
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+    function norm(s){ return String(s ?? "").trim(); }
+
+    function showGate(title, msg, showLogin){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        </div>
+      `;
+
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn){
+        loginBtn.onclick = async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        };
+      }
+    }
+
+    window.doLogout = async () => {
+      try { await firebase.auth().signOut(); }
+      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+    };
+
+    async function loadMyUser(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return null;
+      return snap.data() || null;
+    }
+
+    function renderStatus(){
+      const uid = sessionStorage.getItem("impersonateUid");
+      const email = sessionStorage.getItem("impersonateEmail");
+      const role = sessionStorage.getItem("impersonateRole");
+      const orgId = sessionStorage.getItem("impersonateOrgId");
+      const schoolId = sessionStorage.getItem("impersonateSchoolId");
+
+      if (!uid){
+        statusText.innerHTML = `尚未啟用模擬，目前使用的是自己的真實帳號。`;
+        endBtn.disabled = true;
+        return;
+      }
+
+      statusText.innerHTML = `
+        <span style="font-weight:900;color:#b91c1c;">目前正在模擬中</span><br/>
+        目標帳號：<span class="mono">${esc(email || uid)}</span><br/>
+        角色：<span class="mono">${esc(role || "-")}</span>｜
+        orgId：<span class="mono">${esc(orgId || "-")}</span>｜
+        schoolId：<span class="mono">${esc(schoolId || "-")}</span>
+      `;
+      endBtn.disabled = false;
+    }
+
+    function matchesUser(u){
+      const q = norm(qEl.value).toLowerCase();
+      const rf = roleFilterEl.value;
+
+      if (rf !== "all" && norm(u.role) !== rf) return false;
+      if (!q) return true;
+
+      const fields = [
+        u.id,
+        u.uid,
+        u.email,
+        u.role,
+        u.orgId,
+        u.schoolId,
+        u.team
+      ].map(x => norm(x).toLowerCase());
+
+      return fields.some(x => x.includes(q));
+    }
+
+    function renderList(){
+      const items = userCache.filter(matchesUser);
+
+      if (!items.length){
+        listEl.innerHTML = `
+          <div class="item">
+            <div class="title">目前沒有符合的帳號</div>
+            <div class="meta">請調整搜尋條件。</div>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = items.map(u => `
+        <div class="item">
+          <div class="itemTop">
+            <div style="min-width:260px; flex:1;">
+              <div class="title">${esc(u.email || u.id)} <span class="pill mono" style="font-size:12px;">${esc(u.role || "-")}</span></div>
+              <div class="meta">
+                uid：<span class="mono">${esc(u.id)}</span><br/>
+                enabled：<span class="mono">${u.enabled === true ? "true" : "false"}</span><br/>
+                orgId：<span class="mono">${esc(u.orgId || "-")}</span><br/>
+                schoolId：<span class="mono">${esc(u.schoolId || "-")}</span><br/>
+                team：<span class="mono">${esc(u.team || "-")}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" data-pick="${esc(u.id)}">選擇</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      listEl.querySelectorAll("[data-pick]").forEach(btn=>{
+        btn.onclick = () => {
+          const uid = btn.dataset.pick;
+          const found = userCache.find(x => x.id === uid);
+          if (!found) return;
+          selectedUser = found;
+          renderPreview();
+        };
+      });
+    }
+
+    function renderPreview(){
+      if (!selectedUser){
+        emptyPreview.style.display = "block";
+        previewBox.style.display = "none";
+        return;
+      }
+
+      emptyPreview.style.display = "none";
+      previewBox.style.display = "block";
+
+      pUid.textContent = selectedUser.id || "-";
+      pEmail.textContent = selectedUser.email || "-";
+      pRole.textContent = selectedUser.role || "-";
+      pEnabled.textContent = selectedUser.enabled === true ? "true" : "false";
+      pOrg.textContent = selectedUser.orgId || "-";
+      pSchool.textContent = selectedUser.schoolId || "-";
+      pTeam.textContent = selectedUser.team || "-";
+    }
+
+    async function loadUsers(){
+      listEl.innerHTML = `<div class="sub">讀取中…</div>`;
+      reloadBtn.disabled = true;
+
+      try{
+        const snap = await db.collection("users").limit(300).get();
+        userCache = [];
+        snap.forEach(doc => {
+          const d = doc.data() || {};
+          if (!STAFF_ROLES.has(norm(d.role))) return;
+          userCache.push({ id: doc.id, ...d });
+        });
+        renderList();
+      }catch(e){
+        console.error(e);
+        listEl.innerHTML = `
+          <div class="item">
+            <div class="title">讀取失敗</div>
+            <div class="meta">可能是 Firestore Rules 權限不足。</div>
+          </div>
+        `;
+      }finally{
+        reloadBtn.disabled = false;
+      }
+    }
+
+    async function startImpersonation(){
+      if (!selectedUser || !currentUser) return;
+
+      if (!confirm(`確定要開始模擬 ${selectedUser.email || selectedUser.id} 嗎？`)) return;
+
+      try{
+        sessionStorage.setItem("impersonateUid", selectedUser.id);
+        sessionStorage.setItem("impersonateEmail", selectedUser.email || "");
+        sessionStorage.setItem("impersonateRole", selectedUser.role || "");
+        sessionStorage.setItem("impersonateOrgId", selectedUser.orgId || "");
+        sessionStorage.setItem("impersonateSchoolId", selectedUser.schoolId || "");
+        sessionStorage.setItem("impersonateTeam", selectedUser.team || "");
+        sessionStorage.setItem("impersonateStartedAt", String(Date.now()));
+
+        await db.collection("impersonationLogs").add({
+          actorUid: currentUser.uid,
+          actorEmail: myUserDoc?.email || currentUser.email || "",
+          targetUid: selectedUser.id,
+          targetEmail: selectedUser.email || "",
+          targetRole: selectedUser.role || "",
+          targetOrgId: selectedUser.orgId || "",
+          targetSchoolId: selectedUser.schoolId || "",
+          startedAt: new Date(),
+          action: "start"
+        });
+
+        renderStatus();
+        alert("已開始模擬，接下來請前往 Dashboard 測試。");
+      }catch(e){
+        console.error(e);
+        alert("開始模擬失敗（可能是 Rules 權限不足）");
+      }
+    }
+
+    async function stopImpersonation(){
+      const targetUid = sessionStorage.getItem("impersonateUid");
+      const targetEmail = sessionStorage.getItem("impersonateEmail");
+
+      if (!targetUid){
+        renderStatus();
+        return;
+      }
+
+      if (!confirm("確定要結束模擬嗎？")) return;
+
+      try{
+        await db.collection("impersonationLogs").add({
+          actorUid: currentUser.uid,
+          actorEmail: myUserDoc?.email || currentUser.email || "",
+          targetUid,
+          targetEmail: targetEmail || "",
+          endedAt: new Date(),
+          action: "end"
+        });
+      }catch(e){
+        console.warn("write impersonation end log failed:", e);
+      }
+
+      sessionStorage.removeItem("impersonateUid");
+      sessionStorage.removeItem("impersonateEmail");
+      sessionStorage.removeItem("impersonateRole");
+      sessionStorage.removeItem("impersonateOrgId");
+      sessionStorage.removeItem("impersonateSchoolId");
+      sessionStorage.removeItem("impersonateTeam");
+      sessionStorage.removeItem("impersonateStartedAt");
+
+      renderStatus();
+      alert("已結束模擬。");
+    }
+
+    qEl.oninput = renderList;
+    roleFilterEl.onchange = renderList;
+    reloadBtn.onclick = loadUsers;
+    startBtn.onclick = startImpersonation;
+    endBtn.onclick = stopImpersonation;
+    goDashBtn.onclick = () => go("dashboard.html");
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user){
+        showGate("模擬頁面", "請先登入管理帳號。", true);
+        return;
+      }
+
+      try{
+        myUserDoc = await loadMyUser(user.uid);
+        if (!myUserDoc){
+          showGate("等待授權", "你的帳號尚未被授權為管理者。", false);
+          return;
+        }
+        if (myUserDoc.enabled !== true){
+          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          return;
+        }
+
+        const role = norm(myUserDoc.role);
+        if (role !== "platform_super"){
+          showGate("權限不足", "只有 platform_super 可以使用模擬頁面。", false);
+          return;
+        }
+
+        whoEl.textContent = myUserDoc.email || user.email || "-";
+        myRoleEl.textContent = role;
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        renderStatus();
+        renderPreview();
+        await loadUsers();
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>
+模擬頁面是長這樣 你在寫什麼。ਦಾತ್ರ
