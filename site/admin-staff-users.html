@@ -14,29 +14,58 @@
       --line:rgba(17,17,17,.10);
       --shadow:0 14px 40px rgba(0,0,0,.08);
     }
+
     *{ box-sizing:border-box; }
+
     body{
       margin:0;
       background:var(--bg);
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:1040px; margin:0 auto; padding:48px 24px; }
-    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:18px;
-      margin-bottom:18px;
+    .wrap{
+      max-width:1040px;
+      margin:0 auto;
+      padding:48px 24px;
     }
 
-    h1{ margin:0 0 6px; font-size:22px; }
-    h2{ margin:0; font-size:16px; }
-    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
-    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    @media (max-width:640px){
+      .wrap{ padding:28px 16px; }
+    }
+
+    .card{
+      margin-bottom:18px;
+      padding:18px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+    }
+
+    h1{
+      margin:0 0 6px;
+      font-size:22px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
 
     .btn{
       display:inline-flex;
@@ -44,43 +73,79 @@
       justify-content:center;
       height:44px;
       padding:10px 18px;
-      border-radius:999px;
       border:1px solid var(--line);
+      border-radius:999px;
       background:#fff;
       color:#111;
-      font-weight:900;
       font-size:16px;
-      cursor:pointer;
+      font-weight:900;
       text-decoration:none;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      cursor:pointer;
       user-select:none;
       white-space:nowrap;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
 
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-sm{ height:40px; padding:8px 14px; font-size:15px; }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-danger{
+      border-color:rgba(239,68,68,.35);
+      background:#fff;
+      color:#b91c1c;
+    }
+
+    .btn-sm{
+      height:40px;
+      padding:8px 14px;
+      font-size:15px;
+    }
 
     .pill{
       display:inline-flex;
       align-items:center;
       gap:8px;
+      padding:8px 12px;
       border:1px solid var(--line);
       border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      font-size:14px;
       background:#fff;
+      font-size:14px;
+      font-weight:900;
     }
 
     .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
-    .ok{ color:#166534; font-weight:900; }
-    .warn{ color:#b91c1c; font-weight:900; }
+    .ok{
+      color:#166534;
+      font-weight:900;
+    }
+
+    .warn{
+      color:#b91c1c;
+      font-weight:900;
+    }
 
     .soft{
       background:#f1f2f6;
@@ -92,18 +157,27 @@
       gap:10px;
       flex-wrap:wrap;
     }
+
     .tab{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       height:40px;
       padding:8px 14px;
-      border-radius:999px;
       border:1px solid var(--line);
+      border-radius:999px;
       background:#fff;
       font-weight:900;
       cursor:pointer;
       user-select:none;
-      transition: transform .12s ease, box-shadow .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
     }
-    .tab:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+
+    .tab:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
     .tab.active{
       background:#111;
       color:#fff;
@@ -117,24 +191,29 @@
       grid-template-columns:1fr 1fr;
       gap:14px;
     }
+
     @media (max-width:900px){
       .grid2{ grid-template-columns:1fr; }
     }
 
     label{
-      font-weight:900;
       display:block;
       margin:12px 0 6px;
+      font-weight:900;
     }
-    input[type="text"], select, textarea{
+
+    input[type="text"],
+    select,
+    textarea{
       width:100%;
       padding:12px;
-      border-radius:14px;
       border:1px solid var(--line);
+      border-radius:14px;
       background:#fff;
       font-size:16px;
       outline:none;
     }
+
     textarea{
       min-height:110px;
       resize:vertical;
@@ -144,33 +223,38 @@
       display:grid;
       gap:12px;
     }
+
     .item{
+      padding:14px;
       border:1px solid var(--line);
       border-radius:18px;
       background:#fff;
       box-shadow:0 10px 26px rgba(0,0,0,.05);
-      padding:14px;
     }
+
     .itemTop{
       display:flex;
       justify-content:space-between;
-      gap:12px;
       align-items:flex-start;
+      gap:12px;
       flex-wrap:wrap;
     }
+
     .itemTitle{
-      font-weight:900;
-      font-size:15px;
-      line-height:1.45;
       margin:0;
+      font-size:15px;
+      font-weight:900;
+      line-height:1.45;
     }
+
     .meta{
+      margin-top:6px;
       color:var(--muted);
       font-size:13px;
       line-height:1.6;
-      margin-top:6px;
       word-break:break-word;
     }
+
     .actions{
       display:flex;
       gap:10px;
@@ -178,61 +262,52 @@
       justify-content:flex-end;
       margin-top:12px;
     }
-    .hr{
-      height:1px;
-      background:rgba(17,17,17,.08);
-      margin:12px 0;
-    }
-    .mini{
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:#fff;
-    }
 
     .badge{
       display:inline-flex;
       align-items:center;
       padding:6px 10px;
-      border-radius:999px;
       border:1px solid var(--line);
-      font-weight:900;
-      font-size:12px;
+      border-radius:999px;
       background:#fff;
+      font-size:12px;
+      font-weight:900;
       white-space:nowrap;
     }
 
-    /* modal */
     .modalBack{
       position:fixed;
       inset:0;
-      background:rgba(0,0,0,.35);
+      z-index:9999;
       display:none;
       align-items:center;
       justify-content:center;
       padding:16px;
-      z-index:9999;
+      background:rgba(0,0,0,.35);
     }
+
     .modal{
       width:min(960px,100%);
       max-height:88vh;
       overflow:auto;
-      background:#fff;
+      padding:16px;
       border:1px solid var(--line);
       border-radius:18px;
+      background:#fff;
       box-shadow:0 18px 60px rgba(0,0,0,.25);
-      padding:16px;
     }
+
     .modalTop{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:10px;
       flex-wrap:wrap;
+      margin-bottom:12px;
       padding-bottom:12px;
       border-bottom:1px solid var(--line);
-      margin-bottom:12px;
     }
+
     .kv{
       display:grid;
       grid-template-columns:130px 1fr;
@@ -240,34 +315,42 @@
       padding:10px 0;
       border-top:1px dashed var(--line);
     }
-    .kv:first-child{ border-top:none; }
+
+    .kv:first-child{
+      border-top:none;
+    }
+
     @media (max-width:640px){
       .kv{ grid-template-columns:105px 1fr; }
     }
+
     .k{
       color:var(--muted);
       font-size:13px;
       line-height:1.5;
     }
+
     .v{
-      font-weight:900;
       font-size:13px;
+      font-weight:900;
       line-height:1.5;
       word-break:break-word;
     }
 
     .answerBlock{
+      margin-top:8px;
+      padding:10px;
       border:1px dashed var(--line);
       border-radius:14px;
-      padding:10px;
-      margin-top:8px;
       background:#fff;
     }
+
     .answerQ{
+      margin-bottom:4px;
       color:var(--muted);
       font-size:12px;
-      margin-bottom:4px;
     }
+
     .answerA{
       font-size:14px;
       font-weight:900;
@@ -276,51 +359,50 @@
       word-break:break-word;
     }
 
-    /* transition */
     .page{
       opacity:0;
-      transform: translateY(6px);
-      transition: opacity .22s ease, transform .22s ease;
+      transform:translateY(6px);
+      transition:opacity .22s ease, transform .22s ease;
     }
+
     .page.on{
       opacity:1;
-      transform: translateY(0);
+      transform:translateY(0);
     }
+
     .page.leaving{
       opacity:0;
-      transform: translateY(6px);
+      transform:translateY(6px);
     }
   </style>
 </head>
 
 <body>
   <div class="wrap page" id="pageRoot">
-
     <div id="gate" class="card" style="display:none;"></div>
 
     <div id="app" style="display:none;">
-      <!-- Header -->
       <div class="card">
         <div class="row">
           <div>
             <h1>後台帳號管理</h1>
             <div class="sub">
-              這裡只管理「後台人員申請 / 審核 / 指派 / 啟用停用」。<br/>
-              申請資料全部留存在 <span class="mono">adminAccessRequests</span>，通過後再寫入 <span class="mono">users/{uid}</span>。
+              這裡只管理後台人員申請、審核、指派與啟用狀態。<br>
+              申請資料保留在 <span class="mono">adminAccessRequests</span>，通過後再寫入 <span class="mono">users/{uid}</span>。
             </div>
             <div class="sub" style="margin-top:8px;">
               登入：<span id="who" class="mono">-</span>｜
               角色：<span id="myRole" class="mono">-</span>
             </div>
           </div>
+
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <a class="btn" href="dashboard.html">回主選單</a>
-            <button class="btn" onclick="doLogout()">登出</button>
+            <button class="btn" id="logoutBtn">登出</button>
           </div>
         </div>
       </div>
 
-      <!-- Tabs -->
       <div class="card soft">
         <div class="row">
           <div>
@@ -331,14 +413,13 @@
         </div>
       </div>
 
-      <!-- Requests -->
       <div id="tabRequests" style="display:none;">
         <div class="card">
           <div class="row">
             <div>
               <h2>申請審核</h2>
               <div class="sub">
-                申請頁寫入 <span class="mono">adminAccessRequests</span>，這裡讀取並做審核。
+                申請頁寫入 <span class="mono">adminAccessRequests</span>，這裡負責審核與指派。
               </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -357,7 +438,7 @@
               </select>
             </div>
             <div>
-              <label style="margin-top:0;">搜尋（email / uid / 申請編號）</label>
+              <label style="margin-top:0;">搜尋（email / uid / requestId）</label>
               <input type="text" id="reqSearch" placeholder="輸入 email、uid 或 requestId" />
             </div>
           </div>
@@ -366,7 +447,6 @@
         <div class="list" id="reqList"></div>
       </div>
 
-      <!-- Staff users -->
       <div id="tabStaff" style="display:none;">
         <div class="card">
           <div class="row">
@@ -405,7 +485,6 @@
     </div>
   </div>
 
-  <!-- Modal -->
   <div class="modalBack" id="modalBack">
     <div class="modal">
       <div class="modalTop">
@@ -451,6 +530,7 @@
               <option value="org_staff">org_staff</option>
             </select>
           </div>
+
           <div>
             <label style="margin-top:0;">啟用（enabled）</label>
             <select id="mEnabled">
@@ -463,6 +543,7 @@
             <label>組織（orgId，可空）</label>
             <input type="text" id="mOrgId" placeholder="例如：KMHS" />
           </div>
+
           <div>
             <label>校園（schoolId，可空）</label>
             <input type="text" id="mSchoolId" placeholder="例如：kmsh" />
@@ -470,46 +551,47 @@
 
           <div style="grid-column:1/-1;">
             <label>工作組別（team，可空）</label>
-            <input type="text" id="mTeam" placeholder="例如：公關組 / 事務組 / 服務台" />
+            <input type="text" id="mTeam" placeholder="例如：公關組 / 服務台 / 事務組" />
           </div>
 
           <div style="grid-column:1/-1;">
-            <label>備註（note，會回寫到申請紀錄）</label>
-            <textarea id="mNote" placeholder="例如：已電話確認 / 先派服務台"></textarea>
+            <label>備註（會回寫到申請紀錄）</label>
+            <textarea id="mNote" placeholder="例如：已電話確認 / 先指派服務台"></textarea>
           </div>
         </div>
 
         <div class="actions">
-          <button class="btn btn-sm" id="mRejectBtn">拒絕</button>
+          <button class="btn btn-danger btn-sm" id="mRejectBtn">拒絕</button>
           <button class="btn btn-primary btn-sm" id="mApproveBtn">通過並寫入</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    // ===== Transition =====
     const pageRoot = document.getElementById("pageRoot");
     requestAnimationFrame(() => pageRoot.classList.add("on"));
+
     function go(href){
       pageRoot.classList.add("leaving");
-      setTimeout(()=> location.href = href, 140);
+      setTimeout(() => location.href = href, 140);
     }
-    document.addEventListener("click", (e)=>{
+
+    document.addEventListener("click", (e) => {
       const a = e.target.closest("a");
       if (!a) return;
+
       const href = a.getAttribute("href");
       if (!href || href.startsWith("#") || href.startsWith("http")) return;
+
       e.preventDefault();
       go(href);
     });
 
-    // ===== Firebase =====
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
@@ -518,15 +600,16 @@
       messagingSenderId: "704757384914",
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // ===== DOM =====
     const gate = document.getElementById("gate");
-    const app  = document.getElementById("app");
+    const app = document.getElementById("app");
 
     const whoEl = document.getElementById("who");
     const myRoleEl = document.getElementById("myRole");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     const tabsEl = document.getElementById("tabs");
     const tabHint = document.getElementById("tabHint");
@@ -544,7 +627,6 @@
     const userRoleSel = document.getElementById("userRoleSel");
     const userList = document.getElementById("userList");
 
-    // modal
     const modalBack = document.getElementById("modalBack");
     const mCloseBtn = document.getElementById("mCloseBtn");
     const mSub = document.getElementById("mSub");
@@ -566,7 +648,6 @@
     const mApproveBtn = document.getElementById("mApproveBtn");
     const mRejectBtn = document.getElementById("mRejectBtn");
 
-    // ===== State =====
     let currentUser = null;
     let myRole = "";
     let myUserDoc = null;
@@ -574,13 +655,27 @@
     let userCache = [];
     let currentRequest = null;
 
-    // ===== Helpers =====
+    const STAFF_ROLES = new Set([
+      "platform_super",
+      "platform_admin",
+      "org_super",
+      "org_admin",
+      "org_staff"
+    ]);
+
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
       }[m]));
     }
-    function norm(s){ return String(s ?? "").trim(); }
+
+    function norm(s){
+      return String(s ?? "").trim();
+    }
 
     function tsToText(ts){
       try{
@@ -595,31 +690,38 @@
     function showGate(title, msg, showLogin){
       gate.style.display = "block";
       app.style.display = "none";
+
       gate.innerHTML = `
         <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
         <div class="sub">${esc(msg)}</div>
         <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
           ${showLogin ? `<button class="btn" id="loginBtn">使用 Google 登入</button>` : ``}
-          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="logoutGateBtn">登出</button>` : ``}
         </div>
       `;
+
       const loginBtn = document.getElementById("loginBtn");
-      if (loginBtn){
+      if (loginBtn) {
         loginBtn.onclick = async () => {
           const provider = new firebase.auth.GoogleAuthProvider();
           await firebase.auth().signInWithPopup(provider);
         };
       }
+
+      const logoutGateBtn = document.getElementById("logoutGateBtn");
+      if (logoutGateBtn) logoutGateBtn.onclick = doLogout;
     }
 
-    window.doLogout = async () => {
+    async function doLogout(){
       try{
         await firebase.auth().signOut();
       }catch(e){
         console.error(e);
         alert("登出失敗（請看 Console）");
       }
-    };
+    }
+
+    logoutBtn.onclick = doLogout;
 
     async function loadMyUser(uid){
       const snap = await db.collection("users").doc(uid).get();
@@ -638,44 +740,41 @@
       return `<span class="badge">pending</span>`;
     }
 
-    // ===== Tabs =====
     function renderTabs(){
       tabsEl.innerHTML = `
         <button class="tab active" data-tab="requests">申請審核</button>
         <button class="tab" data-tab="staff">後台人員</button>
       `;
-      tabsEl.querySelectorAll(".tab").forEach(btn=>{
-        btn.onclick = ()=>{
-          activateTab(btn.dataset.tab);
-        };
+
+      tabsEl.querySelectorAll(".tab").forEach(btn => {
+        btn.onclick = () => activateTab(btn.dataset.tab);
       });
+
       activateTab("requests");
     }
 
     function activateTab(tab){
-      tabsEl.querySelectorAll(".tab").forEach(btn=>{
+      tabsEl.querySelectorAll(".tab").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
 
-      tabRequests.style.display = (tab === "requests") ? "block" : "none";
-      tabStaff.style.display = (tab === "staff") ? "block" : "none";
+      tabRequests.style.display = tab === "requests" ? "block" : "none";
+      tabStaff.style.display = tab === "staff" ? "block" : "none";
 
-      if (tab === "requests"){
-        tabHint.textContent = "審核後台帳號申請，並通過/拒絕。";
+      if (tab === "requests") {
+        tabHint.textContent = "審核後台帳號申請，並完成角色與組織指派。";
         loadRequests();
       } else {
-        tabHint.textContent = "查看已寫入 users 的後台人員資料。";
+        tabHint.textContent = "查看已寫入 users 的後台人員資料，並快速調整狀態。";
         loadStaffUsers();
       }
     }
 
-    // ===== Requests =====
     function reqMatches(r){
       const status = reqStatusSel.value;
       const q = norm(reqSearch.value).toLowerCase();
 
       if (status !== "all" && (norm(r.status) || "pending") !== status) return false;
-
       if (!q) return true;
 
       const fields = [
@@ -684,15 +783,15 @@
         r.email,
         r.desiredRole,
         r.desiredOrg
-      ].map(x => norm(x).toLowerCase());
+      ].map(v => norm(v).toLowerCase());
 
-      return fields.some(x => x.includes(q));
+      return fields.some(v => v.includes(q));
     }
 
     function renderReqList(){
       const items = reqCache.filter(reqMatches);
 
-      if (!items.length){
+      if (!items.length) {
         reqList.innerHTML = `
           <div class="item">
             <div class="itemTitle">目前沒有資料</div>
@@ -715,10 +814,10 @@
               <div style="min-width:260px; flex:1;">
                 <div class="itemTitle">${esc(email)} ${statusBadge(r.status)}</div>
                 <div class="meta">
-                  requestId：<span class="mono">${esc(r.id)}</span><br/>
-                  uid：<span class="mono">${esc(uid)}</span><br/>
-                  申請角色：<span class="mono">${esc(desiredRole)}</span><br/>
-                  期望組織：<span class="mono">${esc(desiredOrg)}</span><br/>
+                  requestId：<span class="mono">${esc(r.id)}</span><br>
+                  uid：<span class="mono">${esc(uid)}</span><br>
+                  申請角色：<span class="mono">${esc(desiredRole)}</span><br>
+                  期望組織：<span class="mono">${esc(desiredOrg)}</span><br>
                   申請時間：<span class="mono">${esc(createdAt)}</span>
                 </div>
               </div>
@@ -730,7 +829,7 @@
         `;
       }).join("");
 
-      reqList.querySelectorAll("[data-open]").forEach(btn=>{
+      reqList.querySelectorAll("[data-open]").forEach(btn => {
         btn.onclick = () => openRequest(btn.dataset.open);
       });
     }
@@ -768,23 +867,25 @@
     reqSearch.oninput = renderReqList;
     reloadReqBtn.onclick = loadRequests;
 
-    // ===== Modal / Review =====
     function closeModal(){
       modalBack.style.display = "none";
       currentRequest = null;
     }
+
     mCloseBtn.onclick = closeModal;
-    modalBack.addEventListener("click", (e)=>{
+    modalBack.addEventListener("click", (e) => {
       if (e.target === modalBack) closeModal();
     });
 
     function renderAnswers(obj){
       const answers = obj && typeof obj === "object" ? obj : {};
       const entries = Object.entries(answers);
-      if (!entries.length){
+
+      if (!entries.length) {
         mAnswers.innerHTML = `<div class="sub">（無回答）</div>`;
         return;
       }
+
       mAnswers.innerHTML = entries.map(([key, val]) => `
         <div class="answerBlock">
           <div class="answerQ mono">${esc(key)}</div>
@@ -794,10 +895,11 @@
     }
 
     function openRequest(id){
-      const r = reqCache.find(x => x.id === id);
+      const r = reqCache.find(item => item.id === id);
       if (!r) return;
 
       currentRequest = r;
+
       mRequestId.textContent = r.id || "-";
       mUid.textContent = r.uid || "-";
       mEmail.textContent = r.email || "-";
@@ -805,23 +907,22 @@
       mCreated.textContent = tsToText(r.createdAt);
       mDesiredRole.textContent = r.desiredRole || "-";
       mDesiredOrg.textContent = r.desiredOrg || "-";
+
       renderAnswers(r.answers);
 
-      // 預填
       const desiredRole = norm(r.desiredRole);
-      if ([...mRole.options].some(o => o.value === desiredRole)) {
+      if ([...mRole.options].some(option => option.value === desiredRole)) {
         mRole.value = desiredRole;
       } else {
         mRole.value = "org_staff";
       }
 
       mEnabled.value = "true";
-      mOrgId.value = norm(r.desiredOrg || "");
-      mSchoolId.value = norm(r.desiredSchool || "");
+      mOrgId.value = norm(r.assignedOrgId || r.desiredOrg || "");
+      mSchoolId.value = norm(r.assignedSchoolId || r.desiredSchool || "");
       mTeam.value = norm(r.assignedTeam || "");
       mNote.value = norm(r.note || "");
 
-      // 已審核的時候也能看，但不一定要再審
       const isPending = (norm(r.status) || "pending") === "pending";
       mApproveBtn.disabled = !isPending;
       mRejectBtn.disabled = !isPending;
@@ -838,7 +939,11 @@
 
       const uid = norm(currentRequest.uid);
       const email = norm(currentRequest.email);
-      if (!uid) return alert("此申請缺少 uid");
+
+      if (!uid) {
+        alert("此申請缺少 uid");
+        return;
+      }
 
       const role = norm(mRole.value);
       const enabled = mEnabled.value === "true";
@@ -856,33 +961,31 @@
         const reqRef = db.collection("adminAccessRequests").doc(currentRequest.id);
         const userRef = db.collection("users").doc(uid);
 
-        await db.runTransaction(async (tx) => {
-          tx.set(userRef, {
-            uid,
-            email,
-            enabled,
-            role,
-            orgId: orgId || "",
-            schoolId: schoolId || "",
-            team: team || "",
-            approvedAt: new Date(),
-            approvedByUid: currentUser.uid,
-            updatedAt: new Date()
-          }, { merge:true });
-
-          tx.set(reqRef, {
-            status: "approved",
-            reviewedAt: new Date(),
-            reviewedByUid: currentUser.uid,
-            approvedAt: new Date(),
-            approvedByUid: currentUser.uid,
-            assignedRole: role,
-            assignedOrgId: orgId || "",
-            assignedSchoolId: schoolId || "",
-            assignedTeam: team || "",
-            note
-          }, { merge:true });
+        await reqRef.update({
+          status: "approved",
+          reviewedAt: new Date(),
+          reviewedByUid: currentUser.uid,
+          approvedAt: new Date(),
+          approvedByUid: currentUser.uid,
+          assignedRole: role,
+          assignedOrgId: orgId || "",
+          assignedSchoolId: schoolId || "",
+          assignedTeam: team || "",
+          note
         });
+
+        await userRef.set({
+          uid,
+          email,
+          enabled,
+          role,
+          orgId: orgId || "",
+          schoolId: schoolId || "",
+          team: team || "",
+          approvedAt: new Date(),
+          approvedByUid: currentUser.uid,
+          updatedAt: new Date()
+        }, { merge:true });
 
         alert("已通過，並寫入 users/" + uid);
         closeModal();
@@ -899,22 +1002,22 @@
 
     async function rejectCurrent(){
       if (!currentRequest) return;
-      const note = norm(mNote.value);
 
+      const note = norm(mNote.value);
       if (!confirm("確定要拒絕這筆申請嗎？")) return;
 
       mApproveBtn.disabled = true;
       mRejectBtn.disabled = true;
 
       try{
-        await db.collection("adminAccessRequests").doc(currentRequest.id).set({
+        await db.collection("adminAccessRequests").doc(currentRequest.id).update({
           status: "rejected",
           reviewedAt: new Date(),
           reviewedByUid: currentUser.uid,
           rejectedAt: new Date(),
           rejectedByUid: currentUser.uid,
           note
-        }, { merge:true });
+        });
 
         alert("已拒絕");
         closeModal();
@@ -931,15 +1034,6 @@
     mApproveBtn.onclick = approveCurrent;
     mRejectBtn.onclick = rejectCurrent;
 
-    // ===== Users =====
-    const STAFF_ROLES = new Set([
-      "platform_super",
-      "platform_admin",
-      "org_super",
-      "org_admin",
-      "org_staff"
-    ]);
-
     function userMatches(u){
       const q = norm(userSearch.value).toLowerCase();
       const roleFilter = userRoleSel.value;
@@ -955,15 +1049,15 @@
         u.schoolId,
         u.team,
         u.role
-      ].map(x => norm(x).toLowerCase());
+      ].map(v => norm(v).toLowerCase());
 
-      return fields.some(x => x.includes(q));
+      return fields.some(v => v.includes(q));
     }
 
     function renderUserList(){
       const items = userCache.filter(userMatches);
 
-      if (!items.length){
+      if (!items.length) {
         userList.innerHTML = `
           <div class="item">
             <div class="itemTitle">目前沒有後台人員資料</div>
@@ -977,19 +1071,32 @@
         <div class="item">
           <div class="itemTop">
             <div style="min-width:260px; flex:1;">
-              <div class="itemTitle">${esc(u.email || u.id)} <span class="badge mono">${esc(u.role || "-")}</span></div>
+              <div class="itemTitle">
+                ${esc(u.email || u.id)}
+                <span class="badge mono">${esc(u.role || "-")}</span>
+                ${u.enabled === true ? `<span class="badge ok">enabled</span>` : `<span class="badge warn">disabled</span>`}
+              </div>
               <div class="meta">
-                uid：<span class="mono">${esc(u.id)}</span><br/>
-                enabled：<span class="mono">${u.enabled === true ? "true" : "false"}</span><br/>
-                orgId：<span class="mono">${esc(u.orgId || "-")}</span><br/>
-                schoolId：<span class="mono">${esc(u.schoolId || "-")}</span><br/>
-                team：<span class="mono">${esc(u.team || "-")}</span><br/>
+                uid：<span class="mono">${esc(u.id)}</span><br>
+                orgId：<span class="mono">${esc(u.orgId || "-")}</span><br>
+                schoolId：<span class="mono">${esc(u.schoolId || "-")}</span><br>
+                team：<span class="mono">${esc(u.team || "-")}</span><br>
                 approvedAt：<span class="mono">${esc(tsToText(u.approvedAt))}</span>
               </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-sm" data-toggle-user="${esc(u.id)}" data-enabled="${u.enabled === true ? "true" : "false"}">
+                ${u.enabled === true ? "停用" : "啟用"}
+              </button>
             </div>
           </div>
         </div>
       `).join("");
+
+      userList.querySelectorAll("[data-toggle-user]").forEach(btn => {
+        btn.onclick = () => toggleUserEnabled(btn.dataset.toggleUser, btn.dataset.enabled === "true");
+      });
     }
 
     async function loadStaffUsers(){
@@ -997,42 +1104,56 @@
       reloadUsersBtn.disabled = true;
 
       try{
-        const snap = await db.collection("users")
-          .orderBy("approvedAt", "desc")
-          .limit(200)
-          .get();
+        let snap;
+        try{
+          snap = await db.collection("users")
+            .orderBy("approvedAt", "desc")
+            .limit(200)
+            .get();
+        }catch(e){
+          snap = await db.collection("users").limit(200).get();
+        }
 
         userCache = [];
         snap.forEach(doc => {
-          const d = doc.data() || {};
-          if (!STAFF_ROLES.has(norm(d.role))) return;
-          userCache.push({ id: doc.id, ...d });
+          const data = doc.data() || {};
+          if (!STAFF_ROLES.has(norm(data.role))) return;
+          userCache.push({ id: doc.id, ...data });
+        });
+
+        userCache.sort((a, b) => {
+          const ta = a.approvedAt?.toDate ? a.approvedAt.toDate().getTime() : 0;
+          const tb = b.approvedAt?.toDate ? b.approvedAt.toDate().getTime() : 0;
+          return tb - ta;
         });
 
         renderUserList();
       }catch(e){
         console.error(e);
-        // fallback：如果 orderBy approvedAt 不行，就直接抓
-        try{
-          const snap = await db.collection("users").limit(200).get();
-          userCache = [];
-          snap.forEach(doc => {
-            const d = doc.data() || {};
-            if (!STAFF_ROLES.has(norm(d.role))) return;
-            userCache.push({ id: doc.id, ...d });
-          });
-          renderUserList();
-        }catch(e2){
-          console.error(e2);
-          userList.innerHTML = `
-            <div class="item">
-              <div class="itemTitle warn">讀取後台人員失敗</div>
-              <div class="meta">可能是 Firestore Rules 權限不足。</div>
-            </div>
-          `;
-        }
+        userList.innerHTML = `
+          <div class="item">
+            <div class="itemTitle warn">讀取後台人員失敗</div>
+            <div class="meta">可能是 Firestore Rules 權限不足。</div>
+          </div>
+        `;
       }finally{
         reloadUsersBtn.disabled = false;
+      }
+    }
+
+    async function toggleUserEnabled(uid, enabledNow){
+      if (!confirm(`確定要${enabledNow ? "停用" : "啟用"}這個帳號嗎？`)) return;
+
+      try{
+        await db.collection("users").doc(uid).update({
+          enabled: !enabledNow,
+          updatedAt: new Date()
+        });
+
+        await loadStaffUsers();
+      }catch(e){
+        console.error(e);
+        alert("更新失敗（可能是 Firestore Rules 權限不足）");
       }
     }
 
@@ -1040,28 +1161,30 @@
     userRoleSel.onchange = renderUserList;
     reloadUsersBtn.onclick = loadStaffUsers;
 
-    // ===== Boot =====
     firebase.auth().onAuthStateChanged(async (user) => {
       currentUser = user || null;
 
-      if (!user){
+      if (!user) {
         showGate("後台帳號管理", "請先登入管理帳號以繼續。", true);
         return;
       }
 
       try{
         myUserDoc = await loadMyUser(user.uid);
-        if (!myUserDoc){
+
+        if (!myUserDoc) {
           showGate("等待授權", "你的帳號尚未被授權為管理者。", false);
           return;
         }
-        if (myUserDoc.enabled !== true){
+
+        if (myUserDoc.enabled !== true) {
           showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
           return;
         }
 
         myRole = norm(myUserDoc.role);
-        if (!isPlatform(myRole)){
+
+        if (!isPlatform(myRole)) {
           showGate("權限不足", "此頁面目前僅開放平台管理員使用。", false);
           return;
         }
@@ -1073,7 +1196,6 @@
         app.style.display = "block";
 
         renderTabs();
-
       }catch(e){
         console.error(e);
         showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
