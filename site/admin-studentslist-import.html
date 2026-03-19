@@ -306,6 +306,13 @@
           <button class="btn btn-primary" id="importBtn" disabled>開始匯入</button>
         </div>
 
+        <div id="progressWrap" style="display:none; margin-top:12px;">
+          <div id="progressText" class="small">準備中…</div>
+          <div style="margin-top:8px; width:100%; height:12px; border:1px solid var(--line); border-radius:999px; background:#fff; overflow:hidden;">
+            <div id="progressBar" style="width:0%; height:100%; background:#111; transition:width .18s ease;"></div>
+          </div>
+        </div>
+
         <div id="log" class="small" style="margin-top:10px;"></div>
       </div>
     </div>
@@ -350,6 +357,10 @@
     const importBtn = document.getElementById("importBtn");
     const logEl = document.getElementById("log");
 
+    const progressWrap = document.getElementById("progressWrap");
+    const progressText = document.getElementById("progressText");
+    const progressBar = document.getElementById("progressBar");
+
     let currentUser = null;
     let currentRole = "";
     let schoolDoc = null;
@@ -387,6 +398,20 @@
 
     function setLog(msg){
       logEl.innerHTML = msg;
+    }
+
+    function resetProgress(){
+      progressWrap.style.display = "none";
+      progressText.textContent = "準備中…";
+      progressBar.style.width = "0%";
+    }
+
+    function setProgress(current, total, extraText = ""){
+      const safeTotal = total > 0 ? total : 1;
+      const percent = Math.min(100, Math.round((current / safeTotal) * 100));
+      progressWrap.style.display = "block";
+      progressBar.style.width = percent + "%";
+      progressText.textContent = `匯入進度：${current} / ${total}（${percent}%）${extraText ? "｜" + extraText : ""}`;
     }
 
     function getSchoolIdFromUrl(){
@@ -493,6 +518,7 @@
       verifyKeyFieldsBox.innerHTML = "";
       importBtn.disabled = true;
       setLog("");
+      resetProgress();
 
       if (!schoolId) {
         schoolMeta.innerHTML = `<span class="warn">請先選擇校園</span>`;
@@ -698,6 +724,7 @@
         }
 
         setLog("");
+        resetProgress();
         fileInfo.textContent = "讀取中…";
 
         const ext = (file.name.split(".").pop() || "").toLowerCase();
@@ -815,6 +842,7 @@
       const oldText = importBtn.textContent;
       importBtn.textContent = "匯入中…";
       setLog("準備匯入…");
+      setProgress(0, rows.length, "開始處理");
 
       try {
         const schoolRef = db.collection("partnerSchools").doc(schoolId);
@@ -845,6 +873,11 @@
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
+
+          if (i === 0 || i % 20 === 0 || i === rows.length - 1) {
+            setProgress(i + 1, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
 
           let missing = false;
           for (const field of verifyKeyFields) {
@@ -892,12 +925,15 @@
             await batch.commit();
             batch = db.batch();
             batchCount = 0;
+            setProgress(i + 1, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
           }
         }
 
         if (batchCount > 0) {
           await batch.commit();
         }
+
+        setProgress(rows.length, rows.length, "匯入完成");
 
         setLog(`
           <span class="ok">匯入完成</span><br>
