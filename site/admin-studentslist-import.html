@@ -795,163 +795,180 @@
       return keyFields.map(field => norm(row[field])).join("｜");
     }
 
-    async function importRecords(){
-      if (!schoolId || !parsed) return;
+    async function importRecords() {
+  if (!schoolId || !parsed) return;
 
-      const rows = parsed.rows;
-      const headers = parsed.headers;
+  const rows = parsed.rows;
+  const headers = parsed.headers;
 
-      let verifyFields = [];
-      let verifyKeyFields = [];
+  let verifyFields = [];
+  let verifyKeyFields = [];
 
-      if (currentRole === "platform_super") {
-        verifyFields = readChecks(verifyFieldsBox);
-        verifyKeyFields = readChecks(verifyKeyFieldsBox);
+  if (currentRole === "platform_super") {
+    verifyFields = readChecks(verifyFieldsBox);
+    verifyKeyFields = readChecks(verifyKeyFieldsBox);
 
-        if (!verifyFields.length) {
-          alert("請至少勾選 1 個 verifyFields");
-          return;
-        }
+    if (!verifyFields.length) {
+      alert("請至少勾選 1 個 verifyFields");
+      return;
+    }
 
-        if (!verifyKeyFields.length) {
-          alert("請至少勾選 1 個 verifyKeyFields");
-          return;
-        }
-      } else {
-        verifyFields = Array.isArray(schoolDoc.verifyFields) ? schoolDoc.verifyFields : [];
-        verifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) ? schoolDoc.verifyKeyFields : [];
-        const importColumns = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
+    if (!verifyKeyFields.length) {
+      alert("請至少勾選 1 個 verifyKeyFields");
+      return;
+    }
+  } else {
+    verifyFields = Array.isArray(schoolDoc.verifyFields) ? schoolDoc.verifyFields : [];
+    verifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) ? schoolDoc.verifyKeyFields : [];
+    const importColumns = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
 
-        if (!importColumns.length) {
-          alert("此校尚未完成第一次設定，請聯絡超級管理員。");
-          return;
-        }
+    if (!importColumns.length) {
+      alert("此校尚未完成第一次設定，請聯絡超級管理員。");
+      return;
+    }
 
-        if (!headersEqual(importColumns, headers)) {
-          alert("欄位不一致，禁止匯入。請使用與第一次相同欄位與順序的檔案。");
-          return;
-        }
+    if (!headersEqual(importColumns, headers)) {
+      alert("欄位不一致，禁止匯入。請使用與第一次相同欄位與順序的檔案。");
+      return;
+    }
 
-        if (!verifyFields.length || !verifyKeyFields.length) {
-          alert("此校驗證設定不完整，請聯絡超級管理員。");
-          return;
+    if (!verifyFields.length || !verifyKeyFields.length) {
+      alert("此校驗證設定不完整，請聯絡超級管理員。");
+      return;
+    }
+  }
+
+  importBtn.disabled = true;
+  parseBtn.disabled = true;
+  schoolSel.disabled = true;
+  toggleVerifyBtn.disabled = true;
+
+  const oldText = importBtn.textContent;
+  importBtn.textContent = "匯入中…";
+  setLog("準備匯入…");
+  setProgress(0, rows.length, "準備資料");
+
+  try {
+    const schoolRef = db.collection("partnerSchools").doc(schoolId);
+
+    if (currentRole === "platform_super") {
+      await schoolRef.set({
+        importColumns: headers,
+        verifyFields,
+        verifyKeyFields,
+        verifyLocked: true,
+        verifyEnabled: true,
+        verifyConfiguredAt: new Date()
+      }, { merge: true });
+    }
+
+    const updatedDoc = await schoolRef.get();
+    schoolDoc = updatedDoc.data() || {};
+    renderSuperNotice();
+
+    const recordsRef = schoolRef.collection("records");
+
+    // 先把現有 verifyKey 一次抓回來，後面就不用每筆都 get
+    setProgress(0, rows.length, "讀取既有資料");
+    const existingSnap = await recordsRef.get();
+    const existingKeySet = new Set(existingSnap.docs.map(doc => doc.id));
+
+    let ok = 0;
+    let skip = 0;
+    let bad = 0;
+    let processed = 0;
+
+    let batch = db.batch();
+    let batchCount = 0;
+    const pendingNewKeys = new Set();
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      processed++;
+
+      if (i === 0 || i % 25 === 0 || i === rows.length - 1) {
+        setProgress(processed, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+
+      let missing = false;
+      for (const field of verifyKeyFields) {
+        if (!norm(row[field])) {
+          missing = true;
+          break;
         }
       }
 
-      importBtn.disabled = true;
-      const oldText = importBtn.textContent;
-      importBtn.textContent = "匯入中…";
-      setLog("準備匯入…");
-      setProgress(0, rows.length, "開始處理");
+      if (missing) {
+        bad++;
+        continue;
+      }
 
-      try {
-        const schoolRef = db.collection("partnerSchools").doc(schoolId);
+      const verifyKey = makeVerifyKey(row, verifyKeyFields);
+      if (!verifyKey || verifyKey.split("｜").every(item => !item)) {
+        bad++;
+        continue;
+      }
 
-        if (currentRole === "platform_super") {
-          await schoolRef.set({
-            importColumns: headers,
-            verifyFields,
-            verifyKeyFields,
-            verifyLocked: true,
-            verifyEnabled: true,
-            verifyConfiguredAt: new Date()
-          }, { merge:true });
-        }
+      // 先檢查資料庫既有，再檢查這次匯入流程中是否已重複
+      if (existingKeySet.has(verifyKey) || pendingNewKeys.has(verifyKey)) {
+        skip++;
+        continue;
+      }
 
-        const updatedDoc = await schoolRef.get();
-        schoolDoc = updatedDoc.data() || {};
-        renderSuperNotice();
+      const recordRef = recordsRef.doc(verifyKey);
 
-        const recordsRef = schoolRef.collection("records");
+      const payload = {
+        verifyKey,
+        createdAt: new Date(),
+        usedByUid: "",
+        usedAt: null
+      };
 
-        let ok = 0;
-        let skip = 0;
-        let bad = 0;
+      headers.forEach(header => {
+        payload[header] = norm(row[header]);
+      });
 
-        let batch = db.batch();
-        let batchCount = 0;
+      batch.set(recordRef, payload, { merge: false });
+      batchCount++;
+      ok++;
+      pendingNewKeys.add(verifyKey);
 
-        for (let i = 0; i < rows.length; i++) {
-          const row = rows[i];
-
-          if (i === 0 || i % 20 === 0 || i === rows.length - 1) {
-            setProgress(i + 1, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
-            await new Promise(resolve => setTimeout(resolve, 0));
-          }
-
-          let missing = false;
-          for (const field of verifyKeyFields) {
-            if (!norm(row[field])) {
-              missing = true;
-              break;
-            }
-          }
-
-          if (missing) {
-            bad++;
-            continue;
-          }
-
-          const verifyKey = makeVerifyKey(row, verifyKeyFields);
-          if (!verifyKey || verifyKey.split("｜").every(item => !item)) {
-            bad++;
-            continue;
-          }
-
-          const recordRef = recordsRef.doc(verifyKey);
-          const existing = await recordRef.get();
-
-          if (existing.exists) {
-            skip++;
-            continue;
-          }
-
-          const payload = {
-            verifyKey,
-            createdAt: new Date(),
-            usedByUid: "",
-            usedAt: null
-          };
-
-          headers.forEach(header => {
-            payload[header] = norm(row[header]);
-          });
-
-          batch.set(recordRef, payload, { merge:false });
-          batchCount++;
-          ok++;
-
-          if (batchCount >= 400) {
-            await batch.commit();
-            batch = db.batch();
-            batchCount = 0;
-            setProgress(i + 1, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
-          }
-        }
-
-        if (batchCount > 0) {
-          await batch.commit();
-        }
-
-        setProgress(rows.length, rows.length, "匯入完成");
-
-        setLog(`
-          <span class="ok">匯入完成</span><br>
-          新增：<span class="mono">${ok}</span>｜
-          跳過（verifyKey 已存在）：<span class="mono">${skip}</span>｜
-          略過（verifyKey 欄位缺值 / 不合法）：<span class="mono">${bad}</span>
-        `);
-
-        await loadSchool(schoolId);
-        updateImportBtn();
-      } catch (e) {
-        console.error(e);
-        alert("匯入失敗：\n" + (e.message || e));
-      } finally {
-        importBtn.textContent = oldText;
-        updateImportBtn();
+      if (batchCount >= 400) {
+        await batch.commit();
+        batch = db.batch();
+        batchCount = 0;
+        setProgress(processed, rows.length, `新增 ${ok}｜跳過 ${skip}｜略過 ${bad}`);
       }
     }
+
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+
+    setProgress(rows.length, rows.length, "匯入完成");
+
+    setLog(`
+      <span class="ok">匯入完成</span><br>
+      新增：<span class="mono">${ok}</span>｜
+      跳過（verifyKey 已存在 / 本次重複）：<span class="mono">${skip}</span>｜
+      略過（verifyKey 欄位缺值 / 不合法）：<span class="mono">${bad}</span>
+    `);
+
+    await loadSchool(schoolId);
+    updateImportBtn();
+  } catch (e) {
+    console.error(e);
+    alert("匯入失敗：\n" + (e.message || e));
+  } finally {
+    importBtn.textContent = oldText;
+    importBtn.disabled = false;
+    parseBtn.disabled = false;
+    schoolSel.disabled = false;
+    toggleVerifyBtn.disabled = false;
+    updateImportBtn();
+  }
+}
 
     importBtn.onclick = importRecords;
 
