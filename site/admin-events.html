@@ -961,68 +961,80 @@
         : norm(ownerSchoolSel.value);
     }
 
-    async function loadEvents(){
-      listEl.innerHTML = `<div class="small">載入中…</div>`;
+  async function loadEvents(){
+    listEl.innerHTML = `<div class="small">載入中…</div>`;
 
-      let q = db.collection("events");
+    let docs = [];
 
-      if (isPlatform()) {
-        q = q.orderBy("createdAt", "desc").limit(50);
-      } else {
-        q = q.where("ownerSchoolId", "==", mySchoolId).orderBy("createdAt", "desc").limit(50);
-      }
+    if (isPlatform()) {
+      const snap = await db.collection("events")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
 
-      const snap = await q.get();
+      docs = snap.docs;
+    } else {
+      const snap = await db.collection("events")
+        .where("ownerSchoolId", "==", mySchoolId)
+        .limit(100)
+        .get();
 
-      if (snap.empty) {
-        listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
-        return;
-      }
+      docs = snap.docs.sort((a, b) => {
+        const ta = a.data()?.createdAt?.toDate ? a.data().createdAt.toDate().getTime() : 0;
+        const tb = b.data()?.createdAt?.toDate ? b.data().createdAt.toDate().getTime() : 0;
+        return tb - ta;
+      });
+    }
 
-      listEl.innerHTML = snap.docs.map(doc => {
-        const e = doc.data() || {};
-        const id = doc.id;
+    if (!docs.length) {
+      listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
+      return;
+    }
 
-        const title = e.title || "(未命名)";
-        const owner = e.ownerSchoolId || "-";
-        const published = e.published === true;
-        const approvalStatus = e.approvalStatus || "pending";
-        const saleStart = toInputDateTime(e.saleStartAt);
-        const saleEnd = toInputDateTime(e.saleEndAt);
-        const eventStart = toInputDateTime(e.eventStartAt);
-        const inviteEnabled = e.inviteCodeEnabled === true;
-        const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
+    listEl.innerHTML = docs.map(doc => {
+      const e = doc.data() || {};
+      const id = doc.id;
 
-        const tag = owner === "__global__"
-          ? `<span class="pill">平台活動</span>`
-          : `<span class="pill">校園活動</span>`;
+      const title = e.title || "(未命名)";
+      const owner = e.ownerSchoolId || "-";
+      const published = e.published === true;
+      const approvalStatus = e.approvalStatus || "pending";
+      const saleStart = toInputDateTime(e.saleStartAt);
+      const saleEnd = toInputDateTime(e.saleEndAt);
+      const eventStart = toInputDateTime(e.eventStartAt);
+      const inviteEnabled = e.inviteCodeEnabled === true;
+      const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
 
-        return `
-          <div class="item">
-            <div class="item-top">
-              <div style="min-width:0;">
-                <div class="item-title">${esc(title)} ${tag}</div>
-                <div class="item-meta">
-                  eventId：<span class="mono">${esc(id)}</span><br>
-                  ownerSchoolId：<span class="mono">${esc(owner)}</span><br>
-                  approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
-                  published：<span class="mono">${published ? "true" : "false"}</span><br>
-                  搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
-                  活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
-                  inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
-                  邀請碼數量：<span class="mono">${inviteCount}</span>
-                </div>
-              </div>
+      const tag = owner === "__global__"
+        ? `<span class="pill">平台活動</span>`
+        : `<span class="pill">校園活動</span>`;
 
-              <div class="right">
-                <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
-                ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
+      return `
+        <div class="item">
+          <div class="item-top">
+            <div style="min-width:0;">
+              <div class="item-title">${esc(title)} ${tag}</div>
+              <div class="item-meta">
+                eventId：<span class="mono">${esc(id)}</span><br>
+                ownerSchoolId：<span class="mono">${esc(owner)}</span><br>
+                approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
+                published：<span class="mono">${published ? "true" : "false"}</span><br>
+                搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
+                活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
+                inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
+                邀請碼數量：<span class="mono">${inviteCount}</span>
               </div>
             </div>
+
+            <div class="right">
+              <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
+              ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
+            </div>
           </div>
-        `;
-      }).join("");
-    }
+        </div>
+      `;
+    }).join("");
+  }
 
     reloadBtn.onclick = async () => {
       resetEditor();
