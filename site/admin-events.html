@@ -7,71 +7,289 @@
 
   <style>
     :root{
-      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
-      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
-      --btn-h:46px; --btn-fs:16px;
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
       --r:18px;
     }
+
     *{ box-sizing:border-box; }
+
     body{
-      margin:0; background:var(--bg); color:var(--text);
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
+
+    .wrap{
+      max-width:1080px;
+      margin:0 auto;
+      padding:48px 16px;
+    }
+
     .section{
-      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
     }
-    .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
-    h2{ margin:0; font-size:16px; font-weight:900; }
-    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
-    .small{ font-size:13px; color:var(--muted); }
-    label{ font-weight:900; display:block; margin:12px 0 6px; }
-    input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select{
-      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
-      font-size:16px; background:#fff;
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
     }
-    textarea{ min-height:100px; resize:vertical; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    label{
+      font-weight:900;
+      display:block;
+      margin:12px 0 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    textarea,
+    select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:16px;
+      background:#fff;
+    }
+
+    textarea{
+      min-height:100px;
+      resize:vertical;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
-      border-radius:999px; border:1px solid var(--line);
-      background:#fff; font-weight:900; font-size:var(--btn-fs);
-      cursor:pointer; color:#111; text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
-    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-danger{ border-color:rgba(239,68,68,.35); color:#b91c1c; background:#fff; }
-    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
 
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    .btn:hover{
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transform:translateY(-1px);
+    }
 
-    .box{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-danger{
+      border-color:rgba(239,68,68,.35);
+      color:#b91c1c;
+      background:#fff;
+    }
+
+    .btn-sm{
+      height:40px;
+      padding:8px calc(var(--btn-b)*1.25);
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:860px){
+      .grid,
+      .grid3{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
     .pill{
-      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
-      border-radius:999px; font-size:13px; background:#fff;
+      display:inline-flex;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      font-size:13px;
+      background:#fff;
     }
-    .warn{ color:#b91c1c; font-weight:900; }
-    .ok{ color:#166534; font-weight:900; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 
-    .list{ display:grid; gap:12px; margin-top:12px; }
-    .item{
-      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+    .warn{
+      color:#b91c1c;
+      font-weight:900;
     }
-    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .item-title{ font-weight:900; }
-    .item-meta{ margin-top:6px; color:var(--muted); font-size:13px; line-height:1.6; }
-    .right{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-    .divider{ height:1px; background:var(--line); margin:12px 0; }
+
+    .ok{
+      color:#166534;
+      font-weight:900;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .item{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    .item-title{
+      font-weight:900;
+    }
+
+    .item-meta{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .right{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .divider{
+      height:1px;
+      background:var(--line);
+      margin:16px 0;
+    }
+
+    .modeCardWrap{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:720px){
+      .modeCardWrap{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .modeCard{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      background:#fff;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+
+    .modeCard:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .modeCard.active{
+      border-color:#111;
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .modeTitle{
+      font-size:16px;
+      font-weight:900;
+    }
 
     .inviteItem{
       border:1px dashed var(--line);
@@ -80,6 +298,7 @@
       background:#fff;
       margin-top:10px;
     }
+
     .inviteTop{
       display:flex;
       justify-content:space-between;
@@ -88,11 +307,16 @@
       flex-wrap:wrap;
       margin-bottom:10px;
     }
+
     .switchRow{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
       align-items:center;
+    }
+
+    .hidden{
+      display:none !important;
     }
   </style>
 </head>
@@ -106,12 +330,32 @@
         <div class="header">
           <div>
             <h1>活動管理</h1>
-            <div class="sub">建立 / 編輯活動。支援「校園活動」與「平台活動（__global__）」</div>
-            <div class="sub small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+            <div class="sub">
+              可建立活動、管理活動、設定邀請碼，並查看目前的發布審核狀態。
+            </div>
+            <div class="sub small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>
+            </div>
           </div>
+
           <div class="row" style="justify-content:flex-end;">
             <a class="btn btn-sm" href="dashboard.html">回主選單</a>
             <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="modeCardWrap">
+          <div class="modeCard active" id="openCreateMode">
+            <div class="modeTitle">建立活動</div>
+            <div class="sub">建立新活動、設定活動類型、主辦對象、時間、邀請碼等內容。</div>
+          </div>
+
+          <div class="modeCard" id="openManageMode">
+            <div class="modeTitle">管理活動</div>
+            <div class="sub">查看既有活動、編輯內容、刪除活動與確認目前審核 / 公開狀態。</div>
           </div>
         </div>
       </div>
@@ -121,25 +365,19 @@
           <div>
             <label>管理範圍</label>
             <div class="box">
-              <div class="row" style="justify-content:space-between; align-items:flex-start;">
-                <div>
-                  <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
-                  <div class="small">校方只能管理自己校園活動；平台端可管理全部與平台活動。</div>
-                </div>
-                <button class="btn btn-sm" id="reloadBtn">重新載入</button>
+              <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
+              <div class="small" style="margin-top:8px;">
+                校方角色只能管理自己校園相關活動；平台角色可管理全部活動。
               </div>
             </div>
           </div>
 
           <div>
-            <label>建立活動類型</label>
+            <label>公開 / 不公開 說明</label>
             <div class="box">
-              <div class="row" style="justify-content:space-between;">
-                <div>
-                  <div>類型：<span id="typeText" class="mono">school</span></div>
-                  <div class="small">平台端可切換成平台活動（__global__）。</div>
-                </div>
-                <button class="btn btn-sm" id="toggleTypeBtn" disabled>平台活動</button>
+              <div class="small">
+                <span class="ok">公開</span>：通過平台審核後，前台可看到並可進入購票 / 報名流程。<br>
+                <span class="warn">不公開</span>：前台不顯示，通常用於草稿、內部測試或尚未準備完成的活動。
               </div>
             </div>
           </div>
@@ -147,8 +385,50 @@
       </div>
 
       <div class="section" id="editorSection">
-        <h2>建立 / 編輯</h2>
-        <div class="sub small" id="editingHint">目前：<span class="mono">新增模式</span></div>
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <h2>建立 / 編輯活動</h2>
+            <div class="sub small" id="editingHint">目前：<span class="mono">新增模式</span></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-sm" id="reloadBtn">重新載入</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="grid3">
+          <div>
+            <label style="margin-top:0;">活動發布類型</label>
+            <select id="publishScope">
+              <option value="school">校園活動</option>
+              <option value="platform">平台活動</option>
+            </select>
+            <div class="small" style="margin-top:8px;">
+              校園活動會綁定某一校園；平台活動則視為全平台活動。
+            </div>
+          </div>
+
+          <div>
+            <label style="margin-top:0;">主辦對象</label>
+            <select id="ownerSchoolSel"></select>
+            <div class="small" id="ownerHint" style="margin-top:8px;">
+              -
+            </div>
+          </div>
+
+          <div>
+            <label style="margin-top:0;">審核狀態</label>
+            <select id="approvalStatus">
+              <option value="pending">pending（待平台審核）</option>
+              <option value="approved">approved（已通過）</option>
+              <option value="rejected">rejected（已退回）</option>
+            </select>
+            <div class="small" style="margin-top:8px;">
+              建議一般建立時預設為 pending，待平台管理員確認後再改成 approved。
+            </div>
+          </div>
+        </div>
 
         <div class="grid" style="margin-top:12px;">
           <div>
@@ -163,14 +443,6 @@
           </div>
 
           <div>
-            <label>活動歸屬（ownerSchoolId）</label>
-            <select id="ownerSchoolSel" disabled></select>
-            <div class="small" style="margin-top:8px;">
-              校園活動＝某校 docId；平台活動＝<span class="mono">__global__</span>
-            </div>
-
-            <div class="divider"></div>
-
             <label>是否公開（published）</label>
             <select id="published">
               <option value="false">false（不公開）</option>
@@ -179,6 +451,12 @@
 
             <label>名額（選填）</label>
             <input id="capacity" type="number" min="0" placeholder="例：500" />
+
+            <label>建立者所屬資訊</label>
+            <div class="box">
+              <div>role：<span id="creatorRoleText" class="mono">-</span></div>
+              <div style="margin-top:8px;">schoolId：<span id="creatorSchoolText" class="mono">-</span></div>
+            </div>
           </div>
         </div>
 
@@ -200,7 +478,7 @@
           </div>
         </div>
 
-        <div class="divider" style="margin-top:16px;"></div>
+        <div class="divider"></div>
 
         <h2>邀請碼設定</h2>
         <div class="sub">可選手動輸入或隨機產生，並可設定每組邀請碼可用次數。</div>
@@ -214,7 +492,7 @@
             </select>
           </div>
           <div class="small" style="margin-top:8px;">
-            啟用後，可在報名流程中要求輸入對應邀請碼。
+            啟用後，前台流程可要求輸入邀請碼才能報名 / 購票。
           </div>
         </div>
 
@@ -227,16 +505,18 @@
         </div>
 
         <div class="row" style="justify-content:flex-end; margin-top:12px;">
-          <button class="btn" id="resetBtn">清空/取消編輯</button>
+          <button class="btn" id="resetBtn">清空 / 取消編輯</button>
           <button class="btn btn-primary" id="saveBtn" disabled>儲存</button>
         </div>
 
         <div class="small" id="editorMsg" style="margin-top:10px;"></div>
       </div>
 
-      <div class="section">
+      <div class="section hidden" id="manageSection">
         <h2>活動清單</h2>
-        <div class="sub">點「編輯」可載入到上方表單。平台端可看到所有活動；校方只看自己校園活動。</div>
+        <div class="sub">
+          點「編輯」會把資料載入上方表單。平台端可看到全部活動；校方只看自己校園活動。
+        </div>
         <div class="list" id="list"></div>
       </div>
     </div>
@@ -252,6 +532,7 @@
       authDomain: "concert-1ff7e.firebaseapp.com",
       projectId: "concert-1ff7e"
     });
+
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
@@ -261,12 +542,19 @@
     const logoutBtn = document.getElementById("logoutBtn");
 
     const mySchoolText = document.getElementById("mySchoolText");
+    const creatorRoleText = document.getElementById("creatorRoleText");
+    const creatorSchoolText = document.getElementById("creatorSchoolText");
     const reloadBtn = document.getElementById("reloadBtn");
 
-    const typeText = document.getElementById("typeText");
-    const toggleTypeBtn = document.getElementById("toggleTypeBtn");
+    const openCreateMode = document.getElementById("openCreateMode");
+    const openManageMode = document.getElementById("openManageMode");
+    const editorSection = document.getElementById("editorSection");
+    const manageSection = document.getElementById("manageSection");
 
+    const publishScopeEl = document.getElementById("publishScope");
     const ownerSchoolSel = document.getElementById("ownerSchoolSel");
+    const ownerHint = document.getElementById("ownerHint");
+    const approvalStatusEl = document.getElementById("approvalStatus");
     const publishedEl = document.getElementById("published");
     const capacityEl = document.getElementById("capacity");
 
@@ -293,18 +581,24 @@
     let currentUser = null;
     let currentRole = "";
     let userData = null;
-
     let mySchoolId = "";
-    let modeType = "school";
     let editingId = "";
     let inviteCodesState = [];
+    let currentView = "create";
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
       }[m]));
     }
-    function norm(v){ return String(v ?? "").trim(); }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
 
     function showGate(html){
       gate.innerHTML = html;
@@ -313,26 +607,38 @@
     }
 
     async function doLogout(){
-      try { await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
+      try{
+        await firebase.auth().signOut();
+      }catch(e){
+        console.error(e);
+        alert("登出失敗（看 Console）");
+      }
     }
+
     logoutBtn.onclick = doLogout;
 
     async function loadUserRole(uid){
       const doc = await db.collection("users").doc(uid).get();
       if (!doc.exists) return { ok:false, reason:"尚未授權" };
+
       const u = doc.data() || {};
       if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
-      const role = String(u.role || "").trim();
-      return { ok:true, role, userData:u };
+
+      return {
+        ok:true,
+        role:String(u.role || "").trim(),
+        userData:u
+      };
     }
 
     function isPlatform(){
       return currentRole === "platform_super" || currentRole === "platform_admin";
     }
+
     function isPlatformSuper(){
       return currentRole === "platform_super";
     }
+
     function isOrgRole(){
       return ["org_super","org_admin","org_staff"].includes(currentRole);
     }
@@ -341,12 +647,14 @@
       if (!ts) return "";
       const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
       if (!d) return "";
-      const pad = (n)=> String(n).padStart(2,"0");
+
+      const pad = n => String(n).padStart(2, "0");
       const yyyy = d.getFullYear();
-      const mm = pad(d.getMonth()+1);
+      const mm = pad(d.getMonth() + 1);
       const dd = pad(d.getDate());
       const hh = pad(d.getHours());
       const mi = pad(d.getMinutes());
+
       return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
     }
 
@@ -358,14 +666,31 @@
       return d;
     }
 
-    function updateSaveBtn(){
-      const ok = norm(titleEl.value).length > 0 && norm(ownerSchoolSel.value).length > 0;
-      saveBtn.disabled = !ok;
-    }
-
     function setEditorMessage(html){
       editorMsg.innerHTML = html || "";
     }
+
+    function updateSaveBtn(){
+      const titleOk = norm(titleEl.value).length > 0;
+      const ownerOk = norm(ownerSchoolSel.value).length > 0;
+      saveBtn.disabled = !(titleOk && ownerOk);
+    }
+
+    function setPageMode(mode){
+      currentView = mode;
+
+      openCreateMode.classList.toggle("active", mode === "create");
+      openManageMode.classList.toggle("active", mode === "manage");
+
+      editorSection.classList.toggle("hidden", mode !== "create");
+      manageSection.classList.toggle("hidden", mode !== "manage");
+    }
+
+    openCreateMode.onclick = () => setPageMode("create");
+    openManageMode.onclick = async () => {
+      setPageMode("manage");
+      await loadEvents();
+    };
 
     function randomInviteCode(length = 8){
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -377,8 +702,9 @@
     }
 
     function normalizeInviteItem(x){
-      const mode = (norm(x.mode) === "random") ? "random" : "manual";
+      const mode = norm(x.mode) === "random" ? "random" : "manual";
       const randomLength = Math.max(4, Math.min(20, Number(x.randomLength || 8) || 8));
+
       return {
         code: norm(x.code || ""),
         note: norm(x.note || ""),
@@ -418,6 +744,7 @@
                   <option value="random" ${item.mode === "random" ? "selected" : ""}>random（隨機）</option>
                 </select>
               </div>
+
               <div>
                 <label style="margin-top:0;">是否啟用</label>
                 <select onchange="updateInviteCode(${idx}, 'enabled', this.value)">
@@ -438,6 +765,7 @@
                   placeholder="${isRandom ? "隨機產生" : "例如：VIP2026"}"
                 />
               </div>
+
               <div>
                 <label>${isRandom ? "亂數長度" : "可用次數（maxUses）"}</label>
                 ${
@@ -457,6 +785,7 @@
                     : `<input type="number" value="${item.usedCount}" readonly />`
                 }
               </div>
+
               <div>
                 <label>${isRandom ? "已使用次數（usedCount）" : "備註（note）"}</label>
                 ${
@@ -476,48 +805,6 @@
       }).join("");
     }
 
-    function resetEditor(){
-      editingId = "";
-      editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
-      titleEl.value = "";
-      locationEl.value = "";
-      descriptionEl.value = "";
-      publishedEl.value = "false";
-      capacityEl.value = "";
-
-      saleStartAtEl.value = "";
-      saleEndAtEl.value = "";
-      eventStartAtEl.value = "";
-      eventEndAtEl.value = "";
-
-      inviteCodeEnabledEl.value = "false";
-      inviteCodesState = [];
-      renderInviteCodes();
-
-      setEditorMessage("");
-      updateSaveBtn();
-    }
-    resetBtn.onclick = resetEditor;
-
-    function setModeType(next){
-      modeType = next;
-      typeText.textContent = (modeType === "global") ? "global(__global__)" : "school";
-      if (modeType === "global") {
-        ownerSchoolSel.value = "__global__";
-        ownerSchoolSel.disabled = true;
-      } else {
-        ownerSchoolSel.disabled = isOrgRole();
-        ownerSchoolSel.value = mySchoolId || ownerSchoolSel.value;
-      }
-      updateSaveBtn();
-    }
-
-    toggleTypeBtn.onclick = () => {
-      if (!isPlatform()) return;
-      setModeType(modeType === "school" ? "global" : "school");
-      toggleTypeBtn.textContent = (modeType === "school") ? "平台活動" : "校園活動";
-    };
-
     window.updateInviteCode = (idx, key, value) => {
       if (!inviteCodesState[idx]) return;
 
@@ -526,8 +813,8 @@
       } else if (key === "maxUses" || key === "usedCount" || key === "randomLength") {
         inviteCodesState[idx][key] = Number(value || 0);
       } else if (key === "mode") {
-        inviteCodesState[idx][key] = value === "random" ? "random" : "manual";
-        if (inviteCodesState[idx][key] === "random") {
+        inviteCodesState[idx].mode = value === "random" ? "random" : "manual";
+        if (inviteCodesState[idx].mode === "random") {
           const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
           inviteCodesState[idx].randomLength = len;
           inviteCodesState[idx].code = randomInviteCode(len);
@@ -569,41 +856,116 @@
       renderInviteCodes();
     };
 
+    function refreshOwnerSelectState(){
+      const scope = publishScopeEl.value;
+
+      if (scope === "platform") {
+        ownerSchoolSel.innerHTML = `<option value="__global__">平台（__global__）</option>`;
+        ownerSchoolSel.value = "__global__";
+        ownerSchoolSel.disabled = true;
+        ownerHint.innerHTML = `平台活動會以 <span class="mono">__global__</span> 作為歸屬。`;
+        updateSaveBtn();
+        return;
+      }
+
+      if (isOrgRole()) {
+        ownerSchoolSel.disabled = true;
+        ownerSchoolSel.value = mySchoolId || "";
+        ownerHint.innerHTML = `你目前屬於校方角色，建立校園活動時只能使用自己的校園。`;
+      } else {
+        ownerSchoolSel.disabled = false;
+        ownerHint.innerHTML = `平台角色建立校園活動時，可指定任一校園作為主辦校園。`;
+      }
+
+      updateSaveBtn();
+    }
+
     async function loadOwnerSchoolOptions(){
       ownerSchoolSel.innerHTML = "";
 
       if (isPlatform()) {
-        ownerSchoolSel.insertAdjacentHTML("beforeend",
-          `<option value="__global__">__global__（平台活動）</option>`
+        const snap = await db.collection("partnerSchools").orderBy("name").get();
+        snap.forEach(doc => {
+          const school = doc.data() || {};
+          ownerSchoolSel.insertAdjacentHTML(
+            "beforeend",
+            `<option value="${esc(doc.id)}">${esc(school.name || doc.id)}（${esc(doc.id)}）</option>`
+          );
+        });
+      } else if (mySchoolId) {
+        const doc = await db.collection("partnerSchools").doc(mySchoolId).get();
+        const school = doc.exists ? (doc.data() || {}) : {};
+        ownerSchoolSel.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${esc(mySchoolId)}">${esc(school.name || mySchoolId)}（${esc(mySchoolId)}）</option>`
         );
       }
 
-      if (isPlatform()) {
-        const snap = await db.collection("partnerSchools").orderBy("name").get();
-        snap.forEach(d => {
-          const s = d.data() || {};
-          ownerSchoolSel.insertAdjacentHTML("beforeend",
-            `<option value="${esc(d.id)}">${esc(s.name || d.id)}（${esc(d.id)}）</option>`
-          );
-        });
-      } else {
-        if (mySchoolId) {
-          const doc = await db.collection("partnerSchools").doc(mySchoolId).get();
-          const s = doc.exists ? (doc.data() || {}) : {};
-          ownerSchoolSel.insertAdjacentHTML("beforeend",
-            `<option value="${esc(mySchoolId)}">${esc(s.name || mySchoolId)}（${esc(mySchoolId)}）</option>`
-          );
-        }
+      if (!ownerSchoolSel.value && ownerSchoolSel.options.length) {
+        ownerSchoolSel.value = ownerSchoolSel.options[0].value;
       }
 
-      if (isOrgRole()) setModeType("school");
-      else setModeType("school");
+      refreshOwnerSelectState();
+    }
+
+    function resetEditor(){
+      editingId = "";
+      editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
+
+      publishScopeEl.value = "school";
+      approvalStatusEl.value = "pending";
+
+      titleEl.value = "";
+      locationEl.value = "";
+      descriptionEl.value = "";
+      publishedEl.value = "false";
+      capacityEl.value = "";
+
+      saleStartAtEl.value = "";
+      saleEndAtEl.value = "";
+      eventStartAtEl.value = "";
+      eventEndAtEl.value = "";
+
+      inviteCodeEnabledEl.value = "false";
+      inviteCodesState = [];
+      renderInviteCodes();
+
+      setEditorMessage("");
+      refreshOwnerSelectState();
+      updateSaveBtn();
+    }
+
+    resetBtn.onclick = resetEditor;
+
+    function buildInviteCodesPayload(){
+      const cleaned = inviteCodesState
+        .map(normalizeInviteItem)
+        .filter(item => item.code);
+
+      const unique = [];
+      const seen = new Set();
+
+      for (const item of cleaned){
+        const key = item.code.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(item);
+      }
+
+      return unique;
+    }
+
+    function getScopeOwnerSchoolId(){
+      return publishScopeEl.value === "platform"
+        ? "__global__"
+        : norm(ownerSchoolSel.value);
     }
 
     async function loadEvents(){
       listEl.innerHTML = `<div class="small">載入中…</div>`;
 
       let q = db.collection("events");
+
       if (isPlatform()) {
         q = q.orderBy("createdAt", "desc").limit(50);
       } else {
@@ -611,6 +973,7 @@
       }
 
       const snap = await q.get();
+
       if (snap.empty) {
         listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
         return;
@@ -623,6 +986,7 @@
         const title = e.title || "(未命名)";
         const owner = e.ownerSchoolId || "-";
         const published = e.published === true;
+        const approvalStatus = e.approvalStatus || "pending";
         const saleStart = toInputDateTime(e.saleStartAt);
         const saleEnd = toInputDateTime(e.saleEndAt);
         const eventStart = toInputDateTime(e.eventStartAt);
@@ -640,7 +1004,8 @@
                 <div class="item-title">${esc(title)} ${tag}</div>
                 <div class="item-meta">
                   eventId：<span class="mono">${esc(id)}</span><br>
-                  ownerSchoolId：<span class="mono">${esc(owner)}</span>｜
+                  ownerSchoolId：<span class="mono">${esc(owner)}</span><br>
+                  approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
                   published：<span class="mono">${published ? "true" : "false"}</span><br>
                   搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
                   活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
@@ -661,22 +1026,29 @@
 
     reloadBtn.onclick = async () => {
       resetEditor();
-      await loadEvents();
+      if (currentView === "manage") {
+        await loadEvents();
+      }
     };
 
     window.editEvent = async (eventId) => {
       try {
         const doc = await db.collection("events").doc(eventId).get();
-        if (!doc.exists) return alert("找不到活動");
+        if (!doc.exists) {
+          alert("找不到活動");
+          return;
+        }
 
         const e = doc.data() || {};
         editingId = eventId;
+
         editingHint.innerHTML = `目前：<span class="mono">編輯模式</span>（eventId：<span class="mono">${esc(eventId)}</span>）`;
 
         titleEl.value = e.title || "";
         locationEl.value = e.location || "";
         descriptionEl.value = e.description || "";
-        publishedEl.value = (e.published === true) ? "true" : "false";
+        publishedEl.value = e.published === true ? "true" : "false";
+        approvalStatusEl.value = e.approvalStatus || "pending";
         capacityEl.value = (e.capacity ?? "") === "" ? "" : String(e.capacity ?? "");
 
         saleStartAtEl.value = toInputDateTime(e.saleStartAt);
@@ -686,25 +1058,23 @@
 
         inviteCodeEnabledEl.value = e.inviteCodeEnabled === true ? "true" : "false";
         inviteCodesState = Array.isArray(e.inviteCodes)
-          ? e.inviteCodes.map(x => normalizeInviteItem(x))
+          ? e.inviteCodes.map(item => normalizeInviteItem(item))
           : [];
         renderInviteCodes();
 
         const owner = String(e.ownerSchoolId || "");
-        if (owner === "__global__") {
-          if (!isPlatform()) {
-            alert("你沒有權限編輯平台活動");
-            resetEditor();
-            return;
-          }
-          setModeType("global");
-        } else {
-          setModeType("school");
-          ownerSchoolSel.value = owner || mySchoolId;
+        publishScopeEl.value = owner === "__global__" ? "platform" : "school";
+
+        await loadOwnerSchoolOptions();
+
+        if (publishScopeEl.value === "school") {
+          ownerSchoolSel.value = owner || mySchoolId || ownerSchoolSel.value;
         }
 
+        refreshOwnerSelectState();
         setEditorMessage(`<span class="ok">已載入活動資料</span>`);
         updateSaveBtn();
+        setPageMode("create");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (err) {
         console.error(err);
@@ -727,47 +1097,34 @@
       }
     };
 
-    function buildInviteCodesPayload(){
-      const cleaned = inviteCodesState
-        .map(normalizeInviteItem)
-        .filter(x => x.code);
-
-      const unique = [];
-      const seen = new Set();
-
-      for (const item of cleaned){
-        const key = item.code.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        unique.push(item);
-      }
-      return unique;
-    }
-
     async function saveEvent(){
       saveBtn.disabled = true;
-      const old = saveBtn.textContent;
+      const oldText = saveBtn.textContent;
       saveBtn.textContent = "儲存中…";
       setEditorMessage("");
 
       try {
-        const ownerSchoolId = norm(ownerSchoolSel.value);
         const title = norm(titleEl.value);
-        if (!title) throw new Error("請輸入活動標題");
-        if (!ownerSchoolId) throw new Error("缺少 ownerSchoolId");
-
-        if (!isPlatform() && ownerSchoolId === "__global__") {
-          throw new Error("校方不可建立/修改平台活動");
-        }
-        if (isOrgRole() && ownerSchoolId !== mySchoolId) {
-          throw new Error("校方只能管理自己校園活動");
-        }
-
+        const ownerSchoolId = getScopeOwnerSchoolId();
+        const publishScope = publishScopeEl.value;
         const inviteCodes = buildInviteCodesPayload();
+
+        if (!title) throw new Error("請輸入活動標題");
+        if (!ownerSchoolId) throw new Error("缺少主辦對象");
+
+        if (!isPlatform() && publishScope === "platform") {
+          throw new Error("校方角色不可直接建立平台活動");
+        }
+
+        if (isOrgRole() && publishScope === "school" && ownerSchoolId !== mySchoolId) {
+          throw new Error("校方角色只能建立自己校園的活動");
+        }
 
         const payload = {
           title,
           ownerSchoolId,
+          publishScope,
+          approvalStatus: approvalStatusEl.value,
           published: publishedEl.value === "true",
           location: norm(locationEl.value),
           description: norm(descriptionEl.value),
@@ -782,16 +1139,16 @@
           inviteCodes,
 
           updatedAt: new Date(),
-          updatedBy: currentUser ? (currentUser.uid || "") : ""
+          updatedBy: currentUser ? currentUser.uid : ""
         };
 
-        Object.keys(payload).forEach(k => {
-          if (payload[k] === null) delete payload[k];
+        Object.keys(payload).forEach(key => {
+          if (payload[key] === null) delete payload[key];
         });
 
         if (!editingId) {
           payload.createdAt = new Date();
-          payload.createdBy = currentUser ? (currentUser.uid || "") : "";
+          payload.createdBy = currentUser ? currentUser.uid : "";
           await db.collection("events").add(payload);
           setEditorMessage(`<span class="ok">建立成功</span>`);
         } else {
@@ -801,16 +1158,16 @@
 
         resetEditor();
         await loadEvents();
-
       } catch (err) {
         console.error(err);
         alert("儲存失敗：\n" + (err.message || err));
       } finally {
-        saveBtn.textContent = old;
+        saveBtn.textContent = oldText;
         updateSaveBtn();
       }
     }
 
+    publishScopeEl.addEventListener("change", refreshOwnerSelectState);
     saveBtn.onclick = saveEvent;
     [titleEl, ownerSchoolSel].forEach(el => el.addEventListener("input", updateSaveBtn));
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
@@ -826,6 +1183,7 @@
             <button class="btn btn-primary" id="loginBtn">使用 Google 登入</button>
           </div>
         `);
+
         document.getElementById("loginBtn").onclick = async () => {
           const provider = new firebase.auth.GoogleAuthProvider();
           await firebase.auth().signInWithPopup(provider);
@@ -834,53 +1192,62 @@
       }
 
       try {
-        const r = await loadUserRole(user.uid);
-        if (!r.ok) {
+        const result = await loadUserRole(user.uid);
+
+        if (!result.ok) {
           showGate(`
             <h1>無法進入</h1>
-            <div class="sub warn">${esc(r.reason)}</div>
-            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+            <div class="sub warn">${esc(result.reason)}</div>
+            <div style="margin-top:16px;">
+              <button class="btn" id="outBtn">登出</button>
+            </div>
           `);
+
           document.getElementById("outBtn").onclick = doLogout;
           return;
         }
 
-        currentRole = r.role;
-        userData = r.userData || {};
+        currentRole = result.role;
+        userData = result.userData || {};
+
         whoEl.textContent = user.email || "";
         roleText.textContent = currentRole || "-";
+        creatorRoleText.textContent = currentRole || "-";
 
-        const allowed = ["platform_super","platform_admin","org_super","org_admin"];
+        const allowed = ["platform_super", "platform_admin", "org_super", "org_admin"];
         if (!allowed.includes(currentRole)) {
           showGate(`
             <h1>權限不足</h1>
             <div class="sub warn">你的角色無法使用此功能。</div>
-            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+            <div style="margin-top:16px;">
+              <button class="btn" id="outBtn">登出</button>
+            </div>
           `);
+
           document.getElementById("outBtn").onclick = doLogout;
           return;
         }
 
         mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
         mySchoolText.textContent = mySchoolId || "__none__";
-
-        toggleTypeBtn.disabled = !isPlatform();
-        toggleTypeBtn.textContent = "平台活動";
+        creatorSchoolText.textContent = mySchoolId || "__none__";
 
         gate.style.display = "none";
         app.style.display = "block";
 
         await loadOwnerSchoolOptions();
         resetEditor();
-        await loadEvents();
-
+        setPageMode("create");
       } catch (err) {
         console.error(err);
         showGate(`
           <h1>發生錯誤</h1>
           <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
-          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
+          <div style="margin-top:16px;">
+            <button class="btn" id="outBtn">登出</button>
+          </div>
         `);
+
         document.getElementById("outBtn").onclick = doLogout;
       }
     });
