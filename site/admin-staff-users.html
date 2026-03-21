@@ -1026,32 +1026,53 @@
     }
 
     async function loadRequests(){
-      reqList.innerHTML = `<div class="sub">讀取中…</div>`;
-      reloadReqBtn.disabled = true;
+  reqList.innerHTML = `<div class="sub">讀取中…</div>`;
+  reloadReqBtn.disabled = true;
 
-      try{
-        const snap = await db.collection("adminAccessRequests")
-  .limit(200)
-  .get();
+  try{
+    let snap;
 
-        reqCache = [];
-        snap.forEach(doc => {
-          reqCache.push({ id: doc.id, ...(doc.data() || {}) });
-        });
+    try{
+      console.log("開始讀 adminAccessRequests（orderBy createdAt desc）");
+      snap = await db.collection("adminAccessRequests")
+        .orderBy("createdAt", "desc")
+        .limit(200)
+        .get();
+      console.log("adminAccessRequests orderBy ok", snap.size);
+    } catch (e) {
+      console.error("adminAccessRequests orderBy 失敗", e);
 
-        renderReqList();
-      }catch(e){
-        console.error(e);
-        reqList.innerHTML = `
-          <div class="item">
-            <div class="itemTitle warn">讀取申請失敗</div>
-            <div class="meta">可能是 Firestore Rules 權限不足。</div>
-          </div>
-        `;
-      }finally{
-        reloadReqBtn.disabled = false;
-      }
+      console.log("改用 fallback：不排序直接讀");
+      snap = await db.collection("adminAccessRequests")
+        .limit(200)
+        .get();
+      console.log("adminAccessRequests fallback ok", snap.size);
     }
+
+    reqCache = [];
+    snap.forEach(doc => {
+      reqCache.push({ id: doc.id, ...(doc.data() || {}) });
+    });
+
+    reqCache.sort((a, b) => {
+      const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+      return tb - ta;
+    });
+
+    renderReqList();
+  } catch (e) {
+    console.error("loadRequests 最外層失敗", e);
+    reqList.innerHTML = `
+      <div class="item">
+        <div class="itemTitle warn">讀取申請失敗</div>
+        <div class="meta">請查看 Console 的詳細錯誤訊息。</div>
+      </div>
+    `;
+  } finally {
+    reloadReqBtn.disabled = false;
+  }
+}
 
     reqStatusSel.onchange = renderReqList;
     reqSearch.oninput = renderReqList;
