@@ -678,6 +678,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 
   <script>
     const pageRoot = document.getElementById("pageRoot");
@@ -707,7 +708,8 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+const db = firebase.firestore();
+const functionsApi = firebase.app().functions("us-central1");
 
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
@@ -1010,37 +1012,60 @@
     }
 
     async function createSingleAccount(){
-      const payload = getCreatePayload();
+  const payload = getCreatePayload();
 
-      if (!payload.email) return alert("請輸入 Email");
-      if (!payload.password) return alert("請輸入初始密碼");
-      if (payload.password.length < 6) return alert("密碼至少需要 6 碼");
+  if (!payload.email) return alert("請輸入 Email");
+  if (!STAFF_ROLES.has(payload.role)) return alert("角色不合法");
 
-      if (!STAFF_ROLES.has(payload.role)) {
-        return alert("角色不合法");
+  createSubmitBtn.disabled = true;
+  const oldText = createSubmitBtn.textContent;
+  createSubmitBtn.textContent = "建立中…";
+
+  try{
+    const callable = functionsApi.httpsCallable("createUserWithEmail");
+
+    const res = await callable({
+      email: payload.email,
+      role: payload.role,
+      orgId: payload.orgId,
+      schoolId: payload.schoolId,
+      team: payload.team,
+      enabled: payload.enabled
+    });
+
+    const data = res.data || {};
+
+    createMsg.innerHTML = `
+      <span class="ok">帳號建立成功</span><br>
+      email：<span class="mono">${esc(data.email || payload.email)}</span><br>
+      uid：<span class="mono">${esc(data.uid || "")}</span><br>
+      已產生密碼設定連結
+    `;
+
+    if (data.resetLink) {
+      try {
+        await navigator.clipboard.writeText(data.resetLink);
+        alert("帳號建立成功，密碼設定連結已複製到剪貼簿。");
+      } catch (copyErr) {
+        console.warn("copy resetLink failed:", copyErr);
+        alert("帳號建立成功，但無法自動複製連結，請到 Console 查看 resetLink。");
       }
-
-      createSubmitBtn.disabled = true;
-      const oldText = createSubmitBtn.textContent;
-      createSubmitBtn.textContent = "整理中…";
-
-      try{
-        createMsg.innerHTML = `
-          <span class="ok">前端資料檢查完成</span><br>
-          下一步要把這份 payload 送到 Cloud Function，例如：
-          <span class="mono">createStaffAccount</span>
-        `;
-
-        console.log("createStaffAccount payload =", payload);
-        alert("前端資料已整理完成，下一步接 Cloud Function 真正建立帳號。");
-      }catch(e){
-        console.error(e);
-        alert("建立流程失敗");
-      }finally{
-        createSubmitBtn.disabled = false;
-        createSubmitBtn.textContent = oldText;
-      }
+      console.log("resetLink =", data.resetLink);
+    } else {
+      alert("帳號建立成功，但沒有收到 resetLink");
     }
+
+    resetCreateForm();
+    await loadStaffUsers();
+
+  }catch(e){
+    console.error(e);
+    alert("建立失敗：" + (e.message || e));
+  }finally{
+    createSubmitBtn.disabled = false;
+    createSubmitBtn.textContent = oldText;
+  }
+}
 
     [
       createEmail,
