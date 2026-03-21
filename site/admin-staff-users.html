@@ -25,7 +25,7 @@
     }
 
     .wrap{
-      max-width:1040px;
+      max-width:1100px;
       margin:0 auto;
       padding:48px 24px;
     }
@@ -57,6 +57,12 @@
       color:var(--muted);
       font-size:14px;
       line-height:1.7;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
     }
 
     .row{
@@ -121,18 +127,6 @@
       font-size:15px;
     }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 12px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:14px;
-      font-weight:900;
-    }
-
     .mono{
       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
@@ -192,8 +186,14 @@
       gap:14px;
     }
 
+    .grid3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:14px;
+    }
+
     @media (max-width:900px){
-      .grid2{ grid-template-columns:1fr; }
+      .grid2,.grid3{ grid-template-columns:1fr; }
     }
 
     label{
@@ -203,6 +203,7 @@
     }
 
     input[type="text"],
+    input[type="number"],
     select,
     textarea{
       width:100%;
@@ -286,7 +287,7 @@
     }
 
     .modal{
-      width:min(960px,100%);
+      width:min(980px,100%);
       max-height:88vh;
       overflow:auto;
       padding:16px;
@@ -386,7 +387,7 @@
           <div>
             <h1>後台帳號管理</h1>
             <div class="sub">
-              這裡只管理後台人員申請、審核、指派與啟用狀態。<br>
+              這裡可管理後台人員申請、申請題目、審核、指派與啟用狀態。<br>
               申請資料保留在 <span class="mono">adminAccessRequests</span>，通過後再寫入 <span class="mono">users/{uid}</span>。
             </div>
             <div class="sub" style="margin-top:8px;">
@@ -416,13 +417,77 @@
         <div class="card">
           <div class="row">
             <div>
+              <h2>申請題目管理</h2>
+              <div class="sub">
+                這裡設定申請帳號時要填寫的題目。申請頁可改成直接讀取
+                <span class="mono">system/adminAccessForm/questions</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn btn-sm" id="reloadQuestionsBtn">重新載入題目</button>
+            </div>
+          </div>
+
+          <div class="grid3" style="margin-top:12px;">
+            <div>
+              <label style="margin-top:0;">題目標題（label）</label>
+              <input type="text" id="qLabel" placeholder="例如：請填寫你的幹部經歷" />
+            </div>
+            <div>
+              <label style="margin-top:0;">題型（type）</label>
+              <select id="qType">
+                <option value="text">text（單行）</option>
+                <option value="textarea">textarea（多行）</option>
+              </select>
+            </div>
+            <div>
+              <label style="margin-top:0;">排序（sort）</label>
+              <input type="number" id="qSort" placeholder="例如：10" />
+            </div>
+          </div>
+
+          <div class="grid2" style="margin-top:12px;">
+            <div>
+              <label style="margin-top:0;">提示文字（placeholder）</label>
+              <input type="text" id="qPlaceholder" placeholder="例如：請簡述你的工作內容或經驗" />
+            </div>
+            <div>
+              <label style="margin-top:0;">啟用 / 必填</label>
+              <div class="grid2" style="gap:10px;">
+                <select id="qEnabled">
+                  <option value="true">enabled = true</option>
+                  <option value="false">enabled = false</option>
+                </select>
+                <select id="qRequired">
+                  <option value="true">required = true</option>
+                  <option value="false">required = false</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end; margin-top:12px;">
+            <button class="btn" id="qResetBtn">清空</button>
+            <button class="btn btn-primary" id="qSaveBtn">新增題目</button>
+          </div>
+
+          <div class="small" style="margin-top:8px;">
+            題目會寫入：<span class="mono">system/adminAccessForm/questions/{questionId}</span>
+          </div>
+        </div>
+
+        <div class="list" id="questionList" style="margin-bottom:18px;"></div>
+
+        <div class="card">
+          <div class="row">
+            <div>
               <h2>申請審核</h2>
               <div class="sub">
                 申請頁寫入 <span class="mono">adminAccessRequests</span>，這裡負責審核與指派。
               </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn btn-sm" id="reloadReqBtn">重新載入</button>
+              <button class="btn btn-sm" id="reloadReqBtn">重新載入申請</button>
             </div>
           </div>
 
@@ -453,8 +518,7 @@
               <h2>後台人員</h2>
               <div class="sub">
                 只有平台管理員可查看與管理後台人員資料。<br>
-                可編輯角色、所屬單位、工作組別與啟用狀態。只有平台超級管理員可刪除後台人員。<br>
-                <span class="warn">platform_super 不可被停用、不可被改角色、不可被刪除。</span>
+                可編輯角色、所屬單位、工作組別與啟用狀態。只有平台超級管理員可刪除後台人員。
               </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -645,6 +709,63 @@
     </div>
   </div>
 
+  <div class="modalBack" id="questionModalBack">
+    <div class="modal">
+      <div class="modalTop">
+        <div>
+          <h2 style="margin:0;">編輯申請題目</h2>
+          <div class="sub" id="qmSub">-</div>
+        </div>
+        <div>
+          <button class="btn btn-sm" id="qmCloseBtn">關閉</button>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div>
+          <label style="margin-top:0;">題目標題（label）</label>
+          <input type="text" id="qmLabel" />
+        </div>
+        <div>
+          <label style="margin-top:0;">題型（type）</label>
+          <select id="qmType">
+            <option value="text">text（單行）</option>
+            <option value="textarea">textarea（多行）</option>
+          </select>
+        </div>
+        <div>
+          <label style="margin-top:0;">排序（sort）</label>
+          <input type="number" id="qmSort" />
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px;">
+        <div>
+          <label style="margin-top:0;">提示文字（placeholder）</label>
+          <input type="text" id="qmPlaceholder" />
+        </div>
+        <div>
+          <label style="margin-top:0;">啟用 / 必填</label>
+          <div class="grid2" style="gap:10px;">
+            <select id="qmEnabled">
+              <option value="true">enabled = true</option>
+              <option value="false">enabled = false</option>
+            </select>
+            <select id="qmRequired">
+              <option value="true">required = true</option>
+              <option value="false">required = false</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn btn-danger btn-sm" id="qmDeleteBtn">刪除題目</button>
+        <button class="btn btn-primary btn-sm" id="qmSaveBtn">儲存變更</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -661,10 +782,8 @@
     document.addEventListener("click", (e) => {
       const a = e.target.closest("a");
       if (!a) return;
-
       const href = a.getAttribute("href");
       if (!href || href.startsWith("#") || href.startsWith("http")) return;
-
       e.preventDefault();
       go(href);
     });
@@ -704,6 +823,17 @@
     const userRoleSel = document.getElementById("userRoleSel");
     const userList = document.getElementById("userList");
 
+    const reloadQuestionsBtn = document.getElementById("reloadQuestionsBtn");
+    const qLabel = document.getElementById("qLabel");
+    const qType = document.getElementById("qType");
+    const qSort = document.getElementById("qSort");
+    const qPlaceholder = document.getElementById("qPlaceholder");
+    const qEnabled = document.getElementById("qEnabled");
+    const qRequired = document.getElementById("qRequired");
+    const qResetBtn = document.getElementById("qResetBtn");
+    const qSaveBtn = document.getElementById("qSaveBtn");
+    const questionList = document.getElementById("questionList");
+
     const modalBack = document.getElementById("modalBack");
     const mCloseBtn = document.getElementById("mCloseBtn");
     const mSub = document.getElementById("mSub");
@@ -715,7 +845,6 @@
     const mDesiredRole = document.getElementById("mDesiredRole");
     const mDesiredOrg = document.getElementById("mDesiredOrg");
     const mAnswers = document.getElementById("mAnswers");
-
     const mRole = document.getElementById("mRole");
     const mEnabled = document.getElementById("mEnabled");
     const mOrgId = document.getElementById("mOrgId");
@@ -741,13 +870,29 @@
     const sSaveBtn = document.getElementById("sSaveBtn");
     const sDeleteBtn = document.getElementById("sDeleteBtn");
 
+    const questionModalBack = document.getElementById("questionModalBack");
+    const qmCloseBtn = document.getElementById("qmCloseBtn");
+    const qmSub = document.getElementById("qmSub");
+    const qmLabel = document.getElementById("qmLabel");
+    const qmType = document.getElementById("qmType");
+    const qmSort = document.getElementById("qmSort");
+    const qmPlaceholder = document.getElementById("qmPlaceholder");
+    const qmEnabled = document.getElementById("qmEnabled");
+    const qmRequired = document.getElementById("qmRequired");
+    const qmSaveBtn = document.getElementById("qmSaveBtn");
+    const qmDeleteBtn = document.getElementById("qmDeleteBtn");
+
     let currentUser = null;
     let myRole = "";
     let myUserDoc = null;
+
     let reqCache = [];
     let userCache = [];
+    let questionCache = [];
+
     let currentRequest = null;
     let currentStaffUser = null;
+    let currentQuestion = null;
 
     let schoolNameMap = {};
     let orgNameMap = {};
@@ -798,7 +943,7 @@
       `;
 
       const loginBtn = document.getElementById("loginBtn");
-      if (loginBtn) {
+      if (loginBtn){
         loginBtn.onclick = async () => {
           const provider = new firebase.auth.GoogleAuthProvider();
           await firebase.auth().signInWithPopup(provider);
@@ -873,23 +1018,23 @@
       schoolNameMap = {};
       orgNameMap = {};
 
-      try {
+      try{
         const schoolSnap = await db.collection("partnerSchools").get();
         schoolSnap.forEach(doc => {
           const data = doc.data() || {};
           schoolNameMap[doc.id] = data.name || doc.id;
         });
-      } catch (e) {
+      }catch(e){
         console.error("partnerSchools 失敗", e);
       }
 
-      try {
+      try{
         const orgSnap = await db.collection("organizations").get();
         orgSnap.forEach(doc => {
           const data = doc.data() || {};
           orgNameMap[doc.id] = data.name || doc.id;
         });
-      } catch (e) {
+      }catch(e){
         console.error("organizations 失敗", e);
       }
     }
@@ -935,7 +1080,7 @@
 
     function renderTabs(){
       tabsEl.innerHTML = `
-        <button class="tab active" data-tab="requests">申請審核</button>
+        <button class="tab active" data-tab="requests">申請審核 / 題目管理</button>
         <button class="tab" data-tab="staff">後台人員</button>
       `;
 
@@ -955,13 +1100,250 @@
       tabStaff.style.display = tab === "staff" ? "block" : "none";
 
       if (tab === "requests") {
-        tabHint.textContent = "審核後台帳號申請，並完成角色與所屬單位指派。";
+        tabHint.textContent = "管理申請題目與審核後台帳號申請。";
+        loadQuestions();
         loadRequests();
       } else {
         tabHint.textContent = "只有平台管理員可管理後台人員資料。";
         loadStaffUsers();
       }
     }
+
+    function questionRef(){
+      return db.collection("system").doc("adminAccessForm").collection("questions");
+    }
+
+    function resetQuestionForm(){
+      qLabel.value = "";
+      qType.value = "text";
+      qSort.value = "";
+      qPlaceholder.value = "";
+      qEnabled.value = "true";
+      qRequired.value = "true";
+    }
+
+    function normalizeQuestion(q){
+      return {
+        id: q.id || "",
+        label: norm(q.label),
+        type: norm(q.type) || "text",
+        placeholder: norm(q.placeholder),
+        enabled: q.enabled === true,
+        required: q.required === true,
+        sort: Number(q.sort || 0) || 0,
+        createdAt: q.createdAt || null,
+        updatedAt: q.updatedAt || null
+      };
+    }
+
+    async function loadQuestions(){
+      questionList.innerHTML = `<div class="sub">讀取題目中…</div>`;
+      reloadQuestionsBtn.disabled = true;
+
+      try{
+        let snap;
+        try{
+          snap = await questionRef().orderBy("sort", "asc").get();
+        }catch(e){
+          console.error("questions orderBy 失敗", e);
+          snap = await questionRef().get();
+        }
+
+        questionCache = [];
+        snap.forEach(doc => {
+          questionCache.push(normalizeQuestion({ id: doc.id, ...(doc.data() || {}) }));
+        });
+
+        questionCache.sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, "zh-Hant"));
+        renderQuestionList();
+      }catch(e){
+        console.error("loadQuestions 失敗", e);
+        questionList.innerHTML = `
+          <div class="item">
+            <div class="itemTitle warn">讀取題目失敗</div>
+            <div class="meta">請確認 Firestore Rules 是否允許 platform 管理 system/adminAccessForm/questions。</div>
+          </div>
+        `;
+      }finally{
+        reloadQuestionsBtn.disabled = false;
+      }
+    }
+
+    function renderQuestionList(){
+      if (!questionCache.length){
+        questionList.innerHTML = `
+          <div class="item">
+            <div class="itemTitle">目前沒有題目</div>
+            <div class="meta">可先新增一題，例如「請填寫你的工作經歷」。</div>
+          </div>
+        `;
+        return;
+      }
+
+      questionList.innerHTML = questionCache.map(q => `
+        <div class="item">
+          <div class="itemTop">
+            <div style="min-width:260px; flex:1;">
+              <div class="itemTitle">
+                ${esc(q.label || "（未命名題目）")}
+                <span class="badge mono">${esc(q.type)}</span>
+                ${q.enabled ? `<span class="badge ok">enabled</span>` : `<span class="badge warn">disabled</span>`}
+                ${q.required ? `<span class="badge">required</span>` : `<span class="badge">optional</span>`}
+              </div>
+              <div class="meta">
+                questionId：<span class="mono">${esc(q.id)}</span><br>
+                sort：<span class="mono">${esc(String(q.sort))}</span><br>
+                placeholder：<span class="mono">${esc(q.placeholder || "（無）")}</span><br>
+                updatedAt：<span class="mono">${esc(tsToText(q.updatedAt))}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-sm" data-edit-question="${esc(q.id)}">編輯</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      questionList.querySelectorAll("[data-edit-question]").forEach(btn => {
+        btn.onclick = () => openQuestionEditor(btn.dataset.editQuestion);
+      });
+    }
+
+    async function createQuestion(){
+      const label = norm(qLabel.value);
+      const type = norm(qType.value) || "text";
+      const placeholder = norm(qPlaceholder.value);
+      const sort = Number(qSort.value || 0) || 0;
+      const enabled = qEnabled.value === "true";
+      const required = qRequired.value === "true";
+
+      if (!label) {
+        alert("請輸入題目標題");
+        return;
+      }
+
+      qSaveBtn.disabled = true;
+      try{
+        await questionRef().add({
+          label,
+          type,
+          placeholder,
+          sort,
+          enabled,
+          required,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdByUid: currentUser.uid,
+          updatedByUid: currentUser.uid
+        });
+
+        alert("已新增題目");
+        resetQuestionForm();
+        await loadQuestions();
+      }catch(e){
+        console.error(e);
+        alert("新增題目失敗（可能是 Firestore Rules 權限不足）");
+      }finally{
+        qSaveBtn.disabled = false;
+      }
+    }
+
+    function closeQuestionModal(){
+      questionModalBack.style.display = "none";
+      currentQuestion = null;
+    }
+
+    function openQuestionEditor(id){
+      const q = questionCache.find(item => item.id === id);
+      if (!q) return;
+
+      currentQuestion = q;
+      qmSub.textContent = `questionId：${q.id}`;
+      qmLabel.value = q.label || "";
+      qmType.value = q.type || "text";
+      qmSort.value = String(q.sort || 0);
+      qmPlaceholder.value = q.placeholder || "";
+      qmEnabled.value = q.enabled ? "true" : "false";
+      qmRequired.value = q.required ? "true" : "false";
+
+      questionModalBack.style.display = "flex";
+    }
+
+    async function saveQuestion(){
+      if (!currentQuestion) return;
+
+      const label = norm(qmLabel.value);
+      const type = norm(qmType.value) || "text";
+      const placeholder = norm(qmPlaceholder.value);
+      const sort = Number(qmSort.value || 0) || 0;
+      const enabled = qmEnabled.value === "true";
+      const required = qmRequired.value === "true";
+
+      if (!label) {
+        alert("請輸入題目標題");
+        return;
+      }
+
+      qmSaveBtn.disabled = true;
+      qmDeleteBtn.disabled = true;
+
+      try{
+        await questionRef().doc(currentQuestion.id).update({
+          label,
+          type,
+          placeholder,
+          sort,
+          enabled,
+          required,
+          updatedAt: new Date(),
+          updatedByUid: currentUser.uid
+        });
+
+        alert("已儲存題目");
+        closeQuestionModal();
+        await loadQuestions();
+      }catch(e){
+        console.error(e);
+        alert("儲存題目失敗");
+      }finally{
+        qmSaveBtn.disabled = false;
+        qmDeleteBtn.disabled = false;
+      }
+    }
+
+    async function deleteQuestion(){
+      if (!currentQuestion) return;
+
+      const ok = confirm(`確定要刪除題目「${currentQuestion.label}」嗎？`);
+      if (!ok) return;
+
+      qmSaveBtn.disabled = true;
+      qmDeleteBtn.disabled = true;
+
+      try{
+        await questionRef().doc(currentQuestion.id).delete();
+        alert("已刪除題目");
+        closeQuestionModal();
+        await loadQuestions();
+      }catch(e){
+        console.error(e);
+        alert("刪除題目失敗");
+      }finally{
+        qmSaveBtn.disabled = false;
+        qmDeleteBtn.disabled = false;
+      }
+    }
+
+    qResetBtn.onclick = resetQuestionForm;
+    qSaveBtn.onclick = createQuestion;
+    reloadQuestionsBtn.onclick = loadQuestions;
+    qmCloseBtn.onclick = closeQuestionModal;
+    qmSaveBtn.onclick = saveQuestion;
+    qmDeleteBtn.onclick = deleteQuestion;
+
+    questionModalBack.addEventListener("click", (e) => {
+      if (e.target === questionModalBack) closeQuestionModal();
+    });
 
     function reqMatches(r){
       const status = reqStatusSel.value;
@@ -987,7 +1369,7 @@
       if (!items.length) {
         reqList.innerHTML = `
           <div class="item">
-            <div class="itemTitle">目前沒有資料</div>
+            <div class="itemTitle">目前沒有申請資料</div>
             <div class="meta">請調整篩選條件或確認是否已有申請。</div>
           </div>
         `;
@@ -1028,7 +1410,7 @@
     }
 
     async function loadRequests(){
-      reqList.innerHTML = `<div class="sub">讀取中…</div>`;
+      reqList.innerHTML = `<div class="sub">讀取申請中…</div>`;
       reloadReqBtn.disabled = true;
 
       try{
@@ -1079,11 +1461,6 @@
       modalBack.style.display = "none";
       currentRequest = null;
     }
-
-    mCloseBtn.onclick = closeModal;
-    modalBack.addEventListener("click", (e) => {
-      if (e.target === modalBack) closeModal();
-    });
 
     function renderAnswers(obj){
       const answers = obj && typeof obj === "object" ? obj : {};
@@ -1239,8 +1616,13 @@
       }
     }
 
+    mCloseBtn.onclick = closeModal;
     mApproveBtn.onclick = approveCurrent;
     mRejectBtn.onclick = rejectCurrent;
+
+    modalBack.addEventListener("click", (e) => {
+      if (e.target === modalBack) closeModal();
+    });
 
     function userMatches(u){
       const q = norm(userSearch.value).toLowerCase();
@@ -1334,9 +1716,7 @@
       reloadUsersBtn.disabled = true;
 
       try{
-        const snap = await db.collection("users")
-          .limit(300)
-          .get();
+        const snap = await db.collection("users").limit(300).get();
 
         userCache = [];
         snap.forEach(doc => {
@@ -1383,7 +1763,8 @@
       try{
         await db.collection("users").doc(uid).update({
           enabled: !enabledNow,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          updatedByUid: currentUser.uid
         });
 
         await loadStaffUsers();
@@ -1397,11 +1778,6 @@
       staffModalBack.style.display = "none";
       currentStaffUser = null;
     }
-
-    sCloseBtn.onclick = closeStaffModal;
-    staffModalBack.addEventListener("click", (e) => {
-      if (e.target === staffModalBack) closeStaffModal();
-    });
 
     function openStaffEditor(uid){
       const u = userCache.find(item => item.id === uid);
@@ -1556,8 +1932,13 @@
       }
     }
 
+    sCloseBtn.onclick = closeStaffModal;
     sSaveBtn.onclick = saveStaffUser;
     sDeleteBtn.onclick = deleteStaffUser;
+
+    staffModalBack.addEventListener("click", (e) => {
+      if (e.target === staffModalBack) closeStaffModal();
+    });
 
     userSearch.oninput = renderUserList;
     userRoleSel.onchange = renderUserList;
@@ -1600,6 +1981,7 @@
         app.style.display = "block";
 
         fillSchoolAndOrgSelects();
+        resetQuestionForm();
         renderTabs();
       }catch(e){
         console.error(e);

@@ -64,7 +64,6 @@
     .warn{ color:#b91c1c; font-weight:900; }
     .ok{ color:#166534; font-weight:900; }
 
-    /* 轉場動畫（淡入淡出，不改風格） */
     .page{ opacity:0; transform: translateY(6px); transition: opacity .22s ease, transform .22s ease; }
     .page.on{ opacity:1; transform: translateY(0); }
     .page.leaving{ opacity:0; transform: translateY(6px); }
@@ -103,11 +102,11 @@
           <div>
             <div class="pill">申請資料</div>
             <div class="sub" style="margin-top:8px;">
-              你可以先選擇想申請的身分（管理員 / 服務人員），並回答平台管理員的提問。
+              你可以先選擇想申請的身分，並回答平台管理員設定的提問。
             </div>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn" id="reloadBtn">重新載入</button>
+            <button class="btn" id="reloadBtn">重新載入題目</button>
             <button class="btn" id="submitBtn">送出申請</button>
           </div>
         </div>
@@ -133,19 +132,19 @@
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    // ===== 轉場動畫 =====
     const pageRoot = document.getElementById("pageRoot");
     requestAnimationFrame(() => pageRoot.classList.add("on"));
+
     function go(href){
       pageRoot.classList.add("leaving");
       setTimeout(()=> location.href = href, 140);
     }
+
     document.addEventListener("click", (e)=>{
       const a = e.target.closest("a");
       if (!a) return;
@@ -155,7 +154,6 @@
       go(href);
     });
 
-    // ===== Firebase init =====
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
@@ -179,10 +177,16 @@
     const desiredOrgEl = document.getElementById("desiredOrg");
     const questionsEl = document.getElementById("questions");
 
+    let currentQuestions = [];
+
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
       }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
     }
 
     function showGate(title, msg, showLogin){
@@ -210,22 +214,77 @@
       catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
     };
 
-    // ===== Questions: system/adminAccessQuestions =====
-    // 你之後可讓平台管理員在後台設定這些問題
-    const Q_REF = db.collection("system").doc("adminAccessQuestions");
     const DEFAULT_Q = [
-      { id:"q1", label:"你是誰？（姓名/單位）", placeholder:"例如：王小明／公關組", required:true },
-      { id:"q2", label:"你為什麼需要後台權限？", placeholder:"請簡述用途", required:true },
-      { id:"q3", label:"你希望負責的工作內容", placeholder:"例如：核銷、服務台、名單管理…", required:false }
+      {
+        id: "default_q1",
+        label: "你是誰？（姓名 / 單位）",
+        type: "text",
+        placeholder: "例如：王小明／公關組",
+        required: true,
+        enabled: true,
+        sort: 10
+      },
+      {
+        id: "default_q2",
+        label: "你為什麼需要後台權限？",
+        type: "textarea",
+        placeholder: "請簡述用途",
+        required: true,
+        enabled: true,
+        sort: 20
+      },
+      {
+        id: "default_q3",
+        label: "你希望負責的工作內容",
+        type: "textarea",
+        placeholder: "例如：核銷、服務台、名單管理…",
+        required: false,
+        enabled: true,
+        sort: 30
+      }
     ];
+
+    function normalizeQuestion(docId, raw){
+      const q = raw || {};
+      return {
+        id: norm(docId || q.id),
+        label: norm(q.label),
+        type: norm(q.type) === "textarea" ? "textarea" : "text",
+        placeholder: norm(q.placeholder),
+        required: q.required === true,
+        enabled: q.enabled !== false,
+        sort: Number(q.sort || 0) || 0
+      };
+    }
 
     async function loadQuestions(){
       try{
-        const snap = await Q_REF.get();
-        if (!snap.exists) return DEFAULT_Q;
-        const d = snap.data() || {};
-        if (!Array.isArray(d.questions) || !d.questions.length) return DEFAULT_Q;
-        return d.questions;
+        let snap;
+        try{
+          snap = await db.collection("system")
+            .doc("adminAccessForm")
+            .collection("questions")
+            .orderBy("sort", "asc")
+            .get();
+        }catch(orderErr){
+          console.warn("questions orderBy failed, fallback to unsorted get:", orderErr);
+          snap = await db.collection("system")
+            .doc("adminAccessForm")
+            .collection("questions")
+            .get();
+        }
+
+        const list = [];
+        snap.forEach(doc => {
+          const q = normalizeQuestion(doc.id, doc.data());
+          if (!q.enabled) return;
+          if (!q.label) return;
+          list.push(q);
+        });
+
+        list.sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, "zh-Hant"));
+
+        return list.length ? list : DEFAULT_Q;
       }catch(e){
         console.warn("load questions failed:", e);
         return DEFAULT_Q;
@@ -233,31 +292,49 @@
     }
 
     function renderQuestions(qs){
+      currentQuestions = qs.slice();
+
       questionsEl.innerHTML = `<div class="sub" style="margin-top:14px;"><span class="pill">提問</span></div>`;
-      qs.forEach(q=>{
+
+      qs.forEach(q => {
+        const fieldHtml = q.type === "textarea"
+          ? `<textarea data-qid="${esc(q.id)}" placeholder="${esc(q.placeholder || "")}"></textarea>`
+          : `<input type="text" data-qid="${esc(q.id)}" placeholder="${esc(q.placeholder || "")}" />`;
+
         questionsEl.insertAdjacentHTML("beforeend", `
-          <label>${esc(q.label || q.id)}${q.required ? ' <span class="warn">*</span>' : ''}</label>
-          <textarea data-qid="${esc(q.id)}" placeholder="${esc(q.placeholder || '')}"></textarea>
+          <label>${esc(q.label)}${q.required ? ' <span class="warn">*</span>' : ''}</label>
+          ${fieldHtml}
         `);
       });
+    }
+
+    function getAnswerElement(qid){
+      return questionsEl.querySelector(`[data-qid="${CSS.escape(qid)}"]`);
     }
 
     function readAnswers(qs){
       const answers = {};
       for (const q of qs){
-        const el = questionsEl.querySelector(`textarea[data-qid="${CSS.escape(q.id)}"]`);
-        answers[q.id] = String(el ? el.value : "").trim();
+        const el = getAnswerElement(q.id);
+        answers[q.id] = norm(el ? el.value : "");
       }
       return answers;
     }
 
     function validate(qs, answers){
       for (const q of qs){
-        if (q.required && !String(answers[q.id] || "").trim()){
-          return `請填寫：${q.label || q.id}`;
+        if (q.required && !norm(answers[q.id])) {
+          return `請填寫：${q.label}`;
         }
       }
       return "";
+    }
+
+    function clearAnswers(qs){
+      qs.forEach(q => {
+        const el = getAnswerElement(q.id);
+        if (el) el.value = "";
+      });
     }
 
     function showStatusBox(html){
@@ -265,8 +342,8 @@
       statusCard.innerHTML = html;
     }
 
-    // ===== Submit: adminAccessRequests (每次申請都留存) =====
-    async function submitRequest(user, qs){
+    async function submitRequest(user){
+      const qs = currentQuestions || [];
       const answers = readAnswers(qs);
       const err = validate(qs, answers);
       if (err) return alert(err);
@@ -280,13 +357,12 @@
           uid: user.uid,
           email: user.email || "",
           createdAt: new Date(),
-          status: "pending", // pending / approved / rejected
-          desiredRole: String(desiredRoleEl.value || "").trim(),
-          desiredOrg: String(desiredOrgEl.value || "").trim(),
+          status: "pending",
+          desiredRole: norm(desiredRoleEl.value),
+          desiredOrg: norm(desiredOrgEl.value),
           answers
         };
 
-        // ✅ 每次申請都留存 → 用 auto id
         const ref = await db.collection("adminAccessRequests").add(payload);
 
         showStatusBox(`
@@ -298,11 +374,7 @@
           </div>
         `);
 
-        // 清空輸入（保留角色/組織）
-        qs.forEach(q=>{
-          const el = questionsEl.querySelector(`textarea[data-qid="${CSS.escape(q.id)}"]`);
-          if (el) el.value = "";
-        });
+        clearAnswers(qs);
 
       }catch(e){
         console.error(e);
@@ -313,32 +385,36 @@
       }
     }
 
+    async function reloadQuestionsAndRender(){
+      reloadBtn.disabled = true;
+      const old = reloadBtn.textContent;
+      reloadBtn.textContent = "載入中…";
+      try{
+        const qs = await loadQuestions();
+        renderQuestions(qs);
+      }finally{
+        reloadBtn.disabled = false;
+        reloadBtn.textContent = old;
+      }
+    }
+
     async function boot(){
       const user = firebase.auth().currentUser;
       if (!user) return;
 
       emailEl.textContent = user.email || "-";
-
-      // 顯示表單
       formCard.style.display = "block";
 
-      // 讀問題並渲染
-      const qs = await loadQuestions();
-      renderQuestions(qs);
+      await reloadQuestionsAndRender();
 
-      // 綁事件
-      reloadBtn.onclick = async () => {
-        const qs2 = await loadQuestions();
-        renderQuestions(qs2);
-      };
-      submitBtn.onclick = () => submitRequest(user, qs);
+      reloadBtn.onclick = reloadQuestionsAndRender;
+      submitBtn.onclick = () => submitRequest(user);
 
-      // 顯示說明（不強制查 pending，避免規則沒開造成整頁壞掉）
       showStatusBox(`
         <h1 style="margin:0 0 6px; font-size:22px;">申請說明</h1>
         <div class="sub">
           送出後會進入審核。審核紀錄與申請內容都會留存。<br/>
-          若急需處理，請到服務中心或聯絡平台管理員。
+          題目內容由平台管理員動態設定，重新載入可取得最新版本。
         </div>
       `);
     }
