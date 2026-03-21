@@ -75,6 +75,7 @@
     .small{
       font-size:13px;
       color:var(--muted);
+      line-height:1.6;
     }
 
     label{
@@ -240,6 +241,7 @@
       color:var(--muted);
       font-size:13px;
       line-height:1.6;
+      word-break:break-word;
     }
 
     .right{
@@ -366,6 +368,7 @@
             <label>管理範圍</label>
             <div class="box">
               <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
+              <div style="margin-top:8px;">目前組織：<span id="myOrgText" class="mono">-</span></div>
               <div class="small" style="margin-top:8px;">
                 校方角色只能管理自己校園相關活動；平台角色可管理全部活動。
               </div>
@@ -376,8 +379,8 @@
             <label>公開 / 不公開 說明</label>
             <div class="box">
               <div class="small">
-                <span class="ok">公開</span>：通過平台審核後，前台可看到並可進入購票 / 報名流程。<br>
-                <span class="warn">不公開</span>：前台不顯示，通常用於草稿、內部測試或尚未準備完成的活動。
+                <span class="ok">公開</span>：通常代表前台可見，但仍建議先通過平台審核。<br>
+                <span class="warn">不公開</span>：前台不顯示，通常用於草稿、測試或待審核狀態。
               </div>
             </div>
           </div>
@@ -405,16 +408,14 @@
               <option value="platform">平台活動</option>
             </select>
             <div class="small" style="margin-top:8px;">
-              校園活動會綁定某一校園；平台活動則視為全平台活動。
+              校園活動會綁定校園；平台活動視為全平台活動。
             </div>
           </div>
 
           <div>
-            <label style="margin-top:0;">主辦對象</label>
+            <label style="margin-top:0;">主辦校園</label>
             <select id="ownerSchoolSel"></select>
-            <div class="small" id="ownerHint" style="margin-top:8px;">
-              -
-            </div>
+            <div class="small" id="ownerHint" style="margin-top:8px;">-</div>
           </div>
 
           <div>
@@ -424,8 +425,8 @@
               <option value="approved">approved（已通過）</option>
               <option value="rejected">rejected（已退回）</option>
             </select>
-            <div class="small" style="margin-top:8px;">
-              建議一般建立時預設為 pending，待平台管理員確認後再改成 approved。
+            <div class="small" id="approvalHint" style="margin-top:8px;">
+              -
             </div>
           </div>
         </div>
@@ -456,6 +457,7 @@
             <div class="box">
               <div>role：<span id="creatorRoleText" class="mono">-</span></div>
               <div style="margin-top:8px;">schoolId：<span id="creatorSchoolText" class="mono">-</span></div>
+              <div style="margin-top:8px;">orgId：<span id="creatorOrgText" class="mono">-</span></div>
             </div>
           </div>
         </div>
@@ -542,8 +544,10 @@
     const logoutBtn = document.getElementById("logoutBtn");
 
     const mySchoolText = document.getElementById("mySchoolText");
+    const myOrgText = document.getElementById("myOrgText");
     const creatorRoleText = document.getElementById("creatorRoleText");
     const creatorSchoolText = document.getElementById("creatorSchoolText");
+    const creatorOrgText = document.getElementById("creatorOrgText");
     const reloadBtn = document.getElementById("reloadBtn");
 
     const openCreateMode = document.getElementById("openCreateMode");
@@ -555,6 +559,7 @@
     const ownerSchoolSel = document.getElementById("ownerSchoolSel");
     const ownerHint = document.getElementById("ownerHint");
     const approvalStatusEl = document.getElementById("approvalStatus");
+    const approvalHint = document.getElementById("approvalHint");
     const publishedEl = document.getElementById("published");
     const capacityEl = document.getElementById("capacity");
 
@@ -582,9 +587,13 @@
     let currentRole = "";
     let userData = null;
     let mySchoolId = "";
+    let myOrgId = "";
     let editingId = "";
     let inviteCodesState = [];
     let currentView = "create";
+
+    let schoolNameMap = {};
+    let orgNameMap = {};
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -640,7 +649,7 @@
     }
 
     function isOrgRole(){
-      return ["org_super","org_admin","org_staff"].includes(currentRole);
+      return ["org_super", "org_admin", "org_staff"].includes(currentRole);
     }
 
     function toInputDateTime(ts){
@@ -670,6 +679,40 @@
       editorMsg.innerHTML = html || "";
     }
 
+    function formatSchoolLabel(id){
+      const value = norm(id);
+      if (!value) return "-";
+      if (value === "__global__") return "平台（__global__）";
+      return schoolNameMap[value] ? `${schoolNameMap[value]}（${value}）` : value;
+    }
+
+    function formatOrgLabel(id){
+      const value = norm(id);
+      if (!value) return "-";
+      return orgNameMap[value] ? `${orgNameMap[value]}（${value}）` : value;
+    }
+
+    async function loadNameMaps(){
+      schoolNameMap = {};
+      orgNameMap = {};
+
+      const schoolSnap = await db.collection("partnerSchools").get();
+      schoolSnap.forEach(doc => {
+        const data = doc.data() || {};
+        schoolNameMap[doc.id] = data.name || doc.id;
+      });
+
+      try {
+        const orgSnap = await db.collection("organizations").get();
+        orgSnap.forEach(doc => {
+          const data = doc.data() || {};
+          orgNameMap[doc.id] = data.name || doc.id;
+        });
+      } catch (e) {
+        console.warn("organizations 目前無法讀取或尚未建立");
+      }
+    }
+
     function updateSaveBtn(){
       const titleOk = norm(titleEl.value).length > 0;
       const ownerOk = norm(ownerSchoolSel.value).length > 0;
@@ -686,7 +729,10 @@
       manageSection.classList.toggle("hidden", mode !== "manage");
     }
 
-    openCreateMode.onclick = () => setPageMode("create");
+    openCreateMode.onclick = () => {
+      setPageMode("create");
+    };
+
     openManageMode.onclick = async () => {
       setPageMode("manage");
       await loadEvents();
@@ -831,12 +877,12 @@
       }
     };
 
-    window.removeInviteCode = (idx) => {
+    window.removeInviteCode = idx => {
       inviteCodesState.splice(idx, 1);
       renderInviteCodes();
     };
 
-    window.regenerateInviteCode = (idx) => {
+    window.regenerateInviteCode = idx => {
       if (!inviteCodesState[idx]) return;
       const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
       inviteCodesState[idx].code = randomInviteCode(len);
@@ -856,10 +902,26 @@
       renderInviteCodes();
     };
 
+    function refreshApprovalStatusState(){
+      if (!isPlatform()) {
+        approvalStatusEl.value = "pending";
+        approvalStatusEl.disabled = true;
+        approvalHint.innerHTML = `非平台管理員不可直接將審核狀態改為已通過，建立時會固定為 <span class="mono">pending</span>。`;
+      } else {
+        approvalStatusEl.disabled = false;
+        approvalHint.innerHTML = `平台管理員可調整審核狀態。`;
+      }
+    }
+
     function refreshOwnerSelectState(){
       const scope = publishScopeEl.value;
 
       if (scope === "platform") {
+        if (!isPlatform()) {
+          publishScopeEl.value = "school";
+          return refreshOwnerSelectState();
+        }
+
         ownerSchoolSel.innerHTML = `<option value="__global__">平台（__global__）</option>`;
         ownerSchoolSel.value = "__global__";
         ownerSchoolSel.disabled = true;
@@ -868,43 +930,36 @@
         return;
       }
 
-      if (isOrgRole()) {
-        ownerSchoolSel.disabled = true;
-        ownerSchoolSel.value = mySchoolId || "";
-        ownerHint.innerHTML = `你目前屬於校方角色，建立校園活動時只能使用自己的校園。`;
-      } else {
+      ownerSchoolSel.innerHTML = "";
+
+      if (isPlatform()) {
+        const keys = Object.keys(schoolNameMap).sort((a, b) => {
+          return formatSchoolLabel(a).localeCompare(formatSchoolLabel(b), "zh-Hant");
+        });
+
+        keys.forEach(id => {
+          ownerSchoolSel.insertAdjacentHTML(
+            "beforeend",
+            `<option value="${esc(id)}">${esc(formatSchoolLabel(id))}</option>`
+          );
+        });
+
         ownerSchoolSel.disabled = false;
         ownerHint.innerHTML = `平台角色建立校園活動時，可指定任一校園作為主辦校園。`;
+      } else {
+        ownerSchoolSel.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${esc(mySchoolId)}">${esc(formatSchoolLabel(mySchoolId))}</option>`
+        );
+        ownerSchoolSel.value = mySchoolId || "";
+        ownerSchoolSel.disabled = true;
+        ownerHint.innerHTML = `你目前屬於校方角色，建立校園活動時只能使用自己的校園。`;
       }
 
       updateSaveBtn();
     }
 
     async function loadOwnerSchoolOptions(){
-      ownerSchoolSel.innerHTML = "";
-
-      if (isPlatform()) {
-        const snap = await db.collection("partnerSchools").orderBy("name").get();
-        snap.forEach(doc => {
-          const school = doc.data() || {};
-          ownerSchoolSel.insertAdjacentHTML(
-            "beforeend",
-            `<option value="${esc(doc.id)}">${esc(school.name || doc.id)}（${esc(doc.id)}）</option>`
-          );
-        });
-      } else if (mySchoolId) {
-        const doc = await db.collection("partnerSchools").doc(mySchoolId).get();
-        const school = doc.exists ? (doc.data() || {}) : {};
-        ownerSchoolSel.insertAdjacentHTML(
-          "beforeend",
-          `<option value="${esc(mySchoolId)}">${esc(school.name || mySchoolId)}（${esc(mySchoolId)}）</option>`
-        );
-      }
-
-      if (!ownerSchoolSel.value && ownerSchoolSel.options.length) {
-        ownerSchoolSel.value = ownerSchoolSel.options[0].value;
-      }
-
       refreshOwnerSelectState();
     }
 
@@ -931,6 +986,7 @@
       renderInviteCodes();
 
       setEditorMessage("");
+      refreshApprovalStatusState();
       refreshOwnerSelectState();
       updateSaveBtn();
     }
@@ -945,7 +1001,7 @@
       const unique = [];
       const seen = new Set();
 
-      for (const item of cleaned){
+      for (const item of cleaned) {
         const key = item.code.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
@@ -961,80 +1017,80 @@
         : norm(ownerSchoolSel.value);
     }
 
-  async function loadEvents(){
-    listEl.innerHTML = `<div class="small">載入中…</div>`;
+    async function loadEvents(){
+      listEl.innerHTML = `<div class="small">載入中…</div>`;
 
-    let docs = [];
+      let docs = [];
 
-    if (isPlatform()) {
-      const snap = await db.collection("events")
-        .orderBy("createdAt", "desc")
-        .limit(50)
-        .get();
+      if (isPlatform()) {
+        const snap = await db.collection("events")
+          .orderBy("createdAt", "desc")
+          .limit(50)
+          .get();
 
-      docs = snap.docs;
-    } else {
-      const snap = await db.collection("events")
-        .where("ownerSchoolId", "==", mySchoolId)
-        .limit(100)
-        .get();
+        docs = snap.docs;
+      } else {
+        const snap = await db.collection("events")
+          .where("ownerSchoolId", "==", mySchoolId)
+          .limit(100)
+          .get();
 
-      docs = snap.docs.sort((a, b) => {
-        const ta = a.data()?.createdAt?.toDate ? a.data().createdAt.toDate().getTime() : 0;
-        const tb = b.data()?.createdAt?.toDate ? b.data().createdAt.toDate().getTime() : 0;
-        return tb - ta;
-      });
-    }
+        docs = snap.docs.sort((a, b) => {
+          const ta = a.data()?.createdAt?.toDate ? a.data().createdAt.toDate().getTime() : 0;
+          const tb = b.data()?.createdAt?.toDate ? b.data().createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+      }
 
-    if (!docs.length) {
-      listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
-      return;
-    }
+      if (!docs.length) {
+        listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
+        return;
+      }
 
-    listEl.innerHTML = docs.map(doc => {
-      const e = doc.data() || {};
-      const id = doc.id;
+      listEl.innerHTML = docs.map(doc => {
+        const e = doc.data() || {};
+        const id = doc.id;
 
-      const title = e.title || "(未命名)";
-      const owner = e.ownerSchoolId || "-";
-      const published = e.published === true;
-      const approvalStatus = e.approvalStatus || "pending";
-      const saleStart = toInputDateTime(e.saleStartAt);
-      const saleEnd = toInputDateTime(e.saleEndAt);
-      const eventStart = toInputDateTime(e.eventStartAt);
-      const inviteEnabled = e.inviteCodeEnabled === true;
-      const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
+        const title = e.title || "(未命名)";
+        const owner = e.ownerSchoolId || "-";
+        const published = e.published === true;
+        const approvalStatus = e.approvalStatus || "pending";
+        const saleStart = toInputDateTime(e.saleStartAt);
+        const saleEnd = toInputDateTime(e.saleEndAt);
+        const eventStart = toInputDateTime(e.eventStartAt);
+        const inviteEnabled = e.inviteCodeEnabled === true;
+        const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
 
-      const tag = owner === "__global__"
-        ? `<span class="pill">平台活動</span>`
-        : `<span class="pill">校園活動</span>`;
+        const tag = owner === "__global__"
+          ? `<span class="pill">平台活動</span>`
+          : `<span class="pill">校園活動</span>`;
 
-      return `
-        <div class="item">
-          <div class="item-top">
-            <div style="min-width:0;">
-              <div class="item-title">${esc(title)} ${tag}</div>
-              <div class="item-meta">
-                eventId：<span class="mono">${esc(id)}</span><br>
-                ownerSchoolId：<span class="mono">${esc(owner)}</span><br>
-                approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
-                published：<span class="mono">${published ? "true" : "false"}</span><br>
-                搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
-                活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
-                inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
-                邀請碼數量：<span class="mono">${inviteCount}</span>
+        return `
+          <div class="item">
+            <div class="item-top">
+              <div style="min-width:0;">
+                <div class="item-title">${esc(title)} ${tag}</div>
+                <div class="item-meta">
+                  eventId：<span class="mono">${esc(id)}</span><br>
+                  ownerSchoolId：<span class="mono">${esc(formatSchoolLabel(owner))}</span><br>
+                  approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
+                  published：<span class="mono">${published ? "true" : "false"}</span><br>
+                  搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
+                  活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
+                  inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
+                  邀請碼數量：<span class="mono">${inviteCount}</span>
+                </div>
+              </div>
+
+              <div class="right">
+                <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
+                ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
               </div>
             </div>
-
-            <div class="right">
-              <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
-              ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
-            </div>
           </div>
-        </div>
-      `;
-    }).join("");
-  }
+        `;
+      }).join("");
+    }
 
     reloadBtn.onclick = async () => {
       resetEditor();
@@ -1043,7 +1099,7 @@
       }
     };
 
-    window.editEvent = async (eventId) => {
+    window.editEvent = async eventId => {
       try {
         const doc = await db.collection("events").doc(eventId).get();
         if (!doc.exists) {
@@ -1077,13 +1133,13 @@
         const owner = String(e.ownerSchoolId || "");
         publishScopeEl.value = owner === "__global__" ? "platform" : "school";
 
-        await loadOwnerSchoolOptions();
+        refreshApprovalStatusState();
+        refreshOwnerSelectState();
 
         if (publishScopeEl.value === "school") {
           ownerSchoolSel.value = owner || mySchoolId || ownerSchoolSel.value;
         }
 
-        refreshOwnerSelectState();
         setEditorMessage(`<span class="ok">已載入活動資料</span>`);
         updateSaveBtn();
         setPageMode("create");
@@ -1136,7 +1192,7 @@
           title,
           ownerSchoolId,
           publishScope,
-          approvalStatus: approvalStatusEl.value,
+          approvalStatus: isPlatform() ? approvalStatusEl.value : "pending",
           published: publishedEl.value === "true",
           location: norm(locationEl.value),
           description: norm(descriptionEl.value),
@@ -1149,6 +1205,10 @@
 
           inviteCodeEnabled: inviteCodeEnabledEl.value === "true",
           inviteCodes,
+
+          creatorRole: currentRole || "",
+          creatorSchoolId: mySchoolId || "",
+          creatorOrgId: myOrgId || "",
 
           updatedAt: new Date(),
           updatedBy: currentUser ? currentUser.uid : ""
@@ -1169,7 +1229,9 @@
         }
 
         resetEditor();
-        await loadEvents();
+        if (currentView === "manage") {
+          await loadEvents();
+        }
       } catch (err) {
         console.error(err);
         alert("儲存失敗：\n" + (err.message || err));
@@ -1181,10 +1243,15 @@
 
     publishScopeEl.addEventListener("change", refreshOwnerSelectState);
     saveBtn.onclick = saveEvent;
-    [titleEl, ownerSchoolSel].forEach(el => el.addEventListener("input", updateSaveBtn));
+
+    [titleEl, ownerSchoolSel].forEach(el => {
+      el.addEventListener("input", updateSaveBtn);
+      el.addEventListener("change", updateSaveBtn);
+    });
+
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
 
-    firebase.auth().onAuthStateChanged(async (user) => {
+    firebase.auth().onAuthStateChanged(async user => {
       currentUser = user || null;
 
       if (!user) {
@@ -1221,9 +1288,13 @@
 
         currentRole = result.role;
         userData = result.userData || {};
+        mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
+        myOrgId = norm(userData.orgId || "");
 
         whoEl.textContent = user.email || "";
         roleText.textContent = currentRole || "-";
+        mySchoolText.textContent = formatSchoolLabel(mySchoolId);
+        myOrgText.textContent = formatOrgLabel(myOrgId);
         creatorRoleText.textContent = currentRole || "-";
 
         const allowed = ["platform_super", "platform_admin", "org_super", "org_admin"];
@@ -1240,12 +1311,15 @@
           return;
         }
 
-        mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
-        mySchoolText.textContent = mySchoolId || "__none__";
-        creatorSchoolText.textContent = mySchoolId || "__none__";
-
         gate.style.display = "none";
         app.style.display = "block";
+
+        await loadNameMaps();
+
+        mySchoolText.textContent = formatSchoolLabel(mySchoolId);
+        myOrgText.textContent = formatOrgLabel(myOrgId);
+        creatorSchoolText.textContent = formatSchoolLabel(mySchoolId);
+        creatorOrgText.textContent = formatOrgLabel(myOrgId);
 
         await loadOwnerSchoolOptions();
         resetEditor();
