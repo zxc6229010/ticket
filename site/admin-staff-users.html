@@ -870,7 +870,6 @@
 
       try {
         const schoolSnap = await db.collection("partnerSchools").get();
-        console.log("partnerSchools ok", schoolSnap.size);
         schoolSnap.forEach(doc => {
           const data = doc.data() || {};
           schoolNameMap[doc.id] = data.name || doc.id;
@@ -881,7 +880,6 @@
 
       try {
         const orgSnap = await db.collection("organizations").get();
-        console.log("organizations ok", orgSnap.size);
         orgSnap.forEach(doc => {
           const data = doc.data() || {};
           orgNameMap[doc.id] = data.name || doc.id;
@@ -1032,19 +1030,15 @@
         let snap;
 
         try{
-          console.log("開始讀 adminAccessRequests（orderBy createdAt desc）");
           snap = await db.collection("adminAccessRequests")
             .orderBy("createdAt", "desc")
             .limit(200)
             .get();
-          console.log("adminAccessRequests orderBy ok", snap.size);
         }catch(e){
           console.error("adminAccessRequests orderBy 失敗", e);
-          console.log("改用 fallback：不排序直接讀");
           snap = await db.collection("adminAccessRequests")
             .limit(200)
             .get();
-          console.log("adminAccessRequests fallback ok", snap.size);
         }
 
         reqCache = [];
@@ -1287,6 +1281,7 @@
                   ${esc(u.email || u.id)}
                   <span class="badge mono">${esc(u.role || "-")}</span>
                   ${u.enabled === true ? `<span class="badge ok">enabled</span>` : `<span class="badge warn">disabled</span>`}
+                  ${isMe ? `<span class="badge">你自己</span>` : ``}
                 </div>
                 <div class="meta">
                   uid：<span class="mono">${esc(u.id)}</span><br>
@@ -1325,23 +1320,9 @@
       reloadUsersBtn.disabled = true;
 
       try{
-        let snap;
-
-        try{
-          console.log("開始讀 users（orderBy approvedAt desc）");
-          snap = await db.collection("users")
-            .orderBy("approvedAt", "desc")
-            .limit(200)
-            .get();
-          console.log("users orderBy ok", snap.size);
-        }catch(e){
-          console.error("users orderBy 失敗", e);
-          console.log("改用 fallback：不排序直接讀 users");
-          snap = await db.collection("users")
-            .limit(200)
-            .get();
-          console.log("users fallback ok", snap.size);
-        }
+        const snap = await db.collection("users")
+          .limit(300)
+          .get();
 
         userCache = [];
         snap.forEach(doc => {
