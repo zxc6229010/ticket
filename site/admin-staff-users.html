@@ -866,25 +866,35 @@
     }
 
     async function loadNameMaps(){
-      schoolNameMap = {};
-      orgNameMap = {};
+  schoolNameMap = {};
+  orgNameMap = {};
 
-      const schoolSnap = await db.collection("partnerSchools").get();
-      schoolSnap.forEach(doc => {
-        const data = doc.data() || {};
-        schoolNameMap[doc.id] = data.name || doc.id;
-      });
+  const results = await Promise.allSettled([
+    db.collection("partnerSchools").get(),
+    db.collection("organizations").get()
+  ]);
 
-      try{
-        const orgSnap = await db.collection("organizations").get();
-        orgSnap.forEach(doc => {
-          const data = doc.data() || {};
-          orgNameMap[doc.id] = data.name || doc.id;
-        });
-      }catch(e){
-        console.warn("organizations collection 目前無法讀取或尚未建立");
-      }
-    }
+  const schoolResult = results[0];
+  const orgResult = results[1];
+
+  if (schoolResult.status === "fulfilled") {
+    schoolResult.value.forEach(doc => {
+      const data = doc.data() || {};
+      schoolNameMap[doc.id] = data.name || doc.id;
+    });
+  } else {
+    console.error("partnerSchools 無法讀取", schoolResult.reason);
+  }
+
+  if (orgResult.status === "fulfilled") {
+    orgResult.value.forEach(doc => {
+      const data = doc.data() || {};
+      orgNameMap[doc.id] = data.name || doc.id;
+    });
+  } else {
+    console.error("organizations 無法讀取", orgResult.reason);
+  }
+}
 
     function buildSchoolOptions(selectedValue = ""){
       const selected = norm(selectedValue);
@@ -919,11 +929,11 @@
     }
 
     function fillSchoolAndOrgSelects(){
-      mSchoolId.innerHTML = buildSchoolOptions(mSchoolId.value);
-      mOrgId.innerHTML = buildOrgOptions(mOrgId.value);
-      sEditSchoolId.innerHTML = buildSchoolOptions(sEditSchoolId.value);
-      sEditOrgId.innerHTML = buildOrgOptions(sEditOrgId.value);
-    }
+  if (mSchoolId) mSchoolId.innerHTML = buildSchoolOptions(mSchoolId.value);
+  if (mOrgId) mOrgId.innerHTML = buildOrgOptions(mOrgId.value);
+  if (sEditSchoolId) sEditSchoolId.innerHTML = buildSchoolOptions(sEditSchoolId.value);
+  if (sEditOrgId) sEditOrgId.innerHTML = buildOrgOptions(sEditOrgId.value);
+}
 
     function renderTabs(){
       tabsEl.innerHTML = `
@@ -1502,12 +1512,12 @@
         myRoleEl.textContent = myRole || "-";
 
         await loadNameMaps();
-        fillSchoolAndOrgSelects();
 
-        gate.style.display = "none";
-        app.style.display = "block";
+gate.style.display = "none";
+app.style.display = "block";
 
-        renderTabs();
+fillSchoolAndOrgSelects();
+renderTabs();
       }catch(e){
         console.error(e);
         showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
