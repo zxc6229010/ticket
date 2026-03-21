@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onRequest } = require("firebase-functions/v2/https");
 const { setGlobalOptions } = require("firebase-functions/v2");
 
 admin.initializeApp();
@@ -8,48 +8,57 @@ setGlobalOptions({
   region: "us-central1"
 });
 
-exports.createUserWithEmail = onCall(
+exports.createUserWithEmail = onRequest(
   {
     cors: true
   },
-  async (request) => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "未登入");
-    }
-
-    const callerUid = request.auth.uid;
-
-    const callerDoc = await admin
-      .firestore()
-      .collection("users")
-      .doc(callerUid)
-      .get();
-
-    const callerData = callerDoc.data();
-
-    if (!callerData || !["platform_super", "platform_admin"].includes(callerData.role)) {
-      throw new HttpsError("permission-denied", "沒有權限");
-    }
-
-    const data = request.data || {};
-
-    const email = String(data.email || "").trim();
-    const role = String(data.role || "org_staff").trim();
-    const orgId = String(data.orgId || "").trim();
-    const schoolId = String(data.schoolId || "").trim();
-    const team = String(data.team || "").trim();
-    const enabled = data.enabled === true;
-
-    if (!email) {
-      throw new HttpsError("invalid-argument", "缺少 email");
-    }
-
-    const allowedRoles = ["platform_admin", "org_super", "org_admin", "org_staff"];
-    if (!allowedRoles.includes(role)) {
-      throw new HttpsError("invalid-argument", "角色不合法");
-    }
-
+  async (req, res) => {
     try {
+      if (req.method !== "POST") {
+        return res.status(405).json({ error: "Method not allowed" });
+      }
+
+      const authHeader = req.headers.authorization || "";
+      if (!authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "未登入" });
+      }
+
+      const idToken = authHeader.replace("Bearer ", "").trim();
+      let decodedToken;
+
+      try {
+        decodedToken = await admin.auth().verifyIdToken(idToken);
+      } catch (err) {
+        return res.status(401).json({ error: "Token 驗證失敗" });
+      }
+
+      const callerUid = decodedToken.uid;
+
+      const callerDoc = await admin.firestore().collection("users").doc(callerUid).get();
+      const callerData = callerDoc.data();
+
+      if (!callerData || !["platform_super", "platform_admin"].includes(callerData.role)) {
+        return res.status(403).json({ error: "沒有權限" });
+      }
+
+      const body = req.body || {};
+
+      const email = String(body.email || "").trim();
+      const role = String(body.role || "org_staff").trim();
+      const orgId = String(body.orgId || "").trim();
+      const schoolId = String(body.schoolId || "").trim();
+      const team = String(body.team || "").trim();
+      const enabled = body.enabled === true;
+
+      if (!email) {
+        return res.status(400).json({ error: "缺少 email" });
+      }
+
+      const allowedRoles = ["platform_admin", "org_super", "org_admin", "org_staff"];
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({ error: "角色不合法" });
+      }
+
       const tempPassword = Math.random().toString(36).slice(-10) + "A1!";
 
       const userRecord = await admin.auth().createUser({
@@ -78,15 +87,17 @@ exports.createUserWithEmail = onCall(
 
       const resetLink = await admin.auth().generatePasswordResetLink(email);
 
-      return {
+      return res.status(200).json({
         success: true,
         uid,
         email,
         resetLink
-      };
+      });
     } catch (error) {
       console.error("createUserWithEmail error:", error);
-      throw new HttpsError("internal", error.message || "建立帳號失敗");
+      return res.status(500).json({
+        error: error.message || "建立帳號失敗"
+      });
     }
   }
 );

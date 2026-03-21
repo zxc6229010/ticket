@@ -1022,18 +1022,37 @@ const functionsApi = firebase.app().functions("us-central1");
   createSubmitBtn.textContent = "建立中…";
 
   try{
-    const callable = functionsApi.httpsCallable("createUserWithEmail");
+    const currentAuthUser = firebase.auth().currentUser;
+    if (!currentAuthUser) {
+      throw new Error("目前未登入");
+    }
 
-    const res = await callable({
-      email: payload.email,
-      role: payload.role,
-      orgId: payload.orgId,
-      schoolId: payload.schoolId,
-      team: payload.team,
-      enabled: payload.enabled
-    });
+    const idToken = await currentAuthUser.getIdToken();
 
-    const data = res.data || {};
+    const response = await fetch(
+      "https://us-central1-concert-1ff7e.cloudfunctions.net/createUserWithEmail",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + idToken
+        },
+        body: JSON.stringify({
+          email: payload.email,
+          role: payload.role,
+          orgId: payload.orgId,
+          schoolId: payload.schoolId,
+          team: payload.team,
+          enabled: payload.enabled
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "建立失敗");
+    }
 
     createMsg.innerHTML = `
       <span class="ok">帳號建立成功</span><br>
