@@ -12,5 +12,14 @@
         "*.local"
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "public": "site",
+    "rewrites": [
+      {
+        "source": "/api/createUserWithEmail",
+        "function": "createUserWithEmail"
+      }
+    ]
+  }
 }
