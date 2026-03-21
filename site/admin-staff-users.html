@@ -1031,9 +1031,8 @@
 
       try{
         const snap = await db.collection("adminAccessRequests")
-          .orderBy("createdAt", "desc")
-          .limit(200)
-          .get();
+  .limit(200)
+  .get();
 
         reqCache = [];
         snap.forEach(doc => {
