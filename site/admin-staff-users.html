@@ -869,30 +869,26 @@
   schoolNameMap = {};
   orgNameMap = {};
 
-  const results = await Promise.allSettled([
-    db.collection("partnerSchools").get(),
-    db.collection("organizations").get()
-  ]);
-
-  const schoolResult = results[0];
-  const orgResult = results[1];
-
-  if (schoolResult.status === "fulfilled") {
-    schoolResult.value.forEach(doc => {
+  try {
+    const schoolSnap = await db.collection("partnerSchools").get();
+    console.log("partnerSchools ok", schoolSnap.size);
+    schoolSnap.forEach(doc => {
       const data = doc.data() || {};
       schoolNameMap[doc.id] = data.name || doc.id;
     });
-  } else {
-    console.error("partnerSchools 無法讀取", schoolResult.reason);
+  } catch (e) {
+    console.error("partnerSchools 失敗", e);
   }
 
-  if (orgResult.status === "fulfilled") {
-    orgResult.value.forEach(doc => {
+  try {
+    const orgSnap = await db.collection("organizations").get();
+    console.log("organizations ok", orgSnap.size);
+    orgSnap.forEach(doc => {
       const data = doc.data() || {};
       orgNameMap[doc.id] = data.name || doc.id;
     });
-  } else {
-    console.error("organizations 無法讀取", orgResult.reason);
+  } catch (e) {
+    console.error("organizations 失敗", e);
   }
 }
 
