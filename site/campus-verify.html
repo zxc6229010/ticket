@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>校園身分驗證</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{
+      max-width:760px;
+      margin:0 auto;
+      padding:48px 24px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+    h1{ margin:0 0 6px; font-size:22px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border:1px solid #111;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+    label{
+      display:block;
+      margin:14px 0 6px;
+      font-weight:900;
+    }
+    input, select{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      font-size:16px;
+      background:#fff;
+      outline:none;
+    }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <h1>校園身分驗證</h1>
+        <div class="sub">
+          你可以使用任意 email 註冊網站帳號，但若要取得活動報名資格，需使用學校信箱完成校園身分綁定。<br>
+          驗證完成後，系統會用你綁定的校園身份去比對該活動的可參加名單。
+        </div>
+        <div class="sub" style="margin-top:8px;">
+          目前登入：<span id="who" class="mono">-</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>活動 ID</label>
+        <input id="eventId" type="text" placeholder="請輸入活動 ID" />
+
+        <label>校園</label>
+        <select id="schoolId"></select>
+
+        <label>學號 / 身分代碼</label>
+        <input id="studentCode" type="text" placeholder="請輸入學號" />
+
+        <label>學校信箱</label>
+        <input id="schoolEmail" type="text" placeholder="例如：512345@gm.tgsh.tn.edu.tw" />
+
+        <div style="margin-top:18px;">
+          <button class="btn" id="submitBtn">寄送驗證信</button>
+        </div>
+
+        <div class="sub" id="msg" style="margin-top:12px;">
+          系統會把驗證信寄到你輸入的學校信箱。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const who = document.getElementById("who");
+    const eventIdEl = document.getElementById("eventId");
+    const schoolIdEl = document.getElementById("schoolId");
+    const studentCodeEl = document.getElementById("studentCode");
+    const schoolEmailEl = document.getElementById("schoolEmail");
+    const submitBtn = document.getElementById("submitBtn");
+    const msg = document.getElementById("msg");
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, text){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1>${esc(title)}</h1>
+        <div class="sub">${esc(text)}</div>
+      `;
+    }
+
+    async function loadSchools(){
+      schoolIdEl.innerHTML = `<option value="">載入中…</option>`;
+
+      try{
+        const snap = await db.collection("partnerSchools").get();
+        const items = [];
+
+        snap.forEach(doc => {
+          const data = doc.data() || {};
+          if (data.enabled === false) return;
+          items.push({
+            id: doc.id,
+            name: data.name || doc.id
+          });
+        });
+
+        items.sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
+
+        if (!items.length) {
+          schoolIdEl.innerHTML = `<option value="">沒有可用校園</option>`;
+          return;
+        }
+
+        schoolIdEl.innerHTML = items.map(item => `
+          <option value="${esc(item.id)}">${esc(item.name)}（${esc(item.id)}）</option>
+        `).join("");
+      }catch(e){
+        console.error(e);
+        schoolIdEl.innerHTML = `<option value="">讀取校園失敗</option>`;
+      }
+    }
+
+    async function sendVerify(){
+      const user = firebase.auth().currentUser;
+      if (!user) return alert("請先登入");
+
+      const eventId = eventIdEl.value.trim();
+      const schoolId = schoolIdEl.value.trim();
+      const studentCode = studentCodeEl.value.trim();
+      const schoolEmail = schoolEmailEl.value.trim().toLowerCase();
+
+      if (!eventId) return alert("請輸入活動 ID");
+      if (!schoolId) return alert("請選擇校園");
+      if (!studentCode) return alert("請輸入學號");
+      if (!schoolEmail) return alert("請輸入學校信箱");
+
+      submitBtn.disabled = true;
+      const oldText = submitBtn.textContent;
+      submitBtn.textContent = "寄送中…";
+
+      try {
+        const idToken = await user.getIdToken();
+
+        const response = await fetch("/api/requestCampusVerification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + idToken
+          },
+          body: JSON.stringify({
+            eventId,
+            schoolId,
+            studentCode,
+            schoolEmail
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "寄送失敗");
+        }
+
+        msg.innerHTML = `<span class="ok">驗證信已寄出，請到學校信箱收信。</span>`;
+      } catch (e) {
+        console.error(e);
+        msg.innerHTML = `<span class="warn">${esc(e.message || "寄送失敗")}</span>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = oldText;
+      }
+    }
+
+    submitBtn.onclick = sendVerify;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        showGate("請先登入", "你需要先登入網站帳號，才能進行校園身分驗證。");
+        return;
+      }
+
+      gate.style.display = "none";
+      app.style.display = "block";
+      who.textContent = user.email || user.uid || "-";
+
+      await loadSchools();
+    });
+  </script>
+</body>
+</html>

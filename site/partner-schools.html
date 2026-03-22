@@ -2,352 +2,242 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜特約校園管理</title>
+  <title>後台｜特約校園設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
       --bg:#f6f7fb;
-      --card:#ffffff;
+      --card:#fff;
       --text:#111;
       --muted:rgba(17,17,17,.65);
       --line:rgba(17,17,17,.10);
-      --shadow2:0 14px 40px rgba(0,0,0,.08);
-
-      --btn-a:10px;
-      --btn-b:14px;
-      --btn-x:calc(var(--btn-b) * 1.5);
-      --btn-h:46px;
-      --btn-fs:16px;
+      --shadow:0 14px 40px rgba(0,0,0,.08);
     }
-
     *{ box-sizing:border-box; }
-
     body{
       margin:0;
       background:var(--bg);
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-
     .wrap{
-      max-width:960px;
+      max-width:1100px;
       margin:0 auto;
-      padding:48px 32px;
+      padding:48px 24px;
     }
-
-    @media (max-width:640px){
-      .wrap{ padding:28px 16px; }
-    }
-
-    .section{
-      background:var(--card);
+    .card{
+      margin-bottom:18px;
+      padding:18px;
       border:1px solid var(--line);
       border-radius:18px;
-      box-shadow:var(--shadow2);
-      padding:16px;
-      margin-bottom:22px;
+      background:#fff;
+      box-shadow:var(--shadow);
     }
-
-    .header{
+    h1{ margin:0 0 6px; font-size:22px; }
+    h2{ margin:0; font-size:16px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .row{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:12px;
-      margin-bottom:12px;
+      flex-wrap:wrap;
     }
-
-    h1{
-      margin:0;
-      font-size:22px;
-      letter-spacing:.2px;
-    }
-
-    h2{
-      margin:0;
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:#111;
       font-size:16px;
       font-weight:900;
+      text-decoration:none;
+      cursor:pointer;
     }
-
-    .sub{
-      margin-top:6px;
-      color:var(--muted);
-      line-height:1.6;
-      font-size:14px;
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
     }
-
-    .small{
-      font-size:13px;
-      color:var(--muted);
+    .btn-danger{
+      color:#b91c1c;
+      border-color:rgba(239,68,68,.35);
     }
-
+    .btn-sm{
+      height:40px;
+      padding:8px 14px;
+      font-size:15px;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width:900px){
+      .grid2{ grid-template-columns:1fr; }
+    }
     label{
       display:block;
-      margin-top:10px;
-      margin-bottom:6px;
+      margin:12px 0 6px;
       font-weight:900;
     }
-
-    input[type="text"]{
+    input[type="text"], select, textarea{
       width:100%;
       padding:12px;
       border:1px solid var(--line);
       border-radius:14px;
       background:#fff;
       font-size:16px;
+      outline:none;
     }
-
-    .form-box{
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#fff;
-      padding:12px;
+    textarea{
+      min-height:120px;
+      resize:vertical;
     }
-
-    .form-grid{
-      display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:12px;
-    }
-
-    @media (max-width:640px){
-      .form-grid{ grid-template-columns:1fr; }
-    }
-
-    .switch{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-top:8px;
-    }
-
-    .switch:first-child{ margin-top:0; }
-
-    .switch input{
-      width:18px;
-      height:18px;
-      margin:0;
-      flex:0 0 auto;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      height:var(--btn-h);
-      padding:var(--btn-a) var(--btn-x);
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      color:#111;
-      font-size:var(--btn-fs);
-      font-weight:900;
-      line-height:1;
-      text-decoration:none;
-      cursor:pointer;
-      user-select:none;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
-    }
-
-    .btn:active{
-      transform:translateY(0) scale(.98);
-      box-shadow:none;
-    }
-
-    .btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
-      box-shadow:none;
-      transform:none;
-    }
-
-    .btn-primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    .btn-sm{
-      height:40px;
-      padding:8px calc(var(--btn-b) * 1.25);
-      font-size:15px;
-    }
-
-    .btn-danger{
-      border-color:rgba(239,68,68,.35);
-      background:#fff;
-      color:#b91c1c;
-    }
-
-    .form-actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
     .list{
       display:grid;
       gap:12px;
-      margin-top:12px;
     }
-
     .item{
+      padding:14px;
       border:1px solid var(--line);
       border-radius:18px;
       background:#fff;
-      padding:14px;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
     }
-
-    .item-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-    }
-
-    .item-left{
-      display:flex;
-      align-items:flex-start;
-      gap:12px;
-      min-width:0;
-    }
-
-    .logo{
-      width:44px;
-      height:44px;
-      flex:0 0 auto;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      object-fit:cover;
-    }
-
-    .logo-fallback{
-      width:44px;
-      height:44px;
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
+    .itemTitle{
+      margin:0;
+      font-size:15px;
       font-weight:900;
     }
-
-    .badges{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
+    .meta{
       margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      word-break:break-word;
     }
-
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
     .badge{
       display:inline-flex;
+      align-items:center;
       padding:6px 10px;
       border:1px solid var(--line);
       border-radius:999px;
       background:#fff;
-      font-size:13px;
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
     }
-
-    .right-actions{
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      align-items:flex-start;
-      gap:10px;
-    }
-
-    .edit-panel{
-      display:none;
-      margin-top:12px;
-      padding-top:12px;
-      border-top:1px dashed var(--line);
-    }
-
-    .edit-grid{
-      display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:12px;
-      margin-top:10px;
-    }
-
-    @media (max-width:640px){
-      .edit-grid{ grid-template-columns:1fr; }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div id="loginGate" class="section"></div>
+    <div id="gate" class="card" style="display:none;"></div>
 
-    <div id="adminApp" style="display:none;">
-      <div class="section">
-        <div class="header">
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="row">
           <div>
-            <h1>特約校園管理</h1>
-            <div class="sub">新增、停用、編輯特約校園資料</div>
-          </div>
-
-          <div style="text-align:right;">
-            <div class="small" id="who"></div>
-            <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
-              <a href="dashboard.html" class="btn btn-sm">回主選單</a>
-              <button id="logoutBtn" class="btn btn-sm" type="button">登出</button>
+            <h1>特約校園設定</h1>
+            <div class="sub">
+              這裡可以新增與編輯特約校園，並設定校園驗證規則。<br>
+              驗證規則會被「校園身分驗證」頁讀取。
             </div>
-          </div>
-        </div>
-
-        <div id="editorWrap">
-          <div class="form-grid">
-            <div>
-              <label>學校名稱（必填）</label>
-              <input id="schoolName" type="text" placeholder="例：A學校" />
-
-              <label style="margin-top:12px;">校徽圖片網址（選填）</label>
-              <input id="schoolLogoUrl" type="text" placeholder="https://...（貼圖片網址）" />
-              <div class="small" style="margin-top:8px;">這裡只會存圖片網址，不會上傳檔案。</div>
-            </div>
-
-            <div>
-              <label>允許認證方式（至少選 1 種）</label>
-              <div class="form-box">
-                <div class="switch">
-                  <input id="mStudentId" type="checkbox" />
-                  <span>學號（student_id）</span>
-                </div>
-                <div class="switch">
-                  <input id="mGoogle" type="checkbox" />
-                  <span>Google（google）</span>
-                </div>
-              </div>
-
-              <div class="sub" style="margin-top:12px;">
-                提示：前台只會顯示 enabled = true 的學校。
-              </div>
+            <div class="sub" style="margin-top:8px;">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="myRole" class="mono">-</span>
             </div>
           </div>
 
-          <div class="form-actions">
-            <button id="reloadBtn" class="btn" type="button">重新載入</button>
-            <button id="addBtn" class="btn btn-primary" type="button" disabled>新增校園</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="dashboard.html">回主選單</a>
+            <button class="btn" id="logoutBtn">登出</button>
           </div>
         </div>
       </div>
 
-      <div class="section">
-        <h2>校園清單</h2>
-        <div id="list" class="list"></div>
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>新增 / 編輯校園</h2>
+            <div class="sub">
+              校園代號就是文件 ID，例如：<span class="mono">kmsh</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid2" style="margin-top:12px;">
+          <div>
+            <label style="margin-top:0;">校園代號（schoolId）</label>
+            <input type="text" id="schoolId" placeholder="例如：kmsh" />
+          </div>
+
+          <div>
+            <label style="margin-top:0;">校園名稱</label>
+            <input type="text" id="schoolName" placeholder="例如：高雄某某高中" />
+          </div>
+
+          <div>
+            <label>啟用（enabled）</label>
+            <select id="enabled">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+
+          <div>
+            <label>開放校園驗證（verificationEnabled）</label>
+            <select id="verificationEnabled">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+
+          <div style="grid-column:1/-1;">
+            <label>允許驗證的信箱後綴（每行一個，不要加 @）</label>
+            <textarea id="allowedEmailDomains" placeholder="例如：
+gm.tgsh.tn.edu.tw
+mail.tgsh.tn.edu.tw"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="resetBtn">清空</button>
+          <button class="btn btn-primary" id="saveBtn">儲存校園</button>
+        </div>
+
+        <div class="sub" id="saveMsg" style="margin-top:10px;">-</div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <h2>校園清單</h2>
+            <div class="sub">可點選編輯或刪除。</div>
+          </div>
+          <div>
+            <button class="btn btn-sm" id="reloadBtn">重新載入</button>
+          </div>
+        </div>
+
+        <div class="list" id="schoolList" style="margin-top:12px;"></div>
       </div>
     </div>
   </div>
@@ -357,452 +247,247 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    firebase.initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
 
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const loginGate = document.getElementById("loginGate");
-    const adminApp = document.getElementById("adminApp");
-    const whoEl = document.getElementById("who");
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const who = document.getElementById("who");
+    const myRole = document.getElementById("myRole");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    const listEl = document.getElementById("list");
-    const nameEl = document.getElementById("schoolName");
-    const logoEl = document.getElementById("schoolLogoUrl");
+    const schoolIdEl = document.getElementById("schoolId");
+    const schoolNameEl = document.getElementById("schoolName");
+    const enabledEl = document.getElementById("enabled");
+    const verificationEnabledEl = document.getElementById("verificationEnabled");
+    const allowedEmailDomainsEl = document.getElementById("allowedEmailDomains");
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const saveMsg = document.getElementById("saveMsg");
     const reloadBtn = document.getElementById("reloadBtn");
-    const addBtn = document.getElementById("addBtn");
+    const schoolList = document.getElementById("schoolList");
 
-    const mStudentId = document.getElementById("mStudentId");
-    const mGoogle = document.getElementById("mGoogle");
-
-    let currentRole = "";
     let currentUser = null;
+    let currentRole = "";
+    let schoolCache = [];
 
-    function esc(str) {
-      return String(str ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
     }
 
-    function escAttr(str) {
-      return esc(str).replaceAll("\n", " ");
+    function norm(s){
+      return String(s ?? "").trim();
     }
 
-    async function doLogout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-        alert("登出失敗，請看 Console。");
-      }
-    }
-
-    logoutBtn.addEventListener("click", doLogout);
-
-    function showGate({ title, message, showLogin, showLogout }) {
-      loginGate.innerHTML = `
+    function showGate(title, text){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
         <h1>${esc(title)}</h1>
-        <div class="sub">${esc(message)}</div>
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn btn-primary" id="gateLoginBtn" type="button">使用 Google 登入</button>` : ``}
-          ${showLogout ? `<button class="btn" id="gateLogoutBtn" type="button">登出</button>` : ``}
-        </div>
+        <div class="sub">${esc(text)}</div>
       `;
+    }
 
-      const gateLoginBtn = document.getElementById("gateLoginBtn");
-      if (gateLoginBtn) {
-        gateLoginBtn.onclick = async () => {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
+    async function doLogout(){
+      await firebase.auth().signOut();
+    }
+
+    logoutBtn.onclick = doLogout;
+
+    function canManage(role){
+      return role === "platform_super" || role === "platform_admin";
+    }
+
+    function resetForm(){
+      schoolIdEl.value = "";
+      schoolNameEl.value = "";
+      enabledEl.value = "true";
+      verificationEnabledEl.value = "true";
+      allowedEmailDomainsEl.value = "";
+      saveMsg.textContent = "-";
+    }
+
+    function getFormData(){
+      return {
+        schoolId: norm(schoolIdEl.value),
+        name: norm(schoolNameEl.value),
+        enabled: enabledEl.value === "true",
+        verificationEnabled: verificationEnabledEl.value === "true",
+        allowedEmailDomains: allowedEmailDomainsEl.value
+          .split("\n")
+          .map(v => norm(v).toLowerCase())
+          .filter(Boolean)
+      };
+    }
+
+    async function saveSchool(){
+      const payload = getFormData();
+
+      if (!payload.schoolId) return alert("請輸入 schoolId");
+      if (!payload.name) return alert("請輸入校園名稱");
+
+      saveBtn.disabled = true;
+      const oldText = saveBtn.textContent;
+      saveBtn.textContent = "儲存中…";
+
+      try{
+        await db.collection("partnerSchools").doc(payload.schoolId).set({
+          name: payload.name,
+          enabled: payload.enabled,
+          verificationEnabled: payload.verificationEnabled,
+          allowedEmailDomains: payload.allowedEmailDomains,
+          updatedAt: new Date(),
+          updatedByUid: currentUser.uid
+        }, { merge: true });
+
+        saveMsg.innerHTML = `<span class="ok">已儲存</span>`;
+        await loadSchools();
+      }catch(e){
+        console.error(e);
+        saveMsg.innerHTML = `<span class="warn">儲存失敗</span>`;
+      }finally{
+        saveBtn.disabled = false;
+        saveBtn.textContent = oldText;
+      }
+    }
+
+    function renderSchools(){
+      if (!schoolCache.length) {
+        schoolList.innerHTML = `
+          <div class="item">
+            <div class="itemTitle">目前沒有校園資料</div>
+            <div class="meta">請先新增校園。</div>
+          </div>
+        `;
+        return;
+      }
+
+      schoolList.innerHTML = schoolCache.map(item => `
+        <div class="item">
+          <div class="itemTitle">
+            ${esc(item.name || item.id)}
+            <span class="badge mono">${esc(item.id)}</span>
+            ${item.enabled === true ? `<span class="badge ok">enabled</span>` : `<span class="badge warn">disabled</span>`}
+            ${item.verificationEnabled === true ? `<span class="badge ok">verification on</span>` : `<span class="badge warn">verification off</span>`}
+          </div>
+          <div class="meta">
+            allowedEmailDomains：<span class="mono">${esc((item.allowedEmailDomains || []).join(", ") || "（未設定）")}</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-sm" data-edit="${esc(item.id)}">編輯</button>
+            <button class="btn btn-danger btn-sm" data-delete="${esc(item.id)}">刪除</button>
+          </div>
+        </div>
+      `).join("");
+
+      schoolList.querySelectorAll("[data-edit]").forEach(btn => {
+        btn.onclick = () => {
+          const item = schoolCache.find(v => v.id === btn.dataset.edit);
+          if (!item) return;
+
+          schoolIdEl.value = item.id || "";
+          schoolNameEl.value = item.name || "";
+          enabledEl.value = item.enabled === true ? "true" : "false";
+          verificationEnabledEl.value = item.verificationEnabled === true ? "true" : "false";
+          allowedEmailDomainsEl.value = Array.isArray(item.allowedEmailDomains)
+            ? item.allowedEmailDomains.join("\n")
+            : "";
+          saveMsg.textContent = "已載入可編輯";
+          window.scrollTo({ top: 0, behavior: "smooth" });
         };
-      }
+      });
 
-      const gateLogoutBtn = document.getElementById("gateLogoutBtn");
-      if (gateLogoutBtn) {
-        gateLogoutBtn.onclick = doLogout;
-      }
+      schoolList.querySelectorAll("[data-delete]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.delete;
+          if (!confirm(`確定要刪除校園 ${id} 嗎？`)) return;
 
-      loginGate.style.display = "block";
-      adminApp.style.display = "none";
-    }
-
-    function canDelete() {
-      return currentRole === "platform_super";
-    }
-
-    function canEdit() {
-      return currentRole === "platform_super" || currentRole === "platform_admin";
-    }
-
-    function updateAddButtonState() {
-      const hasName = (nameEl.value || "").trim().length > 0;
-      const hasMethod = mStudentId.checked || mGoogle.checked;
-      addBtn.disabled = !(hasName && hasMethod && canEdit());
-    }
-
-    nameEl.addEventListener("input", updateAddButtonState);
-    logoEl.addEventListener("input", updateAddButtonState);
-    mStudentId.addEventListener("change", updateAddButtonState);
-    mGoogle.addEventListener("change", updateAddButtonState);
-
-    function sortSchools(docs) {
-      return docs.sort((a, b) => {
-        const nameA = String(a.data().name || "").trim().toLowerCase();
-        const nameB = String(b.data().name || "").trim().toLowerCase();
-        return nameA.localeCompare(nameB, "zh-Hant");
+          try{
+            await db.collection("partnerSchools").doc(id).delete();
+            await loadSchools();
+          }catch(e){
+            console.error(e);
+            alert("刪除失敗");
+          }
+        };
       });
     }
 
-    async function loadList() {
-      listEl.innerHTML = `<div class="small">載入中…</div>`;
+    async function loadSchools(){
+      schoolList.innerHTML = `<div class="sub">讀取中…</div>`;
 
-      try {
+      try{
         const snap = await db.collection("partnerSchools").get();
-        const docs = sortSchools(snap.docs.slice());
+        schoolCache = [];
+        snap.forEach(doc => {
+          schoolCache.push({ id: doc.id, ...(doc.data() || {}) });
+        });
 
-        if (!docs.length) {
-          listEl.innerHTML = `<div class="small">目前沒有資料</div>`;
-          return;
-        }
-
-        listEl.innerHTML = docs.map((doc) => {
-          const school = doc.data() || {};
-          const id = doc.id;
-
-          const name = school.name || "未命名學校";
-          const logoUrl = String(school.logoUrl || "").trim();
-          const enabled = school.enabled === true;
-          const methods = Array.isArray(school.authMethods) ? school.authMethods : [];
-          const fallback = String(name).slice(0, 1);
-
-          return `
-            <div class="item" id="row-${escAttr(id)}">
-              <div class="item-top">
-                <div class="item-left">
-                  ${
-                    logoUrl
-                      ? `<img
-                          class="logo"
-                          src="${escAttr(logoUrl)}"
-                          alt="logo"
-                          onerror="this.outerHTML='<div class=\\'logo-fallback\\'>${esc(fallback)}</div>'"
-                        >`
-                      : `<div class="logo-fallback">${esc(fallback)}</div>`
-                  }
-
-                  <div style="min-width:0;">
-                    <div style="font-weight:900;">${esc(name)}</div>
-                    <div class="small" style="margin-top:4px;">
-                      狀態：${enabled ? "啟用" : "停用"}
-                    </div>
-
-                    <div class="badges">
-                      ${
-                        methods.length
-                          ? methods.map(method => `<span class="badge">${esc(method)}</span>`).join("")
-                          : `<span class="badge">（未設定）</span>`
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <div class="right-actions">
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    onclick="toggleEnabled('${escAttr(id)}', ${enabled})"
-                    ${canEdit() ? "" : "disabled"}
-                  >
-                    ${enabled ? "停用" : "啟用"}
-                  </button>
-
-                  <button
-                    class="btn btn-sm"
-                    type="button"
-                    onclick="toggleEdit('${escAttr(id)}')"
-                    ${canEdit() ? "" : "disabled"}
-                  >
-                    編輯
-                  </button>
-
-                  <button
-                    class="btn btn-sm btn-danger"
-                    type="button"
-                    onclick="removeSchool('${escAttr(id)}', '${escAttr(name)}')"
-                    ${canDelete() ? "" : "disabled"}
-                  >
-                    移除
-                  </button>
-
-                  <a class="btn btn-sm" href="admin-studentslist-import.html?schoolId=${encodeURIComponent(id)}">
-                    匯入名單
-                  </a>
-                </div>
-              </div>
-
-              <div class="edit-panel" id="edit-${escAttr(id)}">
-                <div class="small">修改完之後按「儲存」即可。</div>
-
-                <div class="edit-grid">
-                  <div>
-                    <label>學校名稱</label>
-                    <input type="text" id="editName-${escAttr(id)}" value="${escAttr(name)}" />
-
-                    <label style="margin-top:12px;">校徽圖片網址（選填）</label>
-                    <input type="text" id="editLogo-${escAttr(id)}" value="${escAttr(logoUrl)}" placeholder="https://..." />
-                  </div>
-
-                  <div>
-                    <label>允許認證方式</label>
-                    <div class="form-box">
-                      <div class="switch">
-                        <input type="checkbox" id="editMStudent-${escAttr(id)}" ${methods.includes("student_id") ? "checked" : ""} />
-                        <span>學號（student_id）</span>
-                      </div>
-                      <div class="switch">
-                        <input type="checkbox" id="editMGoogle-${escAttr(id)}" ${methods.includes("google") ? "checked" : ""} />
-                        <span>Google（google）</span>
-                      </div>
-                    </div>
-
-                    <div class="form-actions" style="justify-content:flex-end; margin-top:12px;">
-                      <button class="btn btn-sm" type="button" onclick="toggleEdit('${escAttr(id)}')">取消</button>
-                      <button class="btn btn-sm btn-primary" type="button" onclick="saveEdit('${escAttr(id)}')" ${canEdit() ? "" : "disabled"}>儲存</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join("");
-      } catch (e) {
+        schoolCache.sort((a, b) => (a.name || a.id).localeCompare((b.name || b.id), "zh-Hant"));
+        renderSchools();
+      }catch(e){
         console.error(e);
-        listEl.innerHTML = `<div class="small">讀取失敗，請查看 Console。</div>`;
-        alert(
-          "讀取校園清單失敗\n" +
-          "code: " + (e.code || "(no code)") + "\n" +
-          "message: " + (e.message || e)
-        );
+        schoolList.innerHTML = `
+          <div class="item">
+            <div class="itemTitle warn">讀取失敗</div>
+            <div class="meta">請查看 Console。</div>
+          </div>
+        `;
       }
     }
 
-    async function addSchool() {
-      const name = (nameEl.value || "").trim();
-      const logoUrl = (logoEl.value || "").trim();
-
-      if (!name) {
-        alert("請輸入學校名稱");
-        nameEl.focus();
-        return;
-      }
-
-      const methods = [];
-      if (mStudentId.checked) methods.push("student_id");
-      if (mGoogle.checked) methods.push("google");
-
-      if (!methods.length) {
-        alert("請至少選擇一種認證方式");
-        return;
-      }
-
-      addBtn.disabled = true;
-      const oldText = addBtn.textContent;
-      addBtn.textContent = "新增中…";
-
-      try {
-        await db.collection("partnerSchools").add({
-          name,
-          logoUrl,
-          enabled: true,
-          authMethods: methods,
-          createdAt: new Date(),
-          createdBy: currentUser ? currentUser.uid : ""
-        });
-
-        nameEl.value = "";
-        logoEl.value = "";
-        mStudentId.checked = false;
-        mGoogle.checked = false;
-
-        updateAddButtonState();
-        await loadList();
-        alert("新增成功");
-      } catch (e) {
-        console.error(e);
-        alert(
-          "新增失敗\n" +
-          "code: " + (e.code || "(no code)") + "\n" +
-          "message: " + (e.message || e)
-        );
-      } finally {
-        addBtn.textContent = oldText;
-        updateAddButtonState();
-      }
-    }
-
-    window.toggleEnabled = async (id, enabledNow) => {
-      if (!canEdit()) return;
-
-      try {
-        await db.collection("partnerSchools").doc(id).update({
-          enabled: !enabledNow,
-          updatedAt: new Date(),
-          updatedBy: currentUser ? currentUser.uid : ""
-        });
-
-        await loadList();
-      } catch (e) {
-        console.error(e);
-        alert(
-          "變更失敗\n" +
-          "code: " + (e.code || "(no code)") + "\n" +
-          "message: " + (e.message || e)
-        );
-      }
-    };
-
-    window.toggleEdit = (id) => {
-      const panel = document.getElementById(`edit-${id}`);
-      if (!panel) return;
-      panel.style.display = panel.style.display === "block" ? "none" : "block";
-    };
-
-    window.saveEdit = async (id) => {
-      if (!canEdit()) return;
-
-      const name = (document.getElementById(`editName-${id}`)?.value || "").trim();
-      const logoUrl = (document.getElementById(`editLogo-${id}`)?.value || "").trim();
-      const useStudent = !!document.getElementById(`editMStudent-${id}`)?.checked;
-      const useGoogle = !!document.getElementById(`editMGoogle-${id}`)?.checked;
-
-      if (!name) {
-        alert("學校名稱不能為空");
-        return;
-      }
-
-      if (!useStudent && !useGoogle) {
-        alert("請至少選擇一種認證方式");
-        return;
-      }
-
-      const methods = [];
-      if (useStudent) methods.push("student_id");
-      if (useGoogle) methods.push("google");
-
-      try {
-        await db.collection("partnerSchools").doc(id).update({
-          name,
-          logoUrl,
-          authMethods: methods,
-          updatedAt: new Date(),
-          updatedBy: currentUser ? currentUser.uid : ""
-        });
-
-        await loadList();
-      } catch (e) {
-        console.error(e);
-        alert(
-          "儲存失敗\n" +
-          "code: " + (e.code || "(no code)") + "\n" +
-          "message: " + (e.message || e)
-        );
-      }
-    };
-
-    window.removeSchool = async (id, name) => {
-      if (!canDelete()) return;
-
-      const ok = confirm(`確定要移除「${name}」嗎？\n此動作無法復原。`);
-      if (!ok) return;
-
-      try {
-        await db.collection("partnerSchools").doc(id).delete();
-        await loadList();
-      } catch (e) {
-        console.error(e);
-        alert(
-          "移除失敗\n" +
-          "code: " + (e.code || "(no code)") + "\n" +
-          "message: " + (e.message || e)
-        );
-      }
-    };
-
-    reloadBtn.addEventListener("click", loadList);
-    addBtn.addEventListener("click", addSchool);
+    resetBtn.onclick = resetForm;
+    saveBtn.onclick = saveSchool;
+    reloadBtn.onclick = loadSchools;
 
     firebase.auth().onAuthStateChanged(async (user) => {
       currentUser = user || null;
 
       if (!user) {
-        showGate({
-          title: "特約校園管理",
-          message: "請先登入後台帳號。",
-          showLogin: true,
-          showLogout: false
-        });
+        showGate("請先登入", "你需要先登入管理帳號。");
         return;
       }
 
-      try {
-        const userDoc = await db.collection("users").doc(user.uid).get();
+      try{
+        const mySnap = await db.collection("users").doc(user.uid).get();
+        const myData = mySnap.exists ? (mySnap.data() || {}) : null;
 
-        if (!userDoc.exists) {
-          showGate({
-            title: "尚未授權",
-            message: "你的帳號尚未被授權為後台管理員。",
-            showLogin: false,
-            showLogout: true
-          });
+        if (!myData || myData.enabled !== true) {
+          showGate("權限不足", "你的帳號尚未啟用。");
           return;
         }
 
-        const userData = userDoc.data() || {};
-
-        if (userData.enabled !== true) {
-          showGate({
-            title: "帳號已停用",
-            message: "此帳號已被停用，請聯絡系統管理員。",
-            showLogin: false,
-            showLogout: true
-          });
+        currentRole = myData.role || "";
+        if (!canManage(currentRole)) {
+          showGate("權限不足", "此頁面僅開放平台管理員使用。");
           return;
         }
 
-        currentRole = String(userData.role || "").trim();
+        gate.style.display = "none";
+        app.style.display = "block";
+        who.textContent = myData.email || user.email || "-";
+        myRole.textContent = currentRole || "-";
 
-        if (!["platform_super", "platform_admin"].includes(currentRole)) {
-          showGate({
-            title: "權限不足",
-            message: "你沒有權限管理特約校園。",
-            showLogin: false,
-            showLogout: true
-          });
-          return;
-        }
-
-        whoEl.textContent = `${user.email || ""}｜${currentRole}`;
-
-        loginGate.style.display = "none";
-        adminApp.style.display = "block";
-
-        updateAddButtonState();
-        await loadList();
-      } catch (err) {
-        console.error(err);
-        showGate({
-          title: "發生錯誤",
-          message: "無法讀取權限資料，請查看 Console。",
-          showLogin: false,
-          showLogout: true
-        });
+        resetForm();
+        await loadSchools();
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取權限資料。");
       }
     });
   </script>

@@ -19,6 +19,14 @@
       {
         "source": "/api/createUserWithEmail",
         "function": "createUserWithEmailHttp"
+      },
+      {
+        "source": "/api/requestCampusVerification",
+        "function": "requestCampusVerification"
+      },
+      {
+        "source": "/api/confirmCampusVerification",
+        "function": "confirmCampusVerification"
       }
     ]
   }

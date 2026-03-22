@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>完成校園驗證</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{
+      max-width:760px;
+      margin:0 auto;
+      padding:48px 24px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    h1{ margin:0 0 6px; font-size:22px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .ok{ color:#166534; font-weight:900; }
+    .warn{ color:#b91c1c; font-weight:900; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>校園驗證結果</h1>
+      <div class="sub" id="msg">驗證中，請稍候…</div>
+    </div>
+  </div>
+
+  <script>
+    async function run(){
+      const token = new URLSearchParams(location.search).get("token");
+      const msg = document.getElementById("msg");
+
+      if (!token) {
+        msg.innerHTML = `<span class="warn">缺少 token</span>`;
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/confirmCampusVerification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "驗證失敗");
+        }
+
+        if (data.matched) {
+          msg.innerHTML = `
+            <span class="ok">驗證成功，且本活動名單比對通過，你已具備報名資格。</span>
+            <br><br>
+            你可以回到活動頁面繼續操作。
+          `;
+        } else {
+          msg.innerHTML = `
+            <span class="ok">驗證成功。</span>
+            <br><br>
+            但目前未在此活動的可參加名單中，因此尚未取得報名資格。
+          `;
+        }
+      } catch (e) {
+        console.error(e);
+        msg.innerHTML = `<span class="warn">${e.message || "驗證失敗"}</span>`;
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>
