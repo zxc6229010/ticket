@@ -81,8 +81,8 @@
       <div class="card">
         <h1>校園身分驗證</h1>
         <div class="sub">
-          你可以使用任意 email 註冊網站帳號，但若要取得活動報名資格，需使用學校信箱完成校園身分綁定。<br>
-          驗證完成後，系統會用你綁定的校園身份去比對該活動的可參加名單。
+          你只需要完成一次校園身份綁定。<br>
+          後續每場活動都會自動拿你的綁定資料去比對是否具備報名資格。
         </div>
         <div class="sub" style="margin-top:8px;">
           目前登入：<span id="who" class="mono">-</span>
@@ -90,9 +90,6 @@
       </div>
 
       <div class="card">
-        <label>活動 ID</label>
-        <input id="eventId" type="text" placeholder="請輸入活動 ID" />
-
         <label>校園</label>
         <select id="schoolId"></select>
 
@@ -133,7 +130,6 @@
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
     const who = document.getElementById("who");
-    const eventIdEl = document.getElementById("eventId");
     const schoolIdEl = document.getElementById("schoolId");
     const studentCodeEl = document.getElementById("studentCode");
     const schoolEmailEl = document.getElementById("schoolEmail");
@@ -195,12 +191,10 @@
       const user = firebase.auth().currentUser;
       if (!user) return alert("請先登入");
 
-      const eventId = eventIdEl.value.trim();
       const schoolId = schoolIdEl.value.trim();
       const studentCode = studentCodeEl.value.trim();
       const schoolEmail = schoolEmailEl.value.trim().toLowerCase();
 
-      if (!eventId) return alert("請輸入活動 ID");
       if (!schoolId) return alert("請選擇校園");
       if (!studentCode) return alert("請輸入學號");
       if (!schoolEmail) return alert("請輸入學校信箱");
@@ -219,7 +213,6 @@
             "Authorization": "Bearer " + idToken
           },
           body: JSON.stringify({
-            eventId,
             schoolId,
             studentCode,
             schoolEmail

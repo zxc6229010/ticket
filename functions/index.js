@@ -1,121 +1,3 @@
-const admin = require("firebase-admin");
-const { onRequest } = require("firebase-functions/v2/https");
-const { setGlobalOptions } = require("firebase-functions/v2");
-
-admin.initializeApp();
-
-setGlobalOptions({
-  region: "us-central1"
-});
-
-/**
- * 建立後台帳號
- * 只有 platform_super / platform_admin 可用
- */
-exports.createUserWithEmailHttp = onRequest(async (req, res) => {
-  res.set("Access-Control-Allow-Origin", "*");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-
-  if (req.method === "OPTIONS") {
-    return res.status(204).send("");
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Method not allowed",
-      method: req.method
-    });
-  }
-
-  try {
-    const authHeader = req.headers.authorization || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "未登入" });
-    }
-
-    const idToken = authHeader.replace("Bearer ", "").trim();
-
-    let decodedToken;
-    try {
-      decodedToken = await admin.auth().verifyIdToken(idToken);
-    } catch (err) {
-      return res.status(401).json({ error: "Token 驗證失敗" });
-    }
-
-    const callerUid = decodedToken.uid;
-    const callerDoc = await admin.firestore().collection("users").doc(callerUid).get();
-    const callerData = callerDoc.data();
-
-    if (!callerData || !["platform_super", "platform_admin"].includes(callerData.role)) {
-      return res.status(403).json({ error: "沒有權限" });
-    }
-
-    const body = req.body || {};
-    const email = String(body.email || "").trim();
-    const role = String(body.role || "org_staff").trim();
-    const orgId = String(body.orgId || "").trim();
-    const schoolId = String(body.schoolId || "").trim();
-    const team = String(body.team || "").trim();
-    const enabled = body.enabled === true;
-
-    if (!email) {
-      return res.status(400).json({ error: "缺少 email" });
-    }
-
-    const allowedRoles = ["platform_admin", "org_super", "org_admin", "org_staff"];
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ error: "角色不合法" });
-    }
-
-    const tempPassword = Math.random().toString(36).slice(-10) + "A1!";
-
-    const userRecord = await admin.auth().createUser({
-      email,
-      password: tempPassword,
-      emailVerified: false,
-      disabled: false
-    });
-
-    const uid = userRecord.uid;
-
-    await admin.firestore().collection("users").doc(uid).set({
-      uid,
-      email,
-      role,
-      orgId,
-      schoolId,
-      team,
-      enabled,
-      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      createdByUid: callerUid,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedByUid: callerUid
-    });
-
-    const resetLink = await admin.auth().generatePasswordResetLink(email);
-
-    return res.status(200).json({
-      success: true,
-      uid,
-      email,
-      resetLink
-    });
-  } catch (error) {
-    console.error("createUserWithEmailHttp error:", error);
-    return res.status(500).json({
-      error: error.message || "建立帳號失敗"
-    });
-  }
-});
-
-/**
- * 送出校園驗證信
- * 需要登入網站帳號
- * 會讀 partnerSchools/{schoolId} 的 verificationEnabled / allowedEmailDomains
- * 並針對某一個 eventId 進行後續名單比對
- */
 exports.requestCampusVerification = onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -153,9 +35,8 @@ exports.requestCampusVerification = onRequest(async (req, res) => {
     const studentCode = String(body.studentCode || "").trim();
     const schoolEmail = String(body.schoolEmail || "").trim().toLowerCase();
     const schoolId = String(body.schoolId || "").trim();
-    const eventId = String(body.eventId || "").trim();
 
-    if (!studentCode || !schoolEmail || !schoolId || !eventId) {
+    if (!studentCode || !schoolEmail || !schoolId) {
       return res.status(400).json({ error: "缺少欄位" });
     }
 
@@ -188,7 +69,7 @@ exports.requestCampusVerification = onRequest(async (req, res) => {
       return res.status(400).json({ error: "學校信箱後綴不符合校園規則" });
     }
 
-    // 同一個學號不可綁到其他 uid
+    // 同一學號不可被其他 uid 綁定
     const existingBindings = await admin.firestore()
       .collection("campusBindings")
       .where("studentCode", "==", studentCode)
@@ -211,7 +92,6 @@ exports.requestCampusVerification = onRequest(async (req, res) => {
       studentCode,
       schoolEmail,
       schoolId,
-      eventId,
       used: false,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       expiresAt: admin.firestore.Timestamp.fromDate(
@@ -219,7 +99,6 @@ exports.requestCampusVerification = onRequest(async (req, res) => {
       )
     });
 
-    // 使用 Firebase Trigger Email Extension
     await admin.firestore().collection("mail").add({
       to: schoolEmail,
       message: {
@@ -254,10 +133,6 @@ exports.requestCampusVerification = onRequest(async (req, res) => {
   }
 });
 
-/**
- * 點信中的連結後完成驗證
- * 會依 eventId 比對 events/{eventId}/eligibleRoster
- */
 exports.confirmCampusVerification = onRequest(async (req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   res.set("Access-Control-Allow-Headers", "Content-Type");
@@ -304,28 +179,9 @@ exports.confirmCampusVerification = onRequest(async (req, res) => {
     const studentCode = String(data.studentCode || "").trim();
     const schoolEmail = String(data.schoolEmail || "").trim().toLowerCase();
     const schoolId = String(data.schoolId || "").trim();
-    const eventId = String(data.eventId || "").trim();
 
-    if (!uid || !studentCode || !schoolEmail || !schoolId || !eventId) {
+    if (!uid || !studentCode || !schoolEmail || !schoolId) {
       return res.status(400).json({ error: "驗證資料不完整" });
-    }
-
-    // 活動名單比對
-    const rosterSnap = await admin.firestore()
-      .collection("events")
-      .doc(eventId)
-      .collection("eligibleRoster")
-      .where("studentCode", "==", studentCode)
-      .where("schoolId", "==", schoolId)
-      .where("schoolEmail", "==", schoolEmail)
-      .limit(1)
-      .get();
-
-    const rosterMatched = !rosterSnap.empty;
-    let rosterData = null;
-
-    if (rosterMatched) {
-      rosterData = rosterSnap.docs[0].data() || null;
     }
 
     // 同學號不可被別人綁
@@ -349,9 +205,6 @@ exports.confirmCampusVerification = onRequest(async (req, res) => {
       schoolEmail,
       schoolId,
       verified: true,
-      rosterMatched,
-      lastMatchedEventId: eventId,
-      rosterInfo: rosterData,
       verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
@@ -362,8 +215,7 @@ exports.confirmCampusVerification = onRequest(async (req, res) => {
     });
 
     return res.status(200).json({
-      success: true,
-      matched: rosterMatched
+      success: true
     });
   } catch (error) {
     console.error("confirmCampusVerification error:", error);

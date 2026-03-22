@@ -73,19 +73,11 @@
           throw new Error(data.error || "驗證失敗");
         }
 
-        if (data.matched) {
-          msg.innerHTML = `
-            <span class="ok">驗證成功，且本活動名單比對通過，你已具備報名資格。</span>
-            <br><br>
-            你可以回到活動頁面繼續操作。
-          `;
-        } else {
-          msg.innerHTML = `
-            <span class="ok">驗證成功。</span>
-            <br><br>
-            但目前未在此活動的可參加名單中，因此尚未取得報名資格。
-          `;
-        }
+        msg.innerHTML = `
+          <span class="ok">校園身分綁定成功。</span>
+          <br><br>
+          之後每一場活動都會自動依照你的綁定資料比對是否具備報名資格。
+        `;
       } catch (e) {
         console.error(e);
         msg.innerHTML = `<span class="warn">${e.message || "驗證失敗"}</span>`;
