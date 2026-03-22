@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>活動報名</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --ok:#166534;
+      --warn:#b91c1c;
+      --info:#1d4ed8;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+    .wrap{
+      max-width:860px;
+      margin:0 auto;
+      padding:48px 24px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+      margin-bottom:18px;
+    }
+    h1{ margin:0 0 6px; font-size:22px; }
+    h2{ margin:0; font-size:16px; }
+    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:#111;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      text-decoration:none;
+    }
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+    label{
+      display:block;
+      margin:12px 0 6px;
+      font-weight:900;
+    }
+    input[type="text"]{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      font-size:16px;
+      outline:none;
+    }
+    .statusBox{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+    .ok{ color:var(--ok); font-weight:900; }
+    .warn{ color:var(--warn); font-weight:900; }
+    .info{ color:var(--info); font-weight:900; }
+    .hidden{ display:none; }
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="card" style="display:none;"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <h1 id="eventTitle">活動報名</h1>
+        <div class="sub">
+          活動 ID：<span id="eventIdText" class="mono">-</span><br>
+          目前登入：<span id="who" class="mono">-</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>資格判斷</h2>
+        <div id="statusArea" class="statusBox" style="margin-top:12px;">
+          讀取中…
+        </div>
+      </div>
+
+      <div class="card hidden" id="inviteCard">
+        <h2>邀請碼報名</h2>
+        <div class="sub">
+          若你不是名單內使用者，或尚未完成校園驗證，可輸入邀請碼取得報名資格。
+        </div>
+
+        <label>邀請碼</label>
+        <input id="inviteCode" type="text" placeholder="請輸入邀請碼" />
+
+        <div class="actions">
+          <button class="btn btn-primary" id="inviteBtn">驗證邀請碼</button>
+        </div>
+
+        <div class="sub" id="inviteMsg" style="margin-top:12px;">-</div>
+      </div>
+
+      <div class="card hidden" id="registerCard">
+        <h2>正式報名</h2>
+        <div class="sub" id="registerSourceMsg">你已具備報名資格。</div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="registerBtn">確認報名</button>
+        </div>
+
+        <div class="sub" id="registerMsg" style="margin-top:12px;">-</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const who = document.getElementById("who");
+    const eventIdText = document.getElementById("eventIdText");
+    const eventTitle = document.getElementById("eventTitle");
+
+    const statusArea = document.getElementById("statusArea");
+    const inviteCard = document.getElementById("inviteCard");
+    const inviteCode = document.getElementById("inviteCode");
+    const inviteBtn = document.getElementById("inviteBtn");
+    const inviteMsg = document.getElementById("inviteMsg");
+
+    const registerCard = document.getElementById("registerCard");
+    const registerSourceMsg = document.getElementById("registerSourceMsg");
+    const registerBtn = document.getElementById("registerBtn");
+    const registerMsg = document.getElementById("registerMsg");
+
+    let currentUser = null;
+    let currentEventId = "";
+    let eligibilityState = null;
+    let invitePassed = false;
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function showGate(title, text){
+      gate.style.display = "block";
+      app.style.display = "none";
+      gate.innerHTML = `
+        <h1>${esc(title)}</h1>
+        <div class="sub">${esc(text)}</div>
+      `;
+    }
+
+    function getEventIdFromUrl(){
+      const id = new URLSearchParams(location.search).get("eventId");
+      return String(id || "").trim();
+    }
+
+    async function loadEventBasic(eventId){
+      try{
+        const snap = await db.collection("events").doc(eventId).get();
+        if (!snap.exists) {
+          eventTitle.textContent = "活動報名";
+          return;
+        }
+        const data = snap.data() || {};
+        eventTitle.textContent = data.title || "活動報名";
+      }catch(e){
+        console.error(e);
+      }
+    }
+
+    async function checkEventEligibility(uid, eventId){
+      const bindSnap = await db.collection("campusBindings").doc(uid).get();
+
+      if (!bindSnap.exists) {
+        return {
+          status: "unverified",
+          canRegister: false,
+          canUseInviteCode: true,
+          reason: "尚未完成校園綁定"
+        };
+      }
+
+      const bind = bindSnap.data() || {};
+
+      if (bind.verified !== true) {
+        return {
+          status: "unverified",
+          canRegister: false,
+          canUseInviteCode: true,
+          reason: "校園身份尚未驗證"
+        };
+      }
+
+      const rosterSnap = await db.collection("events")
+        .doc(eventId)
+        .collection("eligibleRoster")
+        .where("studentCode", "==", bind.studentCode)
+        .where("schoolId", "==", bind.schoolId)
+        .where("schoolEmail", "==", bind.schoolEmail)
+        .limit(1)
+        .get();
+
+      if (rosterSnap.empty) {
+        return {
+          status: "not_eligible",
+          canRegister: false,
+          canUseInviteCode: true,
+          reason: "不符合本活動名單資格",
+          binding: bind
+        };
+      }
+
+      const roster = rosterSnap.docs[0].data() || {};
+
+      if (roster.canRegister !== true) {
+        return {
+          status: "not_eligible",
+          canRegister: false,
+          canUseInviteCode: true,
+          reason: "本活動目前未開放此名單報名",
+          binding: bind,
+          roster
+        };
+      }
+
+      return {
+        status: "eligible",
+        canRegister: true,
+        canUseInviteCode: false,
+        reason: "",
+        binding: bind,
+        roster
+      };
+    }
+
+    function renderEligibility(result){
+      eligibilityState = result;
+      inviteCard.classList.add("hidden");
+      registerCard.classList.add("hidden");
+      invitePassed = false;
+      inviteMsg.textContent = "-";
+      registerMsg.textContent = "-";
+
+      if (result.status === "eligible") {
+        statusArea.innerHTML = `
+          <div class="ok">你符合本活動名單資格，可直接報名。</div>
+        `;
+        registerCard.classList.remove("hidden");
+        registerSourceMsg.textContent = "你已符合本活動名單資格。";
+        return;
+      }
+
+      if (result.status === "not_eligible") {
+        statusArea.innerHTML = `
+          <div class="warn">你目前不符合本活動名單資格。</div>
+          <div class="sub" style="margin-top:8px;">
+            可能原因：不在活動名單中、不是本校生，或此名單目前未開放報名。<br>
+            你仍可改用邀請碼報名。
+          </div>
+        `;
+        if (result.canUseInviteCode) {
+          inviteCard.classList.remove("hidden");
+        }
+        return;
+      }
+
+      if (result.status === "unverified") {
+        statusArea.innerHTML = `
+          <div class="info">你尚未完成校園身份驗證。</div>
+          <div class="sub" style="margin-top:8px;">
+            你可以先前往校園驗證，或直接改用邀請碼報名。<br>
+            <a href="campus-verify.html" style="font-weight:900;">前往校園驗證</a>
+          </div>
+        `;
+        if (result.canUseInviteCode) {
+          inviteCard.classList.remove("hidden");
+        }
+        return;
+      }
+
+      statusArea.innerHTML = `<div class="warn">無法判斷資格</div>`;
+    }
+
+    async function validateInviteCode(eventId, code){
+      const q = await db.collection("events")
+        .doc(eventId)
+        .collection("inviteCodes")
+        .where("code", "==", code)
+        .where("enabled", "==", true)
+        .limit(1)
+        .get();
+
+      if (q.empty) {
+        return { ok:false, reason:"邀請碼無效" };
+      }
+
+      const doc = q.docs[0];
+      const data = doc.data() || {};
+
+      const maxUses = Number(data.maxUses || 0);
+      const usedCount = Number(data.usedCount || 0);
+
+      if (maxUses > 0 && usedCount >= maxUses) {
+        return { ok:false, reason:"邀請碼使用次數已滿", ref: doc.ref, data };
+      }
+
+      return { ok:true, ref: doc.ref, data };
+    }
+
+    async function useInviteCode(){
+      const code = inviteCode.value.trim();
+      if (!code) return alert("請輸入邀請碼");
+
+      inviteBtn.disabled = true;
+      const oldText = inviteBtn.textContent;
+      inviteBtn.textContent = "驗證中…";
+
+      try{
+        const result = await validateInviteCode(currentEventId, code);
+
+        if (!result.ok) {
+          invitePassed = false;
+          registerCard.classList.add("hidden");
+          inviteMsg.innerHTML = `<span class="warn">${esc(result.reason)}</span>`;
+          return;
+        }
+
+        invitePassed = true;
+        inviteMsg.innerHTML = `<span class="ok">邀請碼驗證成功，你可使用邀請碼報名。</span>`;
+        registerCard.classList.remove("hidden");
+        registerSourceMsg.textContent = "你已通過邀請碼驗證。";
+      }catch(e){
+        console.error(e);
+        invitePassed = false;
+        registerCard.classList.add("hidden");
+        inviteMsg.innerHTML = `<span class="warn">邀請碼驗證失敗</span>`;
+      }finally{
+        inviteBtn.disabled = false;
+        inviteBtn.textContent = oldText;
+      }
+    }
+
+    async function submitRegistration(){
+      if (!currentUser) return alert("請先登入");
+
+      const fromEligible = eligibilityState && eligibilityState.status === "eligible";
+      const fromInvite = invitePassed === true;
+
+      if (!fromEligible && !fromInvite) {
+        alert("你目前沒有可用的報名資格");
+        return;
+      }
+
+      registerBtn.disabled = true;
+      const oldText = registerBtn.textContent;
+      registerBtn.textContent = "送出中…";
+
+      try{
+        const payload = {
+          uid: currentUser.uid,
+          userEmail: currentUser.email || "",
+          source: fromEligible ? "eligibleRoster" : "inviteCode",
+          createdAt: new Date()
+        };
+
+        if (fromEligible) {
+          payload.campusBinding = eligibilityState.binding || null;
+          payload.roster = eligibilityState.roster || null;
+        }
+
+        if (fromInvite) {
+          payload.inviteCode = inviteCode.value.trim();
+        }
+
+        await db.collection("events")
+          .doc(currentEventId)
+          .collection("registrations")
+          .doc(currentUser.uid)
+          .set(payload, { merge:true });
+
+        registerMsg.innerHTML = `<span class="ok">報名成功</span>`;
+      }catch(e){
+        console.error(e);
+        registerMsg.innerHTML = `<span class="warn">報名失敗，請稍後再試</span>`;
+      }finally{
+        registerBtn.disabled = false;
+        registerBtn.textContent = oldText;
+      }
+    }
+
+    inviteBtn.onclick = useInviteCode;
+    registerBtn.onclick = submitRegistration;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user) {
+        showGate("請先登入", "你需要先登入網站帳號，才能進行活動報名。");
+        return;
+      }
+
+      currentEventId = getEventIdFromUrl();
+
+      if (!currentEventId) {
+        showGate("缺少活動 ID", "請從正確的活動連結進入。");
+        return;
+      }
+
+      gate.style.display = "none";
+      app.style.display = "block";
+
+      who.textContent = user.email || user.uid || "-";
+      eventIdText.textContent = currentEventId;
+
+      await loadEventBasic(currentEventId);
+
+      try{
+        const result = await checkEventEligibility(user.uid, currentEventId);
+        renderEligibility(result);
+      }catch(e){
+        console.error(e);
+        statusArea.innerHTML = `<span class="warn">讀取資格失敗</span>`;
+      }
+    });
+  </script>
+</body>
+</html>
