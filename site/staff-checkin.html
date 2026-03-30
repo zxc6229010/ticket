@@ -4,18 +4,115 @@
   <meta charset="utf-8" />
   <title>核銷｜掃描入場</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="shared.css" />
   <style>
-    body { background: #0a0a0a; color: #fff; }
-    .wrap { max-width: 540px; padding: 20px 16px; }
+    *, *::before, *::after { box-sizing: border-box; }
 
-    /* Header */
+    body {
+      margin: 0;
+      background: #0a0a0a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    /* ── Gate（登入畫面） ── */
+    #gateWrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: #0a0a0a;
+    }
+    .gate-inner {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .gate-logo {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+    .gate-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .gate-sub {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .gate-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: left;
+    }
+    .gate-card label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      margin-bottom: 6px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+    .gate-card input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1a1a1a;
+      border: 1.5px solid #2a2a2a;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color .15s;
+    }
+    .gate-card input:focus { border-color: #22c55e; }
+    .gate-card input::placeholder { color: #444; }
+    #loginBtn {
+      width: 100%;
+      padding: 13px;
+      background: #22c55e;
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: 4px;
+    }
+    #loginBtn:hover { background: #16a34a; }
+    #loginBtn:disabled { opacity: .55; cursor: not-allowed; }
+    #loginErr {
+      font-size: 13px;
+      color: #f87171;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+
+    /* ── App ── */
+    #appWrap { display: none; }
+
+    /* Top bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .event-title {
       font-size: 15px;
@@ -26,27 +123,45 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .top-actions { display: flex; gap: 8px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #22c55e;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .btn-logout {
+      padding: 7px 14px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color .13s, border-color .13s;
+    }
+    .btn-logout:hover { color: #f87171; border-color: #7f1d1d; }
 
-    /* Scanner viewport */
+    /* Scanner */
     .scanner-frame {
       position: relative;
       border-radius: 20px;
       overflow: hidden;
-      background: #1a1a1a;
+      background: #111;
       aspect-ratio: 1;
-      max-height: 360px;
+      max-height: 340px;
     }
-    #reader {
-      width: 100% !important;
-      height: 100% !important;
-    }
-    #reader video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover;
-    }
-    /* Hide html5-qrcode default UI noise */
+    #reader { width: 100% !important; height: 100% !important; }
+    #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
     #reader img, #reader__dashboard, #reader__filescan_input { display: none !important; }
 
     .scan-overlay {
@@ -58,18 +173,16 @@
       pointer-events: none;
     }
     .scan-box {
-      width: 200px;
-      height: 200px;
-      border: 3px solid rgba(255,255,255,.8);
-      border-radius: 16px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+      width: 190px; height: 190px;
+      border: 3px solid rgba(255,255,255,.75);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.5);
     }
     .scan-line {
       position: absolute;
-      top: calc(50% - 97px);
-      left: calc(50% - 97px);
-      width: 194px;
-      height: 3px;
+      top: calc(50% - 93px);
+      left: calc(50% - 93px);
+      width: 186px; height: 3px;
       background: linear-gradient(90deg, transparent, #22c55e, transparent);
       animation: scanLine 1.8s ease-in-out infinite;
     }
@@ -77,10 +190,9 @@
       0%   { transform: translateY(0); opacity: 0; }
       15%  { opacity: 1; }
       85%  { opacity: 1; }
-      100% { transform: translateY(194px); opacity: 0; }
+      100% { transform: translateY(186px); opacity: 0; }
     }
 
-    /* Result flash */
     .result-flash {
       position: absolute;
       inset: 0;
@@ -91,162 +203,173 @@
       font-size: 72px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity .15s ease;
+      transition: opacity .12s ease;
     }
-    .result-flash.ok   { background: rgba(34,197,94,.35); }
-    .result-flash.warn { background: rgba(239,68,68,.35); }
+    .result-flash.ok   { background: rgba(34,197,94,.3); }
+    .result-flash.warn { background: rgba(239,68,68,.3); }
     .result-flash.show { opacity: 1; }
 
     /* Status bar */
     .status-bar {
-      margin-top: 12px;
-      padding: 12px 16px;
-      border-radius: 14px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      margin-top: 10px;
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: #111;
+      border: 1px solid #222;
       font-size: 14px;
-      min-height: 52px;
+      min-height: 50px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .status-bar .icon { font-size: 22px; flex-shrink: 0; }
+    .status-bar .icon { font-size: 20px; flex-shrink: 0; }
     .status-bar .msg  { flex: 1; line-height: 1.5; }
-    .status-bar.ok    { border-color: #166534; background: #052e16; }
-    .status-bar.warn  { border-color: #7f1d1d; background: #1c0d0d; }
-    .status-bar.info  { border-color: #1e3a5f; background: #0c1f35; }
+    .status-bar.ok   { border-color: #166534; background: #052e16; }
+    .status-bar.warn { border-color: #7f1d1d; background: #1c0d0d; }
+    .status-bar.info { border-color: #1e3a5f; background: #0c1f35; }
+
+    /* Scan controls */
+    .scan-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-scan {
+      height: 50px;
+      border-radius: 12px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #aaa;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .13s, color .13s;
+    }
+    .btn-scan:hover:not(:disabled) { background: #222; color: #fff; }
+    .btn-scan.active { background: #14532d; border-color: #166534; color: #4ade80; }
+    .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Manual */
+    .manual-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .manual-wrap input {
+      flex: 1;
+      padding: 11px 14px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .manual-wrap input:focus { border-color: #22c55e; }
+    .manual-wrap input::placeholder { color: #444; }
+    .btn-manual {
+      padding: 11px 18px;
+      background: #22c55e;
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .13s;
+    }
+    .btn-manual:hover { background: #16a34a; }
 
     /* Stats */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
     .stat-box {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 10px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 12px 8px;
       text-align: center;
     }
-    .stat-num   { font-size: 26px; font-weight: 900; }
-    .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
-
-    /* Scan btn */
-    .scan-btn-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .scan-btn-row .btn {
-      border-radius: 14px;
-      background: #1e1e1e;
-      border-color: #333;
-      color: #fff;
-      height: 52px;
-      font-size: 15px;
-    }
-    .scan-btn-row .btn.active {
-      background: #166534;
-      border-color: #166534;
-    }
-
-    /* Manual input */
-    .manual-wrap {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-    }
-    .manual-wrap input {
-      flex: 1;
-      background: #1a1a1a;
-      border-color: #2a2a2a;
-      color: #fff;
-      border-radius: 14px;
-    }
-    .manual-wrap input::placeholder { color: #555; }
-    .manual-wrap .btn {
-      background: #22c55e;
-      border-color: #22c55e;
-      color: #000;
-      font-weight: 900;
-      border-radius: 14px;
-      padding: 0 20px;
-      flex-shrink: 0;
-    }
+    .stat-num   { font-size: 28px; font-weight: 900; color: #fff; }
+    .stat-num.green { color: #22c55e; }
+    .stat-label { font-size: 11px; color: #555; margin-top: 3px; }
 
     /* Log */
-    .log-section { margin-top: 16px; }
+    .log-section { margin-top: 14px; }
     .log-title {
-      font-size: 12px;
-      color: #666;
-      font-weight: 900;
-      letter-spacing: .5px;
+      font-size: 11px;
+      color: #444;
+      font-weight: 700;
+      letter-spacing: .6px;
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-    .log-list { display: grid; gap: 6px; }
+    .log-list { display: grid; gap: 5px; }
     .log-item {
       display: flex;
       align-items: flex-start;
       gap: 8px;
       padding: 8px 12px;
-      border-radius: 10px;
-      background: #111;
-      border: 1px solid #222;
+      border-radius: 9px;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
       font-size: 13px;
-      animation: fadeInDown .15s ease;
+      animation: fadeInDown .13s ease;
     }
     @keyframes fadeInDown {
-      from { opacity:0; transform:translateY(-4px); }
+      from { opacity:0; transform:translateY(-3px); }
       to   { opacity:1; transform:translateY(0); }
     }
     .log-item.ok   { border-color: #14532d; }
-    .log-item.warn { border-color: #7f1d1d; }
-    .log-icon { flex-shrink: 0; font-size: 16px; }
-    .log-body { flex: 1; }
-    .log-main { font-weight: 900; color: #e5e7eb; }
-    .log-sub  { color: #6b7280; font-size: 12px; margin-top: 2px; word-break: break-all; }
-    .log-time { font-size: 11px; color: #4b5563; flex-shrink: 0; white-space: nowrap; }
-
-    /* Gate */
-    #gate { background: #111; border-color: #222; color: #fff; }
-    #gate .sub, #gate .hint { color: #888; }
-    #gate input {
-      background: #1a1a1a; border-color: #333; color: #fff;
-    }
-    #gate .btn { background: #1a1a1a; border-color: #333; color: #fff; }
-    #gate .btn-primary { background: #22c55e; border-color: #22c55e; color: #000; }
-
-    /* Live dot */
-    .live { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:#22c55e; }
-    .live-dot {
-      width:7px; height:7px; border-radius:50%; background:#22c55e;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .log-item.warn { border-color: #450a0a; }
+    .log-icon  { flex-shrink: 0; font-size: 15px; }
+    .log-body  { flex: 1; min-width: 0; }
+    .log-main  { font-weight: 700; color: #d1d5db; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .log-sub   { color: #4b5563; font-size: 11px; margin-top: 2px; word-break: break-all; }
+    .log-time  { font-size: 11px; color: #374151; flex-shrink: 0; white-space: nowrap; }
   </style>
 </head>
 <body>
-  <div class="wrap">
 
-    <div id="gate" class="card" style="display:none;"></div>
+  <!-- 登入畫面 -->
+  <div id="gateWrap">
+    <div class="gate-inner">
+      <div class="gate-logo">🎤</div>
+      <div class="gate-title">核銷入場系統</div>
+      <div class="gate-sub">請使用後台帳號登入</div>
+      <div class="gate-card">
+        <label for="loginEmail">帳號</label>
+        <input id="loginEmail" type="email" placeholder="輸入 Email" autocomplete="username" />
+        <label for="loginPassword">密碼</label>
+        <input id="loginPassword" type="password" placeholder="輸入密碼" autocomplete="current-password" />
+        <button id="loginBtn">登入</button>
+        <div id="loginErr"></div>
+      </div>
+    </div>
+  </div>
 
-    <div id="app" style="display:none;">
+  <!-- 主畫面 -->
+  <div id="appWrap">
+    <div class="wrap">
 
       <!-- Top bar -->
       <div class="top-bar">
-        <div class="event-title" id="eventTitle">讀取中…</div>
+        <div class="event-title" id="eventTitle">載入中…</div>
         <div class="top-actions">
           <span class="live"><span class="live-dot"></span>即時</span>
-          <button class="btn btn-sm" style="background:#1a1a1a; border-color:#333; color:#fff; border-radius:10px;" id="logoutBtn">登出</button>
+          <button class="btn-logout" id="logoutBtn">登出</button>
         </div>
       </div>
 
-      <!-- Scanner -->
-      <div class="scanner-frame" id="scannerFrame">
+      <!-- Scanner viewport -->
+      <div class="scanner-frame">
         <div id="reader"></div>
         <div class="scan-overlay">
           <div class="scan-box"></div>
@@ -263,29 +386,29 @@
 
       <!-- Scan controls -->
       <div class="scan-btn-row">
-        <button class="btn" id="startBtn">▶ 開始掃描</button>
-        <button class="btn" id="stopBtn" disabled>■ 停止</button>
+        <button class="btn-scan" id="startBtn">▶ 開始掃描</button>
+        <button class="btn-scan" id="stopBtn" disabled>■ 停止</button>
       </div>
 
-      <!-- Manual input (backup) -->
+      <!-- Manual input -->
       <div class="manual-wrap">
         <input type="text" id="manualCode" placeholder="或手動輸入訂單 ID"
                autocomplete="off" autocorrect="off" spellcheck="false" />
-        <button class="btn" id="manualBtn">核銷</button>
+        <button class="btn-manual" id="manualBtn">核銷</button>
       </div>
 
       <!-- Stats -->
       <div class="stats-row">
         <div class="stat-box">
-          <div class="stat-num" id="sTotal">-</div>
+          <div class="stat-num" id="sTotal">–</div>
           <div class="stat-label">總票數</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" style="color:#22c55e;" id="sChecked">-</div>
+          <div class="stat-num green" id="sChecked">–</div>
           <div class="stat-label">已入場</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" id="sRemain">-</div>
+          <div class="stat-num" id="sRemain">–</div>
           <div class="stat-label">未入場</div>
         </div>
       </div>
@@ -294,36 +417,67 @@
       <div class="log-section">
         <div class="log-title">本次記錄</div>
         <div class="log-list" id="logList">
-          <div style="font-size:13px; color:#444; padding:6px 0;">等待掃描…</div>
+          <div style="font-size:13px;color:#333;padding:4px 0;">等待掃描…</div>
         </div>
       </div>
+
     </div>
   </div>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="shared.js"></script>
+  <!-- QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
-  <script>
-    const db = window.db;
-    const { esc, norm, pageIn, showGate } = AppUI;
 
-    const gate        = document.getElementById("gate");
-    const app         = document.getElementById("app");
-    const eventTitleEl= document.getElementById("eventTitle");
+  <script>
+    /* ══════════════════════════════════════
+       1. Firebase 初始化（最優先）
+    ══════════════════════════════════════ */
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey:            "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain:        "concert-1ff7e.firebaseapp.com",
+        projectId:         "concert-1ff7e",
+        storageBucket:     "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId:             "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    /* ══════════════════════════════════════
+       2. 工具函數
+    ══════════════════════════════════════ */
+    const esc  = s => String(s ?? "").replace(/[&<>"']/g,
+      m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+    const norm = s => String(s ?? "").trim();
+
+    /* ══════════════════════════════════════
+       3. DOM 參照
+    ══════════════════════════════════════ */
+    const gateWrap    = document.getElementById("gateWrap");
+    const appWrap     = document.getElementById("appWrap");
+    const loginEmail  = document.getElementById("loginEmail");
+    const loginPw     = document.getElementById("loginPassword");
+    const loginBtn    = document.getElementById("loginBtn");
+    const loginErr    = document.getElementById("loginErr");
     const logoutBtn   = document.getElementById("logoutBtn");
-    const startBtn    = document.getElementById("startBtn");
-    const stopBtn     = document.getElementById("stopBtn");
+    const eventTitleEl= document.getElementById("eventTitle");
     const statusBar   = document.getElementById("statusBar");
     const resultFlash = document.getElementById("resultFlash");
     const scanLine    = document.getElementById("scanLine");
+    const startBtn    = document.getElementById("startBtn");
+    const stopBtn     = document.getElementById("stopBtn");
     const manualCode  = document.getElementById("manualCode");
     const manualBtn   = document.getElementById("manualBtn");
     const logListEl   = document.getElementById("logList");
 
-    logoutBtn.onclick = AppAuth.logout;
-
+    /* ══════════════════════════════════════
+       4. 狀態
+    ══════════════════════════════════════ */
     let currentUser       = null;
     let myAssignedEventId = "";
     let qr                = null;
@@ -332,14 +486,67 @@
     let logCount          = 0;
     let unsubStats        = null;
 
-    // ── Audio feedback ──
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    function beep(freq = 880, dur = 120, type = "sine", gain = 0.3) {
-      if (!AudioCtx) return;
+    /* ══════════════════════════════════════
+       5. 登入 / 登出
+    ══════════════════════════════════════ */
+    async function doLogin() {
+      const email    = norm(loginEmail.value);
+      const password = loginPw.value;
+      loginErr.style.display = "none";
+
+      if (!email || !password) {
+        loginErr.textContent = "請輸入帳號與密碼";
+        loginErr.style.display = "block";
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "登入中…";
+
       try {
-        const ctx  = new AudioCtx();
-        const osc  = ctx.createOscillator();
-        const vol  = ctx.createGain();
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (e) {
+        loginErr.textContent = "帳號或密碼錯誤，請再試一次";
+        loginErr.style.display = "block";
+        loginBtn.disabled = false;
+        loginBtn.textContent = "登入";
+      }
+    }
+
+    loginBtn.onclick = doLogin;
+    loginEmail.addEventListener("keydown", e => { if (e.key === "Enter") loginPw.focus(); });
+    loginPw.addEventListener("keydown",    e => { if (e.key === "Enter") doLogin(); });
+
+    logoutBtn.onclick = async () => {
+      try { await auth.signOut(); } catch (_) {}
+    };
+
+    /* ══════════════════════════════════════
+       6. UI 切換
+    ══════════════════════════════════════ */
+    function showGate() {
+      gateWrap.style.display = "flex";
+      appWrap.style.display  = "none";
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = "登入";
+      loginErr.style.display = "none";
+    }
+
+    function showApp() {
+      gateWrap.style.display = "none";
+      appWrap.style.display  = "block";
+    }
+
+    /* ══════════════════════════════════════
+       7. 音效
+    ══════════════════════════════════════ */
+    const AC = window.AudioContext || window.webkitAudioContext;
+    function beep(freq = 880, dur = 120, type = "sine", gain = 0.3) {
+      if (!AC) return;
+      try {
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const vol = ctx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
         vol.gain.value = gain;
@@ -353,10 +560,12 @@
     const okBeep   = () => { beep(880, 80); setTimeout(() => beep(1200, 100), 90); };
     const warnBeep = () => { beep(300, 200, "square", 0.15); };
 
-    // ── Flash overlay ──
+    /* ══════════════════════════════════════
+       8. Flash 動畫
+    ══════════════════════════════════════ */
     let flashTimer = null;
     function flash(type) {
-      resultFlash.className = `result-flash ${type} show`;
+      resultFlash.className   = `result-flash ${type} show`;
       resultFlash.textContent = type === "ok" ? "✓" : "✗";
       clearTimeout(flashTimer);
       flashTimer = setTimeout(() => {
@@ -364,13 +573,17 @@
       }, 500);
     }
 
-    // ── Status bar ──
+    /* ══════════════════════════════════════
+       9. Status bar
+    ══════════════════════════════════════ */
     function setStatus(type, icon, msg) {
       statusBar.className = `status-bar ${type}`;
-      statusBar.innerHTML = `<span class="icon">${icon}</span><span class="msg">${msg}</span>`;
+      statusBar.innerHTML = `<span class="icon">${icon}</span><span class="msg">${esc(msg)}</span>`;
     }
 
-    // ── Log ──
+    /* ══════════════════════════════════════
+       10. Log
+    ══════════════════════════════════════ */
     function pushLog(type, main, sub) {
       if (logCount === 0) logListEl.innerHTML = "";
       logCount++;
@@ -390,7 +603,9 @@
       while (logListEl.children.length > 30) logListEl.removeChild(logListEl.lastChild);
     }
 
-    // ── Live stats ──
+    /* ══════════════════════════════════════
+       11. 即時統計
+    ══════════════════════════════════════ */
     function startStats(eventId) {
       if (unsubStats) unsubStats();
       unsubStats = db.collection("events").doc(eventId).collection("orders")
@@ -403,10 +618,12 @@
           document.getElementById("sTotal").textContent   = total;
           document.getElementById("sChecked").textContent = checked;
           document.getElementById("sRemain").textContent  = total - checked;
-        }, () => {});
+        }, err => console.warn("stats error:", err));
     }
 
-    // ── Core checkin ──
+    /* ══════════════════════════════════════
+       12. 核心核銷邏輯
+    ══════════════════════════════════════ */
     async function doCheckin(rawCode) {
       const code = norm(rawCode);
       if (!code) return;
@@ -414,7 +631,7 @@
       setStatus("info", "⏳", `讀取：${code}`);
 
       try {
-        // Try orders collection first
+        // 先查 events/{eventId}/orders/{code}
         const orderRef  = db.collection("events").doc(myAssignedEventId).collection("orders").doc(code);
         const orderSnap = await orderRef.get();
 
@@ -427,7 +644,7 @@
               : "未知";
             flash("warn"); warnBeep();
             setStatus("warn", "⚠️", `重複入場（${atStr} 已核銷）`);
-            pushLog("warn", "重複入場", `${code} 已於 ${atStr} 入場`);
+            pushLog("warn", "重複入場", `${code} 已於 ${atStr} 核銷`);
             return;
           }
           await orderRef.update({
@@ -442,7 +659,7 @@
           return;
         }
 
-        // Fallback: tickets collectionGroup
+        // Fallback：tickets collectionGroup
         const q = await db.collectionGroup("tickets")
           .where(firebase.firestore.FieldPath.documentId(), "==", code)
           .limit(1).get();
@@ -487,7 +704,9 @@
       }
     }
 
-    // ── Scanner ──
+    /* ══════════════════════════════════════
+       13. 掃描器控制
+    ══════════════════════════════════════ */
     async function startScan() {
       if (scanning) return;
       if (!myAssignedEventId) {
@@ -502,21 +721,21 @@
           setStatus("warn", "❌", "找不到相機，請改用手動輸入");
           return;
         }
-        // Prefer back camera
         const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1];
         scanning = true;
-        startBtn.disabled = true; startBtn.classList.add("active");
-        stopBtn.disabled  = false;
+        startBtn.disabled = true;
+        startBtn.classList.add("active");
+        stopBtn.disabled = false;
         scanLine.style.display = "block";
 
         await qr.start(
           cam.id,
-          { fps: 15, qrbox: { width: 220, height: 220 } },
+          { fps: 15, qrbox: { width: 200, height: 200 } },
           async decoded => {
             if (busy) return;
             busy = true;
             try { await doCheckin(decoded); }
-            finally { setTimeout(() => { busy = false; }, 1000); }
+            finally { setTimeout(() => { busy = false; }, 1200); }
           },
           () => {}
         );
@@ -524,66 +743,81 @@
       } catch (e) {
         console.error(e);
         scanning = false;
-        startBtn.disabled = false; startBtn.classList.remove("active");
-        stopBtn.disabled  = true;
+        startBtn.disabled = false;
+        startBtn.classList.remove("active");
+        stopBtn.disabled = true;
         scanLine.style.display = "none";
-        setStatus("warn", "❌", "相機啟動失敗，請確認 https 及相機權限");
+        setStatus("warn", "❌", "相機啟動失敗，請確認已授予相機權限且使用 HTTPS");
       }
     }
 
     async function stopScan() {
       if (!qr || !scanning) return;
       try { await qr.stop(); await qr.clear(); } catch (_) {}
-      scanning = false;
       qr = null;
-      startBtn.disabled = false; startBtn.classList.remove("active");
-      stopBtn.disabled  = true;
+      scanning = false;
+      startBtn.disabled = false;
+      startBtn.classList.remove("active");
+      stopBtn.disabled = true;
       scanLine.style.display = "none";
       setStatus("info", "📷", "已停止掃描");
     }
 
-    startBtn.onclick = startScan;
-    stopBtn.onclick  = stopScan;
-
+    startBtn.onclick  = startScan;
+    stopBtn.onclick   = stopScan;
     manualBtn.onclick = () => { doCheckin(manualCode.value); manualCode.value = ""; };
     manualCode.addEventListener("keydown", e => {
       if (e.key === "Enter") { doCheckin(manualCode.value); manualCode.value = ""; }
     });
 
-    // ── Auth ──
-    firebase.auth().onAuthStateChanged(async user => {
+    /* ══════════════════════════════════════
+       14. Auth 狀態監聽
+    ══════════════════════════════════════ */
+    auth.onAuthStateChanged(async user => {
       currentUser = user || null;
+
       if (!user) {
-        AppUI.showGate(gate, app, {
-          title: "入場核銷",
-          msg:   "請先登入帳號以繼續。",
-          showEmailLogin: true,
-        });
+        if (unsubStats) { unsubStats(); unsubStats = null; }
+        await stopScan();
+        showGate();
         return;
       }
 
       try {
         const snap = await db.collection("users").doc(user.uid).get();
+
         if (!snap.exists) {
-          AppUI.showGate(gate, app, { title: "無法進入", msg: "此帳號尚未授權。" });
+          showGate();
+          loginErr.textContent = "此帳號尚未被授權，請聯絡管理員。";
+          loginErr.style.display = "block";
+          await auth.signOut();
           return;
         }
-        const u = snap.data() || {};
-        if (u.enabled !== true) {
-          AppUI.showGate(gate, app, { title: "帳號已停用", msg: "請聯絡管理員。" });
-          return;
-        }
+
+        const u    = snap.data() || {};
         const role = norm(u.role);
-        const VALID_ROLES = ["platform_super","platform_admin","org_super","org_admin","org_staff"];
-        if (!VALID_ROLES.includes(role)) {
-          AppUI.showGate(gate, app, { title: "權限不足", msg: `角色 "${role}" 無法使用核銷功能。` });
+        const VALID = ["platform_super","platform_admin","org_super","org_admin","org_staff"];
+
+        if (u.enabled !== true) {
+          showGate();
+          loginErr.textContent = "此帳號已被停用，請聯絡管理員。";
+          loginErr.style.display = "block";
+          await auth.signOut();
+          return;
+        }
+
+        if (!VALID.includes(role)) {
+          showGate();
+          loginErr.textContent = `角色「${role}」沒有核銷權限。`;
+          loginErr.style.display = "block";
+          await auth.signOut();
           return;
         }
 
         myAssignedEventId = norm(u.assignedEventId || "");
 
-        // Load event name
-        let evtName = myAssignedEventId || "(未指派活動)";
+        // 讀活動名稱
+        let evtName = myAssignedEventId || "（未指派活動）";
         if (myAssignedEventId) {
           try {
             const es = await db.collection("events").doc(myAssignedEventId).get();
@@ -593,18 +827,19 @@
         }
 
         eventTitleEl.textContent = evtName;
-        gate.style.display = "none";
-        app.style.display  = "block";
+        showApp();
 
-        if (!myAssignedEventId) {
-          setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
-        } else {
-          setStatus("info", "📷", "按「開始掃描」啟動相機");
-        }
+        setStatus(
+          myAssignedEventId ? "info" : "warn",
+          myAssignedEventId ? "📷" : "⚠️",
+          myAssignedEventId ? "按「開始掃描」啟動相機" : "你尚未被指派活動，請聯絡管理員"
+        );
 
       } catch (e) {
         console.error(e);
-        AppUI.showGate(gate, app, { title: "載入失敗", msg: e.message || String(e) });
+        showGate();
+        loginErr.textContent = "讀取失敗：" + (e.message || e);
+        loginErr.style.display = "block";
       }
     });
   </script>
