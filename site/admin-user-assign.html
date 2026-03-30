@@ -426,6 +426,41 @@ tr:last-child td { border-bottom: none; }
 }
 .impersonate-title { font-weight: 900; color: var(--danger); }
 
+
+
+/* ===== remove hamburger menu, keep sidebar visible ===== */
+#sbToggle,
+#sbOverlay { display:none !important; }
+
+@media (max-width: 768px) {
+  body {
+    display:flex !important;
+    min-height:100vh;
+    padding:12px;
+    gap:12px;
+  }
+
+  #adminSidebar {
+    display:flex !important;
+    position:sticky !important;
+    top:0 !important;
+    left:auto !important;
+    height:calc(100vh - 24px) !important;
+    transform:none !important;
+    transition:none !important;
+    border-radius:16px !important;
+  }
+
+  #adminSidebar.sb-open {
+    transform:none !important;
+  }
+
+  #adminMain {
+    min-height:calc(100vh - 24px) !important;
+    padding:0 !important;
+  }
+}
+
 </style>
   <style>
 /* ============================================================
