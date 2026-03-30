@@ -5,1451 +5,334 @@
   <title>活動入場｜Check-in</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-/* ============================================================
-   shared.css — 校園演唱會購票系統 共用樣式
-   ============================================================ */
-
-:root {
-  --bg: #f6f7fb;
-  --card: #fff;
-  --text: #111;
-  --muted: rgba(17,17,17,.65);
-  --line: rgba(17,17,17,.10);
-  --shadow: 0 14px 40px rgba(0,0,0,.08);
-  --shadow-sm: 0 10px 26px rgba(0,0,0,.05);
-  --danger: #b91c1c;
-  --ok: #166534;
-  --info: #1d4ed8;
-  --warn-bg: #fff5f5;
-  --warn-border: rgba(185,28,28,.18);
-  --soft-bg: #f1f2f6;
-  --soft-border: rgba(17,17,17,.12);
-
-  --btn-h: 44px;
-  --btn-fs: 16px;
-  --r: 18px;
-}
-
-*, *::before, *::after { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
-}
-
-/* ── Layout ── */
-.wrap {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px;
-}
-.wrap-lg { max-width: 1100px; }
-.wrap-xl { max-width: 1080px; }
-
-@media (max-width: 640px) {
-  .wrap { padding: 28px 16px; }
-}
-
-/* ── Cards ── */
-.card, .section {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  padding: 18px;
-  margin-bottom: 18px;
-}
-
-.card-soft, .soft {
-  background: var(--soft-bg);
-  border: 1px solid var(--soft-border);
-}
-
-.card-warn {
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-border);
-}
-
-/* ── Typography ── */
-h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: .2px; }
-h2 { margin: 0; font-size: 16px; font-weight: 900; }
-h3 { margin: 0 0 6px; font-size: 15px; font-weight: 900; }
-
-.sub {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-  margin-top: 6px;
-}
-
-.small, .hint {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-}
-
-.ok  { color: var(--ok);     font-weight: 900; }
-.warn{ color: var(--danger); font-weight: 900; }
-.info{ color: var(--info);   font-weight: 900; }
-
-/* ── Buttons ── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--btn-h);
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--text);
-  font-weight: 900;
-  font-size: var(--btn-fs);
-  cursor: pointer;
-  text-decoration: none;
-  user-select: none;
-  white-space: nowrap;
-  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-}
-.btn:hover  { box-shadow: 0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-.btn:active { transform: translateY(0) scale(.98); box-shadow: none; }
-.btn[disabled],
-.btn[aria-disabled="true"] {
-  opacity: .55;
-  cursor: not-allowed;
-  pointer-events: none;
-  box-shadow: none;
-  transform: none;
-}
-
-.btn-primary { background: #111; color: #fff; border-color: #111; }
-.btn-danger  { background: #fff; color: var(--danger); border-color: rgba(239,68,68,.35); }
-.btn-danger-fill { background: var(--danger); color: #fff; border-color: var(--danger); }
-
-.btn-sm { height: 40px; padding: 8px 16px; font-size: 15px; }
-
-/* ── Tabs ── */
-.tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-.tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 8px 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  font-weight: 900;
-  font-size: 15px;
-  cursor: pointer;
-  user-select: none;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.tab:hover { box-shadow: 0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-.tab.active { background: #111; color: #fff; border-color: #111; box-shadow: none; transform: none; }
-
-/* ── Pills & Badges ── */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-weight: 900;
-  font-size: 14px;
-  background: #fff;
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-/* ── Forms ── */
-label {
-  display: block;
-  margin: 12px 0 6px;
-  font-weight: 900;
-}
-input[type="text"],
-input[type="number"],
-input[type="password"],
-input[type="email"],
-input[type="datetime-local"],
-input[type="file"],
-textarea,
-select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  font-size: 16px;
-  outline: none;
-  color: var(--text);
-}
-textarea { min-height: 110px; resize: vertical; }
-
-/* ── Grid Helpers ── */
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.row-center { align-items: center; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.actions-end { justify-content: flex-end; }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-
-@media (max-width: 900px) {
-  .grid2, .grid3 { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .grid2, .grid3 { grid-template-columns: 1fr; }
-}
-
-/* ── List / Item ── */
-.list { display: grid; gap: 12px; }
-.item {
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-}
-.item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.item-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1.45;
-}
-.meta {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-/* ── Table ── */
-.table-wrap {
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  margin-top: 12px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 600px;
-}
-th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  font-size: 14px;
-  vertical-align: top;
-}
-th {
-  background: #fafafa;
-  font-weight: 900;
-  white-space: nowrap;
-}
-tr:last-child td { border-bottom: none; }
-
-/* ── KV Detail Block ── */
-.kv {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 8px 12px;
-  padding: 10px 0;
-  border-top: 1px dashed var(--line);
-}
-.kv:first-child { border-top: none; }
-.kv .k { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.kv .v { font-size: 13px; font-weight: 900; line-height: 1.5; word-break: break-word; }
-
-@media (max-width: 640px) {
-  .kv { grid-template-columns: 105px 1fr; }
-}
-
-/* ── Modal ── */
-.modal-back {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(0,0,0,.35);
-}
-.modal-back.open { display: flex; }
-.modal {
-  width: min(980px, 100%);
-  max-height: 88vh;
-  overflow: auto;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: #fff;
-  box-shadow: 0 18px 60px rgba(0,0,0,.25);
-}
-.modal-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
-}
-
-/* ── Navbar ── */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255,255,255,.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 52px;
-}
-.navbar-brand {
-  font-weight: 900;
-  font-size: 15px;
-  text-decoration: none;
-  color: var(--text);
-  white-space: nowrap;
-  padding-right: 16px;
-  border-right: 1px solid var(--line);
-  margin-right: 14px;
-}
-.navbar-crumb {
-  font-size: 14px;
-  color: var(--muted);
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-.navbar-role {
-  font-size: 13px;
-  font-weight: 900;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .navbar { padding: 0 16px; }
-  .navbar-crumb { display: none; }
-}
-
-/* ── Page transition ── */
-.page {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .22s ease, transform .22s ease;
-}
-.page.on { opacity: 1; transform: translateY(0); }
-.page.leaving { opacity: 0; transform: translateY(6px); }
-
-/* ── Tile (dashboard) ── */
-.tile {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  justify-content: space-between;
-}
-.tile h3 { margin: 0; font-size: 16px; }
-.tile p  { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
-
-/* ── Divider ── */
-.divider { height: 1px; background: var(--line); margin: 12px 0; }
-
-/* ── Impersonate Banner ── */
-.impersonate-banner {
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-border);
-  border-radius: var(--r);
-  padding: 14px 18px;
-  margin-bottom: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.impersonate-title { font-weight: 900; color: var(--danger); }
-
-</style>
-  <style>
-/* topnav.css — 前台頂部導覽列 */
-*, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; background: #f5f7fb; }
-
-#frontNav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0,0,0,.07);
-  padding: 0 24px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.fn-brand {
-  display: flex; align-items: center; gap: 8px;
-  text-decoration: none; color: #111;
-  font-size: 14px; font-weight: 900;
-  flex-shrink: 0;
-}
-.fn-brand-icon {
-  width: 28px; height: 28px;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-}
-.fn-links {
-  display: flex; align-items: center; gap: 2px;
-  flex: 1; overflow: hidden;
-}
-.fn-link {
-  padding: 6px 12px; border-radius: 8px;
-  font-size: 13px; font-weight: 600;
-  text-decoration: none; color: #555;
-  white-space: nowrap;
-  transition: background .12s, color .12s;
-}
-.fn-link:hover { background: #f0f4ff; color: #3b82f6; }
-.fn-link.fn-active { background: #eff6ff; color: #2563eb; font-weight: 800; }
-.fn-user {
-  display: flex; align-items: center; gap: 8px;
-  margin-left: auto; flex-shrink: 0;
-}
-.fn-avatar {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 12px; font-weight: 900;
-}
-.fn-email { font-size: 12px; color: #666; }
-.fn-logout {
-  padding: 5px 12px; border-radius: 8px;
-  background: #f5f5f5; border: none;
-  font-size: 12px; font-weight: 700; color: #555;
-  cursor: pointer; transition: background .12s;
-}
-.fn-logout:hover { background: #ffe4e4; color: #b91c1c; }
-
-/* 讓 .wrap 不再有很大的 margin-top */
-body > .wrap, #frontWrap > .wrap {
-  padding-top: 20px !important;
-}
-@media (max-width: 640px) {
-  #frontNav { padding: 0 14px; }
-  .fn-links { display: none; }
-}
-
-</style>
-  <style>
-    .wrap { max-width: 720px; }
-
-    /* Stats grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-      margin-top: 14px;
+    :root{
+      --bg:#f6f7fb; --card:#fff; --text:#111;
+      --muted:rgba(17,17,17,.65); --line:rgba(17,17,17,.10);
+      --shadow2:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px; --btn-fs:16px;
     }
-    .stat-box {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 14px;
-      text-align: center;
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
+    .wrap{ max-width:960px; margin:0 auto; padding:48px 32px; }
+    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
+    .section{ background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow2); padding:16px; margin-bottom:22px; }
+    .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
+    .small{ font-size:13px; color:var(--muted); }
+    label{ font-weight:900; display:block; margin-top:10px; margin-bottom:6px; }
+    input[type="text"]{ width:100%; padding:12px; border-radius:14px; border:1px solid var(--line); font-size:16px; background:#fff; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
+      border-radius:999px; border:1px solid var(--line);
+      background:#fff; font-weight:900; font-size:var(--btn-fs);
+      cursor:pointer; color:#111; text-decoration:none;
     }
-    .stat-num  { font-size: 28px; font-weight: 900; line-height: 1.1; }
-    .stat-label{ font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-    /* Log */
-    .log-list { display: grid; gap: 8px; margin-top: 12px; }
-    .log-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: #fff;
-      font-size: 14px;
-      animation: slideIn .18s ease;
-    }
-    @keyframes slideIn {
-      from { opacity:0; transform:translateY(-6px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-    .log-item.ok   { border-color: #86efac; background: #f0fdf4; }
-    .log-item.warn { border-color: #fca5a5; background: #fff5f5; }
-    .log-icon  { font-size: 18px; line-height: 1; flex-shrink: 0; }
-    .log-body  { flex: 1; }
-    .log-title { font-weight: 900; }
-    .log-detail{ color: var(--muted); font-size: 12px; margin-top: 2px; word-break: break-all; }
-    .log-time  { font-size: 11px; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
-
-    /* Code input */
-    .code-input-wrap {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-      align-items: stretch;
-    }
-    .code-input-wrap input {
-      flex: 1;
-      font-size: 18px;
-      font-family: ui-monospace, monospace;
-      font-weight: 900;
-      border-radius: 14px;
-    }
-
-    /* Live badge */
-    .live-dot {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-      animation: pulse 1.5s ease-in-out infinite;
-      vertical-align: middle;
-      margin-right: 5px;
-    }
-    @keyframes pulse {
-      0%,100% { opacity:1; }
-      50%      { opacity:.3; }
-    }
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .stats{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .badge{ border:1px solid var(--line); border-radius:999px; padding:8px 12px; font-size:13px; background:#fff; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+    .log{ margin-top:12px; display:grid; gap:10px; }
+    .card{ border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff; }
+    .ok{ border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.06); }
+    .warn{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.06); }
   </style>
+
+<style id="utility-bar-style">
+.page-utility-bar{position:fixed;top:14px;right:14px;z-index:9999;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page-utility-bar .pub-email{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:12px;color:#666;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.page-utility-bar .pub-btn{border:none;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.page-utility-bar .pub-home{background:#2563eb;color:#fff}
+.page-utility-bar .pub-logout{background:#111;color:#fff}
+body.utility-bar-space{padding-top:72px !important}
+@media (max-width:700px){.page-utility-bar{left:14px;right:14px;justify-content:flex-end}.page-utility-bar .pub-email{display:none}}
+</style>
+
 </head>
 <body>
-  <div class="wrap page" id="pageRoot">
-
-    <!-- 頁首 -->
-    <div class="card">
-      <div class="row">
+  <div class="wrap">
+    <div class="section">
+      <div class="header">
         <div>
-          <h1 id="eventName">讀取中…</h1>
-          <div class="sub">
-            <span class="live-dot"></span>即時模式
-            ｜活動 ID：<span id="eventId" class="mono">-</span>
+          <h1>活動入場 Check-in</h1>
+          <div class="sub">活動：<span id="eventName" class="mono">讀取中…</span></div>
+          <div class="small">eventId：<span id="eventId" class="mono"></span></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="small" id="who"></div>
+          <div class="row" style="justify-content:flex-end; margin-top:8px;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
           </div>
-          <div class="small" id="who" style="margin-top:4px;"></div>
-        </div>
-        <div class="actions">
-          <a class="btn btn-sm" href="dashboard.html">主選單</a>
         </div>
       </div>
 
-      <!-- 輸入區 -->
-      <div class="code-input-wrap">
-        <input
-          id="code"
-          type="text"
-          placeholder="掃描或輸入訂單 / 票碼"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
-        />
-        <button class="btn btn-primary" id="checkinBtn">入場 ✓</button>
+      <label>票碼 / ticketId</label>
+      <input id="code" type="text" placeholder="掃描或貼上票碼（建議就是 ticketId）" />
+
+      <div class="row" style="justify-content:flex-end; margin-top:12px;">
+        <button class="btn" id="reloadBtn">重新整理統計</button>
+        <button class="btn btn-primary" id="checkinBtn">確認入場</button>
       </div>
+
+      <div class="stats" id="stats"></div>
+      <div class="small" style="margin-top:10px;">提示：若顯示「找不到票」，代表 tickets 裡尚未建立這張票。</div>
     </div>
 
-    <!-- 統計 -->
-    <div class="card">
-      <div class="row row-center">
-        <h2>入場統計</h2>
-        <button class="btn btn-sm" id="reloadBtn">重新整理</button>
-      </div>
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-box"><div class="stat-num" id="sTotal">-</div><div class="stat-label">總票數</div></div>
-        <div class="stat-box"><div class="stat-num ok" id="sChecked">-</div><div class="stat-label">已入場</div></div>
-        <div class="stat-box"><div class="stat-num" id="sRemain">-</div><div class="stat-label">未入場</div></div>
-        <div class="stat-box"><div class="stat-num warn" id="sVoided">-</div><div class="stat-label">作廢</div></div>
-      </div>
-    </div>
-
-    <!-- 記錄 -->
-    <div class="card">
-      <div class="row row-center" style="margin-bottom:8px;">
-        <h2>本次記錄</h2>
-        <button class="btn btn-sm" id="clearLogBtn">清除記錄</button>
-      </div>
-      <div id="logList" class="log-list">
-        <div class="small" style="color:var(--muted); padding:8px 0;">等待掃描…</div>
-      </div>
+    <div class="section">
+      <h2 style="margin:0; font-size:16px; font-weight:900;">最新紀錄</h2>
+      <div class="log" id="log"></div>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script>
-/**
- * shared.js — 校園演唱會購票系統 共用 JS 模組
- *
- * 使用方式：在 HTML <head> 載入 Firebase SDK 後，
- * 再載入此檔案。此檔案會自動初始化 Firebase 並掛載全域工具。
- *
- * 暴露的全域物件：
- *   window.db        — Firestore 實例
- *   window.AppAuth   — 認證輔助工具
- *   window.AppUI     — UI 工具（esc, norm, tsToText, page transition…）
- *   window.AppNav    — 頂部導覽列
- */
 
-(function () {
-  "use strict";
-
-  /* ── Firebase 初始化 ── */
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-    authDomain: "concert-1ff7e.firebaseapp.com",
-    projectId: "concert-1ff7e",
-    storageBucket: "concert-1ff7e.firebasestorage.app",
-    messagingSenderId: "704757384914",
-    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-  };
-
-  // 避免重複初始化（多頁面同時引入時安全）
-  if (!firebase.apps.length) {
-    firebase.initializeApp(FIREBASE_CONFIG);
+<script id="email-login-patch">
+(function(){
+  function ensureUtilityBar(){
+    if(document.getElementById('pageUtilityBar')) return;
+    var bar=document.createElement('div');
+    bar.id='pageUtilityBar';
+    bar.className='page-utility-bar';
+    bar.innerHTML='\n      <div class="pub-email" id="pubEmailChip">未登入</div>\n      <button class="pub-btn pub-home" type="button" id="pubHomeBtn">回到初選單</button>\n      <button class="pub-btn pub-logout" type="button" id="pubLogoutBtn">登出</button>';
+    document.body.appendChild(bar);
+    document.body.classList.add('utility-bar-space');
+    document.getElementById('pubHomeBtn').onclick=function(){ location.href='dashboard.html'; };
+    document.getElementById('pubLogoutBtn').onclick=async function(){ try{ if(window.firebase) await firebase.auth().signOut(); else location.href='dashboard.html'; }catch(e){ console.error(e); alert('登出失敗，請看 Console。'); } };
   }
 
-  window.db = firebase.firestore();
+  async function emailPasswordPrompt(){
+    var email=window.prompt('請輸入 Email');
+    if(email===null) throw new Error('cancelled');
+    email=String(email||'').trim();
+    if(!email) throw new Error('missing email');
+    var password=window.prompt('請輸入密碼');
+    if(password===null) throw new Error('cancelled');
+    password=String(password||'');
+    if(!password) throw new Error('missing password');
+    return {email:email,password:password};
+  }
 
-  /* ══════════════════════════════════════════
-     AppUI — 共用 UI 工具
-  ══════════════════════════════════════════ */
-  window.AppUI = {
+  function patchFirebaseEmailLogin(){
+    if(!window.firebase || !firebase.auth) return;
+    var auth=firebase.auth();
+    if(auth.__emailPatchApplied) return;
+    auth.__emailPatchApplied=true;
+    var original=auth.signInWithPopup ? auth.signInWithPopup.bind(auth) : null;
+    auth.signInWithPopup=async function(){
+      var creds=await emailPasswordPrompt();
+      return auth.signInWithEmailAndPassword(creds.email, creds.password);
+    };
+    window.__originalSignInWithPopup=original;
+    try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
+  }
 
-    /** HTML 跳脫（防 XSS） */
-    esc(s) {
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[m]));
-    },
+  function replaceTextNodes(){
+    var walker=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var t=node.nodeValue;
+      if(!t) return;
+      t=t.replace(/使用\s*Google\s*登入/g,'使用 Email 登入');
+      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入後台/g,'請先使用 Email／密碼登入後台');
+      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入/g,'請先使用 Email／密碼登入');
+      t=t.replace(/前往 Dashboard/g,'前往初選單');
+      t=t.replace(/回 Dashboard/g,'回到初選單');
+      t=t.replace(/接下來請前往 Dashboard 測試/g,'接下來請前往初選單測試');
+      node.nodeValue=t;
+    });
+    document.querySelectorAll('a,button').forEach(function(el){
+      var txt=(el.textContent||'').trim();
+      if(txt==='回 Dashboard') el.textContent='回到初選單';
+      if(txt==='前往 Dashboard') el.textContent='前往初選單';
+    });
+  }
 
-    /** 去頭尾空白 */
-    norm(s) {
-      return String(s ?? "").trim();
-    },
+  function patchHomeLinks(){
+    document.querySelectorAll('a[href="dashboard.html"]').forEach(function(a){
+      if((a.textContent||'').includes('Dashboard')) a.textContent=a.textContent.replace(/Dashboard/g,'初選單');
+    });
+  }
 
-    /** Firestore Timestamp → 本地時間字串 */
-    tsToText(ts) {
-      try {
-        if (!ts) return "-";
-        const d = ts.toDate ? ts.toDate() : new Date(ts);
-        return d.toLocaleString("zh-Hant", { hour12: false });
-      } catch { return "-"; }
-    },
+  function updateEmailChip(){
+    var chip=document.getElementById('pubEmailChip');
+    if(!chip || !window.firebase || !firebase.auth) return;
+    var user=firebase.auth().currentUser;
+    chip.textContent=user && user.email ? user.email : '未登入';
+  }
 
-    /** 頁面淡入 */
-    pageIn(el) {
-      if (!el) return;
-      requestAnimationFrame(() => el.classList.add("on"));
-    },
-
-    /** 頁面淡出後跳轉 */
-    go(href, pageEl) {
-      const root = pageEl || document.getElementById("pageRoot");
-      if (root) root.classList.add("leaving");
-      setTimeout(() => { location.href = href; }, 140);
-    },
-
-    /** 攔截所有 <a> 的頁面跳轉並套用轉場動畫 */
-    initPageLinks(pageEl) {
-      document.addEventListener("click", (e) => {
-        const a = e.target.closest("a");
-        if (!a) return;
-        const href = a.getAttribute("href");
-        if (!href || href.startsWith("#") || href.startsWith("http")) return;
-        if (a.getAttribute("aria-disabled") === "true") return;
-        e.preventDefault();
-        AppUI.go(href, pageEl);
-      });
-    },
-
-    /**
-     * 渲染「Gate」錯誤/登入卡片
-     * @param {HTMLElement} gateEl
-     * @param {HTMLElement} appEl
-     * @param {{ title, msg, showEmailLogin, extraBtns }} opts
-     */
-    showGate(gateEl, appEl, { title = "請先登入", msg = "", showEmailLogin = false, extraBtns = "" } = {}) {
-      if (appEl) appEl.style.display = "none";
-      gateEl.style.display = "block";
-
-      // 若是 gate-mode（全頁登入），用新版樣式
-      const isGateMode = document.body?.classList?.contains("gate-mode");
-
-      if (isGateMode) {
-        // 新版：仿圖片，背景灰，白卡片
-        let loginFields = "";
-        if (showEmailLogin) {
-          loginFields = `
-            <div style="margin-bottom:15px;">
-              <label style="display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">帳號</label>
-              <input id="_loginEmail" type="text" placeholder="輸入 Email"
-                style="width:100%;padding:12px 14px;border:1.5px solid #dde1e7;border-radius:10px;
-                       font-size:14px;outline:none;background:#fff;transition:border-color .15s;"
-                onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#dde1e7'" />
-            </div>
-            <div style="margin-bottom:18px;">
-              <label style="display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">密碼</label>
-              <input id="_loginPassword" type="password" placeholder="輸入密碼"
-                style="width:100%;padding:12px 14px;border:1.5px solid #dde1e7;border-radius:10px;
-                       font-size:14px;outline:none;background:#fff;transition:border-color .15s;"
-                onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#dde1e7'" />
-            </div>
-            <button id="_loginBtn"
-              style="width:100%;padding:13px;background:#2563eb;color:#fff;border:none;
-                     border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
-                     transition:background .15s;"
-              onmouseover="this.style.background='#1d4ed8'"
-              onmouseout="if(!this.disabled)this.style.background='#2563eb'">
-              登入
-            </button>
-            <div id="_loginMsg" style="font-size:13px;color:#dc2626;margin-top:10px;text-align:center;display:none;"></div>
-          `;
-        }
-
-        let extraHtml = extraBtns
-          ? `<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">${extraBtns}</div>`
-          : "";
-        if (!showEmailLogin && !extraBtns) {
-          extraHtml = `<button onclick="if(typeof AppAuth!=='undefined')AppAuth.logout()"
-            style="width:100%;margin-top:6px;padding:12px;border-radius:10px;border:1.5px solid #dde1e7;
-                   background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:#555;">
-            返回初選單 / 登出
-          </button>`;
-        }
-
-        gateEl.innerHTML = `
-          <div style="text-align:center;margin-bottom:26px;">
-            <div style="font-size:38px;margin-bottom:10px;">🎤</div>
-            <div style="font-size:19px;font-weight:900;color:#1e2a45;letter-spacing:.3px;">校園演唱會購票系統</div>
-            <div style="font-size:9px;letter-spacing:2.5px;color:#bbb;margin-top:5px;text-transform:uppercase;">Concert Ticketing System</div>
-          </div>
-          <div style="background:#fff;border-radius:16px;padding:26px 26px 22px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08);">
-            ${showEmailLogin
-              ? `<div style="font-size:17px;font-weight:900;color:#111;margin-bottom:18px;">登入</div>`
-              : `<div style="font-size:15px;font-weight:900;color:#111;margin-bottom:8px;">${AppUI.esc(title)}</div>
-                 ${msg ? `<div style="font-size:13px;color:#888;margin-bottom:16px;line-height:1.6;">${msg}</div>` : ""}`
-            }
-            ${loginFields}
-            ${extraHtml}
-          </div>
-          <div style="font-size:12px;color:#bbb;margin-top:22px;text-align:center;">© Concert Ticketing System</div>
-        `;
-
-      } else {
-        // 舊版：行內 gate 卡片（用於非 dashboard 的頁面）
-        gateEl.innerHTML = `
-          <h1 style="margin:0 0 6px;font-size:20px;font-weight:900;">${AppUI.esc(title)}</h1>
-          <div class="sub" style="margin-bottom:${showEmailLogin||extraBtns?"16px":"0"}">${msg}</div>
-          ${showEmailLogin ? `
-            <div style="max-width:360px;display:grid;gap:10px;margin-top:8px;">
-              <input id="_loginEmail" type="text" placeholder="帳號（Email）"
-                style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #dde1e7;font-size:15px;outline:none;"/>
-              <input id="_loginPassword" type="password" placeholder="密碼"
-                style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #dde1e7;font-size:15px;outline:none;"/>
-              <button id="_loginBtn" style="padding:12px;background:#2563eb;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">登入</button>
-              <div id="_loginMsg" style="font-size:13px;color:#dc2626;display:none;"></div>
-            </div>
-          ` : ""}
-          ${extraBtns ? `<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">${extraBtns}</div>` : ""}
-          ${!showEmailLogin && !extraBtns ? `<button class="btn" id="_logoutBtn" style="margin-top:12px;">登出</button>` : ""}
-        `;
-      }
-
-      // 登入按鈕共用邏輯
-      const loginBtn = document.getElementById("_loginBtn");
-      if (loginBtn) {
-        const doLogin = async () => {
-          const emailVal = (document.getElementById("_loginEmail")?.value || "").trim();
-          const pwVal    = document.getElementById("_loginPassword")?.value || "";
-          const msgEl    = document.getElementById("_loginMsg");
-          if (!emailVal || !pwVal) {
-            if (msgEl) { msgEl.textContent = "請輸入帳號與密碼"; msgEl.style.display = "block"; }
-            return;
-          }
-          loginBtn.disabled = true;
-          loginBtn.textContent = "登入中…";
-          if (msgEl) msgEl.style.display = "none";
-          try {
-            await firebase.auth().signInWithEmailAndPassword(emailVal, pwVal);
-          } catch (e) {
-            if (msgEl) { msgEl.textContent = "帳號或密碼錯誤，請再試一次。"; msgEl.style.display = "block"; }
-            loginBtn.disabled = false;
-            loginBtn.textContent = "登入";
-            if (loginBtn.style) loginBtn.style.background = "#2563eb";
-          }
-        };
-        loginBtn.onclick = doLogin;
-        ["_loginEmail","_loginPassword"].forEach(id => {
-          document.getElementById(id)?.addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
-        });
-      }
-      const logoutBtn = document.getElementById("_logoutBtn");
-      if (logoutBtn) logoutBtn.onclick = AppAuth.logout;
-    } = {}) {
-      if (appEl) appEl.style.display = "none";
-      gateEl.style.display = "block";
-
-      gateEl.innerHTML = `
-        <h1 style="margin:0 0 6px; font-size:22px;">${AppUI.esc(title)}</h1>
-        <div class="sub">${msg}</div>
-
-        ${showEmailLogin ? `
-          <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
-            <input
-              id="_loginEmail"
-              type="text"
-              placeholder="帳號（Email）"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.1); font-size:16px; background:#fff; outline:none;"
-            />
-            <input
-              id="_loginPassword"
-              type="password"
-              placeholder="密碼"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.1); font-size:16px; background:#fff; outline:none;"
-            />
-            <button class="btn btn-primary" id="_loginBtn">登入</button>
-            <div id="_loginMsg" style="font-size:13px; color:#b91c1c; display:none;"></div>
-          </div>
-        ` : ""}
-
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${extraBtns}
-          ${!showEmailLogin ? `<button class="btn" id="_logoutBtn">登出</button>` : ""}
-        </div>
-      `;
-
-      const loginBtn = document.getElementById("_loginBtn");
-      if (loginBtn) {
-        const doLogin = async () => {
-          const email = (document.getElementById("_loginEmail")?.value || "").trim();
-          const password = document.getElementById("_loginPassword")?.value || "";
-          const msgEl = document.getElementById("_loginMsg");
-
-          if (!email || !password) { alert("請輸入帳號與密碼"); return; }
-
-          loginBtn.disabled = true;
-          const oldText = loginBtn.textContent;
-          loginBtn.textContent = "登入中…";
-          if (msgEl) msgEl.style.display = "none";
-
-          try {
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-          } catch (e) {
-            console.error(e);
-            if (msgEl) {
-              msgEl.textContent = "登入失敗，請確認帳號密碼是否正確";
-              msgEl.style.display = "block";
-            } else {
-              alert("登入失敗，請確認帳號密碼是否正確");
-            }
-          } finally {
-            loginBtn.disabled = false;
-            loginBtn.textContent = oldText;
-          }
-        };
-
-        loginBtn.onclick = doLogin;
-
-        ["_loginEmail", "_loginPassword"].forEach(id => {
-          document.getElementById(id)?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") doLogin();
-          });
-        });
-      }
-
-      const logoutBtn = document.getElementById("_logoutBtn");
-      if (logoutBtn) logoutBtn.onclick = AppAuth.logout;
-    },
-
-    /** 顯示 Toast 提示（輕量版，自動消失） */
-    toast(msg, type = "ok", duration = 3000) {
-      let el = document.getElementById("_appToast");
-      if (!el) {
-        el = document.createElement("div");
-        el.id = "_appToast";
-        el.style.cssText = `
-          position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
-          min-width:200px; max-width:360px; padding:12px 20px;
-          border-radius:999px; font-size:14px; font-weight:900;
-          box-shadow:0 10px 30px rgba(0,0,0,.15); z-index:99999;
-          opacity:0; transition:opacity .2s ease, transform .2s ease;
-          text-align:center; pointer-events:none;
-        `;
-        document.body.appendChild(el);
-      }
-
-      const colors = {
-        ok:   { bg: "#166534", color: "#fff" },
-        warn: { bg: "#b91c1c", color: "#fff" },
-        info: { bg: "#1d4ed8", color: "#fff" },
-        neutral: { bg: "#111", color: "#fff" }
-      };
-      const c = colors[type] || colors.neutral;
-      el.style.background = c.bg;
-      el.style.color = c.color;
-      el.textContent = msg;
-
-      clearTimeout(el._timer);
-      requestAnimationFrame(() => {
-        el.style.opacity = "1";
-        el.style.transform = "translateX(-50%) translateY(0)";
-      });
-
-      el._timer = setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateX(-50%) translateY(10px)";
-      }, duration);
+  function init(){
+    ensureUtilityBar();
+    patchFirebaseEmailLogin();
+    replaceTextNodes();
+    patchHomeLinks();
+    updateEmailChip();
+    if(window.firebase && firebase.auth){
+      firebase.auth().onAuthStateChanged(function(){ updateEmailChip(); replaceTextNodes(); patchHomeLinks(); });
     }
-  };
+  }
 
-  // 短別名
-  const { esc, norm } = window.AppUI;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 
-  /* ══════════════════════════════════════════
-     AppAuth — 認證 & 角色輔助
-  ══════════════════════════════════════════ */
-  window.AppAuth = {
 
-    /** 登出 */
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-        alert("登出失敗（請看 Console）");
-      }
-    },
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    });
 
-    /** 從 Firestore users/{uid} 讀取用戶資料 */
-    async loadUser(uid) {
-      const snap = await window.db.collection("users").doc(uid).get();
-      if (!snap.exists) return null;
-      return { id: snap.id, ...snap.data() };
-    },
+    const db = firebase.firestore();
 
-    /** 角色判斷 */
-    isPlatform(role)      { return role === "platform_super" || role === "platform_admin"; },
-    isPlatformSuper(role) { return role === "platform_super"; },
-    isOrgRole(role)       { return ["org_super","org_admin","org_staff"].includes(role); },
-    isProtectedSuper(u)   { return norm(u?.role) === "platform_super"; },
+    const sp = new URLSearchParams(location.search);
+    const eventId = sp.get("eventId") || "";
+    document.getElementById("eventId").textContent = eventId;
 
-    /**
-     * 模擬帳號（impersonate）工具
-     */
-    impersonate: {
-      get uid()      { return sessionStorage.getItem("impersonateUid") || ""; },
-      get email()    { return sessionStorage.getItem("impersonateEmail") || ""; },
-      get role()     { return sessionStorage.getItem("impersonateRole") || ""; },
-      get orgId()    { return sessionStorage.getItem("impersonateOrgId") || ""; },
-      get schoolId() { return sessionStorage.getItem("impersonateSchoolId") || ""; },
-      get active()   { return !!sessionStorage.getItem("impersonateUid"); },
+    const whoEl = document.getElementById("who");
+    const eventNameEl = document.getElementById("eventName");
+    const codeEl = document.getElementById("code");
+    const statsEl = document.getElementById("stats");
+    const logEl = document.getElementById("log");
 
-      start({ uid, email, role, orgId, schoolId, team }) {
-        sessionStorage.setItem("impersonateUid", uid || "");
-        sessionStorage.setItem("impersonateEmail", email || "");
-        sessionStorage.setItem("impersonateRole", role || "");
-        sessionStorage.setItem("impersonateOrgId", orgId || "");
-        sessionStorage.setItem("impersonateSchoolId", schoolId || "");
-        sessionStorage.setItem("impersonateTeam", team || "");
-        sessionStorage.setItem("impersonateStartedAt", new Date().toISOString());
-      },
+    const checkinBtn = document.getElementById("checkinBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
 
-      stop() {
-        [
-          "impersonateUid", "impersonateEmail", "impersonateRole",
-          "impersonateOrgId", "impersonateSchoolId", "impersonateTeam",
-          "impersonateStartedAt"
-        ].forEach(k => sessionStorage.removeItem(k));
-      },
+    function esc(s){
+      return (s || "").toString()
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    }
 
-      /** 取得目前「有效」的 uid（模擬中用模擬 uid，否則用真實 uid） */
-      getActingUid(realUser) {
-        return sessionStorage.getItem("impersonateUid") || realUser?.uid || "";
-      }
-    },
+    function badge(text){ return `<span class="badge">${esc(text)}</span>`; }
 
-    /**
-     * 渲染模擬帳號 Banner（需要有 class="impersonate-banner" 的元素，id="impersonateBanner"）
-     * @param {Function} onStop — 點「結束模擬」後的回呼
-     */
-    renderImpersonateBanner(onStop) {
-      const banner = document.getElementById("impersonateBanner");
-      if (!banner) return;
-
-      const imp = AppAuth.impersonate;
-
-      if (!imp.active) {
-        banner.style.display = "none";
+    async function loadEvent(){
+      if (!eventId) {
+        eventNameEl.textContent = "缺少 eventId";
         return;
       }
-
-      banner.style.display = "flex";
-      banner.innerHTML = `
-        <div style="flex:1;">
-          <div class="impersonate-title">⚠ 目前正在模擬帳號</div>
-          <div class="sub" style="margin-top:6px;">
-            模擬：<span class="mono">${esc(imp.email || imp.uid)}</span><br/>
-            role：<span class="mono">${esc(imp.role || "-")}</span>｜
-            orgId：<span class="mono">${esc(imp.orgId || "-")}</span>｜
-            schoolId：<span class="mono">${esc(imp.schoolId || "-")}</span>
-          </div>
-        </div>
-        <div>
-          <button class="btn btn-danger-fill btn-sm" id="_stopImpersonateBtn">結束模擬</button>
-        </div>
-      `;
-
-      document.getElementById("_stopImpersonateBtn").onclick = () => {
-        imp.stop();
-        if (typeof onStop === "function") onStop();
-        else location.reload();
-      };
+      const doc = await db.collection("events").doc(eventId).get();
+      if (!doc.exists) {
+        eventNameEl.textContent = "活動不存在";
+        return;
+      }
+      const e = doc.data() || {};
+      eventNameEl.textContent = e.name || "(未命名活動)";
+      if (e.enabled !== true) {
+        statsEl.innerHTML = `<span class="badge warn">此活動目前為停用</span>`;
+      }
     }
-  };
 
-  /* ══════════════════════════════════════════
-     AppNav — 頂部導覽列
-  ══════════════════════════════════════════ */
-  window.AppNav = {
-    /**
-     * 在 body 最頂端插入導覽列
-     * @param {{ crumb, role, email, showBack }} opts
-     */
-    init({ crumb = "", role = "", email = "", showBack = true } = {}) {
-      // 確認尚未插入
-      if (document.getElementById("_appNavbar")) return;
-
-      const nav = document.createElement("nav");
-      nav.id = "_appNavbar";
-      nav.className = "navbar";
-      nav.innerHTML = `
-        <a class="navbar-brand" href="dashboard.html">後台</a>
-        ${crumb ? `<span class="navbar-crumb">${esc(crumb)}</span>` : ""}
-        <div class="navbar-actions">
-          ${role ? `<span class="navbar-role mono">${esc(role)}</span>` : ""}
-          ${showBack ? `<a class="btn btn-sm" href="dashboard.html">回主選單</a>` : ""}
-          <button class="btn btn-sm" id="_navLogoutBtn">登出</button>
-        </div>
-      `;
-
-      document.body.insertBefore(nav, document.body.firstChild);
-
-      document.getElementById("_navLogoutBtn").onclick = AppAuth.logout;
-    },
-
-    /** 在導覽列更新 role / email 顯示（auth 回呼完成後呼叫） */
-    update({ role = "", email = "" } = {}) {
-      const roleEl = document.querySelector(".navbar-role");
-      if (roleEl && role) roleEl.textContent = role;
-    }
-  };
-
-  /* ══════════════════════════════════════════
-     AppData — 共用資料載入
-  ══════════════════════════════════════════ */
-  window.AppData = {
-    /** 載入全部 partnerSchools 回傳 { id: name } map */
-    async loadSchoolMap() {
-      const map = {};
-      try {
-        const snap = await window.db.collection("partnerSchools").get();
-        snap.forEach(doc => {
-          map[doc.id] = doc.data()?.name || doc.id;
-        });
-      } catch (e) { console.error("loadSchoolMap 失敗", e); }
-      return map;
-    },
-
-    /** 載入全部 organizations 回傳 { id: name } map */
-    async loadOrgMap() {
-      const map = {};
-      try {
-        const snap = await window.db.collection("organizations").get();
-        snap.forEach(doc => {
-          map[doc.id] = doc.data()?.name || doc.id;
-        });
-      } catch (e) { console.error("loadOrgMap 失敗", e); }
-      return map;
-    },
-
-    /**
-     * 產生 <select> 的 <option> HTML（school）
-     * @param {Object} schoolMap
-     * @param {string} selectedId
-     */
-    buildSchoolOptions(schoolMap, selectedId = "") {
-      const sel = norm(selectedId);
-      const keys = Object.keys(schoolMap).sort((a, b) =>
-        (schoolMap[a] || a).localeCompare(schoolMap[b] || b, "zh-Hant")
-      );
-      return `
-        <option value="">（未設定）</option>
-        ${keys.map(id => `
-          <option value="${esc(id)}" ${sel === id ? "selected" : ""}>
-            ${esc(schoolMap[id] ? `${schoolMap[id]}（${id}）` : id)}
-          </option>
-        `).join("")}
-      `;
-    },
-
-    /**
-     * 產生 <select> 的 <option> HTML（org）
-     */
-    buildOrgOptions(orgMap, selectedId = "") {
-      const sel = norm(selectedId);
-      const keys = Object.keys(orgMap).sort((a, b) =>
-        (orgMap[a] || a).localeCompare(orgMap[b] || b, "zh-Hant")
-      );
-      return `
-        <option value="">（未設定）</option>
-        ${keys.map(id => `
-          <option value="${esc(id)}" ${sel === id ? "selected" : ""}>
-            ${esc(orgMap[id] ? `${orgMap[id]}（${id}）` : id)}
-          </option>
-        `).join("")}
-      `;
-    }
-  };
-
-})();
-
-</script>
-  <script>
-/**
- * topnav.js — 前台頂部導覽列
- * 自動注入，不改變頁面結構
- */
-(function() {
-  const LINKS = [
-    { t: "首頁",     h: "index.html" },
-    { t: "活動報名", h: "event-register.html" },
-    { t: "我的票券", h: "member.html" },
-    { t: "邀請碼",   h: "guest.html" },
-  ];
-  const cur = location.pathname.split("/").pop() || "index.html";
-  const esc = s => String(s??"").replace(/[&<>"']/g,
-    m=>({  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
-
-  function inject() {
-    if (document.getElementById("frontNav")) return;
-
-    const nav = document.createElement("nav");
-    nav.id = "frontNav";
-    nav.innerHTML = `
-      <a class="fn-brand" href="index.html">
-        <div class="fn-brand-icon">🎤</div>
-        校園演唱會
-      </a>
-      <div class="fn-links">
-        ${LINKS.map(l=>`
-          <a class="fn-link${cur===l.h?" fn-active":""}" href="${esc(l.h)}">${esc(l.t)}</a>
-        `).join("")}
-      </div>
-      <div class="fn-user" id="fnUser">
-        <button class="fn-logout" id="fnLogin">登入</button>
-      </div>`;
-
-    document.body.insertBefore(nav, document.body.firstChild);
-
-    // Auth 監聽
-    if (typeof firebase !== "undefined") {
-      firebase.auth().onAuthStateChanged(user => {
-        const userEl = document.getElementById("fnUser");
-        if (!userEl) return;
-        if (user) {
-          userEl.innerHTML = `
-            <div class="fn-avatar">${(user.email||"?")[0].toUpperCase()}</div>
-            <span class="fn-email">${esc(user.email||"")}</span>
-            <button class="fn-logout" onclick="firebase.auth().signOut()">登出</button>`;
-        } else {
-          userEl.innerHTML = `<button class="fn-logout" id="fnLogin" onclick="location.href='member.html'">登入</button>`;
-        }
-      });
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", inject);
-  } else {
-    inject();
-  }
-})();
-
-</script>
-  <script>
-    const db = window.db;
-    const { esc, norm, pageIn, initPageLinks } = AppUI;
-
-    const pageRoot   = document.getElementById("pageRoot");
-    const eventNameEl= document.getElementById("eventName");
-    const eventIdEl  = document.getElementById("eventId");
-    const whoEl      = document.getElementById("who");
-    const codeEl     = document.getElementById("code");
-    const checkinBtn = document.getElementById("checkinBtn");
-    const reloadBtn  = document.getElementById("reloadBtn");
-    const clearLogBtn= document.getElementById("clearLogBtn");
-    const logListEl  = document.getElementById("logList");
-
-    pageIn(pageRoot);
-    initPageLinks(pageRoot);
-
-    const sp      = new URLSearchParams(location.search);
-    const eventId = norm(sp.get("eventId") || "");
-    eventIdEl.textContent = eventId || "(未指定)";
-
-    let unsubStats = null;
-
-    // ── 即時統計（onSnapshot） ──
-    function startStatsListener() {
+    async function loadStats(){
       if (!eventId) return;
-      if (unsubStats) unsubStats();
 
-      unsubStats = db.collection("events").doc(eventId).collection("orders")
-        .onSnapshot(snap => {
-          let total = 0, checked = 0, voided = 0;
-          snap.forEach(d => {
-            total++;
-            const o = d.data() || {};
-            if (o.checkedIn === true) checked++;
-            if (o.voided    === true) voided++;
-          });
-          const remain = total - checked - voided;
-          document.getElementById("sTotal").textContent   = total;
-          document.getElementById("sChecked").textContent = checked;
-          document.getElementById("sRemain").textContent  = Math.max(0, remain);
-          document.getElementById("sVoided").textContent  = voided;
-        }, err => {
-          // Fallback: try tickets collectionGroup
-          console.warn("orders snapshot 失敗，改用 tickets：", err);
-          loadStatsFallback();
-        });
+      // 以 tickets 直接統計（MVP）
+      const snap = await db.collection("tickets").where("eventId", "==", eventId).get();
+
+      let total = 0, checked = 0, voided = 0, issued = 0;
+      snap.forEach(d => {
+        total++;
+        const t = d.data() || {};
+        const st = (t.status || "issued");
+        if (st === "checked_in") checked++;
+        else if (st === "void") voided++;
+        else issued++;
+      });
+
+      statsEl.innerHTML = [
+        badge("總票數：" + total),
+        badge("已入場：" + checked),
+        badge("未入場：" + issued),
+        badge("作廢：" + voided)
+      ].join("");
     }
 
-    async function loadStatsFallback() {
-      try {
-        const snap = await db.collection("tickets")
-          .where("eventId", "==", eventId).get();
-        let total = 0, checked = 0, voided = 0;
-        snap.forEach(d => {
-          total++;
-          const t = d.data() || {};
-          const st = norm(t.status || "issued");
-          if (st === "checked_in") checked++;
-          if (st === "void") voided++;
-        });
-        document.getElementById("sTotal").textContent   = total;
-        document.getElementById("sChecked").textContent = checked;
-        document.getElementById("sRemain").textContent  = Math.max(0, total - checked - voided);
-        document.getElementById("sVoided").textContent  = voided;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    // ── Log ──
-    let logCount = 0;
-    function pushLog(type, title, detail) {
-      if (logCount === 0) logListEl.innerHTML = "";
-      logCount++;
-
-      const now = new Date().toLocaleTimeString("zh-Hant", { hour12: false });
-      const icon = type === "ok" ? "✅" : type === "warn" ? "⚠️" : "ℹ️";
-      const item = document.createElement("div");
-      item.className = `log-item ${type}`;
-      item.innerHTML = `
-        <div class="log-icon">${icon}</div>
-        <div class="log-body">
-          <div class="log-title">${esc(title)}</div>
-          ${detail ? `<div class="log-detail">${esc(detail)}</div>` : ""}
+    function pushLog(kind, title, detail){
+      const cls = kind === "ok" ? "card ok" : "card warn";
+      const html = `
+        <div class="${cls}">
+          <div style="font-weight:900;">${esc(title)}</div>
+          <div class="small" style="margin-top:6px;">${esc(detail)}</div>
         </div>
-        <div class="log-time">${now}</div>
       `;
-      logListEl.insertBefore(item, logListEl.firstChild);
-
-      // Keep last 50
-      while (logListEl.children.length > 50) {
-        logListEl.removeChild(logListEl.lastChild);
-      }
+      logEl.innerHTML = html + logEl.innerHTML;
     }
 
-    clearLogBtn.onclick = () => {
-      logCount = 0;
-      logListEl.innerHTML = `<div class="small" style="color:var(--muted); padding:8px 0;">等待掃描…</div>`;
-    };
-
-    // ── 入場 ──
-    async function doCheckin() {
-      const raw  = norm(codeEl.value);
-      const code = raw;
-      if (!code) return;
-      if (!eventId) { AppUI.toast("缺少 eventId，請由正確連結進入", "warn"); return; }
+    async function checkin(){
+      const code = (codeEl.value || "").trim();
+      if (!code) { alert("請輸入票碼"); return; }
+      if (!eventId) { alert("缺少 eventId"); return; }
 
       checkinBtn.disabled = true;
-      const oldText = checkinBtn.textContent;
+      const old = checkinBtn.textContent;
       checkinBtn.textContent = "處理中…";
 
-      try {
-        // Try orders first (by order ID)
-        const orderRef = db.collection("events").doc(eventId).collection("orders").doc(code);
-        const orderSnap = await orderRef.get();
+      try{
+        const ref = db.collection("tickets").doc(code);
+        const doc = await ref.get();
 
-        if (orderSnap.exists) {
-          const o = orderSnap.data() || {};
-          if (o.checkedIn === true) {
-            const atStr = o.checkedInAt
-              ? (o.checkedInAt.toDate ? o.checkedInAt.toDate() : new Date(o.checkedInAt))
-                  .toLocaleString("zh-Hant", { hour12: false })
-              : "未知時間";
-            pushLog("warn", "重複入場", `訂單 ${code}｜已於 ${atStr} 入場`);
-            AppUI.toast("⚠️ 此票已入場", "warn");
-            codeEl.value = "";
-            return;
-          }
-          await orderRef.update({
-            checkedIn:      true,
-            checkedInAt:    new Date(),
-            checkedInBy:    firebase.auth().currentUser?.uid   || "",
-            checkedInEmail: firebase.auth().currentUser?.email || "",
-          });
-          pushLog("ok", "入場成功", `訂單 ${code}｜${esc(o.email || "")}`);
-          AppUI.toast("✅ 入場成功", "ok");
-          codeEl.value = "";
-          codeEl.focus();
+        if (!doc.exists) {
+          pushLog("warn", "找不到票", "ticketId：" + code);
+          alert("找不到票（tickets 沒有這個 ticketId）");
           return;
         }
 
-        // Fallback: try tickets collection
-        const ticketRef  = db.collection("tickets").doc(code);
-        const ticketSnap = await ticketRef.get();
-
-        if (!ticketSnap.exists) {
-          pushLog("warn", "找不到票", code);
-          AppUI.toast("找不到此訂單/票碼", "warn");
+        const t = doc.data() || {};
+        if (t.eventId !== eventId) {
+          pushLog("warn", "活動不符", `此票屬於 eventId=${t.eventId}，不是目前活動`);
+          alert("活動不符：此票不是這個活動");
           return;
         }
 
-        const t = ticketSnap.data() || {};
-        if (norm(t.eventId) !== eventId) {
-          pushLog("warn", "活動不符", `此票屬於 ${t.eventId}`);
-          AppUI.toast("活動不符：此票不屬於本活動", "warn");
+        if ((t.status || "issued") === "checked_in") {
+          pushLog("warn", "重複入場", "此票已入場，時間：" + (t.checkedInAt?.toDate?.().toLocaleString() || "(未知)"));
+          alert("這張票已經入場過了");
           return;
         }
-        if (norm(t.status || "issued") === "checked_in") {
-          pushLog("warn", "重複入場", code);
-          AppUI.toast("⚠️ 此票已入場", "warn");
-          codeEl.value = "";
-          return;
-        }
-        await ticketRef.update({
-          status:      "checked_in",
+
+        await ref.update({
+          status: "checked_in",
           checkedInAt: new Date(),
-          checkedInBy: firebase.auth().currentUser?.email || "",
+          checkedInBy: (firebase.auth().currentUser?.email || "").toLowerCase()
         });
-        pushLog("ok", "入場成功（票券）", code);
-        AppUI.toast("✅ 入場成功", "ok");
-        codeEl.value = "";
-        codeEl.focus();
 
-      } catch (e) {
+        pushLog("ok", "入場成功", "ticketId：" + code);
+        codeEl.value = "";
+        await loadStats();
+
+      }catch(e){
         console.error(e);
-        pushLog("error", "入場失敗", e.message || String(e));
-        AppUI.toast("入場失敗：" + (e.message || e), "warn");
-      } finally {
-        checkinBtn.disabled   = false;
-        checkinBtn.textContent = oldText;
+        pushLog("warn", "入場失敗", e.message || String(e));
+        alert("入場失敗\n" + (e.message || e));
+      }finally{
+        checkinBtn.disabled = false;
+        checkinBtn.textContent = old;
       }
     }
 
-    checkinBtn.onclick = doCheckin;
-    codeEl.addEventListener("keydown", e => {
-      if (e.key === "Enter") doCheckin();
-    });
-    reloadBtn.onclick = loadStatsFallback;
+    reloadBtn.onclick = async () => { await loadStats(); };
+    checkinBtn.onclick = checkin;
 
-    // ── 載入活動資訊 ──
-    async function loadEvent() {
-      if (!eventId) {
-        eventNameEl.textContent = "未指定活動";
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        // checkin 也可以選擇「不登入」給工讀生用
+        // 但你要後台控管的話就保留登入限制
+        location.href = "dashboard.html";
         return;
       }
-      try {
-        const snap = await db.collection("events").doc(eventId).get();
-        if (!snap.exists) { eventNameEl.textContent = "活動不存在"; return; }
-        const d = snap.data() || {};
-        eventNameEl.textContent = norm(d.title || d.name || "(未命名活動)");
-      } catch (e) {
-        eventNameEl.textContent = eventId;
-      }
-    }
 
-    // ── Auth ──
-    firebase.auth().onAuthStateChanged(async user => {
-      if (!user) { location.href = "dashboard.html"; return; }
-      whoEl.textContent = user.email || "";
+      whoEl.textContent = (user.email || "").toLowerCase();
+
+      // （可選）你也可以在這裡檢查 role
       await loadEvent();
-      startStatsListener();
-      codeEl.focus();
+      await loadStats();
     });
   </script>
 </body>

@@ -5,439 +5,114 @@
   <title>核銷｜掃描入場</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
   <style>
-/* ============================================================
-   shared.css — 校園演唱會購票系統 共用樣式
-   ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; }
 
-:root {
-  --bg: #f6f7fb;
-  --card: #fff;
-  --text: #111;
-  --muted: rgba(17,17,17,.65);
-  --line: rgba(17,17,17,.10);
-  --shadow: 0 14px 40px rgba(0,0,0,.08);
-  --shadow-sm: 0 10px 26px rgba(0,0,0,.05);
-  --danger: #b91c1c;
-  --ok: #166534;
-  --info: #1d4ed8;
-  --warn-bg: #fff5f5;
-  --warn-border: rgba(185,28,28,.18);
-  --soft-bg: #f1f2f6;
-  --soft-border: rgba(17,17,17,.12);
+    body {
+      margin: 0;
+      background: #0a0a0a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      min-height: 100vh;
+    }
 
-  --btn-h: 44px;
-  --btn-fs: 16px;
-  --r: 18px;
-}
+    .wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
 
-*, *::before, *::after { box-sizing: border-box; }
+    /* ── Gate（登入畫面） ── */
+    #gateWrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: #0a0a0a;
+    }
+    .gate-inner {
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .gate-logo {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+    .gate-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .gate-sub {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .gate-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: left;
+    }
+    .gate-card label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      margin-bottom: 6px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+    .gate-card input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1a1a1a;
+      border: 1.5px solid #2a2a2a;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 12px;
+      transition: border-color .15s;
+    }
+    .gate-card input:focus { border-color: #22c55e; }
+    .gate-card input::placeholder { color: #444; }
+    #loginBtn {
+      width: 100%;
+      padding: 13px;
+      background: #22c55e;
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: background .15s;
+      margin-top: 4px;
+    }
+    #loginBtn:hover { background: #16a34a; }
+    #loginBtn:disabled { opacity: .55; cursor: not-allowed; }
+    #loginErr {
+      font-size: 13px;
+      color: #f87171;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
-}
+    /* ── App ── */
+    #appWrap { display: none; }
 
-/* ── Layout ── */
-.wrap {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 24px;
-}
-.wrap-lg { max-width: 1100px; }
-.wrap-xl { max-width: 1080px; }
-
-@media (max-width: 640px) {
-  .wrap { padding: 28px 16px; }
-}
-
-/* ── Cards ── */
-.card, .section {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  padding: 18px;
-  margin-bottom: 18px;
-}
-
-.card-soft, .soft {
-  background: var(--soft-bg);
-  border: 1px solid var(--soft-border);
-}
-
-.card-warn {
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-border);
-}
-
-/* ── Typography ── */
-h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: .2px; }
-h2 { margin: 0; font-size: 16px; font-weight: 900; }
-h3 { margin: 0 0 6px; font-size: 15px; font-weight: 900; }
-
-.sub {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.7;
-  margin-top: 6px;
-}
-
-.small, .hint {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-}
-
-.ok  { color: var(--ok);     font-weight: 900; }
-.warn{ color: var(--danger); font-weight: 900; }
-.info{ color: var(--info);   font-weight: 900; }
-
-/* ── Buttons ── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--btn-h);
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--text);
-  font-weight: 900;
-  font-size: var(--btn-fs);
-  cursor: pointer;
-  text-decoration: none;
-  user-select: none;
-  white-space: nowrap;
-  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-}
-.btn:hover  { box-shadow: 0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-.btn:active { transform: translateY(0) scale(.98); box-shadow: none; }
-.btn[disabled],
-.btn[aria-disabled="true"] {
-  opacity: .55;
-  cursor: not-allowed;
-  pointer-events: none;
-  box-shadow: none;
-  transform: none;
-}
-
-.btn-primary { background: #111; color: #fff; border-color: #111; }
-.btn-danger  { background: #fff; color: var(--danger); border-color: rgba(239,68,68,.35); }
-.btn-danger-fill { background: var(--danger); color: #fff; border-color: var(--danger); }
-
-.btn-sm { height: 40px; padding: 8px 16px; font-size: 15px; }
-
-/* ── Tabs ── */
-.tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-.tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 8px 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  font-weight: 900;
-  font-size: 15px;
-  cursor: pointer;
-  user-select: none;
-  transition: transform .12s ease, box-shadow .12s ease;
-}
-.tab:hover { box-shadow: 0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-.tab.active { background: #111; color: #fff; border-color: #111; box-shadow: none; transform: none; }
-
-/* ── Pills & Badges ── */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-weight: 900;
-  font-size: 14px;
-  background: #fff;
-}
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: #fff;
-  font-size: 12px;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-/* ── Forms ── */
-label {
-  display: block;
-  margin: 12px 0 6px;
-  font-weight: 900;
-}
-input[type="text"],
-input[type="number"],
-input[type="password"],
-input[type="email"],
-input[type="datetime-local"],
-input[type="file"],
-textarea,
-select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  font-size: 16px;
-  outline: none;
-  color: var(--text);
-}
-textarea { min-height: 110px; resize: vertical; }
-
-/* ── Grid Helpers ── */
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.row-center { align-items: center; }
-.actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.actions-end { justify-content: flex-end; }
-
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-
-@media (max-width: 900px) {
-  .grid2, .grid3 { grid-template-columns: 1fr; }
-}
-@media (max-width: 640px) {
-  .grid2, .grid3 { grid-template-columns: 1fr; }
-}
-
-/* ── List / Item ── */
-.list { display: grid; gap: 12px; }
-.item {
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-}
-.item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.item-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 900;
-  line-height: 1.45;
-}
-.meta {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  word-break: break-word;
-}
-
-/* ── Table ── */
-.table-wrap {
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  margin-top: 12px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 600px;
-}
-th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  font-size: 14px;
-  vertical-align: top;
-}
-th {
-  background: #fafafa;
-  font-weight: 900;
-  white-space: nowrap;
-}
-tr:last-child td { border-bottom: none; }
-
-/* ── KV Detail Block ── */
-.kv {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 8px 12px;
-  padding: 10px 0;
-  border-top: 1px dashed var(--line);
-}
-.kv:first-child { border-top: none; }
-.kv .k { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.kv .v { font-size: 13px; font-weight: 900; line-height: 1.5; word-break: break-word; }
-
-@media (max-width: 640px) {
-  .kv { grid-template-columns: 105px 1fr; }
-}
-
-/* ── Modal ── */
-.modal-back {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(0,0,0,.35);
-}
-.modal-back.open { display: flex; }
-.modal {
-  width: min(980px, 100%);
-  max-height: 88vh;
-  overflow: auto;
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  background: #fff;
-  box-shadow: 0 18px 60px rgba(0,0,0,.25);
-}
-.modal-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line);
-}
-
-/* ── Navbar ── */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255,255,255,.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 0;
-  height: 52px;
-}
-.navbar-brand {
-  font-weight: 900;
-  font-size: 15px;
-  text-decoration: none;
-  color: var(--text);
-  white-space: nowrap;
-  padding-right: 16px;
-  border-right: 1px solid var(--line);
-  margin-right: 14px;
-}
-.navbar-crumb {
-  font-size: 14px;
-  color: var(--muted);
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-.navbar-role {
-  font-size: 13px;
-  font-weight: 900;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .navbar { padding: 0 16px; }
-  .navbar-crumb { display: none; }
-}
-
-/* ── Page transition ── */
-.page {
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .22s ease, transform .22s ease;
-}
-.page.on { opacity: 1; transform: translateY(0); }
-.page.leaving { opacity: 0; transform: translateY(6px); }
-
-/* ── Tile (dashboard) ── */
-.tile {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  min-height: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  justify-content: space-between;
-}
-.tile h3 { margin: 0; font-size: 16px; }
-.tile p  { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
-
-/* ── Divider ── */
-.divider { height: 1px; background: var(--line); margin: 12px 0; }
-
-/* ── Impersonate Banner ── */
-.impersonate-banner {
-  background: var(--warn-bg);
-  border: 1px solid var(--warn-border);
-  border-radius: var(--r);
-  padding: 14px 18px;
-  margin-bottom: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.impersonate-title { font-weight: 900; color: var(--danger); }
-
-</style>
-  <style>
-    body { background: #0a0a0a; color: #fff; }
-    .wrap { max-width: 540px; padding: 20px 16px; }
-
-    /* Header */
+    /* Top bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .event-title {
       font-size: 15px;
@@ -448,27 +123,45 @@ tr:last-child td { border-bottom: none; }
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .top-actions { display: flex; gap: 8px; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: #22c55e;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .btn-logout {
+      padding: 7px 14px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color .13s, border-color .13s;
+    }
+    .btn-logout:hover { color: #f87171; border-color: #7f1d1d; }
 
-    /* Scanner viewport */
+    /* Scanner */
     .scanner-frame {
       position: relative;
       border-radius: 20px;
       overflow: hidden;
-      background: #1a1a1a;
+      background: #111;
       aspect-ratio: 1;
-      max-height: 360px;
+      max-height: 340px;
     }
-    #reader {
-      width: 100% !important;
-      height: 100% !important;
-    }
-    #reader video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover;
-    }
-    /* Hide html5-qrcode default UI noise */
+    #reader { width: 100% !important; height: 100% !important; }
+    #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
     #reader img, #reader__dashboard, #reader__filescan_input { display: none !important; }
 
     .scan-overlay {
@@ -480,18 +173,16 @@ tr:last-child td { border-bottom: none; }
       pointer-events: none;
     }
     .scan-box {
-      width: 200px;
-      height: 200px;
-      border: 3px solid rgba(255,255,255,.8);
-      border-radius: 16px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,.45);
+      width: 190px; height: 190px;
+      border: 3px solid rgba(255,255,255,.75);
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.5);
     }
     .scan-line {
       position: absolute;
-      top: calc(50% - 97px);
-      left: calc(50% - 97px);
-      width: 194px;
-      height: 3px;
+      top: calc(50% - 93px);
+      left: calc(50% - 93px);
+      width: 186px; height: 3px;
       background: linear-gradient(90deg, transparent, #22c55e, transparent);
       animation: scanLine 1.8s ease-in-out infinite;
     }
@@ -499,10 +190,9 @@ tr:last-child td { border-bottom: none; }
       0%   { transform: translateY(0); opacity: 0; }
       15%  { opacity: 1; }
       85%  { opacity: 1; }
-      100% { transform: translateY(194px); opacity: 0; }
+      100% { transform: translateY(186px); opacity: 0; }
     }
 
-    /* Result flash */
     .result-flash {
       position: absolute;
       inset: 0;
@@ -513,162 +203,184 @@ tr:last-child td { border-bottom: none; }
       font-size: 72px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity .15s ease;
+      transition: opacity .12s ease;
     }
-    .result-flash.ok   { background: rgba(34,197,94,.35); }
-    .result-flash.warn { background: rgba(239,68,68,.35); }
+    .result-flash.ok   { background: rgba(34,197,94,.3); }
+    .result-flash.warn { background: rgba(239,68,68,.3); }
     .result-flash.show { opacity: 1; }
 
     /* Status bar */
     .status-bar {
-      margin-top: 12px;
-      padding: 12px 16px;
-      border-radius: 14px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      margin-top: 10px;
+      padding: 12px 15px;
+      border-radius: 12px;
+      background: #111;
+      border: 1px solid #222;
       font-size: 14px;
-      min-height: 52px;
+      min-height: 50px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .status-bar .icon { font-size: 22px; flex-shrink: 0; }
+    .status-bar .icon { font-size: 20px; flex-shrink: 0; }
     .status-bar .msg  { flex: 1; line-height: 1.5; }
-    .status-bar.ok    { border-color: #166534; background: #052e16; }
-    .status-bar.warn  { border-color: #7f1d1d; background: #1c0d0d; }
-    .status-bar.info  { border-color: #1e3a5f; background: #0c1f35; }
+    .status-bar.ok   { border-color: #166534; background: #052e16; }
+    .status-bar.warn { border-color: #7f1d1d; background: #1c0d0d; }
+    .status-bar.info { border-color: #1e3a5f; background: #0c1f35; }
+
+    /* Scan controls */
+    .scan-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .btn-scan {
+      height: 50px;
+      border-radius: 12px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #aaa;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .13s, color .13s;
+    }
+    .btn-scan:hover:not(:disabled) { background: #222; color: #fff; }
+    .btn-scan.active { background: #14532d; border-color: #166534; color: #4ade80; }
+    .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Manual */
+    .manual-wrap {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .manual-wrap input {
+      flex: 1;
+      padding: 11px 14px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .manual-wrap input:focus { border-color: #22c55e; }
+    .manual-wrap input::placeholder { color: #444; }
+    .btn-manual {
+      padding: 11px 18px;
+      background: #22c55e;
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .13s;
+    }
+    .btn-manual:hover { background: #16a34a; }
 
     /* Stats */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
     .stat-box {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 14px;
-      padding: 10px;
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 12px 8px;
       text-align: center;
     }
-    .stat-num   { font-size: 26px; font-weight: 900; }
-    .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
-
-    /* Scan btn */
-    .scan-btn-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .scan-btn-row .btn {
-      border-radius: 14px;
-      background: #1e1e1e;
-      border-color: #333;
-      color: #fff;
-      height: 52px;
-      font-size: 15px;
-    }
-    .scan-btn-row .btn.active {
-      background: #166534;
-      border-color: #166534;
-    }
-
-    /* Manual input */
-    .manual-wrap {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-    }
-    .manual-wrap input {
-      flex: 1;
-      background: #1a1a1a;
-      border-color: #2a2a2a;
-      color: #fff;
-      border-radius: 14px;
-    }
-    .manual-wrap input::placeholder { color: #555; }
-    .manual-wrap .btn {
-      background: #22c55e;
-      border-color: #22c55e;
-      color: #000;
-      font-weight: 900;
-      border-radius: 14px;
-      padding: 0 20px;
-      flex-shrink: 0;
-    }
+    .stat-num   { font-size: 28px; font-weight: 900; color: #fff; }
+    .stat-num.green { color: #22c55e; }
+    .stat-label { font-size: 11px; color: #555; margin-top: 3px; }
 
     /* Log */
-    .log-section { margin-top: 16px; }
+    .log-section { margin-top: 14px; }
     .log-title {
-      font-size: 12px;
-      color: #666;
-      font-weight: 900;
-      letter-spacing: .5px;
+      font-size: 11px;
+      color: #444;
+      font-weight: 700;
+      letter-spacing: .6px;
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-    .log-list { display: grid; gap: 6px; }
+    .log-list { display: grid; gap: 5px; }
     .log-item {
       display: flex;
       align-items: flex-start;
       gap: 8px;
       padding: 8px 12px;
-      border-radius: 10px;
-      background: #111;
-      border: 1px solid #222;
+      border-radius: 9px;
+      background: #0d0d0d;
+      border: 1px solid #1a1a1a;
       font-size: 13px;
-      animation: fadeInDown .15s ease;
+      animation: fadeInDown .13s ease;
     }
     @keyframes fadeInDown {
-      from { opacity:0; transform:translateY(-4px); }
+      from { opacity:0; transform:translateY(-3px); }
       to   { opacity:1; transform:translateY(0); }
     }
     .log-item.ok   { border-color: #14532d; }
-    .log-item.warn { border-color: #7f1d1d; }
-    .log-icon { flex-shrink: 0; font-size: 16px; }
-    .log-body { flex: 1; }
-    .log-main { font-weight: 900; color: #e5e7eb; }
-    .log-sub  { color: #6b7280; font-size: 12px; margin-top: 2px; word-break: break-all; }
-    .log-time { font-size: 11px; color: #4b5563; flex-shrink: 0; white-space: nowrap; }
-
-    /* Gate */
-    #gate { background: #111; border-color: #222; color: #fff; }
-    #gate .sub, #gate .hint { color: #888; }
-    #gate input {
-      background: #1a1a1a; border-color: #333; color: #fff;
-    }
-    #gate .btn { background: #1a1a1a; border-color: #333; color: #fff; }
-    #gate .btn-primary { background: #22c55e; border-color: #22c55e; color: #000; }
-
-    /* Live dot */
-    .live { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:#22c55e; }
-    .live-dot {
-      width:7px; height:7px; border-radius:50%; background:#22c55e;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .log-item.warn { border-color: #450a0a; }
+    .log-icon  { flex-shrink: 0; font-size: 15px; }
+    .log-body  { flex: 1; min-width: 0; }
+    .log-main  { font-weight: 700; color: #d1d5db; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .log-sub   { color: #4b5563; font-size: 11px; margin-top: 2px; word-break: break-all; }
+    .log-time  { font-size: 11px; color: #374151; flex-shrink: 0; white-space: nowrap; }
   </style>
+
+<style id="utility-bar-style">
+.page-utility-bar{position:fixed;top:14px;right:14px;z-index:9999;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page-utility-bar .pub-email{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:12px;color:#666;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.page-utility-bar .pub-btn{border:none;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+.page-utility-bar .pub-home{background:#2563eb;color:#fff}
+.page-utility-bar .pub-logout{background:#111;color:#fff}
+body.utility-bar-space{padding-top:72px !important}
+@media (max-width:700px){.page-utility-bar{left:14px;right:14px;justify-content:flex-end}.page-utility-bar .pub-email{display:none}}
+</style>
+
 </head>
 <body>
-  <div class="wrap">
 
-    <div id="gate" class="card" style="display:none;"></div>
+  <!-- 登入畫面 -->
+  <div id="gateWrap">
+    <div class="gate-inner">
+      <div class="gate-logo">🎤</div>
+      <div class="gate-title">核銷入場系統</div>
+      <div class="gate-sub">請使用後台帳號登入</div>
+      <div class="gate-card">
+        <label for="loginEmail">帳號</label>
+        <input id="loginEmail" type="email" placeholder="輸入 Email" autocomplete="username" />
+        <label for="loginPassword">密碼</label>
+        <input id="loginPassword" type="password" placeholder="輸入密碼" autocomplete="current-password" />
+        <button id="loginBtn">登入</button>
+        <div id="loginErr"></div>
+      </div>
+    </div>
+  </div>
 
-    <div id="app" style="display:none;">
+  <!-- 主畫面 -->
+  <div id="appWrap">
+    <div class="wrap">
 
       <!-- Top bar -->
       <div class="top-bar">
-        <div class="event-title" id="eventTitle">讀取中…</div>
+        <div class="event-title" id="eventTitle">載入中…</div>
         <div class="top-actions">
           <span class="live"><span class="live-dot"></span>即時</span>
-          <button class="btn btn-sm" style="background:#1a1a1a; border-color:#333; color:#fff; border-radius:10px;" id="logoutBtn">登出</button>
+          <button class="btn-logout" id="logoutBtn">登出</button>
         </div>
       </div>
 
-      <!-- Scanner -->
-      <div class="scanner-frame" id="scannerFrame">
+      <!-- Scanner viewport -->
+      <div class="scanner-frame">
         <div id="reader"></div>
         <div class="scan-overlay">
           <div class="scan-box"></div>
@@ -685,29 +397,29 @@ tr:last-child td { border-bottom: none; }
 
       <!-- Scan controls -->
       <div class="scan-btn-row">
-        <button class="btn" id="startBtn">▶ 開始掃描</button>
-        <button class="btn" id="stopBtn" disabled>■ 停止</button>
+        <button class="btn-scan" id="startBtn">▶ 開始掃描</button>
+        <button class="btn-scan" id="stopBtn" disabled>■ 停止</button>
       </div>
 
-      <!-- Manual input (backup) -->
+      <!-- Manual input -->
       <div class="manual-wrap">
         <input type="text" id="manualCode" placeholder="或手動輸入訂單 ID"
                autocomplete="off" autocorrect="off" spellcheck="false" />
-        <button class="btn" id="manualBtn">核銷</button>
+        <button class="btn-manual" id="manualBtn">核銷</button>
       </div>
 
       <!-- Stats -->
       <div class="stats-row">
         <div class="stat-box">
-          <div class="stat-num" id="sTotal">-</div>
+          <div class="stat-num" id="sTotal">–</div>
           <div class="stat-label">總票數</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" style="color:#22c55e;" id="sChecked">-</div>
+          <div class="stat-num green" id="sChecked">–</div>
           <div class="stat-label">已入場</div>
         </div>
         <div class="stat-box">
-          <div class="stat-num" id="sRemain">-</div>
+          <div class="stat-num" id="sRemain">–</div>
           <div class="stat-label">未入場</div>
         </div>
       </div>
@@ -716,573 +428,158 @@ tr:last-child td { border-bottom: none; }
       <div class="log-section">
         <div class="log-title">本次記錄</div>
         <div class="log-list" id="logList">
-          <div style="font-size:13px; color:#444; padding:6px 0;">等待掃描…</div>
+          <div style="font-size:13px;color:#333;padding:4px 0;">等待掃描…</div>
         </div>
       </div>
+
     </div>
   </div>
 
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script>
-/**
- * shared.js — 校園演唱會購票系統 共用 JS 模組
- *
- * 使用方式：在 HTML <head> 載入 Firebase SDK 後，
- * 再載入此檔案。此檔案會自動初始化 Firebase 並掛載全域工具。
- *
- * 暴露的全域物件：
- *   window.db        — Firestore 實例
- *   window.AppAuth   — 認證輔助工具
- *   window.AppUI     — UI 工具（esc, norm, tsToText, page transition…）
- *   window.AppNav    — 頂部導覽列
- */
 
-(function () {
-  "use strict";
-
-  /* ── Firebase 初始化 ── */
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-    authDomain: "concert-1ff7e.firebaseapp.com",
-    projectId: "concert-1ff7e",
-    storageBucket: "concert-1ff7e.firebasestorage.app",
-    messagingSenderId: "704757384914",
-    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-  };
-
-  // 避免重複初始化（多頁面同時引入時安全）
-  if (!firebase.apps.length) {
-    firebase.initializeApp(FIREBASE_CONFIG);
+<script id="email-login-patch">
+(function(){
+  function ensureUtilityBar(){
+    if(document.getElementById('pageUtilityBar')) return;
+    var bar=document.createElement('div');
+    bar.id='pageUtilityBar';
+    bar.className='page-utility-bar';
+    bar.innerHTML='\n      <div class="pub-email" id="pubEmailChip">未登入</div>\n      <button class="pub-btn pub-home" type="button" id="pubHomeBtn">回到初選單</button>\n      <button class="pub-btn pub-logout" type="button" id="pubLogoutBtn">登出</button>';
+    document.body.appendChild(bar);
+    document.body.classList.add('utility-bar-space');
+    document.getElementById('pubHomeBtn').onclick=function(){ location.href='dashboard.html'; };
+    document.getElementById('pubLogoutBtn').onclick=async function(){ try{ if(window.firebase) await firebase.auth().signOut(); else location.href='dashboard.html'; }catch(e){ console.error(e); alert('登出失敗，請看 Console。'); } };
   }
 
-  window.db = firebase.firestore();
+  async function emailPasswordPrompt(){
+    var email=window.prompt('請輸入 Email');
+    if(email===null) throw new Error('cancelled');
+    email=String(email||'').trim();
+    if(!email) throw new Error('missing email');
+    var password=window.prompt('請輸入密碼');
+    if(password===null) throw new Error('cancelled');
+    password=String(password||'');
+    if(!password) throw new Error('missing password');
+    return {email:email,password:password};
+  }
 
-  /* ══════════════════════════════════════════
-     AppUI — 共用 UI 工具
-  ══════════════════════════════════════════ */
-  window.AppUI = {
+  function patchFirebaseEmailLogin(){
+    if(!window.firebase || !firebase.auth) return;
+    var auth=firebase.auth();
+    if(auth.__emailPatchApplied) return;
+    auth.__emailPatchApplied=true;
+    var original=auth.signInWithPopup ? auth.signInWithPopup.bind(auth) : null;
+    auth.signInWithPopup=async function(){
+      var creds=await emailPasswordPrompt();
+      return auth.signInWithEmailAndPassword(creds.email, creds.password);
+    };
+    window.__originalSignInWithPopup=original;
+    try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
+  }
 
-    /** HTML 跳脫（防 XSS） */
-    esc(s) {
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[m]));
-    },
+  function replaceTextNodes(){
+    var walker=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      var t=node.nodeValue;
+      if(!t) return;
+      t=t.replace(/使用\s*Google\s*登入/g,'使用 Email 登入');
+      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入後台/g,'請先使用 Email／密碼登入後台');
+      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入/g,'請先使用 Email／密碼登入');
+      t=t.replace(/前往 Dashboard/g,'前往初選單');
+      t=t.replace(/回 Dashboard/g,'回到初選單');
+      t=t.replace(/接下來請前往 Dashboard 測試/g,'接下來請前往初選單測試');
+      node.nodeValue=t;
+    });
+    document.querySelectorAll('a,button').forEach(function(el){
+      var txt=(el.textContent||'').trim();
+      if(txt==='回 Dashboard') el.textContent='回到初選單';
+      if(txt==='前往 Dashboard') el.textContent='前往初選單';
+    });
+  }
 
-    /** 去頭尾空白 */
-    norm(s) {
-      return String(s ?? "").trim();
-    },
+  function patchHomeLinks(){
+    document.querySelectorAll('a[href="dashboard.html"]').forEach(function(a){
+      if((a.textContent||'').includes('Dashboard')) a.textContent=a.textContent.replace(/Dashboard/g,'初選單');
+    });
+  }
 
-    /** Firestore Timestamp → 本地時間字串 */
-    tsToText(ts) {
-      try {
-        if (!ts) return "-";
-        const d = ts.toDate ? ts.toDate() : new Date(ts);
-        return d.toLocaleString("zh-Hant", { hour12: false });
-      } catch { return "-"; }
-    },
+  function updateEmailChip(){
+    var chip=document.getElementById('pubEmailChip');
+    if(!chip || !window.firebase || !firebase.auth) return;
+    var user=firebase.auth().currentUser;
+    chip.textContent=user && user.email ? user.email : '未登入';
+  }
 
-    /** 頁面淡入 */
-    pageIn(el) {
-      if (!el) return;
-      requestAnimationFrame(() => el.classList.add("on"));
-    },
-
-    /** 頁面淡出後跳轉 */
-    go(href, pageEl) {
-      const root = pageEl || document.getElementById("pageRoot");
-      if (root) root.classList.add("leaving");
-      setTimeout(() => { location.href = href; }, 140);
-    },
-
-    /** 攔截所有 <a> 的頁面跳轉並套用轉場動畫 */
-    initPageLinks(pageEl) {
-      document.addEventListener("click", (e) => {
-        const a = e.target.closest("a");
-        if (!a) return;
-        const href = a.getAttribute("href");
-        if (!href || href.startsWith("#") || href.startsWith("http")) return;
-        if (a.getAttribute("aria-disabled") === "true") return;
-        e.preventDefault();
-        AppUI.go(href, pageEl);
-      });
-    },
-
-    /**
-     * 渲染「Gate」錯誤/登入卡片
-     * @param {HTMLElement} gateEl
-     * @param {HTMLElement} appEl
-     * @param {{ title, msg, showEmailLogin, extraBtns }} opts
-     */
-    showGate(gateEl, appEl, { title = "請先登入", msg = "", showEmailLogin = false, extraBtns = "" } = {}) {
-      if (appEl) appEl.style.display = "none";
-      gateEl.style.display = "block";
-
-      // 若是 gate-mode（全頁登入），用新版樣式
-      const isGateMode = document.body?.classList?.contains("gate-mode");
-
-      if (isGateMode) {
-        // 新版：仿圖片，背景灰，白卡片
-        let loginFields = "";
-        if (showEmailLogin) {
-          loginFields = `
-            <div style="margin-bottom:15px;">
-              <label style="display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">帳號</label>
-              <input id="_loginEmail" type="text" placeholder="輸入 Email"
-                style="width:100%;padding:12px 14px;border:1.5px solid #dde1e7;border-radius:10px;
-                       font-size:14px;outline:none;background:#fff;transition:border-color .15s;"
-                onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#dde1e7'" />
-            </div>
-            <div style="margin-bottom:18px;">
-              <label style="display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px;">密碼</label>
-              <input id="_loginPassword" type="password" placeholder="輸入密碼"
-                style="width:100%;padding:12px 14px;border:1.5px solid #dde1e7;border-radius:10px;
-                       font-size:14px;outline:none;background:#fff;transition:border-color .15s;"
-                onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#dde1e7'" />
-            </div>
-            <button id="_loginBtn"
-              style="width:100%;padding:13px;background:#2563eb;color:#fff;border:none;
-                     border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
-                     transition:background .15s;"
-              onmouseover="this.style.background='#1d4ed8'"
-              onmouseout="if(!this.disabled)this.style.background='#2563eb'">
-              登入
-            </button>
-            <div id="_loginMsg" style="font-size:13px;color:#dc2626;margin-top:10px;text-align:center;display:none;"></div>
-          `;
-        }
-
-        let extraHtml = extraBtns
-          ? `<div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">${extraBtns}</div>`
-          : "";
-        if (!showEmailLogin && !extraBtns) {
-          extraHtml = `<button onclick="if(typeof AppAuth!=='undefined')AppAuth.logout()"
-            style="width:100%;margin-top:6px;padding:12px;border-radius:10px;border:1.5px solid #dde1e7;
-                   background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:#555;">
-            返回初選單 / 登出
-          </button>`;
-        }
-
-        gateEl.innerHTML = `
-          <div style="text-align:center;margin-bottom:26px;">
-            <div style="font-size:38px;margin-bottom:10px;">🎤</div>
-            <div style="font-size:19px;font-weight:900;color:#1e2a45;letter-spacing:.3px;">校園演唱會購票系統</div>
-            <div style="font-size:9px;letter-spacing:2.5px;color:#bbb;margin-top:5px;text-transform:uppercase;">Concert Ticketing System</div>
-          </div>
-          <div style="background:#fff;border-radius:16px;padding:26px 26px 22px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08);">
-            ${showEmailLogin
-              ? `<div style="font-size:17px;font-weight:900;color:#111;margin-bottom:18px;">登入</div>`
-              : `<div style="font-size:15px;font-weight:900;color:#111;margin-bottom:8px;">${AppUI.esc(title)}</div>
-                 ${msg ? `<div style="font-size:13px;color:#888;margin-bottom:16px;line-height:1.6;">${msg}</div>` : ""}`
-            }
-            ${loginFields}
-            ${extraHtml}
-          </div>
-          <div style="font-size:12px;color:#bbb;margin-top:22px;text-align:center;">© Concert Ticketing System</div>
-        `;
-
-      } else {
-        // 舊版：行內 gate 卡片（用於非 dashboard 的頁面）
-        gateEl.innerHTML = `
-          <h1 style="margin:0 0 6px;font-size:20px;font-weight:900;">${AppUI.esc(title)}</h1>
-          <div class="sub" style="margin-bottom:${showEmailLogin||extraBtns?"16px":"0"}">${msg}</div>
-          ${showEmailLogin ? `
-            <div style="max-width:360px;display:grid;gap:10px;margin-top:8px;">
-              <input id="_loginEmail" type="text" placeholder="帳號（Email）"
-                style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #dde1e7;font-size:15px;outline:none;"/>
-              <input id="_loginPassword" type="password" placeholder="密碼"
-                style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #dde1e7;font-size:15px;outline:none;"/>
-              <button id="_loginBtn" style="padding:12px;background:#2563eb;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;">登入</button>
-              <div id="_loginMsg" style="font-size:13px;color:#dc2626;display:none;"></div>
-            </div>
-          ` : ""}
-          ${extraBtns ? `<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">${extraBtns}</div>` : ""}
-          ${!showEmailLogin && !extraBtns ? `<button class="btn" id="_logoutBtn" style="margin-top:12px;">登出</button>` : ""}
-        `;
-      }
-
-      // 登入按鈕共用邏輯
-      const loginBtn = document.getElementById("_loginBtn");
-      if (loginBtn) {
-        const doLogin = async () => {
-          const emailVal = (document.getElementById("_loginEmail")?.value || "").trim();
-          const pwVal    = document.getElementById("_loginPassword")?.value || "";
-          const msgEl    = document.getElementById("_loginMsg");
-          if (!emailVal || !pwVal) {
-            if (msgEl) { msgEl.textContent = "請輸入帳號與密碼"; msgEl.style.display = "block"; }
-            return;
-          }
-          loginBtn.disabled = true;
-          loginBtn.textContent = "登入中…";
-          if (msgEl) msgEl.style.display = "none";
-          try {
-            await firebase.auth().signInWithEmailAndPassword(emailVal, pwVal);
-          } catch (e) {
-            if (msgEl) { msgEl.textContent = "帳號或密碼錯誤，請再試一次。"; msgEl.style.display = "block"; }
-            loginBtn.disabled = false;
-            loginBtn.textContent = "登入";
-            if (loginBtn.style) loginBtn.style.background = "#2563eb";
-          }
-        };
-        loginBtn.onclick = doLogin;
-        ["_loginEmail","_loginPassword"].forEach(id => {
-          document.getElementById(id)?.addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
-        });
-      }
-      const logoutBtn = document.getElementById("_logoutBtn");
-      if (logoutBtn) logoutBtn.onclick = AppAuth.logout;
-    } = {}) {
-      if (appEl) appEl.style.display = "none";
-      gateEl.style.display = "block";
-
-      gateEl.innerHTML = `
-        <h1 style="margin:0 0 6px; font-size:22px;">${AppUI.esc(title)}</h1>
-        <div class="sub">${msg}</div>
-
-        ${showEmailLogin ? `
-          <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
-            <input
-              id="_loginEmail"
-              type="text"
-              placeholder="帳號（Email）"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.1); font-size:16px; background:#fff; outline:none;"
-            />
-            <input
-              id="_loginPassword"
-              type="password"
-              placeholder="密碼"
-              style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.1); font-size:16px; background:#fff; outline:none;"
-            />
-            <button class="btn btn-primary" id="_loginBtn">登入</button>
-            <div id="_loginMsg" style="font-size:13px; color:#b91c1c; display:none;"></div>
-          </div>
-        ` : ""}
-
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${extraBtns}
-          ${!showEmailLogin ? `<button class="btn" id="_logoutBtn">登出</button>` : ""}
-        </div>
-      `;
-
-      const loginBtn = document.getElementById("_loginBtn");
-      if (loginBtn) {
-        const doLogin = async () => {
-          const email = (document.getElementById("_loginEmail")?.value || "").trim();
-          const password = document.getElementById("_loginPassword")?.value || "";
-          const msgEl = document.getElementById("_loginMsg");
-
-          if (!email || !password) { alert("請輸入帳號與密碼"); return; }
-
-          loginBtn.disabled = true;
-          const oldText = loginBtn.textContent;
-          loginBtn.textContent = "登入中…";
-          if (msgEl) msgEl.style.display = "none";
-
-          try {
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-          } catch (e) {
-            console.error(e);
-            if (msgEl) {
-              msgEl.textContent = "登入失敗，請確認帳號密碼是否正確";
-              msgEl.style.display = "block";
-            } else {
-              alert("登入失敗，請確認帳號密碼是否正確");
-            }
-          } finally {
-            loginBtn.disabled = false;
-            loginBtn.textContent = oldText;
-          }
-        };
-
-        loginBtn.onclick = doLogin;
-
-        ["_loginEmail", "_loginPassword"].forEach(id => {
-          document.getElementById(id)?.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") doLogin();
-          });
-        });
-      }
-
-      const logoutBtn = document.getElementById("_logoutBtn");
-      if (logoutBtn) logoutBtn.onclick = AppAuth.logout;
-    },
-
-    /** 顯示 Toast 提示（輕量版，自動消失） */
-    toast(msg, type = "ok", duration = 3000) {
-      let el = document.getElementById("_appToast");
-      if (!el) {
-        el = document.createElement("div");
-        el.id = "_appToast";
-        el.style.cssText = `
-          position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
-          min-width:200px; max-width:360px; padding:12px 20px;
-          border-radius:999px; font-size:14px; font-weight:900;
-          box-shadow:0 10px 30px rgba(0,0,0,.15); z-index:99999;
-          opacity:0; transition:opacity .2s ease, transform .2s ease;
-          text-align:center; pointer-events:none;
-        `;
-        document.body.appendChild(el);
-      }
-
-      const colors = {
-        ok:   { bg: "#166534", color: "#fff" },
-        warn: { bg: "#b91c1c", color: "#fff" },
-        info: { bg: "#1d4ed8", color: "#fff" },
-        neutral: { bg: "#111", color: "#fff" }
-      };
-      const c = colors[type] || colors.neutral;
-      el.style.background = c.bg;
-      el.style.color = c.color;
-      el.textContent = msg;
-
-      clearTimeout(el._timer);
-      requestAnimationFrame(() => {
-        el.style.opacity = "1";
-        el.style.transform = "translateX(-50%) translateY(0)";
-      });
-
-      el._timer = setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateX(-50%) translateY(10px)";
-      }, duration);
+  function init(){
+    ensureUtilityBar();
+    patchFirebaseEmailLogin();
+    replaceTextNodes();
+    patchHomeLinks();
+    updateEmailChip();
+    if(window.firebase && firebase.auth){
+      firebase.auth().onAuthStateChanged(function(){ updateEmailChip(); replaceTextNodes(); patchHomeLinks(); });
     }
-  };
+  }
 
-  // 短別名
-  const { esc, norm } = window.AppUI;
-
-  /* ══════════════════════════════════════════
-     AppAuth — 認證 & 角色輔助
-  ══════════════════════════════════════════ */
-  window.AppAuth = {
-
-    /** 登出 */
-    async logout() {
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-        alert("登出失敗（請看 Console）");
-      }
-    },
-
-    /** 從 Firestore users/{uid} 讀取用戶資料 */
-    async loadUser(uid) {
-      const snap = await window.db.collection("users").doc(uid).get();
-      if (!snap.exists) return null;
-      return { id: snap.id, ...snap.data() };
-    },
-
-    /** 角色判斷 */
-    isPlatform(role)      { return role === "platform_super" || role === "platform_admin"; },
-    isPlatformSuper(role) { return role === "platform_super"; },
-    isOrgRole(role)       { return ["org_super","org_admin","org_staff"].includes(role); },
-    isProtectedSuper(u)   { return norm(u?.role) === "platform_super"; },
-
-    /**
-     * 模擬帳號（impersonate）工具
-     */
-    impersonate: {
-      get uid()      { return sessionStorage.getItem("impersonateUid") || ""; },
-      get email()    { return sessionStorage.getItem("impersonateEmail") || ""; },
-      get role()     { return sessionStorage.getItem("impersonateRole") || ""; },
-      get orgId()    { return sessionStorage.getItem("impersonateOrgId") || ""; },
-      get schoolId() { return sessionStorage.getItem("impersonateSchoolId") || ""; },
-      get active()   { return !!sessionStorage.getItem("impersonateUid"); },
-
-      start({ uid, email, role, orgId, schoolId, team }) {
-        sessionStorage.setItem("impersonateUid", uid || "");
-        sessionStorage.setItem("impersonateEmail", email || "");
-        sessionStorage.setItem("impersonateRole", role || "");
-        sessionStorage.setItem("impersonateOrgId", orgId || "");
-        sessionStorage.setItem("impersonateSchoolId", schoolId || "");
-        sessionStorage.setItem("impersonateTeam", team || "");
-        sessionStorage.setItem("impersonateStartedAt", new Date().toISOString());
-      },
-
-      stop() {
-        [
-          "impersonateUid", "impersonateEmail", "impersonateRole",
-          "impersonateOrgId", "impersonateSchoolId", "impersonateTeam",
-          "impersonateStartedAt"
-        ].forEach(k => sessionStorage.removeItem(k));
-      },
-
-      /** 取得目前「有效」的 uid（模擬中用模擬 uid，否則用真實 uid） */
-      getActingUid(realUser) {
-        return sessionStorage.getItem("impersonateUid") || realUser?.uid || "";
-      }
-    },
-
-    /**
-     * 渲染模擬帳號 Banner（需要有 class="impersonate-banner" 的元素，id="impersonateBanner"）
-     * @param {Function} onStop — 點「結束模擬」後的回呼
-     */
-    renderImpersonateBanner(onStop) {
-      const banner = document.getElementById("impersonateBanner");
-      if (!banner) return;
-
-      const imp = AppAuth.impersonate;
-
-      if (!imp.active) {
-        banner.style.display = "none";
-        return;
-      }
-
-      banner.style.display = "flex";
-      banner.innerHTML = `
-        <div style="flex:1;">
-          <div class="impersonate-title">⚠ 目前正在模擬帳號</div>
-          <div class="sub" style="margin-top:6px;">
-            模擬：<span class="mono">${esc(imp.email || imp.uid)}</span><br/>
-            role：<span class="mono">${esc(imp.role || "-")}</span>｜
-            orgId：<span class="mono">${esc(imp.orgId || "-")}</span>｜
-            schoolId：<span class="mono">${esc(imp.schoolId || "-")}</span>
-          </div>
-        </div>
-        <div>
-          <button class="btn btn-danger-fill btn-sm" id="_stopImpersonateBtn">結束模擬</button>
-        </div>
-      `;
-
-      document.getElementById("_stopImpersonateBtn").onclick = () => {
-        imp.stop();
-        if (typeof onStop === "function") onStop();
-        else location.reload();
-      };
-    }
-  };
-
-  /* ══════════════════════════════════════════
-     AppNav — 頂部導覽列
-  ══════════════════════════════════════════ */
-  window.AppNav = {
-    /**
-     * 在 body 最頂端插入導覽列
-     * @param {{ crumb, role, email, showBack }} opts
-     */
-    init({ crumb = "", role = "", email = "", showBack = true } = {}) {
-      // 確認尚未插入
-      if (document.getElementById("_appNavbar")) return;
-
-      const nav = document.createElement("nav");
-      nav.id = "_appNavbar";
-      nav.className = "navbar";
-      nav.innerHTML = `
-        <a class="navbar-brand" href="dashboard.html">後台</a>
-        ${crumb ? `<span class="navbar-crumb">${esc(crumb)}</span>` : ""}
-        <div class="navbar-actions">
-          ${role ? `<span class="navbar-role mono">${esc(role)}</span>` : ""}
-          ${showBack ? `<a class="btn btn-sm" href="dashboard.html">回主選單</a>` : ""}
-          <button class="btn btn-sm" id="_navLogoutBtn">登出</button>
-        </div>
-      `;
-
-      document.body.insertBefore(nav, document.body.firstChild);
-
-      document.getElementById("_navLogoutBtn").onclick = AppAuth.logout;
-    },
-
-    /** 在導覽列更新 role / email 顯示（auth 回呼完成後呼叫） */
-    update({ role = "", email = "" } = {}) {
-      const roleEl = document.querySelector(".navbar-role");
-      if (roleEl && role) roleEl.textContent = role;
-    }
-  };
-
-  /* ══════════════════════════════════════════
-     AppData — 共用資料載入
-  ══════════════════════════════════════════ */
-  window.AppData = {
-    /** 載入全部 partnerSchools 回傳 { id: name } map */
-    async loadSchoolMap() {
-      const map = {};
-      try {
-        const snap = await window.db.collection("partnerSchools").get();
-        snap.forEach(doc => {
-          map[doc.id] = doc.data()?.name || doc.id;
-        });
-      } catch (e) { console.error("loadSchoolMap 失敗", e); }
-      return map;
-    },
-
-    /** 載入全部 organizations 回傳 { id: name } map */
-    async loadOrgMap() {
-      const map = {};
-      try {
-        const snap = await window.db.collection("organizations").get();
-        snap.forEach(doc => {
-          map[doc.id] = doc.data()?.name || doc.id;
-        });
-      } catch (e) { console.error("loadOrgMap 失敗", e); }
-      return map;
-    },
-
-    /**
-     * 產生 <select> 的 <option> HTML（school）
-     * @param {Object} schoolMap
-     * @param {string} selectedId
-     */
-    buildSchoolOptions(schoolMap, selectedId = "") {
-      const sel = norm(selectedId);
-      const keys = Object.keys(schoolMap).sort((a, b) =>
-        (schoolMap[a] || a).localeCompare(schoolMap[b] || b, "zh-Hant")
-      );
-      return `
-        <option value="">（未設定）</option>
-        ${keys.map(id => `
-          <option value="${esc(id)}" ${sel === id ? "selected" : ""}>
-            ${esc(schoolMap[id] ? `${schoolMap[id]}（${id}）` : id)}
-          </option>
-        `).join("")}
-      `;
-    },
-
-    /**
-     * 產生 <select> 的 <option> HTML（org）
-     */
-    buildOrgOptions(orgMap, selectedId = "") {
-      const sel = norm(selectedId);
-      const keys = Object.keys(orgMap).sort((a, b) =>
-        (orgMap[a] || a).localeCompare(orgMap[b] || b, "zh-Hant")
-      );
-      return `
-        <option value="">（未設定）</option>
-        ${keys.map(id => `
-          <option value="${esc(id)}" ${sel === id ? "selected" : ""}>
-            ${esc(orgMap[id] ? `${orgMap[id]}（${id}）` : id)}
-          </option>
-        `).join("")}
-      `;
-    }
-  };
-
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
-
 </script>
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script>
-    const db = window.db;
-    const { esc, norm, pageIn, showGate } = AppUI;
 
-    const gate        = document.getElementById("gate");
-    const app         = document.getElementById("app");
-    const eventTitleEl= document.getElementById("eventTitle");
+  <!-- QR Scanner -->
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <script>
+    /* ══════════════════════════════════════
+       1. Firebase 初始化（最優先）
+    ══════════════════════════════════════ */
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey:            "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain:        "concert-1ff7e.firebaseapp.com",
+        projectId:         "concert-1ff7e",
+        storageBucket:     "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId:             "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    /* ══════════════════════════════════════
+       2. 工具函數
+    ══════════════════════════════════════ */
+    const esc  = s => String(s ?? "").replace(/[&<>"']/g,
+      m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+    const norm = s => String(s ?? "").trim();
+
+    /* ══════════════════════════════════════
+       3. DOM 參照
+    ══════════════════════════════════════ */
+    const gateWrap    = document.getElementById("gateWrap");
+    const appWrap     = document.getElementById("appWrap");
+    const loginEmail  = document.getElementById("loginEmail");
+    const loginPw     = document.getElementById("loginPassword");
+    const loginBtn    = document.getElementById("loginBtn");
+    const loginErr    = document.getElementById("loginErr");
     const logoutBtn   = document.getElementById("logoutBtn");
-    const startBtn    = document.getElementById("startBtn");
-    const stopBtn     = document.getElementById("stopBtn");
+    const eventTitleEl= document.getElementById("eventTitle");
     const statusBar   = document.getElementById("statusBar");
     const resultFlash = document.getElementById("resultFlash");
     const scanLine    = document.getElementById("scanLine");
+    const startBtn    = document.getElementById("startBtn");
+    const stopBtn     = document.getElementById("stopBtn");
     const manualCode  = document.getElementById("manualCode");
     const manualBtn   = document.getElementById("manualBtn");
     const logListEl   = document.getElementById("logList");
 
-    logoutBtn.onclick = AppAuth.logout;
-
+    /* ══════════════════════════════════════
+       4. 狀態
+    ══════════════════════════════════════ */
     let currentUser       = null;
     let myAssignedEventId = "";
     let qr                = null;
@@ -1291,14 +588,67 @@ tr:last-child td { border-bottom: none; }
     let logCount          = 0;
     let unsubStats        = null;
 
-    // ── Audio feedback ──
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    function beep(freq = 880, dur = 120, type = "sine", gain = 0.3) {
-      if (!AudioCtx) return;
+    /* ══════════════════════════════════════
+       5. 登入 / 登出
+    ══════════════════════════════════════ */
+    async function doLogin() {
+      const email    = norm(loginEmail.value);
+      const password = loginPw.value;
+      loginErr.style.display = "none";
+
+      if (!email || !password) {
+        loginErr.textContent = "請輸入帳號與密碼";
+        loginErr.style.display = "block";
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "登入中…";
+
       try {
-        const ctx  = new AudioCtx();
-        const osc  = ctx.createOscillator();
-        const vol  = ctx.createGain();
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (e) {
+        loginErr.textContent = "帳號或密碼錯誤，請再試一次";
+        loginErr.style.display = "block";
+        loginBtn.disabled = false;
+        loginBtn.textContent = "登入";
+      }
+    }
+
+    loginBtn.onclick = doLogin;
+    loginEmail.addEventListener("keydown", e => { if (e.key === "Enter") loginPw.focus(); });
+    loginPw.addEventListener("keydown",    e => { if (e.key === "Enter") doLogin(); });
+
+    logoutBtn.onclick = async () => {
+      try { await auth.signOut(); } catch (_) {}
+    };
+
+    /* ══════════════════════════════════════
+       6. UI 切換
+    ══════════════════════════════════════ */
+    function showGate() {
+      gateWrap.style.display = "flex";
+      appWrap.style.display  = "none";
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = "登入";
+      loginErr.style.display = "none";
+    }
+
+    function showApp() {
+      gateWrap.style.display = "none";
+      appWrap.style.display  = "block";
+    }
+
+    /* ══════════════════════════════════════
+       7. 音效
+    ══════════════════════════════════════ */
+    const AC = window.AudioContext || window.webkitAudioContext;
+    function beep(freq = 880, dur = 120, type = "sine", gain = 0.3) {
+      if (!AC) return;
+      try {
+        const ctx = new AC();
+        const osc = ctx.createOscillator();
+        const vol = ctx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
         vol.gain.value = gain;
@@ -1312,10 +662,12 @@ tr:last-child td { border-bottom: none; }
     const okBeep   = () => { beep(880, 80); setTimeout(() => beep(1200, 100), 90); };
     const warnBeep = () => { beep(300, 200, "square", 0.15); };
 
-    // ── Flash overlay ──
+    /* ══════════════════════════════════════
+       8. Flash 動畫
+    ══════════════════════════════════════ */
     let flashTimer = null;
     function flash(type) {
-      resultFlash.className = `result-flash ${type} show`;
+      resultFlash.className   = `result-flash ${type} show`;
       resultFlash.textContent = type === "ok" ? "✓" : "✗";
       clearTimeout(flashTimer);
       flashTimer = setTimeout(() => {
@@ -1323,13 +675,17 @@ tr:last-child td { border-bottom: none; }
       }, 500);
     }
 
-    // ── Status bar ──
+    /* ══════════════════════════════════════
+       9. Status bar
+    ══════════════════════════════════════ */
     function setStatus(type, icon, msg) {
       statusBar.className = `status-bar ${type}`;
-      statusBar.innerHTML = `<span class="icon">${icon}</span><span class="msg">${msg}</span>`;
+      statusBar.innerHTML = `<span class="icon">${icon}</span><span class="msg">${esc(msg)}</span>`;
     }
 
-    // ── Log ──
+    /* ══════════════════════════════════════
+       10. Log
+    ══════════════════════════════════════ */
     function pushLog(type, main, sub) {
       if (logCount === 0) logListEl.innerHTML = "";
       logCount++;
@@ -1349,7 +705,9 @@ tr:last-child td { border-bottom: none; }
       while (logListEl.children.length > 30) logListEl.removeChild(logListEl.lastChild);
     }
 
-    // ── Live stats ──
+    /* ══════════════════════════════════════
+       11. 即時統計
+    ══════════════════════════════════════ */
     function startStats(eventId) {
       if (unsubStats) unsubStats();
       unsubStats = db.collection("events").doc(eventId).collection("orders")
@@ -1362,10 +720,12 @@ tr:last-child td { border-bottom: none; }
           document.getElementById("sTotal").textContent   = total;
           document.getElementById("sChecked").textContent = checked;
           document.getElementById("sRemain").textContent  = total - checked;
-        }, () => {});
+        }, err => console.warn("stats error:", err));
     }
 
-    // ── Core checkin ──
+    /* ══════════════════════════════════════
+       12. 核心核銷邏輯
+    ══════════════════════════════════════ */
     async function doCheckin(rawCode) {
       const code = norm(rawCode);
       if (!code) return;
@@ -1373,7 +733,7 @@ tr:last-child td { border-bottom: none; }
       setStatus("info", "⏳", `讀取：${code}`);
 
       try {
-        // Try orders collection first
+        // 先查 events/{eventId}/orders/{code}
         const orderRef  = db.collection("events").doc(myAssignedEventId).collection("orders").doc(code);
         const orderSnap = await orderRef.get();
 
@@ -1386,7 +746,7 @@ tr:last-child td { border-bottom: none; }
               : "未知";
             flash("warn"); warnBeep();
             setStatus("warn", "⚠️", `重複入場（${atStr} 已核銷）`);
-            pushLog("warn", "重複入場", `${code} 已於 ${atStr} 入場`);
+            pushLog("warn", "重複入場", `${code} 已於 ${atStr} 核銷`);
             return;
           }
           await orderRef.update({
@@ -1401,7 +761,7 @@ tr:last-child td { border-bottom: none; }
           return;
         }
 
-        // Fallback: tickets collectionGroup
+        // Fallback：tickets collectionGroup
         const q = await db.collectionGroup("tickets")
           .where(firebase.firestore.FieldPath.documentId(), "==", code)
           .limit(1).get();
@@ -1446,7 +806,9 @@ tr:last-child td { border-bottom: none; }
       }
     }
 
-    // ── Scanner ──
+    /* ══════════════════════════════════════
+       13. 掃描器控制
+    ══════════════════════════════════════ */
     async function startScan() {
       if (scanning) return;
       if (!myAssignedEventId) {
@@ -1461,21 +823,21 @@ tr:last-child td { border-bottom: none; }
           setStatus("warn", "❌", "找不到相機，請改用手動輸入");
           return;
         }
-        // Prefer back camera
         const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1];
         scanning = true;
-        startBtn.disabled = true; startBtn.classList.add("active");
-        stopBtn.disabled  = false;
+        startBtn.disabled = true;
+        startBtn.classList.add("active");
+        stopBtn.disabled = false;
         scanLine.style.display = "block";
 
         await qr.start(
           cam.id,
-          { fps: 15, qrbox: { width: 220, height: 220 } },
+          { fps: 15, qrbox: { width: 200, height: 200 } },
           async decoded => {
             if (busy) return;
             busy = true;
             try { await doCheckin(decoded); }
-            finally { setTimeout(() => { busy = false; }, 1000); }
+            finally { setTimeout(() => { busy = false; }, 1200); }
           },
           () => {}
         );
@@ -1483,66 +845,81 @@ tr:last-child td { border-bottom: none; }
       } catch (e) {
         console.error(e);
         scanning = false;
-        startBtn.disabled = false; startBtn.classList.remove("active");
-        stopBtn.disabled  = true;
+        startBtn.disabled = false;
+        startBtn.classList.remove("active");
+        stopBtn.disabled = true;
         scanLine.style.display = "none";
-        setStatus("warn", "❌", "相機啟動失敗，請確認 https 及相機權限");
+        setStatus("warn", "❌", "相機啟動失敗，請確認已授予相機權限且使用 HTTPS");
       }
     }
 
     async function stopScan() {
       if (!qr || !scanning) return;
       try { await qr.stop(); await qr.clear(); } catch (_) {}
-      scanning = false;
       qr = null;
-      startBtn.disabled = false; startBtn.classList.remove("active");
-      stopBtn.disabled  = true;
+      scanning = false;
+      startBtn.disabled = false;
+      startBtn.classList.remove("active");
+      stopBtn.disabled = true;
       scanLine.style.display = "none";
       setStatus("info", "📷", "已停止掃描");
     }
 
-    startBtn.onclick = startScan;
-    stopBtn.onclick  = stopScan;
-
+    startBtn.onclick  = startScan;
+    stopBtn.onclick   = stopScan;
     manualBtn.onclick = () => { doCheckin(manualCode.value); manualCode.value = ""; };
     manualCode.addEventListener("keydown", e => {
       if (e.key === "Enter") { doCheckin(manualCode.value); manualCode.value = ""; }
     });
 
-    // ── Auth ──
-    firebase.auth().onAuthStateChanged(async user => {
+    /* ══════════════════════════════════════
+       14. Auth 狀態監聽
+    ══════════════════════════════════════ */
+    auth.onAuthStateChanged(async user => {
       currentUser = user || null;
+
       if (!user) {
-        AppUI.showGate(gate, app, {
-          title: "入場核銷",
-          msg:   "請先登入帳號以繼續。",
-          showEmailLogin: true,
-        });
+        if (unsubStats) { unsubStats(); unsubStats = null; }
+        await stopScan();
+        showGate();
         return;
       }
 
       try {
         const snap = await db.collection("users").doc(user.uid).get();
+
         if (!snap.exists) {
-          AppUI.showGate(gate, app, { title: "無法進入", msg: "此帳號尚未授權。" });
+          showGate();
+          loginErr.textContent = "此帳號尚未被授權，請聯絡管理員。";
+          loginErr.style.display = "block";
+          await auth.signOut();
           return;
         }
-        const u = snap.data() || {};
-        if (u.enabled !== true) {
-          AppUI.showGate(gate, app, { title: "帳號已停用", msg: "請聯絡管理員。" });
-          return;
-        }
+
+        const u    = snap.data() || {};
         const role = norm(u.role);
-        const VALID_ROLES = ["platform_super","platform_admin","org_super","org_admin","org_staff"];
-        if (!VALID_ROLES.includes(role)) {
-          AppUI.showGate(gate, app, { title: "權限不足", msg: `角色 "${role}" 無法使用核銷功能。` });
+        const VALID = ["platform_super","platform_admin","org_super","org_admin","org_staff"];
+
+        if (u.enabled !== true) {
+          showGate();
+          loginErr.textContent = "此帳號已被停用，請聯絡管理員。";
+          loginErr.style.display = "block";
+          await auth.signOut();
+          return;
+        }
+
+        if (!VALID.includes(role)) {
+          showGate();
+          loginErr.textContent = `角色「${role}」沒有核銷權限。`;
+          loginErr.style.display = "block";
+          await auth.signOut();
           return;
         }
 
         myAssignedEventId = norm(u.assignedEventId || "");
 
-        // Load event name
-        let evtName = myAssignedEventId || "(未指派活動)";
+        // 讀活動名稱
+        let evtName = myAssignedEventId || "（未指派活動）";
         if (myAssignedEventId) {
           try {
             const es = await db.collection("events").doc(myAssignedEventId).get();
@@ -1552,18 +929,19 @@ tr:last-child td { border-bottom: none; }
         }
 
         eventTitleEl.textContent = evtName;
-        gate.style.display = "none";
-        app.style.display  = "block";
+        showApp();
 
-        if (!myAssignedEventId) {
-          setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
-        } else {
-          setStatus("info", "📷", "按「開始掃描」啟動相機");
-        }
+        setStatus(
+          myAssignedEventId ? "info" : "warn",
+          myAssignedEventId ? "📷" : "⚠️",
+          myAssignedEventId ? "按「開始掃描」啟動相機" : "你尚未被指派活動，請聯絡管理員"
+        );
 
       } catch (e) {
         console.error(e);
-        AppUI.showGate(gate, app, { title: "載入失敗", msg: e.message || String(e) });
+        showGate();
+        loginErr.textContent = "讀取失敗：" + (e.message || e);
+        loginErr.style.display = "block";
       }
     });
   </script>
