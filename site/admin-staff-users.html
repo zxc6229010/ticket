@@ -402,17 +402,6 @@
       transform:translateY(6px);
     }
   </style>
-
-<style id="utility-bar-style">
-.page-utility-bar{position:fixed;top:14px;right:14px;z-index:9999;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.page-utility-bar .pub-email{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:12px;color:#666;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-btn{border:none;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-home{background:#2563eb;color:#fff}
-.page-utility-bar .pub-logout{background:#111;color:#fff}
-body.utility-bar-space{padding-top:72px !important}
-@media (max-width:700px){.page-utility-bar{left:14px;right:14px;justify-content:flex-end}.page-utility-bar .pub-email{display:none}}
-</style>
-
 </head>
 
 <body>
@@ -501,6 +490,16 @@ body.utility-bar-space{padding-top:72px !important}
               <select id="createOrgId"></select>
             </div>
 
+            <div>
+              <label>指派活動（assignedEventId，可空）</label>
+              <input type="text" id="createAssignedEventId" placeholder="例如：abc123event" />
+            </div>
+
+            <div>
+              <label>指派入口（assignedGate，可空）</label>
+              <input type="text" id="createAssignedGate" placeholder="例如：A入口 / 北門" />
+            </div>
+
             <div style="grid-column:1/-1;">
               <label>工作組別（team，可空）</label>
               <input type="text" id="createTeam" placeholder="例如：公關組 / 活動組 / 服務台" />
@@ -566,7 +565,7 @@ body.utility-bar-space{padding-top:72px !important}
           </div>
 
           <div class="actions" style="margin-top:14px;">
-            <button class="btn btn-primary" id="bulkCreateBtn" disabled>批次建立帳號（下一步接後端）</button>
+            <button class="btn btn-primary" id="bulkCreateBtn" disabled>批次建立帳號</button>
           </div>
         </div>
       </div>
@@ -673,6 +672,16 @@ body.utility-bar-space{padding-top:72px !important}
           </div>
 
           <div>
+            <label>指派活動（assignedEventId，可空）</label>
+            <input type="text" id="sEditAssignedEventId" placeholder="例如：abc123event" />
+          </div>
+
+          <div>
+            <label>指派入口（assignedGate，可空）</label>
+            <input type="text" id="sEditAssignedGate" placeholder="例如：A入口 / 北門" />
+          </div>
+
+          <div>
             <label>工作組別（team，可空）</label>
             <input type="text" id="sEditTeam" placeholder="例如：服務台 / 公關組" />
           </div>
@@ -689,97 +698,6 @@ body.utility-bar-space{padding-top:72px !important}
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
-<script id="email-login-patch">
-(function(){
-  function ensureUtilityBar(){
-    if(document.getElementById('pageUtilityBar')) return;
-    var bar=document.createElement('div');
-    bar.id='pageUtilityBar';
-    bar.className='page-utility-bar';
-    bar.innerHTML='\n      <div class="pub-email" id="pubEmailChip">未登入</div>\n      <button class="pub-btn pub-home" type="button" id="pubHomeBtn">回到初選單</button>\n      <button class="pub-btn pub-logout" type="button" id="pubLogoutBtn">登出</button>';
-    document.body.appendChild(bar);
-    document.body.classList.add('utility-bar-space');
-    document.getElementById('pubHomeBtn').onclick=function(){ location.href='dashboard.html'; };
-    document.getElementById('pubLogoutBtn').onclick=async function(){ try{ if(window.firebase) await firebase.auth().signOut(); else location.href='dashboard.html'; }catch(e){ console.error(e); alert('登出失敗，請看 Console。'); } };
-  }
-
-  async function emailPasswordPrompt(){
-    var email=window.prompt('請輸入 Email');
-    if(email===null) throw new Error('cancelled');
-    email=String(email||'').trim();
-    if(!email) throw new Error('missing email');
-    var password=window.prompt('請輸入密碼');
-    if(password===null) throw new Error('cancelled');
-    password=String(password||'');
-    if(!password) throw new Error('missing password');
-    return {email:email,password:password};
-  }
-
-  function patchFirebaseEmailLogin(){
-    if(!window.firebase || !firebase.auth) return;
-    var auth=firebase.auth();
-    if(auth.__emailPatchApplied) return;
-    auth.__emailPatchApplied=true;
-    var original=auth.signInWithPopup ? auth.signInWithPopup.bind(auth) : null;
-    auth.signInWithPopup=async function(){
-      var creds=await emailPasswordPrompt();
-      return auth.signInWithEmailAndPassword(creds.email, creds.password);
-    };
-    window.__originalSignInWithPopup=original;
-    try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
-  }
-
-  function replaceTextNodes(){
-    var walker=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(function(node){
-      var t=node.nodeValue;
-      if(!t) return;
-      t=t.replace(/使用\s*Google\s*登入/g,'使用 Email 登入');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入後台/g,'請先使用 Email／密碼登入後台');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入/g,'請先使用 Email／密碼登入');
-      t=t.replace(/前往 Dashboard/g,'前往初選單');
-      t=t.replace(/回 Dashboard/g,'回到初選單');
-      t=t.replace(/接下來請前往 Dashboard 測試/g,'接下來請前往初選單測試');
-      node.nodeValue=t;
-    });
-    document.querySelectorAll('a,button').forEach(function(el){
-      var txt=(el.textContent||'').trim();
-      if(txt==='回 Dashboard') el.textContent='回到初選單';
-      if(txt==='前往 Dashboard') el.textContent='前往初選單';
-    });
-  }
-
-  function patchHomeLinks(){
-    document.querySelectorAll('a[href="dashboard.html"]').forEach(function(a){
-      if((a.textContent||'').includes('Dashboard')) a.textContent=a.textContent.replace(/Dashboard/g,'初選單');
-    });
-  }
-
-  function updateEmailChip(){
-    var chip=document.getElementById('pubEmailChip');
-    if(!chip || !window.firebase || !firebase.auth) return;
-    var user=firebase.auth().currentUser;
-    chip.textContent=user && user.email ? user.email : '未登入';
-  }
-
-  function init(){
-    ensureUtilityBar();
-    patchFirebaseEmailLogin();
-    replaceTextNodes();
-    patchHomeLinks();
-    updateEmailChip();
-    if(window.firebase && firebase.auth){
-      firebase.auth().onAuthStateChanged(function(){ updateEmailChip(); replaceTextNodes(); patchHomeLinks(); });
-    }
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 
   <script>
@@ -813,6 +731,35 @@ body.utility-bar-space{padding-top:72px !important}
 const db = firebase.firestore();
 const functionsApi = firebase.app().functions("us-central1");
 
+    async function createAuthUserAndProfile(payload){
+      const secondaryName = "staff-create-" + Date.now() + "-" + Math.random().toString(36).slice(2,8);
+      const secondary = firebase.initializeApp(firebaseConfig, secondaryName);
+      try {
+        const cred = await secondary.auth().createUserWithEmailAndPassword(payload.email, payload.password || "12345678");
+        const uid = cred.user.uid;
+        await db.collection("users").doc(uid).set({
+          email: payload.email,
+          role: payload.role,
+          enabled: payload.enabled,
+          schoolId: payload.schoolId || "",
+          orgId: payload.orgId || "",
+          team: payload.team || "",
+          assignedEventId: payload.assignedEventId || "",
+          assignedGate: payload.assignedGate || "",
+          approvedAt: new Date(),
+          createdAt: new Date(),
+          createdByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : "",
+          updatedAt: new Date(),
+          updatedByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : ""
+        }, { merge: true });
+        return { uid, email: payload.email };
+      } finally {
+        try { await secondary.auth().signOut(); } catch (_) {}
+        try { await secondary.delete(); } catch (_) {}
+      }
+    }
+
+
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
 
@@ -834,6 +781,8 @@ const functionsApi = firebase.app().functions("us-central1");
     const createSchoolId = document.getElementById("createSchoolId");
     const createOrgId = document.getElementById("createOrgId");
     const createTeam = document.getElementById("createTeam");
+    const createAssignedEventId = document.getElementById("createAssignedEventId");
+    const createAssignedGate = document.getElementById("createAssignedGate");
     const createResetBtn = document.getElementById("createResetBtn");
     const createSubmitBtn = document.getElementById("createSubmitBtn");
     const createMsg = document.getElementById("createMsg");
@@ -864,6 +813,8 @@ const functionsApi = firebase.app().functions("us-central1");
     const sEditOrgId = document.getElementById("sEditOrgId");
     const sEditSchoolId = document.getElementById("sEditSchoolId");
     const sEditTeam = document.getElementById("sEditTeam");
+    const sEditAssignedEventId = document.getElementById("sEditAssignedEventId");
+    const sEditAssignedGate = document.getElementById("sEditAssignedGate");
     const sSaveBtn = document.getElementById("sSaveBtn");
     const sDeleteBtn = document.getElementById("sDeleteBtn");
 
@@ -924,8 +875,11 @@ const functionsApi = firebase.app().functions("us-central1");
       const loginBtn = document.getElementById("loginBtn");
       if (loginBtn) {
         loginBtn.onclick = async () => {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
         };
       }
 
@@ -983,6 +937,8 @@ const functionsApi = firebase.app().functions("us-central1");
       if (org) html += `組織：<span class="mono">${esc(org)}</span><br>`;
       if (!school && !org) html += `<span class="mono">（未設定）</span>`;
 
+      if (norm(user.assignedEventId)) html += `<br>指派活動：<span class="mono">${esc(user.assignedEventId)}</span>`;
+      if (norm(user.assignedGate)) html += `<br>指派入口：<span class="mono">${esc(user.assignedGate)}</span>`;
       return html;
     }
 
@@ -1092,7 +1048,9 @@ const functionsApi = firebase.app().functions("us-central1");
         enabled: createEnabled.value === "true",
         schoolId: norm(createSchoolId.value),
         orgId: norm(createOrgId.value),
-        team: norm(createTeam.value)
+        team: norm(createTeam.value),
+        assignedEventId: norm(createAssignedEventId.value),
+        assignedGate: norm(createAssignedGate.value)
       };
     }
 
@@ -1107,7 +1065,11 @@ const functionsApi = firebase.app().functions("us-central1");
       createEnabled.value = "true";
       createSchoolId.value = "";
       createOrgId.value = "";
-      createTeam.value = "";
+      createTeam,
+      createAssignedEventId,
+      createAssignedGate.value = "";
+      createAssignedEventId.value = "";
+      createAssignedGate.value = "";
       fillUnitSelects();
       updateCreatePreview();
       createMsg.innerHTML = `目前這版先完成資料整理與驗證；下一步我會幫你接上 Cloud Function 真正建帳。`;
@@ -1117,68 +1079,24 @@ const functionsApi = firebase.app().functions("us-central1");
   const payload = getCreatePayload();
 
   if (!payload.email) return alert("請輸入 Email");
+  if (!payload.password || payload.password.length < 6) return alert("請輸入至少 6 碼的初始密碼");
   if (!STAFF_ROLES.has(payload.role)) return alert("角色不合法");
 
   createSubmitBtn.disabled = true;
   const oldText = createSubmitBtn.textContent;
   createSubmitBtn.textContent = "建立中…";
 
-  try{
-    const currentAuthUser = firebase.auth().currentUser;
-    if (!currentAuthUser) {
-      throw new Error("目前未登入");
-    }
-
-    const idToken = await currentAuthUser.getIdToken();
-
-    const response = await fetch(
-      "/api/createUserWithEmail",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + idToken
-        },
-        body: JSON.stringify({
-          email: payload.email,
-          role: payload.role,
-          orgId: payload.orgId,
-          schoolId: payload.schoolId,
-          team: payload.team,
-          enabled: payload.enabled
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "建立失敗");
-    }
-
+  try {
+    const result = await createAuthUserAndProfile(payload);
     createMsg.innerHTML = `
       <span class="ok">帳號建立成功</span><br>
-      email：<span class="mono">${esc(data.email || payload.email)}</span><br>
-      uid：<span class="mono">${esc(data.uid || "")}</span><br>
-      已產生密碼設定連結
+      email：<span class="mono">${esc(result.email || payload.email)}</span><br>
+      uid：<span class="mono">${esc(result.uid || "")}</span><br>
+      初始密碼：<span class="mono">${esc(payload.password)}</span>
     `;
-
-    if (data.resetLink) {
-      try {
-        await navigator.clipboard.writeText(data.resetLink);
-        alert("帳號建立成功，密碼設定連結已複製到剪貼簿。");
-      } catch (copyErr) {
-        console.warn("copy resetLink failed:", copyErr);
-        alert("帳號建立成功，但無法自動複製連結，請到 Console 查看 resetLink。");
-      }
-      console.log("resetLink =", data.resetLink);
-    } else {
-      alert("帳號建立成功，但沒有收到 resetLink");
-    }
-
     resetCreateForm();
     await loadStaffUsers();
-
+    activateTab("staff");
   }catch(e){
     console.error(e);
     alert("建立失敗：" + (e.message || e));
@@ -1195,7 +1113,9 @@ const functionsApi = firebase.app().functions("us-central1");
       createEnabled,
       createSchoolId,
       createOrgId,
-      createTeam
+      createTeam,
+      createAssignedEventId,
+      createAssignedGate
     ].forEach(el => {
       el.addEventListener("input", updateCreatePreview);
       el.addEventListener("change", updateCreatePreview);
@@ -1272,10 +1192,10 @@ const functionsApi = firebase.app().functions("us-central1");
     }
 
     function downloadSampleCsv(){
-      const headers = ["email","password","role","schoolId","orgId","team","enabled"];
+      const headers = ["email","password","role","schoolId","orgId","team","assignedEventId","assignedGate","enabled"];
       const sampleRows = [
-        ["user1@example.com","abc12345","org_staff","kmsh","student_union","公關組","true"],
-        ["user2@example.com","abc12345","org_admin","kmsh","student_union","活動組","true"]
+        ["user1@example.com","abc12345","org_staff","kmsh","student_union","公關組","event_demo_01","A入口","true"],
+        ["user2@example.com","abc12345","org_admin","kmsh","student_union","活動組","event_demo_01","服務台","true"]
       ];
 
       const csv = [
@@ -1296,9 +1216,47 @@ const functionsApi = firebase.app().functions("us-central1");
 
     parseCsvBtn.onclick = parseCsvFile;
     downloadSampleBtn.onclick = downloadSampleCsv;
-    bulkCreateBtn.onclick = () => {
-      alert("下一步會把這裡接到 bulkCreateStaffAccounts Cloud Function。");
-      console.log("parsedCsvRows =", parsedCsvRows);
+    bulkCreateBtn.onclick = async () => {
+      if (!parsedCsvRows.length) return alert("沒有可匯入的資料");
+      if (!confirm(`確定要批次建立 ${parsedCsvRows.length} 個帳號嗎？`)) return;
+      bulkCreateBtn.disabled = true;
+      const oldText = bulkCreateBtn.textContent;
+      let okCount = 0;
+      const failed = [];
+      try {
+        for (let i = 0; i < parsedCsvRows.length; i++) {
+          const row = parsedCsvRows[i];
+          bulkCreateBtn.textContent = `建立中… (${i+1}/${parsedCsvRows.length})`;
+          const payload = {
+            email: norm(row.email || ""),
+            password: norm(row.password || "12345678"),
+            role: norm(row.role || "org_staff"),
+            schoolId: norm(row.schoolId || ""),
+            orgId: norm(row.orgId || ""),
+            team: norm(row.team || ""),
+            enabled: norm(row.enabled || "true") !== "false",
+            assignedEventId: norm(row.assignedEventId || ""),
+            assignedGate: norm(row.assignedGate || "")
+          };
+          if (!payload.email) { failed.push("第"+(i+1)+"列 email 為空"); continue; }
+          try {
+            await createAuthUserAndProfile(payload);
+            okCount++;
+          } catch (e) {
+            failed.push(`${payload.email}：${e.message || e}`);
+          }
+        }
+        alert(`批次建立完成
+成功：${okCount}
+失敗：${failed.length}` + (failed.length ? `
+
+${failed.join("
+")}` : ""));
+        await loadStaffUsers();
+      } finally {
+        bulkCreateBtn.disabled = false;
+        bulkCreateBtn.textContent = oldText;
+      }
     };
 
     function userMatches(u){
@@ -1473,6 +1431,8 @@ const functionsApi = firebase.app().functions("us-central1");
       sEditSchoolId.innerHTML = buildSchoolOptions(u.schoolId || "");
       sEditOrgId.innerHTML = buildOrgOptions(u.orgId || "");
       sEditTeam.value = norm(u.team || "");
+      sEditAssignedEventId.value = norm(u.assignedEventId || "");
+      sEditAssignedGate.value = norm(u.assignedGate || "");
 
       const isMe = currentUser && u.id === currentUser.uid;
       const isSuperProtected = isProtectedSuperUser(u);
@@ -1503,6 +1463,8 @@ const functionsApi = firebase.app().functions("us-central1");
       const orgId = norm(sEditOrgId.value);
       const schoolId = norm(sEditSchoolId.value);
       const team = norm(sEditTeam.value);
+      const assignedEventId = norm(sEditAssignedEventId.value);
+      const assignedGate = norm(sEditAssignedGate.value);
 
       if (!uid) return alert("缺少 uid");
       if (!email) return alert("請輸入 email");
@@ -1528,6 +1490,8 @@ const functionsApi = firebase.app().functions("us-central1");
           orgId: orgId || "",
           schoolId: schoolId || "",
           team: team || "",
+          assignedEventId: assignedEventId || "",
+          assignedGate: assignedGate || "",
           updatedAt: new Date(),
           updatedByUid: currentUser.uid
         });

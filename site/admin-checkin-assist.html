@@ -95,17 +95,6 @@
     }
     .meta{ margin-top:6px; color:var(--muted); font-size:13px; line-height:1.6; }
   </style>
-
-<style id="utility-bar-style">
-.page-utility-bar{position:fixed;top:14px;right:14px;z-index:9999;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.page-utility-bar .pub-email{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:12px;color:#666;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-btn{border:none;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-home{background:#2563eb;color:#fff}
-.page-utility-bar .pub-logout{background:#111;color:#fff}
-body.utility-bar-space{padding-top:72px !important}
-@media (max-width:700px){.page-utility-bar{left:14px;right:14px;justify-content:flex-end}.page-utility-bar .pub-email{display:none}}
-</style>
-
 </head>
 
 <body>
@@ -182,97 +171,6 @@ body.utility-bar-space{padding-top:72px !important}
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
-<script id="email-login-patch">
-(function(){
-  function ensureUtilityBar(){
-    if(document.getElementById('pageUtilityBar')) return;
-    var bar=document.createElement('div');
-    bar.id='pageUtilityBar';
-    bar.className='page-utility-bar';
-    bar.innerHTML='\n      <div class="pub-email" id="pubEmailChip">未登入</div>\n      <button class="pub-btn pub-home" type="button" id="pubHomeBtn">回到初選單</button>\n      <button class="pub-btn pub-logout" type="button" id="pubLogoutBtn">登出</button>';
-    document.body.appendChild(bar);
-    document.body.classList.add('utility-bar-space');
-    document.getElementById('pubHomeBtn').onclick=function(){ location.href='dashboard.html'; };
-    document.getElementById('pubLogoutBtn').onclick=async function(){ try{ if(window.firebase) await firebase.auth().signOut(); else location.href='dashboard.html'; }catch(e){ console.error(e); alert('登出失敗，請看 Console。'); } };
-  }
-
-  async function emailPasswordPrompt(){
-    var email=window.prompt('請輸入 Email');
-    if(email===null) throw new Error('cancelled');
-    email=String(email||'').trim();
-    if(!email) throw new Error('missing email');
-    var password=window.prompt('請輸入密碼');
-    if(password===null) throw new Error('cancelled');
-    password=String(password||'');
-    if(!password) throw new Error('missing password');
-    return {email:email,password:password};
-  }
-
-  function patchFirebaseEmailLogin(){
-    if(!window.firebase || !firebase.auth) return;
-    var auth=firebase.auth();
-    if(auth.__emailPatchApplied) return;
-    auth.__emailPatchApplied=true;
-    var original=auth.signInWithPopup ? auth.signInWithPopup.bind(auth) : null;
-    auth.signInWithPopup=async function(){
-      var creds=await emailPasswordPrompt();
-      return auth.signInWithEmailAndPassword(creds.email, creds.password);
-    };
-    window.__originalSignInWithPopup=original;
-    try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
-  }
-
-  function replaceTextNodes(){
-    var walker=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(function(node){
-      var t=node.nodeValue;
-      if(!t) return;
-      t=t.replace(/使用\s*Google\s*登入/g,'使用 Email 登入');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入後台/g,'請先使用 Email／密碼登入後台');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入/g,'請先使用 Email／密碼登入');
-      t=t.replace(/前往 Dashboard/g,'前往初選單');
-      t=t.replace(/回 Dashboard/g,'回到初選單');
-      t=t.replace(/接下來請前往 Dashboard 測試/g,'接下來請前往初選單測試');
-      node.nodeValue=t;
-    });
-    document.querySelectorAll('a,button').forEach(function(el){
-      var txt=(el.textContent||'').trim();
-      if(txt==='回 Dashboard') el.textContent='回到初選單';
-      if(txt==='前往 Dashboard') el.textContent='前往初選單';
-    });
-  }
-
-  function patchHomeLinks(){
-    document.querySelectorAll('a[href="dashboard.html"]').forEach(function(a){
-      if((a.textContent||'').includes('Dashboard')) a.textContent=a.textContent.replace(/Dashboard/g,'初選單');
-    });
-  }
-
-  function updateEmailChip(){
-    var chip=document.getElementById('pubEmailChip');
-    if(!chip || !window.firebase || !firebase.auth) return;
-    var user=firebase.auth().currentUser;
-    chip.textContent=user && user.email ? user.email : '未登入';
-  }
-
-  function init(){
-    ensureUtilityBar();
-    patchFirebaseEmailLogin();
-    replaceTextNodes();
-    patchHomeLinks();
-    updateEmailChip();
-    if(window.firebase && firebase.auth){
-      firebase.auth().onAuthStateChanged(function(){ updateEmailChip(); replaceTextNodes(); patchHomeLinks(); });
-    }
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
 
   <script>
     firebase.initializeApp({
@@ -529,14 +427,17 @@ body.utility-bar-space{padding-top:72px !important}
       if (!user){
         showGate(`
           <h1>服務中心｜查詢與人工核銷</h1>
-          <div class="sub">請先使用 Email／密碼登入後台。</div>
+          <div class="sub">請先使用 Email / 密碼登入後台。</div>
           <div style="margin-top:16px;">
             <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
           </div>
         `);
         document.getElementById("loginBtn").onclick = async () => {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          await firebase.auth().signInWithPopup(provider);
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
         };
         return;
       }

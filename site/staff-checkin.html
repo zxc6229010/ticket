@@ -250,39 +250,6 @@
     .btn-scan.active { background: #14532d; border-color: #166534; color: #4ade80; }
     .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* Manual */
-    .manual-wrap {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .manual-wrap input {
-      flex: 1;
-      padding: 11px 14px;
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      transition: border-color .15s;
-    }
-    .manual-wrap input:focus { border-color: #22c55e; }
-    .manual-wrap input::placeholder { color: #444; }
-    .btn-manual {
-      padding: 11px 18px;
-      background: #22c55e;
-      border: none;
-      border-radius: 12px;
-      color: #000;
-      font-size: 14px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background .13s;
-    }
-    .btn-manual:hover { background: #16a34a; }
-
     /* Stats */
     .stats-row {
       display: grid;
@@ -335,17 +302,6 @@
     .log-sub   { color: #4b5563; font-size: 11px; margin-top: 2px; word-break: break-all; }
     .log-time  { font-size: 11px; color: #374151; flex-shrink: 0; white-space: nowrap; }
   </style>
-
-<style id="utility-bar-style">
-.page-utility-bar{position:fixed;top:14px;right:14px;z-index:9999;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.page-utility-bar .pub-email{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:12px;color:#666;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-btn{border:none;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-.page-utility-bar .pub-home{background:#2563eb;color:#fff}
-.page-utility-bar .pub-logout{background:#111;color:#fff}
-body.utility-bar-space{padding-top:72px !important}
-@media (max-width:700px){.page-utility-bar{left:14px;right:14px;justify-content:flex-end}.page-utility-bar .pub-email{display:none}}
-</style>
-
 </head>
 <body>
 
@@ -372,7 +328,7 @@ body.utility-bar-space{padding-top:72px !important}
 
       <!-- Top bar -->
       <div class="top-bar">
-        <div class="event-title" id="eventTitle">載入中…</div>
+        <div><div class="event-title" id="eventTitle">載入中…</div><div style="font-size:12px;color:#9ca3af;margin-top:4px;">入口：<span id="gateName">未設定</span></div></div>
         <div class="top-actions">
           <span class="live"><span class="live-dot"></span>即時</span>
           <button class="btn-logout" id="logoutBtn">登出</button>
@@ -439,99 +395,8 @@ body.utility-bar-space{padding-top:72px !important}
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
-<script id="email-login-patch">
-(function(){
-  function ensureUtilityBar(){
-    if(document.getElementById('pageUtilityBar')) return;
-    var bar=document.createElement('div');
-    bar.id='pageUtilityBar';
-    bar.className='page-utility-bar';
-    bar.innerHTML='\n      <div class="pub-email" id="pubEmailChip">未登入</div>\n      <button class="pub-btn pub-home" type="button" id="pubHomeBtn">回到初選單</button>\n      <button class="pub-btn pub-logout" type="button" id="pubLogoutBtn">登出</button>';
-    document.body.appendChild(bar);
-    document.body.classList.add('utility-bar-space');
-    document.getElementById('pubHomeBtn').onclick=function(){ location.href='dashboard.html'; };
-    document.getElementById('pubLogoutBtn').onclick=async function(){ try{ if(window.firebase) await firebase.auth().signOut(); else location.href='dashboard.html'; }catch(e){ console.error(e); alert('登出失敗，請看 Console。'); } };
-  }
-
-  async function emailPasswordPrompt(){
-    var email=window.prompt('請輸入 Email');
-    if(email===null) throw new Error('cancelled');
-    email=String(email||'').trim();
-    if(!email) throw new Error('missing email');
-    var password=window.prompt('請輸入密碼');
-    if(password===null) throw new Error('cancelled');
-    password=String(password||'');
-    if(!password) throw new Error('missing password');
-    return {email:email,password:password};
-  }
-
-  function patchFirebaseEmailLogin(){
-    if(!window.firebase || !firebase.auth) return;
-    var auth=firebase.auth();
-    if(auth.__emailPatchApplied) return;
-    auth.__emailPatchApplied=true;
-    var original=auth.signInWithPopup ? auth.signInWithPopup.bind(auth) : null;
-    auth.signInWithPopup=async function(){
-      var creds=await emailPasswordPrompt();
-      return auth.signInWithEmailAndPassword(creds.email, creds.password);
-    };
-    window.__originalSignInWithPopup=original;
-    try{ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); }catch(e){}
-  }
-
-  function replaceTextNodes(){
-    var walker=document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-    var nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(function(node){
-      var t=node.nodeValue;
-      if(!t) return;
-      t=t.replace(/使用\s*Google\s*登入/g,'使用 Email 登入');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入後台/g,'請先使用 Email／密碼登入後台');
-      t=t.replace(/請先使用\s*Google\s*(帳號)?\s*登入/g,'請先使用 Email／密碼登入');
-      t=t.replace(/前往 Dashboard/g,'前往初選單');
-      t=t.replace(/回 Dashboard/g,'回到初選單');
-      t=t.replace(/接下來請前往 Dashboard 測試/g,'接下來請前往初選單測試');
-      node.nodeValue=t;
-    });
-    document.querySelectorAll('a,button').forEach(function(el){
-      var txt=(el.textContent||'').trim();
-      if(txt==='回 Dashboard') el.textContent='回到初選單';
-      if(txt==='前往 Dashboard') el.textContent='前往初選單';
-    });
-  }
-
-  function patchHomeLinks(){
-    document.querySelectorAll('a[href="dashboard.html"]').forEach(function(a){
-      if((a.textContent||'').includes('Dashboard')) a.textContent=a.textContent.replace(/Dashboard/g,'初選單');
-    });
-  }
-
-  function updateEmailChip(){
-    var chip=document.getElementById('pubEmailChip');
-    if(!chip || !window.firebase || !firebase.auth) return;
-    var user=firebase.auth().currentUser;
-    chip.textContent=user && user.email ? user.email : '未登入';
-  }
-
-  function init(){
-    ensureUtilityBar();
-    patchFirebaseEmailLogin();
-    replaceTextNodes();
-    patchHomeLinks();
-    updateEmailChip();
-    if(window.firebase && firebase.auth){
-      firebase.auth().onAuthStateChanged(function(){ updateEmailChip(); replaceTextNodes(); patchHomeLinks(); });
-    }
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
   <!-- QR Scanner -->
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <script>
     /* ══════════════════════════════════════
@@ -568,13 +433,12 @@ body.utility-bar-space{padding-top:72px !important}
     const loginErr    = document.getElementById("loginErr");
     const logoutBtn   = document.getElementById("logoutBtn");
     const eventTitleEl= document.getElementById("eventTitle");
+    const gateNameEl = document.getElementById("gateName");
     const statusBar   = document.getElementById("statusBar");
     const resultFlash = document.getElementById("resultFlash");
     const scanLine    = document.getElementById("scanLine");
     const startBtn    = document.getElementById("startBtn");
     const stopBtn     = document.getElementById("stopBtn");
-    const manualCode  = document.getElementById("manualCode");
-    const manualBtn   = document.getElementById("manualBtn");
     const logListEl   = document.getElementById("logList");
 
     /* ══════════════════════════════════════
@@ -582,6 +446,7 @@ body.utility-bar-space{padding-top:72px !important}
     ══════════════════════════════════════ */
     let currentUser       = null;
     let myAssignedEventId = "";
+    let myAssignedGate = "";
     let qr                = null;
     let scanning          = false;
     let busy              = false;
@@ -723,45 +588,28 @@ body.utility-bar-space{padding-top:72px !important}
         }, err => console.warn("stats error:", err));
     }
 
+    function parseTicketCode(raw){
+      const code = norm(raw);
+      if (!code) return "";
+      if (/^https?:\/\//i.test(code)) {
+        try {
+          const url = new URL(code);
+          return norm(url.searchParams.get("ticketId") || url.searchParams.get("id") || url.pathname.split("/").pop());
+        } catch (_) {}
+      }
+      return code.replace(/^ticket[:#-]?/i, "").trim();
+    }
+
     /* ══════════════════════════════════════
        12. 核心核銷邏輯
     ══════════════════════════════════════ */
     async function doCheckin(rawCode) {
-      const code = norm(rawCode);
+      const code = parseTicketCode(rawCode);
       if (!code) return;
 
-      setStatus("info", "⏳", `讀取：${code}`);
+      setStatus("info", "⏳", `讀取票券：${code}`);
 
       try {
-        // 先查 events/{eventId}/orders/{code}
-        const orderRef  = db.collection("events").doc(myAssignedEventId).collection("orders").doc(code);
-        const orderSnap = await orderRef.get();
-
-        if (orderSnap.exists) {
-          const o = orderSnap.data() || {};
-          if (o.checkedIn === true) {
-            const atStr = o.checkedInAt
-              ? (o.checkedInAt.toDate ? o.checkedInAt.toDate() : new Date(o.checkedInAt))
-                  .toLocaleTimeString("zh-Hant", { hour12: false })
-              : "未知";
-            flash("warn"); warnBeep();
-            setStatus("warn", "⚠️", `重複入場（${atStr} 已核銷）`);
-            pushLog("warn", "重複入場", `${code} 已於 ${atStr} 核銷`);
-            return;
-          }
-          await orderRef.update({
-            checkedIn:      true,
-            checkedInAt:    new Date(),
-            checkedInBy:    currentUser.uid,
-            checkedInEmail: currentUser.email || "",
-          });
-          flash("ok"); okBeep();
-          setStatus("ok", "✅", "入場成功！");
-          pushLog("ok", "入場成功", `訂單 ${code}`);
-          return;
-        }
-
-        // Fallback：tickets collectionGroup
         const q = await db.collectionGroup("tickets")
           .where(firebase.firestore.FieldPath.documentId(), "==", code)
           .limit(1).get();
@@ -769,34 +617,43 @@ body.utility-bar-space{padding-top:72px !important}
         if (q.empty) {
           flash("warn"); warnBeep();
           setStatus("warn", "❌", "找不到此票券");
-          pushLog("warn", "找不到票", code);
+          pushLog("warn", "找不到票券", code);
           return;
         }
 
         const tDoc = q.docs[0];
-        const t    = tDoc.data() || {};
+        const t = tDoc.data() || {};
+        const ticketEventId = norm(t.eventId || tDoc.ref.parent.parent?.id || "");
 
-        if (myAssignedEventId && norm(t.eventId) !== myAssignedEventId) {
+        if (myAssignedEventId && ticketEventId !== myAssignedEventId) {
           flash("warn"); warnBeep();
-          setStatus("warn", "⚠️", "此票不屬於本活動");
+          setStatus("warn", "⚠️", "此票券不屬於你被指派的活動");
           pushLog("warn", "活動不符", code);
           return;
         }
+
         if (t.checkedIn === true) {
+          const atStr = t.checkedInAt
+            ? (t.checkedInAt.toDate ? t.checkedInAt.toDate() : new Date(t.checkedInAt)).toLocaleTimeString("zh-Hant", { hour12: false })
+            : "未知";
           flash("warn"); warnBeep();
-          setStatus("warn", "⚠️", "此票已核銷");
-          pushLog("warn", "重複核銷", code);
+          setStatus("warn", "⚠️", `重複入場（${atStr} 已核銷）`);
+          pushLog("warn", "重複核銷", `${code}｜${atStr}`);
           return;
         }
+
         await tDoc.ref.update({
-          checkedIn:        true,
-          checkedInAt:      new Date(),
-          checkedInBy:      currentUser.uid,
+          checkedIn: true,
+          checkedInAt: new Date(),
+          checkedInBy: currentUser.uid,
           checkedInByEmail: currentUser.email || "",
+          checkedInGate: myAssignedGate || "",
+          checkedInEventId: myAssignedEventId || ticketEventId || ""
         });
+
         flash("ok"); okBeep();
-        setStatus("ok", "✅", "入場成功！");
-        pushLog("ok", "入場成功（票券）", code);
+        setStatus("ok", "✅", `入場成功${myAssignedGate ? `｜${myAssignedGate}` : ""}`);
+        pushLog("ok", "入場成功（票券）", `${code}${myAssignedGate ? `｜${myAssignedGate}` : ""}`);
 
       } catch (e) {
         console.error(e);
@@ -867,10 +724,6 @@ body.utility-bar-space{padding-top:72px !important}
 
     startBtn.onclick  = startScan;
     stopBtn.onclick   = stopScan;
-    manualBtn.onclick = () => { doCheckin(manualCode.value); manualCode.value = ""; };
-    manualCode.addEventListener("keydown", e => {
-      if (e.key === "Enter") { doCheckin(manualCode.value); manualCode.value = ""; }
-    });
 
     /* ══════════════════════════════════════
        14. Auth 狀態監聽
@@ -917,6 +770,7 @@ body.utility-bar-space{padding-top:72px !important}
         }
 
         myAssignedEventId = norm(u.assignedEventId || "");
+        myAssignedGate = norm(u.assignedGate || u.assignedEntrance || "");
 
         // 讀活動名稱
         let evtName = myAssignedEventId || "（未指派活動）";
@@ -929,12 +783,13 @@ body.utility-bar-space{padding-top:72px !important}
         }
 
         eventTitleEl.textContent = evtName;
+        gateNameEl.textContent = myAssignedGate || "未設定";
         showApp();
 
         setStatus(
           myAssignedEventId ? "info" : "warn",
           myAssignedEventId ? "📷" : "⚠️",
-          myAssignedEventId ? "按「開始掃描」啟動相機" : "你尚未被指派活動，請聯絡管理員"
+          myAssignedEventId ? `按「開始掃描」啟動相機${myAssignedGate ? `｜目前入口：${myAssignedGate}` : ""}` : "你尚未被指派活動，請聯絡管理員"
         );
 
       } catch (e) {
