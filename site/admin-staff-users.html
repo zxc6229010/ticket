@@ -1246,12 +1246,7 @@ const functionsApi = firebase.app().functions("us-central1");
             failed.push(`${payload.email}：${e.message || e}`);
           }
         }
-        alert(`批次建立完成
-成功：${okCount}
-失敗：${failed.length}` + (failed.length ? `
-
-${failed.join("
-")}` : ""));
+        alert(`批次建立完成\n成功：${okCount}\n失敗：${failed.length}` + (failed.length ? `\n\n${failed.join("\n")}` : ""));
         await loadStaffUsers();
       } finally {
         bulkCreateBtn.disabled = false;

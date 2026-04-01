@@ -506,6 +506,12 @@
           <div id="inviteList"></div>
         </div>
 
+        <div class="box" id="inviteUsageBox" style="margin-top:12px; display:none;">
+          <div style="font-weight:900; margin-bottom:8px;">邀請碼使用名單</div>
+          <div class="small" style="margin-bottom:8px;">顯示此活動中使用邀請碼報名的人員。</div>
+          <div id="inviteUsageList" class="small">尚無資料</div>
+        </div>
+
         <div class="row" style="justify-content:flex-end; margin-top:12px;">
           <button class="btn" id="resetBtn">清空 / 取消編輯</button>
           <button class="btn btn-primary" id="saveBtn" disabled>儲存</button>
@@ -575,6 +581,8 @@
     const inviteCodeEnabledEl = document.getElementById("inviteCodeEnabled");
     const addInviteBtn = document.getElementById("addInviteBtn");
     const inviteList = document.getElementById("inviteList");
+    const inviteUsageBox = document.getElementById("inviteUsageBox");
+    const inviteUsageList = document.getElementById("inviteUsageList");
 
     const saveBtn = document.getElementById("saveBtn");
     const resetBtn = document.getElementById("resetBtn");
@@ -963,6 +971,50 @@
       refreshOwnerSelectState();
     }
 
+    async function loadInviteUsage(eventId){
+      if (!inviteUsageBox || !inviteUsageList) return;
+      if (!eventId) {
+        inviteUsageBox.style.display = "none";
+        inviteUsageList.innerHTML = "尚無資料";
+        return;
+      }
+      inviteUsageBox.style.display = "block";
+      inviteUsageList.innerHTML = "載入中…";
+      try {
+        const snap = await db.collection("events").doc(eventId).collection("registrations").get();
+        const rows = [];
+        snap.forEach(doc => {
+          const r = doc.data() || {};
+          if (!norm(r.inviteCode)) return;
+          rows.push({
+            inviteCode: norm(r.inviteCode),
+            email: norm(r.userEmail || r.email || doc.id),
+            uid: doc.id,
+            createdAt: r.createdAt
+          });
+        });
+        if (!rows.length) {
+          inviteUsageList.innerHTML = "目前沒有使用邀請碼的報名資料。";
+          return;
+        }
+        rows.sort((a,b)=>{
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+        inviteUsageList.innerHTML = rows.map(row => `
+          <div style="padding:10px 0; border-top:1px solid var(--line);">
+            <div><span class="pill">${esc(row.inviteCode)}</span></div>
+            <div style="margin-top:6px;">${esc(row.email || "-")}</div>
+            <div class="small mono" style="margin-top:4px;">${esc(row.uid)}</div>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error(err);
+        inviteUsageList.innerHTML = `讀取失敗：${esc(err.message || err)}`;
+      }
+    }
+
     function resetEditor(){
       editingId = "";
       editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
@@ -984,6 +1036,8 @@
       inviteCodeEnabledEl.value = "false";
       inviteCodesState = [];
       renderInviteCodes();
+      if (inviteUsageBox) inviteUsageBox.style.display = "none";
+      if (inviteUsageList) inviteUsageList.innerHTML = "尚無資料";
 
       setEditorMessage("");
       refreshApprovalStatusState();
@@ -1129,6 +1183,7 @@
           ? e.inviteCodes.map(item => normalizeInviteItem(item))
           : [];
         renderInviteCodes();
+        await loadInviteUsage(eventId);
 
         const owner = String(e.ownerSchoolId || "");
         publishScopeEl.value = owner === "__global__" ? "platform" : "school";
