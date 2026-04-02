@@ -1483,39 +1483,42 @@
 
         // 同步更新核銷人員指派
         try {
-          const oldAssignedSnap = await db.collection("users")
-            .where("assignedCheckinEventId", "==", eventId)
-            .get();
+          // ✅ 清空舊的指派
+const oldAssignSnap = await db.collection("events")
+  .doc(eventId)
+  .collection("checkinAssignments")
+  .get();
 
-          if (!oldAssignedSnap.empty) {
-            const clearBatch = db.batch();
-            oldAssignedSnap.forEach(doc => {
-              clearBatch.update(doc.ref, {
-                assignedCheckinEventId: "",
-                assignedCheckinGateName: "",
-                updatedAt: new Date(),
-                updatedByUid: currentUser ? currentUser.uid : ""
-              });
-            });
-            await clearBatch.commit();
-          }
+if (!oldAssignSnap.empty) {
+  const batch = db.batch();
+  oldAssignSnap.forEach(doc => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+}
 
-          if (gates.length) {
-            const assignBatch = db.batch();
+// ✅ 新增指派
+if (gates.length) {
+  const batch = db.batch();
 
-            gates.forEach(item => {
-              if (!item.staffUid) return;
-              const userRef = db.collection("users").doc(item.staffUid);
-              assignBatch.set(userRef, {
-                assignedCheckinEventId: eventId,
-                assignedCheckinGateName: item.name,
-                updatedAt: new Date(),
-                updatedByUid: currentUser ? currentUser.uid : ""
-              }, { merge: true });
-            });
+  gates.forEach(item => {
+    if (!item.staffUid) return;
 
-            await assignBatch.commit();
-          }
+    const ref = db.collection("events")
+      .doc(eventId)
+      .collection("checkinAssignments")
+      .doc(item.staffUid);
+
+    batch.set(ref, {
+      uid: item.staffUid,
+      gateName: item.name,
+      assignedAt: new Date(),
+      assignedBy: currentUser.uid
+    });
+  });
+
+  await batch.commit();
+}
         } catch (assignErr) {
           console.error(assignErr);
           alert("活動已儲存，但同步核銷人員指派失敗：\n" + (assignErr.message || assignErr));
