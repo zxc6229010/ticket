@@ -320,6 +320,23 @@
     .hidden{
       display:none !important;
     }
+
+    .gateItem{
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+      margin-top:10px;
+    }
+
+    .gateTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
   </style>
 </head>
 
@@ -512,6 +529,19 @@
           <div id="inviteUsageList" class="small">尚無資料</div>
         </div>
 
+        <div class="divider"></div>
+
+        <h2>出入口與核銷人員設定</h2>
+        <div class="sub">請在活動層級設定出入口名稱，並為每個出入口指定核銷人員。</div>
+
+        <div style="margin-top:12px;">
+          <div class="row" style="justify-content:space-between;">
+            <label style="margin:0;">出入口清單</label>
+            <button class="btn btn-sm" id="addGateBtn" type="button">＋新增出入口</button>
+          </div>
+          <div id="gateAssignList"></div>
+        </div>
+
         <div class="row" style="justify-content:flex-end; margin-top:12px;">
           <button class="btn" id="resetBtn">清空 / 取消編輯</button>
           <button class="btn btn-primary" id="saveBtn" disabled>儲存</button>
@@ -535,11 +565,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e"
+      });
+    }
 
     const db = firebase.firestore();
 
@@ -584,6 +616,9 @@
     const inviteUsageBox = document.getElementById("inviteUsageBox");
     const inviteUsageList = document.getElementById("inviteUsageList");
 
+    const addGateBtn = document.getElementById("addGateBtn");
+    const gateAssignList = document.getElementById("gateAssignList");
+
     const saveBtn = document.getElementById("saveBtn");
     const resetBtn = document.getElementById("resetBtn");
     const editorMsg = document.getElementById("editorMsg");
@@ -598,6 +633,8 @@
     let myOrgId = "";
     let editingId = "";
     let inviteCodesState = [];
+    let gateAssignmentsState = [];
+    let staffOptionsState = [];
     let currentView = "create";
 
     let schoolNameMap = {};
@@ -718,6 +755,41 @@
         });
       } catch (e) {
         console.warn("organizations 目前無法讀取或尚未建立");
+      }
+    }
+
+    async function loadStaffOptions(){
+      staffOptionsState = [];
+
+      try {
+        const snap = await db.collection("users")
+          .where("enabled", "==", true)
+          .get();
+
+        snap.forEach(doc => {
+          const u = doc.data() || {};
+          const role = norm(u.role);
+          if (!["org_staff", "org_admin", "org_super", "platform_admin", "platform_super"].includes(role)) {
+            return;
+          }
+
+          if (!isPlatform()) {
+            const schoolId = norm(u.schoolId || u.orgSchoolId || "");
+            if (schoolId !== mySchoolId) return;
+          }
+
+          staffOptionsState.push({
+            uid: doc.id,
+            email: norm(u.email || ""),
+            role
+          });
+        });
+
+        staffOptionsState.sort((a, b) => {
+          return (a.email || a.uid).localeCompare(b.email || b.uid, "zh-Hant");
+        });
+      } catch (e) {
+        console.error("loadStaffOptions failed:", e);
       }
     }
 
@@ -859,6 +931,64 @@
       }).join("");
     }
 
+    function renderGateAssignments(){
+      if (!gateAssignmentsState.length){
+        gateAssignList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有出入口。</div>`;
+        return;
+      }
+
+      gateAssignList.innerHTML = gateAssignmentsState.map((item, idx) => {
+        const selectedUid = norm(item.staffUid || "");
+        const staffOptionsHtml = `
+          <option value="">（未指定）</option>
+          ${staffOptionsState.map(s => `
+            <option value="${esc(s.uid)}" ${selectedUid === s.uid ? "selected" : ""}>
+              ${esc(s.email || s.uid)}｜${esc(s.role)}
+            </option>
+          `).join("")}
+        `;
+
+        return `
+          <div class="gateItem">
+            <div class="gateTop">
+              <div class="pill">出入口 ${idx + 1}</div>
+              <div class="row">
+                <button class="btn btn-sm btn-danger" type="button" onclick="removeGateAssign(${idx})">刪除</button>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div>
+                <label style="margin-top:0;">出入口名稱</label>
+                <input
+                  type="text"
+                  value="${esc(item.name || "")}"
+                  oninput="updateGateAssign(${idx}, 'name', this.value)"
+                  placeholder="例如：A入口 / 北門 / 側門"
+                />
+              </div>
+
+              <div>
+                <label style="margin-top:0;">核銷人員</label>
+                <select onchange="updateGateAssign(${idx}, 'staffUid', this.value)">
+                  ${staffOptionsHtml}
+                </select>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function buildGateAssignmentsPayload(){
+      return gateAssignmentsState
+        .map(item => ({
+          name: norm(item.name || ""),
+          staffUid: norm(item.staffUid || "")
+        }))
+        .filter(item => item.name);
+    }
+
     window.updateInviteCode = (idx, key, value) => {
       if (!inviteCodesState[idx]) return;
 
@@ -897,6 +1027,16 @@
       renderInviteCodes();
     };
 
+    window.updateGateAssign = (idx, key, value) => {
+      if (!gateAssignmentsState[idx]) return;
+      gateAssignmentsState[idx][key] = value;
+    };
+
+    window.removeGateAssign = idx => {
+      gateAssignmentsState.splice(idx, 1);
+      renderGateAssignments();
+    };
+
     addInviteBtn.onclick = () => {
       inviteCodesState.push({
         code: "",
@@ -908,6 +1048,14 @@
         usedCount: 0
       });
       renderInviteCodes();
+    };
+
+    addGateBtn.onclick = () => {
+      gateAssignmentsState.push({
+        name: "",
+        staffUid: ""
+      });
+      renderGateAssignments();
     };
 
     function refreshApprovalStatusState(){
@@ -978,14 +1126,18 @@
         inviteUsageList.innerHTML = "尚無資料";
         return;
       }
+
       inviteUsageBox.style.display = "block";
       inviteUsageList.innerHTML = "載入中…";
+
       try {
         const snap = await db.collection("events").doc(eventId).collection("registrations").get();
         const rows = [];
+
         snap.forEach(doc => {
           const r = doc.data() || {};
           if (!norm(r.inviteCode)) return;
+
           rows.push({
             inviteCode: norm(r.inviteCode),
             email: norm(r.userEmail || r.email || doc.id),
@@ -993,15 +1145,18 @@
             createdAt: r.createdAt
           });
         });
+
         if (!rows.length) {
           inviteUsageList.innerHTML = "目前沒有使用邀請碼的報名資料。";
           return;
         }
-        rows.sort((a,b)=>{
+
+        rows.sort((a, b) => {
           const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
           return tb - ta;
         });
+
         inviteUsageList.innerHTML = rows.map(row => `
           <div style="padding:10px 0; border-top:1px solid var(--line);">
             <div><span class="pill">${esc(row.inviteCode)}</span></div>
@@ -1035,7 +1190,10 @@
 
       inviteCodeEnabledEl.value = "false";
       inviteCodesState = [];
+      gateAssignmentsState = [];
       renderInviteCodes();
+      renderGateAssignments();
+
       if (inviteUsageBox) inviteUsageBox.style.display = "none";
       if (inviteUsageList) inviteUsageList.innerHTML = "尚無資料";
 
@@ -1114,6 +1272,7 @@
         const eventStart = toInputDateTime(e.eventStartAt);
         const inviteEnabled = e.inviteCodeEnabled === true;
         const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
+        const gateCount = Array.isArray(e.gates) ? e.gates.length : 0;
 
         const tag = owner === "__global__"
           ? `<span class="pill">平台活動</span>`
@@ -1132,7 +1291,8 @@
                   搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
                   活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
                   inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
-                  邀請碼數量：<span class="mono">${inviteCount}</span>
+                  邀請碼數量：<span class="mono">${inviteCount}</span><br>
+                  出入口數量：<span class="mono">${gateCount}</span>
                 </div>
               </div>
 
@@ -1183,6 +1343,15 @@
           ? e.inviteCodes.map(item => normalizeInviteItem(item))
           : [];
         renderInviteCodes();
+
+        gateAssignmentsState = Array.isArray(e.gates)
+          ? e.gates.map(item => ({
+              name: norm(item.name || ""),
+              staffUid: norm(item.staffUid || "")
+            }))
+          : [];
+        renderGateAssignments();
+
         await loadInviteUsage(eventId);
 
         const owner = String(e.ownerSchoolId || "");
@@ -1211,6 +1380,29 @@
 
       try {
         await db.collection("events").doc(eventId).delete();
+
+        // 清除此活動原先指派的人員
+        try {
+          const oldAssignedSnap = await db.collection("users")
+            .where("assignedCheckinEventId", "==", eventId)
+            .get();
+
+          if (!oldAssignedSnap.empty) {
+            const clearBatch = db.batch();
+            oldAssignedSnap.forEach(doc => {
+              clearBatch.update(doc.ref, {
+                assignedCheckinEventId: "",
+                assignedCheckinGateName: "",
+                updatedAt: new Date(),
+                updatedByUid: currentUser ? currentUser.uid : ""
+              });
+            });
+            await clearBatch.commit();
+          }
+        } catch (e) {
+          console.warn("清除核銷人員指派失敗：", e);
+        }
+
         resetEditor();
         await loadEvents();
         alert("已刪除");
@@ -1231,6 +1423,7 @@
         const ownerSchoolId = getScopeOwnerSchoolId();
         const publishScope = publishScopeEl.value;
         const inviteCodes = buildInviteCodesPayload();
+        const gates = buildGateAssignmentsPayload();
 
         if (!title) throw new Error("請輸入活動標題");
         if (!ownerSchoolId) throw new Error("缺少主辦對象");
@@ -1260,6 +1453,7 @@
 
           inviteCodeEnabled: inviteCodeEnabledEl.value === "true",
           inviteCodes,
+          gates,
 
           creatorRole: currentRole || "",
           creatorSchoolId: mySchoolId || "",
@@ -1273,14 +1467,62 @@
           if (payload[key] === null) delete payload[key];
         });
 
+        let eventId = editingId;
+
         if (!editingId) {
           payload.createdAt = new Date();
           payload.createdBy = currentUser ? currentUser.uid : "";
-          await db.collection("events").add(payload);
+          const ref = await db.collection("events").add(payload);
+          eventId = ref.id;
           setEditorMessage(`<span class="ok">建立成功</span>`);
         } else {
           await db.collection("events").doc(editingId).update(payload);
+          eventId = editingId;
           setEditorMessage(`<span class="ok">更新成功</span>`);
+        }
+
+        // 同步更新核銷人員指派
+        try {
+          const oldAssignedSnap = await db.collection("users")
+            .where("assignedCheckinEventId", "==", eventId)
+            .get();
+
+          if (!oldAssignedSnap.empty) {
+            const clearBatch = db.batch();
+            oldAssignedSnap.forEach(doc => {
+              clearBatch.update(doc.ref, {
+                assignedCheckinEventId: "",
+                assignedCheckinGateName: "",
+                updatedAt: new Date(),
+                updatedByUid: currentUser ? currentUser.uid : ""
+              });
+            });
+            await clearBatch.commit();
+          }
+
+          if (gates.length) {
+            const assignBatch = db.batch();
+
+            gates.forEach(item => {
+              if (!item.staffUid) return;
+              const userRef = db.collection("users").doc(item.staffUid);
+              assignBatch.set(userRef, {
+                assignedCheckinEventId: eventId,
+                assignedCheckinGateName: item.name,
+                updatedAt: new Date(),
+                updatedByUid: currentUser ? currentUser.uid : ""
+              }, { merge: true });
+            });
+
+            await assignBatch.commit();
+          }
+        } catch (assignErr) {
+          console.error(assignErr);
+          alert("活動已儲存，但同步核銷人員指派失敗：\n" + (assignErr.message || assignErr));
+        }
+
+        if (editingId) {
+          await loadInviteUsage(eventId);
         }
 
         resetEditor();
@@ -1373,6 +1615,7 @@
         app.style.display = "block";
 
         await loadNameMaps();
+        await loadStaffOptions();
 
         mySchoolText.textContent = formatSchoolLabel(mySchoolId);
         myOrgText.textContent = formatOrgLabel(myOrgId);
