@@ -2,75 +2,342 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>校園演唱會購票系統</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>活動列表</title>
 
 <style>
+:root{
+  --bg:#f7f7f8;
+  --card:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --line:rgba(17,24,39,.08);
+  --shadow:0 10px 30px rgba(0,0,0,.06);
+  --black:#111;
+}
+*{ box-sizing:border-box; }
 body{
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:#f5f7fb;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+}
+a{ color:inherit; text-decoration:none; }
+
+.wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:28px 16px 48px;
 }
 
-.container{
-  max-width:700px;
-  margin:80px auto;
-  background:white;
-  padding:40px;
-  border-radius:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.08);
+.hero{
+  margin-bottom:20px;
 }
 
-h1{
-  margin-top:0;
+.hero-title{
+  font-size:32px;
+  font-weight:900;
+  margin:0;
+  letter-spacing:.5px;
+}
+
+.hero-sub{
+  margin-top:8px;
+  color:var(--muted);
+  line-height:1.7;
+  font-size:15px;
+}
+
+.toolbar{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:1fr 180px;
+  gap:12px;
+}
+
+@media (max-width:720px){
+  .toolbar{
+    grid-template-columns:1fr;
+  }
+}
+
+.input, .select{
+  width:100%;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:16px;
+  padding:14px 16px;
+  font-size:15px;
+  outline:none;
+}
+
+.grid{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:16px;
+}
+
+@media (max-width:980px){
+  .grid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width:640px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+}
+
+.cover{
+  width:100%;
+  aspect-ratio:16/9;
+  background:#eceff3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#9ca3af;
+  font-weight:700;
+  overflow:hidden;
+}
+
+.cover img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.body{
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex:1;
+}
+
+.status{
+  display:inline-flex;
+  align-self:flex-start;
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.status-selling{
+  background:#dcfce7;
+  color:#166534;
+}
+.status-upcoming{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+.status-ended{
+  background:#f3f4f6;
+  color:#6b7280;
+}
+.status-muted{
+  background:#f3f4f6;
+  color:#6b7280;
+}
+
+.title{
+  font-size:20px;
+  font-weight:900;
+  line-height:1.4;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.8;
+}
+
+.desc{
+  color:#374151;
+  line-height:1.7;
+  font-size:14px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.footer{
+  margin-top:auto;
+  padding-top:4px;
 }
 
 .btn{
-  display:block;
-  margin-top:16px;
-  padding:16px;
-  text-align:center;
-  background:#111;
-  color:white;
-  border-radius:12px;
-  text-decoration:none;
-  font-weight:600;
+  width:100%;
+  border:none;
+  background:var(--black);
+  color:#fff;
+  border-radius:14px;
+  padding:13px 16px;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
 }
 
-.btn.light{
-  background:#eee;
-  color:#111;
+.empty{
+  margin-top:24px;
+  color:var(--muted);
+  text-align:center;
+  padding:40px 16px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:20px;
+}
+
+.loading{
+  margin-top:24px;
+  color:var(--muted);
+  text-align:center;
+  padding:24px 16px;
 }
 </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="hero">
+      <h1 class="hero-title">活動列表</h1>
+      <div class="hero-sub">
+        查看目前已發布的活動，點入可查看活動資訊、時間、地點與票券內容。
+      </div>
 
-<div class="container">
+      <div class="toolbar">
+        <input id="searchInput" class="input" placeholder="搜尋活動名稱或地點" />
+        <select id="statusFilter" class="select">
+          <option value="all">全部狀態</option>
+          <option value="selling">開賣中</option>
+          <option value="upcoming">尚未開賣</option>
+          <option value="ended">已截止 / 已結束</option>
+        </select>
+      </div>
+    </div>
 
-<h1>校園演唱會購票系統</h1>
+    <div id="list" class="loading">載入中...</div>
+  </div>
 
-<p>請選擇功能：</p>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase.js"></script>
 
-<a class="btn" href="/student-verify.html">
-學生報名 / 購票
-</a>
+  <script>
+    const listEl = document.getElementById("list");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
 
-<a class="btn light" href="/member.html">
-查詢報名結果
-</a>
+    let eventsCache = [];
 
-<a class="btn light" href="/staff-checkin.html">
-工作人員掃描入場
-</a>
+    function getStatusKey(event){
+      const status = getEventStatus(event);
+      if (status.className === "status-selling") return "selling";
+      if (status.className === "status-upcoming") return "upcoming";
+      if (status.className === "status-ended") return "ended";
+      return "all";
+    }
 
-<hr style="margin:30px 0">
+    function matchEvent(event){
+      const q = norm(searchInput.value).toLowerCase();
+      const sf = statusFilter.value;
 
-<a class="btn light" href="/dashboard.html">
-管理後台
-</a>
+      if (sf !== "all" && getStatusKey(event) !== sf) return false;
 
-</div>
+      if (!q) return true;
 
+      const fields = [
+        event.title,
+        event.location,
+        event.description
+      ].map(v => norm(v).toLowerCase());
+
+      return fields.some(v => v.includes(q));
+    }
+
+    function renderEvents(){
+      const rows = eventsCache.filter(matchEvent);
+
+      if (!rows.length){
+        listEl.className = "empty";
+        listEl.innerHTML = "目前沒有符合條件的活動。";
+        return;
+      }
+
+      listEl.className = "grid";
+      listEl.innerHTML = rows.map(event => {
+        const status = getEventStatus(event);
+        const coverHtml = event.coverImage
+          ? `<img src="${esc(event.coverImage)}" alt="${esc(event.title || "活動圖片")}">`
+          : `活動圖片`;
+
+        return `
+          <a class="card" href="event.html?id=${encodeURIComponent(event.id)}">
+            <div class="cover">${coverHtml}</div>
+            <div class="body">
+              <div class="status ${status.className}">${esc(status.text)}</div>
+              <div class="title">${esc(event.title || "未命名活動")}</div>
+              <div class="meta">
+                活動日期：${esc(formatDateOnly(event.eventStartAt))}<br>
+                活動地點：${esc(event.location || "-")}
+              </div>
+              <div class="desc">${esc(event.description || "尚無活動介紹")}</div>
+              <div class="footer">
+                <button class="btn" type="button">查看活動</button>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join("");
+    }
+
+    async function loadEvents(){
+      try{
+        listEl.className = "loading";
+        listEl.innerHTML = "載入中...";
+
+        const snap = await db.collection("events")
+          .where("published", "==", true)
+          .where("approvalStatus", "==", "approved")
+          .get();
+
+        eventsCache = snap.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() || {})
+        }));
+
+        eventsCache.sort((a, b) => {
+          const ta = toDate(a.eventStartAt)?.getTime() ?? 0;
+          const tb = toDate(b.eventStartAt)?.getTime() ?? 0;
+          return ta - tb;
+        });
+
+        renderEvents();
+      } catch (e){
+        console.error(e);
+        listEl.className = "empty";
+        listEl.innerHTML = "活動載入失敗，請稍後再試。";
+      }
+    }
+
+    searchInput.addEventListener("input", renderEvents);
+    statusFilter.addEventListener("change", renderEvents);
+
+    loadEvents();
+  </script>
 </body>
 </html>
