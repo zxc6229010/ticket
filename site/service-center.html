@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>服務中心｜活動控台</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC";
+  background:#f6f7fb;
+}
+
+.wrap{
+  max-width:900px;
+  margin:auto;
+  padding:24px;
+}
+
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+h1{margin:0 0 10px;font-size:22px;}
+input,button{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-top:8px;
+}
+
+button{
+  background:#111;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.bad{
+  color:#dc2626;
+  font-weight:bold;
+}
+
+.ok{
+  color:#16a34a;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>服務中心</h1>
+<input id="eventId" placeholder="輸入活動ID">
+</div>
+
+<div class="card">
+<h1>查詢票券</h1>
+<input id="query" placeholder="輸入 ticketId / email">
+<button onclick="search()">查詢</button>
+</div>
+
+<div class="card" id="result"></div>
+
+<div class="card">
+<h1>即時統計</h1>
+<div id="stats"></div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+  authDomain:"concert-1ff7e.firebaseapp.com",
+  projectId:"concert-1ff7e"
+});
+
+const db = firebase.firestore();
+
+let currentTicket = null;
+
+function statusText(s){
+  if(s==="not_entered") return "未入場";
+  if(s==="inside") return "在場中";
+  if(s==="exited") return "已出場";
+  return "-";
+}
+
+async function search(){
+  const eventId=document.getElementById("eventId").value.trim();
+  const q=document.getElementById("query").value.trim();
+
+  if(!eventId||!q){
+    alert("請輸入完整");
+    return;
+  }
+
+  const resultDiv=document.getElementById("result");
+  resultDiv.innerHTML="載入中...";
+
+  let snap=await db.collection("events")
+    .doc(eventId)
+    .collection("tickets")
+    .where("ticketId","==",q)
+    .get();
+
+  if(snap.empty){
+    snap=await db.collection("events")
+      .doc(eventId)
+      .collection("tickets")
+      .where("email","==",q)
+      .get();
+  }
+
+  if(snap.empty){
+    resultDiv.innerHTML="<span class='bad'>查無資料</span>";
+    return;
+  }
+
+  const t=snap.docs[0];
+  currentTicket={id:t.id,...t.data()};
+
+  resultDiv.innerHTML=`
+    <h1>票券資訊</h1>
+    <div>姓名：${t.data().name||"-"}</div>
+    <div>Email：${t.data().email||"-"}</div>
+    <div>狀態：<b>${statusText(t.data().status)}</b></div>
+    <div>入口：${t.data().checkedInGate||"-"}</div>
+    <div>時間：${t.data().checkedInAt?.toDate?.()||"-"}</div>
+
+    <button onclick="forceCheckin()">強制入場</button>
+    <button onclick="forceCheckout()">強制出場</button>
+    <button onclick="reset()">重設狀態</button>
+  `;
+}
+
+async function forceCheckin(){
+  if(!currentTicket)return;
+
+  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
+    status:"inside",
+    checkedInAt:new Date()
+  });
+
+  alert("已入場");
+  search();
+}
+
+async function forceCheckout(){
+  if(!currentTicket)return;
+
+  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
+    status:"exited",
+    checkedOutAt:new Date()
+  });
+
+  alert("已出場");
+  search();
+}
+
+async function reset(){
+  if(!currentTicket)return;
+
+  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
+    status:"not_entered",
+    checkedInAt:null,
+    checkedOutAt:null
+  });
+
+  alert("已重設");
+  search();
+}
+
+// 即時統計
+function watchStats(){
+  const eventId=document.getElementById("eventId").value.trim();
+  if(!eventId)return;
+
+  db.collection("events")
+    .doc(eventId)
+    .collection("tickets")
+    .onSnapshot(snap=>{
+      let total=0,inside=0,exited=0,not=0;
+
+      snap.forEach(doc=>{
+        total++;
+        const s=doc.data().status;
+        if(s==="inside") inside++;
+        else if(s==="exited") exited++;
+        else not++;
+      });
+
+      document.getElementById("stats").innerHTML=`
+        <div class="stat"><span>總數</span><span>${total}</span></div>
+        <div class="stat"><span>在場</span><span>${inside}</span></div>
+        <div class="stat"><span>已出場</span><span>${exited}</span></div>
+        <div class="stat"><span>未入場</span><span>${not}</span></div>
+      `;
+    });
+}
+
+document.getElementById("eventId").addEventListener("change",watchStats);
+</script>
+</body>
+</html>

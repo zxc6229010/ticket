@@ -337,6 +337,10 @@
       flex-wrap:wrap;
       margin-bottom:10px;
     }
+
+    .inline-editor-host{
+      margin-top:12px;
+    }
   </style>
 </head>
 
@@ -403,6 +407,8 @@
           </div>
         </div>
       </div>
+
+      <div id="editorHome"></div>
 
       <div class="section" id="editorSection">
         <div class="row" style="justify-content:space-between;">
@@ -553,7 +559,7 @@
       <div class="section hidden" id="manageSection">
         <h2>活動清單</h2>
         <div class="sub">
-          點「編輯」會把資料載入上方表單。平台端可看到全部活動；校方只看自己校園活動。
+          點「編輯」會直接在該活動卡片下方展開編輯區。平台端可看到全部活動；校方只看自己校園活動。
         </div>
         <div class="list" id="list"></div>
       </div>
@@ -590,6 +596,7 @@
 
     const openCreateMode = document.getElementById("openCreateMode");
     const openManageMode = document.getElementById("openManageMode");
+    const editorHome = document.getElementById("editorHome");
     const editorSection = document.getElementById("editorSection");
     const manageSection = document.getElementById("manageSection");
 
@@ -799,17 +806,45 @@
       saveBtn.disabled = !(titleOk && ownerOk);
     }
 
+    function moveEditorHome(showEditor = true){
+      if (editorSection.parentNode !== editorHome) {
+        editorHome.appendChild(editorSection);
+      }
+      editorSection.classList.toggle("hidden", !showEditor);
+    }
+
+    function mountEditorInItem(eventId){
+      const host = document.getElementById(`inlineEditorHost-${eventId}`);
+      if (!host) return;
+
+      if (editorSection.parentNode !== host) {
+        host.appendChild(editorSection);
+      }
+      editorSection.classList.remove("hidden");
+    }
+
     function setPageMode(mode){
       currentView = mode;
 
       openCreateMode.classList.toggle("active", mode === "create");
       openManageMode.classList.toggle("active", mode === "manage");
 
-      editorSection.classList.toggle("hidden", mode !== "create");
-      manageSection.classList.toggle("hidden", mode !== "manage");
+      if (mode === "create") {
+        manageSection.classList.add("hidden");
+        moveEditorHome(true);
+      } else {
+        manageSection.classList.remove("hidden");
+
+        if (editingId) {
+          mountEditorInItem(editingId);
+        } else {
+          moveEditorHome(false);
+        }
+      }
     }
 
     openCreateMode.onclick = () => {
+      resetEditor();
       setPageMode("create");
     };
 
@@ -1171,6 +1206,8 @@
     }
 
     function resetEditor(){
+      const wasManage = currentView === "manage";
+
       editingId = "";
       editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
 
@@ -1201,9 +1238,13 @@
       refreshApprovalStatusState();
       refreshOwnerSelectState();
       updateSaveBtn();
-    }
 
-    resetBtn.onclick = resetEditor;
+      if (wasManage) {
+        moveEditorHome(false);
+      } else {
+        moveEditorHome(true);
+      }
+    }
 
     function buildInviteCodesPayload(){
       const cleaned = inviteCodesState
@@ -1256,6 +1297,7 @@
 
       if (!docs.length) {
         listEl.innerHTML = `<div class="small">目前沒有活動</div>`;
+        moveEditorHome(false);
         return;
       }
 
@@ -1279,7 +1321,7 @@
           : `<span class="pill">校園活動</span>`;
 
         return `
-          <div class="item">
+          <div class="item" id="eventItem-${id}">
             <div class="item-top">
               <div style="min-width:0;">
                 <div class="item-title">${esc(title)} ${tag}</div>
@@ -1301,9 +1343,17 @@
                 ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
               </div>
             </div>
+
+            <div id="inlineEditorHost-${id}" class="inline-editor-host"></div>
           </div>
         `;
       }).join("");
+
+      if (currentView === "manage" && editingId) {
+        mountEditorInItem(editingId);
+      } else if (currentView === "manage") {
+        moveEditorHome(false);
+      }
     }
 
     reloadBtn.onclick = async () => {
@@ -1366,8 +1416,15 @@
 
         setEditorMessage(`<span class="ok">已載入活動資料</span>`);
         updateSaveBtn();
-        setPageMode("create");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+
+        setPageMode("manage");
+        await loadEvents();
+        mountEditorInItem(eventId);
+
+        const targetItem = document.getElementById(`eventItem-${eventId}`);
+        if (targetItem) {
+          targetItem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       } catch (err) {
         console.error(err);
         alert("載入失敗：\n" + (err.message || err));
@@ -1381,7 +1438,6 @@
       try {
         await db.collection("events").doc(eventId).delete();
 
-        // 清除此活動原先指派的人員
         try {
           const oldAssignedSnap = await db.collection("users")
             .where("assignedCheckinEventId", "==", eventId)
@@ -1413,6 +1469,8 @@
     };
 
     async function saveEvent(){
+      const isEditing = !!editingId;
+
       saveBtn.disabled = true;
       const oldText = saveBtn.textContent;
       saveBtn.textContent = "儲存中…";
@@ -1474,63 +1532,60 @@
           payload.createdBy = currentUser ? currentUser.uid : "";
           const ref = await db.collection("events").add(payload);
           eventId = ref.id;
-          setEditorMessage(`<span class="ok">建立成功</span>`);
         } else {
           await db.collection("events").doc(editingId).update(payload);
           eventId = editingId;
-          setEditorMessage(`<span class="ok">更新成功</span>`);
         }
 
-        // 同步更新核銷人員指派
         try {
-          // ✅ 清空舊的指派
-const oldAssignSnap = await db.collection("events")
-  .doc(eventId)
-  .collection("checkinAssignments")
-  .get();
+          const oldAssignSnap = await db.collection("events")
+            .doc(eventId)
+            .collection("checkinAssignments")
+            .get();
 
-if (!oldAssignSnap.empty) {
-  const batch = db.batch();
-  oldAssignSnap.forEach(doc => {
-    batch.delete(doc.ref);
-  });
-  await batch.commit();
-}
+          if (!oldAssignSnap.empty) {
+            const batch = db.batch();
+            oldAssignSnap.forEach(doc => {
+              batch.delete(doc.ref);
+            });
+            await batch.commit();
+          }
 
-// ✅ 新增指派
-if (gates.length) {
-  const batch = db.batch();
+          if (gates.length) {
+            const batch = db.batch();
 
-  gates.forEach(item => {
-    if (!item.staffUid) return;
+            gates.forEach(item => {
+              if (!item.staffUid) return;
 
-    const ref = db.collection("events")
-      .doc(eventId)
-      .collection("checkinAssignments")
-      .doc(item.staffUid);
+              const ref = db.collection("events")
+                .doc(eventId)
+                .collection("checkinAssignments")
+                .doc(item.staffUid);
 
-    batch.set(ref, {
-      uid: item.staffUid,
-      gateName: item.name,
-      assignedAt: new Date(),
-      assignedBy: currentUser.uid
-    });
-  });
+              batch.set(ref, {
+                uid: item.staffUid,
+                gateName: item.name,
+                assignedAt: new Date(),
+                assignedBy: currentUser.uid
+              });
+            });
 
-  await batch.commit();
-}
+            await batch.commit();
+          }
         } catch (assignErr) {
           console.error(assignErr);
           alert("活動已儲存，但同步核銷人員指派失敗：\n" + (assignErr.message || assignErr));
         }
 
-        if (editingId) {
-          await loadInviteUsage(eventId);
-        }
-
-        resetEditor();
-        if (currentView === "manage") {
+        if (isEditing) {
+          setEditorMessage(`<span class="ok">更新成功</span>`);
+          resetEditor();
+          setPageMode("manage");
           await loadEvents();
+        } else {
+          setEditorMessage(`<span class="ok">建立成功</span>`);
+          resetEditor();
+          setPageMode("create");
         }
       } catch (err) {
         console.error(err);
@@ -1550,6 +1605,15 @@ if (gates.length) {
     });
 
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
+
+    resetBtn.onclick = async () => {
+      const wasManage = currentView === "manage";
+      resetEditor();
+
+      if (wasManage) {
+        await loadEvents();
+      }
+    };
 
     firebase.auth().onAuthStateChanged(async user => {
       currentUser = user || null;
@@ -1626,8 +1690,8 @@ if (gates.length) {
         creatorOrgText.textContent = formatOrgLabel(myOrgId);
 
         await loadOwnerSchoolOptions();
-        resetEditor();
         setPageMode("create");
+        resetEditor();
       } catch (err) {
         console.error(err);
         showGate(`
