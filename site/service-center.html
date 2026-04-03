@@ -6,33 +6,74 @@
 <title>服務中心｜活動控台</title>
 
 <style>
+:root{
+  --bg:#f6f7fb;
+  --card:#fff;
+  --text:#111;
+  --muted:#6b7280;
+  --line:rgba(17,17,17,.10);
+  --shadow:0 10px 25px rgba(0,0,0,.06);
+  --danger:#dc2626;
+  --ok:#16a34a;
+}
+
+*{ box-sizing:border-box; }
+
 body{
   margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC";
-  background:#f6f7fb;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
 
 .wrap{
-  max-width:900px;
+  max-width:980px;
   margin:auto;
-  padding:24px;
+  padding:24px 16px 40px;
 }
 
 .card{
-  background:#fff;
+  background:var(--card);
   border-radius:16px;
   padding:16px;
   margin-bottom:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  box-shadow:var(--shadow);
+  border:1px solid var(--line);
 }
 
-h1{margin:0 0 10px;font-size:22px;}
-input,button{
+h1{
+  margin:0 0 10px;
+  font-size:22px;
+}
+
+h2{
+  margin:0 0 10px;
+  font-size:18px;
+}
+
+.sub{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+@media (max-width:780px){
+  .grid{ grid-template-columns:1fr; }
+}
+
+input,button,select{
   width:100%;
   padding:12px;
   border-radius:10px;
   border:1px solid #ddd;
   margin-top:8px;
+  font-size:15px;
 }
 
 button{
@@ -42,20 +83,115 @@ button{
   cursor:pointer;
 }
 
+button:hover{
+  opacity:.94;
+}
+
+.btn-secondary{
+  background:#fff;
+  color:#111;
+}
+
+.btn-danger{
+  background:var(--danger);
+  border-color:var(--danger);
+}
+
+.btn-ok{
+  background:var(--ok);
+  border-color:var(--ok);
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.row > *{
+  flex:1;
+  min-width:140px;
+}
+
 .stat{
   display:flex;
   justify-content:space-between;
   margin-top:8px;
+  padding:10px 0;
+  border-bottom:1px dashed #e5e7eb;
 }
 
 .bad{
-  color:#dc2626;
+  color:var(--danger);
   font-weight:bold;
 }
 
 .ok{
-  color:#16a34a;
+  color:var(--ok);
   font-weight:bold;
+}
+
+.muted{
+  color:var(--muted);
+}
+
+.result-item{
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  margin-top:10px;
+  cursor:pointer;
+  transition:all .12s ease;
+  background:#fff;
+}
+
+.result-item:hover{
+  border-color:#111;
+  transform:translateY(-1px);
+}
+
+.result-item.active{
+  border-color:#111;
+  box-shadow:0 8px 18px rgba(0,0,0,.05);
+}
+
+.info-line{
+  margin-top:8px;
+  line-height:1.7;
+  word-break:break-word;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+@media (max-width:780px){
+  .actions{
+    grid-template-columns:1fr;
+  }
+}
+
+.log-item{
+  border-top:1px dashed #e5e7eb;
+  padding:10px 0;
+  font-size:14px;
+  line-height:1.6;
+}
+
+.small{
+  font-size:13px;
+}
+
+.mono{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+}
+
+.empty{
+  color:var(--muted);
+  padding:8px 0;
 }
 </style>
 </head>
@@ -63,23 +199,51 @@ button{
 <body>
 <div class="wrap">
 
-<div class="card">
-<h1>服務中心</h1>
-<input id="eventId" placeholder="輸入活動ID">
-</div>
+  <div class="card">
+    <h1>服務中心</h1>
+    <div class="sub">可查詢票券、手動處理例外、查看活動即時統計。</div>
 
-<div class="card">
-<h1>查詢票券</h1>
-<input id="query" placeholder="輸入 ticketId / email">
-<button onclick="search()">查詢</button>
-</div>
+    <div class="grid" style="margin-top:10px;">
+      <div>
+        <div class="small muted">活動 ID</div>
+        <input id="eventId" placeholder="輸入活動ID">
+      </div>
+      <div>
+        <div class="small muted">活動名稱</div>
+        <input id="eventTitle" placeholder="尚未載入" readonly>
+      </div>
+    </div>
 
-<div class="card" id="result"></div>
+    <div class="row">
+      <button class="btn-secondary" onclick="loadEventInfo()">載入活動</button>
+    </div>
+  </div>
 
-<div class="card">
-<h1>即時統計</h1>
-<div id="stats"></div>
-</div>
+  <div class="card">
+    <h2>查詢票券</h2>
+    <div class="sub">可輸入 ticketId、票券文件 ID、email、姓名。</div>
+    <input id="query" placeholder="輸入 ticketId / 文件ID / email / 姓名">
+    <div class="row">
+      <button onclick="searchTickets()">查詢</button>
+      <button class="btn-secondary" onclick="clearSearch()">清空</button>
+    </div>
+    <div id="searchResults" class="empty">尚未查詢</div>
+  </div>
+
+  <div class="card" id="detailCard">
+    <h2>票券資訊</h2>
+    <div id="result" class="empty">請先查詢並選擇一張票券</div>
+  </div>
+
+  <div class="card">
+    <h2>即時統計</h2>
+    <div id="stats" class="empty">請先載入活動</div>
+  </div>
+
+  <div class="card">
+    <h2>服務中心紀錄</h2>
+    <div id="serviceLogs" class="empty">請先載入活動</div>
+  </div>
 
 </div>
 
@@ -87,137 +251,408 @@ button{
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-  authDomain:"concert-1ff7e.firebaseapp.com",
-  projectId:"concert-1ff7e"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain:"concert-1ff7e.firebaseapp.com",
+    projectId:"concert-1ff7e"
+  });
+}
 
 const db = firebase.firestore();
 
 let currentTicket = null;
+let ticketsCache = [];
+let unsubStats = null;
+let unsubLogs = null;
+
+const eventIdEl = document.getElementById("eventId");
+const eventTitleEl = document.getElementById("eventTitle");
+const queryEl = document.getElementById("query");
+const resultDiv = document.getElementById("result");
+const searchResultsDiv = document.getElementById("searchResults");
+const statsDiv = document.getElementById("stats");
+const serviceLogsDiv = document.getElementById("serviceLogs");
+
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    "\"":"&quot;",
+    "'":"&#39;"
+  }[m]));
+}
+
+function norm(s){
+  return String(s ?? "").trim();
+}
+
+function fmtTime(v){
+  if (!v) return "-";
+  const d = typeof v.toDate === "function" ? v.toDate() : new Date(v);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("zh-Hant", { hour12:false });
+}
 
 function statusText(s){
-  if(s==="not_entered") return "未入場";
-  if(s==="inside") return "在場中";
-  if(s==="exited") return "已出場";
+  if (s === "not_entered") return "未入場";
+  if (s === "inside") return "在場中";
+  if (s === "exited") return "已出場";
   return "-";
 }
 
-async function search(){
-  const eventId=document.getElementById("eventId").value.trim();
-  const q=document.getElementById("query").value.trim();
+function checkedInText(t){
+  return t.checkedIn === true ? "true" : "false";
+}
 
-  if(!eventId||!q){
-    alert("請輸入完整");
+function getEventId(){
+  return norm(eventIdEl.value);
+}
+
+async function loadEventInfo(){
+  const eventId = getEventId();
+  if (!eventId){
+    alert("請輸入活動ID");
     return;
   }
 
-  const resultDiv=document.getElementById("result");
-  resultDiv.innerHTML="載入中...";
+  try{
+    const snap = await db.collection("events").doc(eventId).get();
+    if (!snap.exists){
+      eventTitleEl.value = "";
+      alert("找不到活動");
+      return;
+    }
 
-  let snap=await db.collection("events")
-    .doc(eventId)
-    .collection("tickets")
-    .where("ticketId","==",q)
-    .get();
+    const data = snap.data() || {};
+    eventTitleEl.value = data.title || eventId;
 
-  if(snap.empty){
-    snap=await db.collection("events")
-      .doc(eventId)
-      .collection("tickets")
-      .where("email","==",q)
-      .get();
+    watchStats();
+    watchServiceLogs();
+  }catch(e){
+    console.error(e);
+    alert("載入活動失敗：" + (e.message || e));
   }
+}
 
-  if(snap.empty){
-    resultDiv.innerHTML="<span class='bad'>查無資料</span>";
+function renderTicketDetail(ticket){
+  if (!ticket){
+    resultDiv.innerHTML = `<div class="empty">請先查詢並選擇一張票券</div>`;
     return;
   }
 
-  const t=snap.docs[0];
-  currentTicket={id:t.id,...t.data()};
+  resultDiv.innerHTML = `
+    <div class="info-line"><b>ticketId：</b><span class="mono">${esc(ticket.ticketId || "-")}</span></div>
+    <div class="info-line"><b>文件ID：</b><span class="mono">${esc(ticket.id || "-")}</span></div>
+    <div class="info-line"><b>姓名：</b>${esc(ticket.name || "-")}</div>
+    <div class="info-line"><b>Email：</b>${esc(ticket.email || "-")}</div>
+    <div class="info-line"><b>狀態：</b><b>${esc(statusText(ticket.status))}</b></div>
+    <div class="info-line"><b>checkedIn：</b>${esc(checkedInText(ticket))}</div>
+    <div class="info-line"><b>入口：</b>${esc(ticket.checkedInGate || "-")}</div>
+    <div class="info-line"><b>入場時間：</b>${esc(fmtTime(ticket.checkedInAt))}</div>
+    <div class="info-line"><b>出場時間：</b>${esc(fmtTime(ticket.checkedOutAt))}</div>
+    <div class="info-line"><b>最後更新：</b>${esc(fmtTime(ticket.updatedAt))}</div>
+    <div class="info-line"><b>最後操作人：</b>${esc(ticket.checkedInByEmail || ticket.updatedByEmail || ticket.checkedInBy || "-")}</div>
 
-  resultDiv.innerHTML=`
-    <h1>票券資訊</h1>
-    <div>姓名：${t.data().name||"-"}</div>
-    <div>Email：${t.data().email||"-"}</div>
-    <div>狀態：<b>${statusText(t.data().status)}</b></div>
-    <div>入口：${t.data().checkedInGate||"-"}</div>
-    <div>時間：${t.data().checkedInAt?.toDate?.()||"-"}</div>
-
-    <button onclick="forceCheckin()">強制入場</button>
-    <button onclick="forceCheckout()">強制出場</button>
-    <button onclick="reset()">重設狀態</button>
+    <div class="actions">
+      <button class="btn-ok" onclick="forceCheckin()">強制入場</button>
+      <button class="btn-secondary" onclick="forceCheckout()">強制出場</button>
+      <button class="btn-danger" onclick="resetTicket()">重設狀態</button>
+    </div>
   `;
 }
 
+function renderSearchResults(rows){
+  if (!rows.length){
+    searchResultsDiv.innerHTML = `<span class="bad">查無資料</span>`;
+    resultDiv.innerHTML = `<div class="empty">請先查詢並選擇一張票券</div>`;
+    currentTicket = null;
+    return;
+  }
+
+  searchResultsDiv.innerHTML = rows.map((t, idx) => `
+    <div class="result-item ${currentTicket && currentTicket.id === t.id ? "active" : ""}" onclick="selectTicket('${esc(t.id)}')">
+      <div><b>${esc(t.name || "-")}</b>｜${esc(t.email || "-")}</div>
+      <div class="small muted" style="margin-top:4px;">
+        ticketId：<span class="mono">${esc(t.ticketId || "-")}</span>｜
+        狀態：${esc(statusText(t.status))}
+      </div>
+    </div>
+  `).join("");
+
+  if (!currentTicket) {
+    currentTicket = rows[0];
+    renderTicketDetail(currentTicket);
+  }
+}
+
+function selectTicket(ticketDocId){
+  const found = ticketsCache.find(t => t.id === ticketDocId);
+  if (!found) return;
+  currentTicket = found;
+  renderSearchResults(ticketsCache);
+  renderTicketDetail(currentTicket);
+}
+
+window.selectTicket = selectTicket;
+
+async function searchTickets(){
+  const eventId = getEventId();
+  const q = norm(queryEl.value);
+
+  if (!eventId || !q){
+    alert("請輸入活動ID與查詢內容");
+    return;
+  }
+
+  searchResultsDiv.innerHTML = "載入中...";
+  resultDiv.innerHTML = `<div class="empty">載入中...</div>`;
+  currentTicket = null;
+  ticketsCache = [];
+
+  try{
+    const col = db.collection("events").doc(eventId).collection("tickets");
+    const resultsMap = new Map();
+
+    const directDoc = await col.doc(q).get();
+    if (directDoc.exists) {
+      resultsMap.set(directDoc.id, { id: directDoc.id, ...(directDoc.data() || {}) });
+    }
+
+    const [ticketIdSnap, emailSnap, nameSnap] = await Promise.all([
+      col.where("ticketId", "==", q).get(),
+      col.where("email", "==", q).get(),
+      col.where("name", "==", q).get()
+    ]);
+
+    [ticketIdSnap, emailSnap, nameSnap].forEach(snap => {
+      snap.forEach(doc => {
+        resultsMap.set(doc.id, { id: doc.id, ...(doc.data() || {}) });
+      });
+    });
+
+    ticketsCache = Array.from(resultsMap.values());
+    renderSearchResults(ticketsCache);
+
+  }catch(e){
+    console.error(e);
+    searchResultsDiv.innerHTML = `<span class="bad">查詢失敗：${esc(e.message || e)}</span>`;
+    resultDiv.innerHTML = `<div class="empty">請先查詢並選擇一張票券</div>`;
+  }
+}
+
+function clearSearch(){
+  queryEl.value = "";
+  currentTicket = null;
+  ticketsCache = [];
+  searchResultsDiv.innerHTML = `<div class="empty">尚未查詢</div>`;
+  resultDiv.innerHTML = `<div class="empty">請先查詢並選擇一張票券</div>`;
+}
+
+async function writeServiceLog(action, ticket){
+  const eventId = getEventId();
+  if (!eventId || !ticket) return;
+
+  try{
+    await db.collection("events")
+      .doc(eventId)
+      .collection("serviceLogs")
+      .add({
+        action,
+        ticketDocId: ticket.id || "",
+        ticketId: ticket.ticketId || "",
+        name: ticket.name || "",
+        email: ticket.email || "",
+        status: ticket.status || "",
+        gate: ticket.checkedInGate || "",
+        createdAt: new Date()
+      });
+  }catch(e){
+    console.warn("service log failed:", e);
+  }
+}
+
 async function forceCheckin(){
-  if(!currentTicket)return;
+  if (!currentTicket) return;
 
-  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
-    status:"inside",
-    checkedInAt:new Date()
-  });
+  const eventId = getEventId();
+  if (!eventId){
+    alert("請先輸入活動ID");
+    return;
+  }
 
-  alert("已入場");
-  search();
+  try{
+    await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
+      status: "inside",
+      checkedIn: true,
+      checkedInAt: new Date(),
+      checkedOutAt: null,
+      updatedAt: new Date(),
+      checkedInGate: "服務中心"
+    });
+
+    await writeServiceLog("force_checkin", {
+      ...currentTicket,
+      status: "inside",
+      checkedInGate: "服務中心"
+    });
+
+    alert("已強制入場");
+    await searchTickets();
+  }catch(e){
+    console.error(e);
+    alert("操作失敗：" + (e.message || e));
+  }
 }
 
 async function forceCheckout(){
-  if(!currentTicket)return;
+  if (!currentTicket) return;
 
-  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
-    status:"exited",
-    checkedOutAt:new Date()
-  });
+  const eventId = getEventId();
+  if (!eventId){
+    alert("請先輸入活動ID");
+    return;
+  }
 
-  alert("已出場");
-  search();
+  try{
+    await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
+      status: "exited",
+      checkedOutAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    await writeServiceLog("force_checkout", {
+      ...currentTicket,
+      status: "exited"
+    });
+
+    alert("已強制出場");
+    await searchTickets();
+  }catch(e){
+    console.error(e);
+    alert("操作失敗：" + (e.message || e));
+  }
 }
 
-async function reset(){
-  if(!currentTicket)return;
+async function resetTicket(){
+  if (!currentTicket) return;
 
-  await db.doc(`events/${eventId.value}/tickets/${currentTicket.id}`).update({
-    status:"not_entered",
-    checkedInAt:null,
-    checkedOutAt:null
-  });
+  const eventId = getEventId();
+  if (!eventId){
+    alert("請先輸入活動ID");
+    return;
+  }
 
-  alert("已重設");
-  search();
+  try{
+    await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
+      status: "not_entered",
+      checkedIn: false,
+      checkedInAt: null,
+      checkedOutAt: null,
+      checkedInGate: "",
+      checkedInBy: "",
+      checkedInByEmail: "",
+      updatedAt: new Date()
+    });
+
+    await writeServiceLog("reset_ticket", {
+      ...currentTicket,
+      status: "not_entered"
+    });
+
+    alert("已重設狀態");
+    await searchTickets();
+  }catch(e){
+    console.error(e);
+    alert("操作失敗：" + (e.message || e));
+  }
 }
 
-// 即時統計
 function watchStats(){
-  const eventId=document.getElementById("eventId").value.trim();
-  if(!eventId)return;
+  const eventId = getEventId();
+  if (!eventId) return;
 
-  db.collection("events")
+  if (unsubStats) {
+    unsubStats();
+    unsubStats = null;
+  }
+
+  statsDiv.innerHTML = "載入中...";
+
+  unsubStats = db.collection("events")
     .doc(eventId)
     .collection("tickets")
-    .onSnapshot(snap=>{
-      let total=0,inside=0,exited=0,not=0;
+    .onSnapshot(snap => {
+      let total = 0, inside = 0, exited = 0, notEntered = 0;
 
-      snap.forEach(doc=>{
+      snap.forEach(doc => {
         total++;
-        const s=doc.data().status;
-        if(s==="inside") inside++;
-        else if(s==="exited") exited++;
-        else not++;
+        const t = doc.data() || {};
+        const s = t.status;
+
+        if (s === "inside") inside++;
+        else if (s === "exited") exited++;
+        else notEntered++;
       });
 
-      document.getElementById("stats").innerHTML=`
-        <div class="stat"><span>總數</span><span>${total}</span></div>
-        <div class="stat"><span>在場</span><span>${inside}</span></div>
+      statsDiv.innerHTML = `
+        <div class="stat"><span>總票數</span><span>${total}</span></div>
+        <div class="stat"><span>在場中</span><span>${inside}</span></div>
         <div class="stat"><span>已出場</span><span>${exited}</span></div>
-        <div class="stat"><span>未入場</span><span>${not}</span></div>
+        <div class="stat"><span>未入場</span><span>${notEntered}</span></div>
       `;
+    }, err => {
+      console.error(err);
+      statsDiv.innerHTML = `<span class="bad">統計讀取失敗：${esc(err.message || err)}</span>`;
     });
 }
 
-document.getElementById("eventId").addEventListener("change",watchStats);
+function watchServiceLogs(){
+  const eventId = getEventId();
+  if (!eventId) return;
+
+  if (unsubLogs) {
+    unsubLogs();
+    unsubLogs = null;
+  }
+
+  serviceLogsDiv.innerHTML = "載入中...";
+
+  unsubLogs = db.collection("events")
+    .doc(eventId)
+    .collection("serviceLogs")
+    .orderBy("createdAt", "desc")
+    .limit(20)
+    .onSnapshot(snap => {
+      if (snap.empty) {
+        serviceLogsDiv.innerHTML = `<div class="empty">目前沒有紀錄</div>`;
+        return;
+      }
+
+      serviceLogsDiv.innerHTML = snap.docs.map(doc => {
+        const d = doc.data() || {};
+        return `
+          <div class="log-item">
+            <div><b>${esc(d.action || "-")}</b></div>
+            <div class="small muted">
+              ticketId：<span class="mono">${esc(d.ticketId || "-")}</span>｜
+              姓名：${esc(d.name || "-")}｜
+              Email：${esc(d.email || "-")}
+            </div>
+            <div class="small muted">
+              時間：${esc(fmtTime(d.createdAt))}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }, err => {
+      console.error(err);
+      serviceLogsDiv.innerHTML = `<span class="bad">紀錄讀取失敗：${esc(err.message || err)}</span>`;
+    });
+}
+
+eventIdEl.addEventListener("change", loadEventInfo);
 </script>
 </body>
 </html>
