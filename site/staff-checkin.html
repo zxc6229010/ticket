@@ -21,7 +21,6 @@
       padding: 20px 16px 40px;
     }
 
-    /* ── Gate（登入畫面） ── */
     #gateWrap {
       min-height: 100vh;
       display: flex;
@@ -103,10 +102,8 @@
       display: none;
     }
 
-    /* ── App ── */
     #appWrap { display: none; }
 
-    /* Top bar */
     .top-bar {
       display: flex;
       justify-content: space-between;
@@ -151,7 +148,6 @@
     }
     .btn-logout:hover { color: #f87171; border-color: #7f1d1d; }
 
-    /* Scanner */
     .scanner-frame {
       position: relative;
       border-radius: 20px;
@@ -209,7 +205,6 @@
     .result-flash.warn { background: rgba(239,68,68,.3); }
     .result-flash.show { opacity: 1; }
 
-    /* Status bar */
     .status-bar {
       margin-top: 10px;
       padding: 12px 15px;
@@ -228,7 +223,6 @@
     .status-bar.warn { border-color: #7f1d1d; background: #1c0d0d; }
     .status-bar.info { border-color: #1e3a5f; background: #0c1f35; }
 
-    /* Scan controls */
     .scan-btn-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -250,7 +244,6 @@
     .btn-scan.active { background: #14532d; border-color: #166534; color: #4ade80; }
     .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
 
-    /* Stats */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -268,7 +261,6 @@
     .stat-num.green { color: #22c55e; }
     .stat-label { font-size: 11px; color: #555; margin-top: 3px; }
 
-    /* Log */
     .log-section { margin-top: 14px; }
     .log-title {
       font-size: 11px;
@@ -305,7 +297,6 @@
 </head>
 <body>
 
-  <!-- 登入畫面 -->
   <div id="gateWrap">
     <div class="gate-inner">
       <div class="gate-logo">🎤</div>
@@ -322,11 +313,9 @@
     </div>
   </div>
 
-  <!-- 主畫面 -->
   <div id="appWrap">
     <div class="wrap">
 
-      <!-- Top bar -->
       <div class="top-bar">
         <div>
           <div class="event-title" id="eventTitle">載入中…</div>
@@ -338,7 +327,6 @@
         </div>
       </div>
 
-      <!-- Scanner viewport -->
       <div class="scanner-frame">
         <div id="reader"></div>
         <div class="scan-overlay">
@@ -348,19 +336,16 @@
         <div class="result-flash" id="resultFlash"></div>
       </div>
 
-      <!-- Status -->
       <div class="status-bar info" id="statusBar">
         <span class="icon">📷</span>
         <span class="msg">按「開始掃描」啟動相機，只能掃描票券條碼</span>
       </div>
 
-      <!-- Scan controls -->
       <div class="scan-btn-row">
         <button class="btn-scan" id="startBtn">▶ 開始掃描</button>
         <button class="btn-scan" id="stopBtn" disabled>■ 停止</button>
       </div>
 
-      <!-- Stats -->
       <div class="stats-row">
         <div class="stat-box">
           <div class="stat-num" id="sTotal">–</div>
@@ -376,7 +361,6 @@
         </div>
       </div>
 
-      <!-- Log -->
       <div class="log-section">
         <div class="log-title">本次記錄</div>
         <div class="log-list" id="logList">
@@ -387,17 +371,12 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <!-- QR Scanner -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <script>
-    /* ══════════════════════════════════════
-       1. Firebase 初始化（最優先）
-    ══════════════════════════════════════ */
     if (!firebase.apps.length) {
       firebase.initializeApp({
         apiKey:            "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -411,16 +390,10 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
-    /* ══════════════════════════════════════
-       2. 工具函數
-    ══════════════════════════════════════ */
     const esc  = s => String(s ?? "").replace(/[&<>"']/g,
       m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
     const norm = s => String(s ?? "").trim();
 
-    /* ══════════════════════════════════════
-       3. DOM 參照
-    ══════════════════════════════════════ */
     const gateWrap     = document.getElementById("gateWrap");
     const appWrap      = document.getElementById("appWrap");
     const loginEmail   = document.getElementById("loginEmail");
@@ -440,23 +413,31 @@
     const sCheckedEl   = document.getElementById("sChecked");
     const sRemainEl    = document.getElementById("sRemain");
 
-    /* ══════════════════════════════════════
-       4. 狀態
-    ══════════════════════════════════════ */
-    let currentUser            = null;
-    let myAssignedEventId      = "";
-    let myAssignedGate         = "";
-    let qr                     = null;
-    let scanning               = false;
-    let busy                   = false;
-    let logCount               = 0;
-    let unsubStats             = null;
+    let currentUser = null;
+    let myAssignedEventId = "";
+    let myAssignedGate = "";
+    let myAssignedEventData = null;
+    let qr = null;
+    let scanning = false;
+    let busy = false;
+    let logCount = 0;
+    let unsubStats = null;
 
-    /* ══════════════════════════════════════
-       5. 登入 / 登出
-    ══════════════════════════════════════ */
+    function showGate() {
+      gateWrap.style.display = "flex";
+      appWrap.style.display  = "none";
+      loginBtn.disabled      = false;
+      loginBtn.textContent   = "登入";
+      loginErr.style.display = "none";
+    }
+
+    function showApp() {
+      gateWrap.style.display = "none";
+      appWrap.style.display  = "block";
+    }
+
     async function doLogin() {
-      const email    = norm(loginEmail.value);
+      const email = norm(loginEmail.value);
       const password = loginPw.value;
       loginErr.style.display = "none";
 
@@ -487,25 +468,6 @@
       try { await auth.signOut(); } catch (_) {}
     };
 
-    /* ══════════════════════════════════════
-       6. UI 切換
-    ══════════════════════════════════════ */
-    function showGate() {
-      gateWrap.style.display = "flex";
-      appWrap.style.display  = "none";
-      loginBtn.disabled      = false;
-      loginBtn.textContent   = "登入";
-      loginErr.style.display = "none";
-    }
-
-    function showApp() {
-      gateWrap.style.display = "none";
-      appWrap.style.display  = "block";
-    }
-
-    /* ══════════════════════════════════════
-       7. 音效
-    ══════════════════════════════════════ */
     const AC = window.AudioContext || window.webkitAudioContext;
     function beep(freq = 880, dur = 120, type = "sine", gain = 0.3) {
       if (!AC) return;
@@ -526,12 +488,9 @@
     const okBeep   = () => { beep(880, 80); setTimeout(() => beep(1200, 100), 90); };
     const warnBeep = () => { beep(300, 200, "square", 0.15); };
 
-    /* ══════════════════════════════════════
-       8. Flash 動畫
-    ══════════════════════════════════════ */
     let flashTimer = null;
     function flash(type) {
-      resultFlash.className   = `result-flash ${type} show`;
+      resultFlash.className = `result-flash ${type} show`;
       resultFlash.textContent = type === "ok" ? "✓" : "✗";
       clearTimeout(flashTimer);
       flashTimer = setTimeout(() => {
@@ -539,21 +498,15 @@
       }, 500);
     }
 
-    /* ══════════════════════════════════════
-       9. Status bar
-    ══════════════════════════════════════ */
     function setStatus(type, icon, msg) {
       statusBar.className = `status-bar ${type}`;
       statusBar.innerHTML = `<span class="icon">${icon}</span><span class="msg">${esc(msg)}</span>`;
     }
 
-    /* ══════════════════════════════════════
-       10. Log
-    ══════════════════════════════════════ */
     function pushLog(type, main, sub) {
       if (logCount === 0) logListEl.innerHTML = "";
       logCount++;
-      const now  = new Date().toLocaleTimeString("zh-Hant", { hour12: false });
+      const now = new Date().toLocaleTimeString("zh-Hant", { hour12: false });
       const icon = type === "ok" ? "✅" : "⚠️";
       const item = document.createElement("div");
       item.className = `log-item ${type}`;
@@ -569,9 +522,6 @@
       while (logListEl.children.length > 30) logListEl.removeChild(logListEl.lastChild);
     }
 
-    /* ══════════════════════════════════════
-       11. 即時統計（改用 tickets）
-    ══════════════════════════════════════ */
     function startStats(eventId) {
       if (unsubStats) unsubStats();
 
@@ -596,9 +546,6 @@
         });
     }
 
-    /* ══════════════════════════════════════
-       12. 解析票券條碼（只接受 ticketId）
-    ══════════════════════════════════════ */
     function parseTicketCode(raw) {
       const code = norm(raw);
       if (!code) return "";
@@ -617,9 +564,112 @@
       return code.replace(/^ticket[:#-]?/i, "").trim();
     }
 
-    /* ══════════════════════════════════════
-       13. 核心核銷邏輯（只看 ticketId）
-    ══════════════════════════════════════ */
+    function toMillis(ts) {
+      if (!ts) return null;
+      if (typeof ts.toDate === "function") return ts.toDate().getTime();
+      if (ts instanceof Date) return ts.getTime();
+      const d = new Date(ts);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+
+    function getEventTimeState(eventData) {
+      const now = Date.now();
+      const startMs = toMillis(eventData?.eventStartAt);
+      const endMs = toMillis(eventData?.eventEndAt);
+
+      if (!startMs || !endMs) {
+        return {
+          ok: false,
+          reason: "活動時間未設定完整，暫時無法核銷"
+        };
+      }
+
+      if (now < startMs) {
+        return {
+          ok: false,
+          reason: "活動尚未開始，目前不可核銷"
+        };
+      }
+
+      if (now > endMs) {
+        return {
+          ok: false,
+          reason: "活動已結束，目前不可核銷"
+        };
+      }
+
+      return { ok: true, reason: "" };
+    }
+
+    async function resolveAssignmentFromEvents(uid) {
+      let foundEventId = "";
+      let foundGateName = "";
+
+      const eventsSnap = await db.collection("events").get();
+
+      for (const eventDoc of eventsSnap.docs) {
+        const eventId = eventDoc.id;
+
+        try {
+          const assignDoc = await db.collection("events")
+            .doc(eventId)
+            .collection("checkinAssignments")
+            .doc(uid)
+            .get();
+
+          if (assignDoc.exists) {
+            const assignData = assignDoc.data() || {};
+            foundEventId = eventId;
+            foundGateName = norm(assignData.gateName || "");
+            break;
+          }
+        } catch (_) {}
+      }
+
+      return {
+        eventId: foundEventId,
+        gateName: foundGateName
+      };
+    }
+
+    async function loadAssignedEventInfo() {
+      myAssignedEventData = null;
+
+      if (!myAssignedEventId) {
+        eventTitleEl.textContent = "（未指派活動）";
+        gateNameEl.textContent = myAssignedGate || "未設定";
+        sTotalEl.textContent = "–";
+        sCheckedEl.textContent = "–";
+        sRemainEl.textContent = "–";
+        return;
+      }
+
+      let evtName = myAssignedEventId;
+
+      try {
+        const es = await db.collection("events").doc(myAssignedEventId).get();
+        if (es.exists) {
+          myAssignedEventData = es.data() || {};
+          evtName = norm(myAssignedEventData.title || myAssignedEventId);
+        }
+      } catch (_) {}
+
+      eventTitleEl.textContent = evtName;
+      gateNameEl.textContent = myAssignedGate || "未設定";
+      startStats(myAssignedEventId);
+
+      const timeState = getEventTimeState(myAssignedEventData);
+      if (!timeState.ok) {
+        setStatus("warn", "⏰", timeState.reason);
+      } else {
+        setStatus(
+          "info",
+          "📷",
+          `按「開始掃描」啟動相機，只能掃描票券條碼${myAssignedGate ? `｜目前入口：${myAssignedGate}` : ""}`
+        );
+      }
+    }
+
     async function doCheckin(rawCode) {
       const code = parseTicketCode(rawCode);
       if (!code) return;
@@ -632,6 +682,15 @@
           warnBeep();
           setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
           pushLog("warn", "尚未被指派活動", code);
+          return;
+        }
+
+        const timeState = getEventTimeState(myAssignedEventData);
+        if (!timeState.ok) {
+          flash("warn");
+          warnBeep();
+          setStatus("warn", "⏰", timeState.reason);
+          pushLog("warn", "目前不可核銷", timeState.reason);
           return;
         }
 
@@ -674,6 +733,23 @@
           checkedInEventId: myAssignedEventId || ""
         });
 
+        try {
+          await db.collection("events")
+            .doc(myAssignedEventId)
+            .collection("scanLogs")
+            .add({
+              ticketId: code,
+              checkedInAt: new Date(),
+              checkedInBy: currentUser.uid,
+              checkedInByEmail: currentUser.email || "",
+              checkedInGate: myAssignedGate || "",
+              checkedInEventId: myAssignedEventId || "",
+              result: "success"
+            });
+        } catch (logErr) {
+          console.warn("scanLogs write failed:", logErr);
+        }
+
         flash("ok");
         okBeep();
         setStatus("ok", "✅", `入場成功${myAssignedGate ? `｜${myAssignedGate}` : ""}`);
@@ -683,19 +759,29 @@
         console.error(e);
         flash("warn");
         warnBeep();
-        setStatus("warn", "❌", "核銷失敗：" + (e.message || e));
-        pushLog("warn", "核銷失敗", e.message || String(e));
+
+        const msg = String(e.message || e || "");
+        if (/permission|insufficient/i.test(msg)) {
+          setStatus("warn", "❌", "目前沒有核銷權限，或不在可核銷時間內");
+          pushLog("warn", "核銷被拒絕", msg);
+        } else {
+          setStatus("warn", "❌", "核銷失敗：" + msg);
+          pushLog("warn", "核銷失敗", msg);
+        }
       }
     }
 
-    /* ══════════════════════════════════════
-       14. 掃描器控制
-    ══════════════════════════════════════ */
     async function startScan() {
       if (scanning) return;
 
       if (!myAssignedEventId) {
         setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
+        return;
+      }
+
+      const timeState = getEventTimeState(myAssignedEventData);
+      if (!timeState.ok) {
+        setStatus("warn", "⏰", timeState.reason);
         return;
       }
 
@@ -757,15 +843,21 @@
       startBtn.classList.remove("active");
       stopBtn.disabled = true;
       scanLine.style.display = "none";
-      setStatus("info", "📷", "已停止掃描");
+      if (myAssignedEventData) {
+        const timeState = getEventTimeState(myAssignedEventData);
+        if (!timeState.ok) {
+          setStatus("warn", "⏰", timeState.reason);
+        } else {
+          setStatus("info", "📷", "已停止掃描");
+        }
+      } else {
+        setStatus("info", "📷", "已停止掃描");
+      }
     }
 
     startBtn.onclick = startScan;
     stopBtn.onclick  = stopScan;
 
-    /* ══════════════════════════════════════
-       15. Auth 狀態監聽
-    ══════════════════════════════════════ */
     auth.onAuthStateChanged(async user => {
       currentUser = user || null;
 
@@ -790,7 +882,7 @@
           return;
         }
 
-        const u    = snap.data() || {};
+        const u = snap.data() || {};
         const role = norm(u.role);
         const VALID = ["platform_super", "platform_admin", "org_super", "org_admin", "org_staff"];
 
@@ -810,43 +902,43 @@
           return;
         }
 
-        myAssignedEventId = norm(
+        myAssignedEventId = "";
+        myAssignedGate = "";
+        myAssignedEventData = null;
+
+        const legacyAssignedEventId = norm(
           u.assignedCheckinEventId ||
           u.assignedEventId ||
           ""
         );
 
-        myAssignedGate = norm(
+        const legacyAssignedGate = norm(
           u.assignedCheckinGateName ||
           u.assignedGate ||
           u.assignedEntrance ||
           ""
         );
 
-        let evtName = myAssignedEventId || "（未指派活動）";
-        if (myAssignedEventId) {
-          try {
-            const es = await db.collection("events").doc(myAssignedEventId).get();
-            if (es.exists) evtName = norm(es.data()?.title || myAssignedEventId);
-          } catch (_) {}
-          startStats(myAssignedEventId);
-        } else {
-          sTotalEl.textContent = "–";
-          sCheckedEl.textContent = "–";
-          sRemainEl.textContent = "–";
+        let foundEventId = "";
+        let foundGateName = "";
+
+        try {
+          const assigned = await resolveAssignmentFromEvents(user.uid);
+          foundEventId = assigned.eventId;
+          foundGateName = assigned.gateName;
+        } catch (e) {
+          console.warn("讀取 checkinAssignments 失敗，改用 users 指派欄位：", e);
         }
 
-        eventTitleEl.textContent = evtName;
-        gateNameEl.textContent = myAssignedGate || "未設定";
+        myAssignedEventId = foundEventId || legacyAssignedEventId || "";
+        myAssignedGate = foundGateName || legacyAssignedGate || "";
+
+        await loadAssignedEventInfo();
         showApp();
 
-        setStatus(
-          myAssignedEventId ? "info" : "warn",
-          myAssignedEventId ? "📷" : "⚠️",
-          myAssignedEventId
-            ? `按「開始掃描」啟動相機，只能掃描票券條碼${myAssignedGate ? `｜目前入口：${myAssignedGate}` : ""}`
-            : "你尚未被指派活動，請聯絡管理員"
-        );
+        if (!myAssignedEventId) {
+          setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
+        }
 
       } catch (e) {
         console.error(e);
