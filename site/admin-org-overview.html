@@ -152,7 +152,9 @@
       messagingSenderId: "704757384914",
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
@@ -300,7 +302,7 @@
               </div>
 
               <div class="row" style="justify-content:flex-end;">
-                <a class="btn btn-sm" href="admin-studentslist-import.html?schoolId=${encodeURIComponent(s.id)}">名單匯入</a>
+                <a class="btn btn-sm" href="admin-studentslist-import.html?schoolId=${encodeURIComponent(item.id)}">名單匯入</a>
                 <a class="btn btn-sm" href="admin-member-lookup.html">會員查詢</a>
               </div>
             </div>
