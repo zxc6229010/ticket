@@ -29,10 +29,6 @@ a{ color:inherit; text-decoration:none; }
   margin:0 auto;
   padding:24px 16px 48px;
 }
-
-.topbar{
-  margin-bottom:16px;
-}
 .back{
   display:inline-flex;
   align-items:center;
@@ -40,20 +36,16 @@ a{ color:inherit; text-decoration:none; }
   color:#374151;
   font-size:14px;
   font-weight:700;
+  margin-bottom:16px;
 }
-
 .layout{
   display:grid;
   grid-template-columns:1.25fr .9fr;
   gap:18px;
 }
-
 @media (max-width:900px){
-  .layout{
-    grid-template-columns:1fr;
-  }
+  .layout{ grid-template-columns:1fr; }
 }
-
 .card{
   background:var(--card);
   border:1px solid var(--line);
@@ -61,7 +53,6 @@ a{ color:inherit; text-decoration:none; }
   box-shadow:var(--shadow);
   overflow:hidden;
 }
-
 .cover{
   width:100%;
   aspect-ratio:16/9;
@@ -73,18 +64,15 @@ a{ color:inherit; text-decoration:none; }
   font-weight:700;
   overflow:hidden;
 }
-
 .cover img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
 }
-
-.content{
+.content, .side{
   padding:18px;
 }
-
 .status{
   display:inline-flex;
   border-radius:999px;
@@ -93,23 +81,10 @@ a{ color:inherit; text-decoration:none; }
   font-weight:800;
   margin-bottom:12px;
 }
-
-.status-selling{
-  background:#dcfce7;
-  color:#166534;
-}
-.status-upcoming{
-  background:#dbeafe;
-  color:#1d4ed8;
-}
-.status-ended{
-  background:#f3f4f6;
-  color:#6b7280;
-}
-.status-muted{
-  background:#f3f4f6;
-  color:#6b7280;
-}
+.status-selling{ background:#dcfce7; color:#166534; }
+.status-upcoming{ background:#dbeafe; color:#1d4ed8; }
+.status-ended{ background:#f3f4f6; color:#6b7280; }
+.status-muted{ background:#f3f4f6; color:#6b7280; }
 
 .title{
   font-size:30px;
@@ -117,48 +92,37 @@ a{ color:inherit; text-decoration:none; }
   font-weight:900;
   margin:0;
 }
-
 .meta{
   margin-top:16px;
   color:#374151;
   line-height:1.9;
   font-size:15px;
 }
-
 .section{
   margin-top:22px;
 }
-
 .section-title{
   font-size:18px;
   font-weight:900;
   margin-bottom:10px;
 }
-
 .desc{
   color:#374151;
   line-height:1.9;
   white-space:pre-wrap;
   word-break:break-word;
 }
-
-.side{
-  padding:18px;
-}
-
 .infoBox{
   border:1px solid var(--line);
   border-radius:18px;
   padding:16px;
   background:#fff;
 }
-
 .infoLine{
   font-size:14px;
   line-height:1.9;
   color:#374151;
 }
-
 .btn{
   width:100%;
   margin-top:16px;
@@ -171,7 +135,6 @@ a{ color:inherit; text-decoration:none; }
   font-weight:900;
   cursor:pointer;
 }
-
 .notice{
   margin-top:14px;
   font-size:13px;
@@ -179,7 +142,6 @@ a{ color:inherit; text-decoration:none; }
   line-height:1.8;
   white-space:pre-wrap;
 }
-
 .loading, .empty{
   max-width:900px;
   margin:32px auto;
@@ -190,18 +152,20 @@ a{ color:inherit; text-decoration:none; }
 </head>
 <body>
   <div class="wrap">
-    <div class="topbar">
-      <a class="back" href="index.html">← 返回活動列表</a>
-    </div>
-
+    <a class="back" href="index.html">← 返回活動列表</a>
     <div id="app" class="loading">載入中...</div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase.js"></script>
+  <script type="module">
+    import {
+      getEventById,
+      getEventStatus,
+      formatDateTime,
+      formatDateOnly,
+      esc,
+      norm
+    } from "./firebase.js";
 
-  <script>
     const app = document.getElementById("app");
     const params = new URLSearchParams(location.search);
     const eventId = norm(params.get("id"));
@@ -214,15 +178,14 @@ a{ color:inherit; text-decoration:none; }
       }
 
       try{
-        const snap = await db.collection("events").doc(eventId).get();
+        const event = await getEventById(eventId);
 
-        if (!snap.exists){
+        if (!event){
           app.className = "empty";
           app.innerHTML = "找不到活動。";
           return;
         }
 
-        const event = { id: snap.id, ...(snap.data() || {}) };
         const status = getEventStatus(event);
         const coverHtml = event.coverImage
           ? `<img src="${esc(event.coverImage)}" alt="${esc(event.title || "活動圖片")}">`
@@ -264,23 +227,23 @@ a{ color:inherit; text-decoration:none; }
                   <div class="infoLine">活動日期：${esc(formatDateOnly(event.eventStartAt))}</div>
                   <div class="infoLine">活動地點：${esc(event.location || "-")}</div>
 
-                  <button class="btn" type="button" onclick="goNext()">我要購票 / 報名</button>
+                  <button class="btn" type="button" id="buyBtn">我要購票 / 報名</button>
 
-                  <div class="notice">之後這裡可以再接你的票種選擇、驗證流程、購票流程。</div>
+                  <div class="notice">之後這裡可以再接票種選擇、驗證流程與購票流程。</div>
                 </div>
               </div>
             </div>
           </div>
         `;
+
+        document.getElementById("buyBtn").onclick = () => {
+          alert("下一步可接購票 / 驗證流程");
+        };
       } catch (e){
         console.error(e);
         app.className = "empty";
         app.innerHTML = "活動載入失敗，請稍後再試。";
       }
-    }
-
-    function goNext(){
-      alert("下一步可接購票 / 驗證流程");
     }
 
     loadEvent();
