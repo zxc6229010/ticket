@@ -16,22 +16,18 @@
   --danger:#dc2626;
   --ok:#16a34a;
 }
-
 *{ box-sizing:border-box; }
-
 body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
   background:var(--bg);
   color:var(--text);
 }
-
 .wrap{
   max-width:980px;
   margin:auto;
   padding:24px 16px 40px;
 }
-
 .card{
   background:var(--card);
   border-radius:16px;
@@ -40,29 +36,17 @@ body{
   box-shadow:var(--shadow);
   border:1px solid var(--line);
 }
-
-h1{
-  margin:0 0 10px;
-  font-size:22px;
-}
-
-h2{
-  margin:0 0 10px;
-  font-size:18px;
-}
-
-.sub{
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.6;
-}
+h1{ margin:0 0 10px; font-size:24px; }
+h2{ margin:0 0 10px; font-size:18px; }
+.sub{ color:var(--muted); font-size:14px; line-height:1.6; }
+.small{ font-size:13px; color:var(--muted); }
+.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace; }
 
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
-
 @media (max-width:780px){
   .grid{ grid-template-columns:1fr; }
 }
@@ -75,28 +59,21 @@ input,button,select{
   margin-top:8px;
   font-size:15px;
 }
-
 button{
   background:#111;
   color:#fff;
   font-weight:bold;
   cursor:pointer;
 }
-
-button:hover{
-  opacity:.94;
-}
-
+button:hover{ opacity:.95; }
 .btn-secondary{
   background:#fff;
   color:#111;
 }
-
 .btn-danger{
   background:var(--danger);
   border-color:var(--danger);
 }
-
 .btn-ok{
   background:var(--ok);
   border-color:var(--ok);
@@ -107,31 +84,33 @@ button:hover{
   gap:10px;
   flex-wrap:wrap;
 }
-
 .row > *{
   flex:1;
   min-width:140px;
 }
 
-.stat{
-  display:flex;
-  justify-content:space-between;
-  margin-top:8px;
-  padding:10px 0;
-  border-bottom:1px dashed #e5e7eb;
+.statsTop{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:12px;
 }
-
-.bad{
-  color:var(--danger);
-  font-weight:bold;
+@media (max-width:780px){
+  .statsTop{ grid-template-columns:repeat(2,1fr); }
 }
-
-.ok{
-  color:var(--ok);
-  font-weight:bold;
+.statBox{
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:14px;
+  background:#fff;
 }
-
-.muted{
+.statNum{
+  font-size:28px;
+  font-weight:900;
+}
+.statLabel{
+  margin-top:4px;
+  font-size:12px;
   color:var(--muted);
 }
 
@@ -144,12 +123,10 @@ button:hover{
   transition:all .12s ease;
   background:#fff;
 }
-
 .result-item:hover{
   border-color:#111;
   transform:translateY(-1px);
 }
-
 .result-item.active{
   border-color:#111;
   box-shadow:0 8px 18px rgba(0,0,0,.05);
@@ -167,11 +144,8 @@ button:hover{
   gap:10px;
   margin-top:14px;
 }
-
 @media (max-width:780px){
-  .actions{
-    grid-template-columns:1fr;
-  }
+  .actions{ grid-template-columns:1fr; }
 }
 
 .log-item{
@@ -180,18 +154,26 @@ button:hover{
   font-size:14px;
   line-height:1.6;
 }
-
-.small{
-  font-size:13px;
-}
-
-.mono{
-  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
-}
-
 .empty{
   color:var(--muted);
   padding:8px 0;
+}
+.bad{
+  color:var(--danger);
+  font-weight:bold;
+}
+.ok{
+  color:var(--ok);
+  font-weight:bold;
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:end;
+}
+@media (max-width:780px){
+  .toolbar{ grid-template-columns:1fr; }
 }
 </style>
 </head>
@@ -201,48 +183,62 @@ button:hover{
 
   <div class="card">
     <h1>服務中心</h1>
-    <div class="sub">可查詢票券、手動處理例外、查看活動即時統計。</div>
+    <div class="sub">選擇活動後，可查詢票券、處理例外狀況，並查看即時活動狀態。</div>
 
-    <div class="grid" style="margin-top:10px;">
+    <div class="toolbar">
       <div>
-        <div class="small muted">活動 ID</div>
-        <input id="eventId" placeholder="輸入活動ID">
+        <div class="small">選擇活動</div>
+        <select id="eventSelect">
+          <option value="">載入中...</option>
+        </select>
       </div>
-      <div>
-        <div class="small muted">活動名稱</div>
-        <input id="eventTitle" placeholder="尚未載入" readonly>
-      </div>
+      <button class="btn-secondary" id="reloadEventsBtn">重新載入活動</button>
     </div>
 
-    <div class="row">
-      <button class="btn-secondary" onclick="loadEventInfo()">載入活動</button>
+    <div style="margin-top:12px;">
+      <div><b>目前活動：</b><span id="currentEventTitle">尚未選擇</span></div>
+      <div class="small" style="margin-top:4px;">活動ID：<span id="currentEventId" class="mono">-</span></div>
+    </div>
+
+    <div class="statsTop" id="topStats">
+      <div class="statBox">
+        <div class="statNum" id="sTotal">-</div>
+        <div class="statLabel">總票數</div>
+      </div>
+      <div class="statBox">
+        <div class="statNum" id="sInside">-</div>
+        <div class="statLabel">在場中</div>
+      </div>
+      <div class="statBox">
+        <div class="statNum" id="sExited">-</div>
+        <div class="statLabel">已出場</div>
+      </div>
+      <div class="statBox">
+        <div class="statNum" id="sNotEntered">-</div>
+        <div class="statLabel">未入場</div>
+      </div>
     </div>
   </div>
 
   <div class="card">
     <h2>查詢票券</h2>
-    <div class="sub">可輸入 ticketId、票券文件 ID、email、姓名。</div>
-    <input id="query" placeholder="輸入 ticketId / 文件ID / email / 姓名">
+    <div class="sub">可直接使用條碼槍掃描，或輸入 ticketId、文件ID、email、姓名。</div>
+    <input id="query" placeholder="請掃描條碼或輸入 ticketId / 文件ID / email / 姓名">
     <div class="row">
-      <button onclick="searchTickets()">查詢</button>
-      <button class="btn-secondary" onclick="clearSearch()">清空</button>
+      <button id="searchBtn">查詢</button>
+      <button class="btn-secondary" id="clearBtn">清空</button>
     </div>
     <div id="searchResults" class="empty">尚未查詢</div>
   </div>
 
-  <div class="card" id="detailCard">
+  <div class="card">
     <h2>票券資訊</h2>
     <div id="result" class="empty">請先查詢並選擇一張票券</div>
   </div>
 
   <div class="card">
-    <h2>即時統計</h2>
-    <div id="stats" class="empty">請先載入活動</div>
-  </div>
-
-  <div class="card">
     <h2>服務中心紀錄</h2>
-    <div id="serviceLogs" class="empty">請先載入活動</div>
+    <div id="serviceLogs" class="empty">請先選擇活動</div>
   </div>
 
 </div>
@@ -258,35 +254,38 @@ if (!firebase.apps.length) {
     projectId:"concert-1ff7e"
   });
 }
-
 const db = firebase.firestore();
 
 let currentTicket = null;
 let ticketsCache = [];
 let unsubStats = null;
 let unsubLogs = null;
+let barcodeTimer = null;
 
-const eventIdEl = document.getElementById("eventId");
-const eventTitleEl = document.getElementById("eventTitle");
+const eventSelectEl = document.getElementById("eventSelect");
+const reloadEventsBtn = document.getElementById("reloadEventsBtn");
+const currentEventTitleEl = document.getElementById("currentEventTitle");
+const currentEventIdEl = document.getElementById("currentEventId");
+
 const queryEl = document.getElementById("query");
-const resultDiv = document.getElementById("result");
+const searchBtn = document.getElementById("searchBtn");
+const clearBtn = document.getElementById("clearBtn");
+
 const searchResultsDiv = document.getElementById("searchResults");
-const statsDiv = document.getElementById("stats");
+const resultDiv = document.getElementById("result");
 const serviceLogsDiv = document.getElementById("serviceLogs");
+
+const sTotalEl = document.getElementById("sTotal");
+const sInsideEl = document.getElementById("sInside");
+const sExitedEl = document.getElementById("sExited");
+const sNotEnteredEl = document.getElementById("sNotEntered");
 
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    "\"":"&quot;",
-    "'":"&#39;"
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
   }[m]));
 }
-
-function norm(s){
-  return String(s ?? "").trim();
-}
+function norm(s){ return String(s ?? "").trim(); }
 
 function fmtTime(v){
   if (!v) return "-";
@@ -307,32 +306,76 @@ function checkedInText(t){
 }
 
 function getEventId(){
-  return norm(eventIdEl.value);
+  return norm(eventSelectEl.value);
 }
 
-async function loadEventInfo(){
+async function loadEvents(){
+  eventSelectEl.innerHTML = `<option value="">載入中...</option>`;
+
+  try{
+    const snap = await db.collection("events").orderBy("createdAt", "desc").limit(100).get();
+
+    if (snap.empty){
+      eventSelectEl.innerHTML = `<option value="">目前沒有活動</option>`;
+      return;
+    }
+
+    const oldValue = eventSelectEl.value;
+
+    eventSelectEl.innerHTML = `<option value="">請選擇活動</option>` + snap.docs.map(doc => {
+      const d = doc.data() || {};
+      return `<option value="${esc(doc.id)}">${esc(d.title || doc.id)}</option>`;
+    }).join("");
+
+    if (oldValue && Array.from(eventSelectEl.options).some(o => o.value === oldValue)) {
+      eventSelectEl.value = oldValue;
+    }
+  }catch(e){
+    console.error(e);
+    eventSelectEl.innerHTML = `<option value="">活動載入失敗</option>`;
+  }
+}
+
+async function onEventChange(){
   const eventId = getEventId();
+
+  currentTicket = null;
+  ticketsCache = [];
+  searchResultsDiv.innerHTML = `<div class="empty">尚未查詢</div>`;
+  resultDiv.innerHTML = `<div class="empty">請先查詢並選擇一張票券</div>`;
+
+  if (unsubStats) { unsubStats(); unsubStats = null; }
+  if (unsubLogs) { unsubLogs(); unsubLogs = null; }
+
   if (!eventId){
-    alert("請輸入活動ID");
+    currentEventTitleEl.textContent = "尚未選擇";
+    currentEventIdEl.textContent = "-";
+    sTotalEl.textContent = "-";
+    sInsideEl.textContent = "-";
+    sExitedEl.textContent = "-";
+    sNotEnteredEl.textContent = "-";
+    serviceLogsDiv.innerHTML = `<div class="empty">請先選擇活動</div>`;
     return;
   }
 
   try{
     const snap = await db.collection("events").doc(eventId).get();
     if (!snap.exists){
-      eventTitleEl.value = "";
-      alert("找不到活動");
+      currentEventTitleEl.textContent = "找不到活動";
+      currentEventIdEl.textContent = eventId;
       return;
     }
 
-    const data = snap.data() || {};
-    eventTitleEl.value = data.title || eventId;
+    const d = snap.data() || {};
+    currentEventTitleEl.textContent = d.title || eventId;
+    currentEventIdEl.textContent = eventId;
 
     watchStats();
     watchServiceLogs();
   }catch(e){
     console.error(e);
-    alert("載入活動失敗：" + (e.message || e));
+    currentEventTitleEl.textContent = "載入失敗";
+    currentEventIdEl.textContent = eventId;
   }
 }
 
@@ -353,7 +396,6 @@ function renderTicketDetail(ticket){
     <div class="info-line"><b>入場時間：</b>${esc(fmtTime(ticket.checkedInAt))}</div>
     <div class="info-line"><b>出場時間：</b>${esc(fmtTime(ticket.checkedOutAt))}</div>
     <div class="info-line"><b>最後更新：</b>${esc(fmtTime(ticket.updatedAt))}</div>
-    <div class="info-line"><b>最後操作人：</b>${esc(ticket.checkedInByEmail || ticket.updatedByEmail || ticket.checkedInBy || "-")}</div>
 
     <div class="actions">
       <button class="btn-ok" onclick="forceCheckin()">強制入場</button>
@@ -371,17 +413,17 @@ function renderSearchResults(rows){
     return;
   }
 
-  searchResultsDiv.innerHTML = rows.map((t, idx) => `
+  searchResultsDiv.innerHTML = rows.map(t => `
     <div class="result-item ${currentTicket && currentTicket.id === t.id ? "active" : ""}" onclick="selectTicket('${esc(t.id)}')">
       <div><b>${esc(t.name || "-")}</b>｜${esc(t.email || "-")}</div>
-      <div class="small muted" style="margin-top:4px;">
+      <div class="small" style="margin-top:4px;">
         ticketId：<span class="mono">${esc(t.ticketId || "-")}</span>｜
         狀態：${esc(statusText(t.status))}
       </div>
     </div>
   `).join("");
 
-  if (!currentTicket) {
+  if (!currentTicket && rows.length) {
     currentTicket = rows[0];
     renderTicketDetail(currentTicket);
   }
@@ -394,15 +436,18 @@ function selectTicket(ticketDocId){
   renderSearchResults(ticketsCache);
   renderTicketDetail(currentTicket);
 }
-
 window.selectTicket = selectTicket;
 
 async function searchTickets(){
   const eventId = getEventId();
   const q = norm(queryEl.value);
 
-  if (!eventId || !q){
-    alert("請輸入活動ID與查詢內容");
+  if (!eventId){
+    alert("請先選擇活動");
+    return;
+  }
+  if (!q){
+    alert("請輸入查詢內容");
     return;
   }
 
@@ -434,7 +479,6 @@ async function searchTickets(){
 
     ticketsCache = Array.from(resultsMap.values());
     renderSearchResults(ticketsCache);
-
   }catch(e){
     console.error(e);
     searchResultsDiv.innerHTML = `<span class="bad">查詢失敗：${esc(e.message || e)}</span>`;
@@ -475,12 +519,8 @@ async function writeServiceLog(action, ticket){
 
 async function forceCheckin(){
   if (!currentTicket) return;
-
   const eventId = getEventId();
-  if (!eventId){
-    alert("請先輸入活動ID");
-    return;
-  }
+  if (!eventId) return;
 
   try{
     await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
@@ -505,15 +545,12 @@ async function forceCheckin(){
     alert("操作失敗：" + (e.message || e));
   }
 }
+window.forceCheckin = forceCheckin;
 
 async function forceCheckout(){
   if (!currentTicket) return;
-
   const eventId = getEventId();
-  if (!eventId){
-    alert("請先輸入活動ID");
-    return;
-  }
+  if (!eventId) return;
 
   try{
     await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
@@ -534,15 +571,12 @@ async function forceCheckout(){
     alert("操作失敗：" + (e.message || e));
   }
 }
+window.forceCheckout = forceCheckout;
 
 async function resetTicket(){
   if (!currentTicket) return;
-
   const eventId = getEventId();
-  if (!eventId){
-    alert("請先輸入活動ID");
-    return;
-  }
+  if (!eventId) return;
 
   try{
     await db.doc(`events/${eventId}/tickets/${currentTicket.id}`).update({
@@ -568,6 +602,7 @@ async function resetTicket(){
     alert("操作失敗：" + (e.message || e));
   }
 }
+window.resetTicket = resetTicket;
 
 function watchStats(){
   const eventId = getEventId();
@@ -577,8 +612,6 @@ function watchStats(){
     unsubStats();
     unsubStats = null;
   }
-
-  statsDiv.innerHTML = "載入中...";
 
   unsubStats = db.collection("events")
     .doc(eventId)
@@ -590,21 +623,21 @@ function watchStats(){
         total++;
         const t = doc.data() || {};
         const s = t.status;
-
         if (s === "inside") inside++;
         else if (s === "exited") exited++;
         else notEntered++;
       });
 
-      statsDiv.innerHTML = `
-        <div class="stat"><span>總票數</span><span>${total}</span></div>
-        <div class="stat"><span>在場中</span><span>${inside}</span></div>
-        <div class="stat"><span>已出場</span><span>${exited}</span></div>
-        <div class="stat"><span>未入場</span><span>${notEntered}</span></div>
-      `;
+      sTotalEl.textContent = total;
+      sInsideEl.textContent = inside;
+      sExitedEl.textContent = exited;
+      sNotEnteredEl.textContent = notEntered;
     }, err => {
       console.error(err);
-      statsDiv.innerHTML = `<span class="bad">統計讀取失敗：${esc(err.message || err)}</span>`;
+      sTotalEl.textContent = "-";
+      sInsideEl.textContent = "-";
+      sExitedEl.textContent = "-";
+      sNotEnteredEl.textContent = "-";
     });
 }
 
@@ -635,12 +668,12 @@ function watchServiceLogs(){
         return `
           <div class="log-item">
             <div><b>${esc(d.action || "-")}</b></div>
-            <div class="small muted">
+            <div class="small">
               ticketId：<span class="mono">${esc(d.ticketId || "-")}</span>｜
               姓名：${esc(d.name || "-")}｜
               Email：${esc(d.email || "-")}
             </div>
-            <div class="small muted">
+            <div class="small">
               時間：${esc(fmtTime(d.createdAt))}
             </div>
           </div>
@@ -652,7 +685,28 @@ function watchServiceLogs(){
     });
 }
 
-eventIdEl.addEventListener("change", loadEventInfo);
+eventSelectEl.addEventListener("change", onEventChange);
+reloadEventsBtn.addEventListener("click", loadEvents);
+searchBtn.addEventListener("click", searchTickets);
+clearBtn.addEventListener("click", clearSearch);
+
+queryEl.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    searchTickets();
+    return;
+  }
+
+  clearTimeout(barcodeTimer);
+  barcodeTimer = setTimeout(() => {
+    const q = norm(queryEl.value);
+    if (q.length >= 6) {
+      searchTickets();
+    }
+  }, 120);
+});
+
+loadEvents();
 </script>
 </body>
 </html>
