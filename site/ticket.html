@@ -1153,6 +1153,17 @@
       renderPage(currentEvent, latestEligibility);
     }
 
+    function buildSeatPickerUrl(){
+      const url = new URL("seat-picker.html", window.location.href);
+      url.searchParams.set("id", currentEvent.id);
+      url.searchParams.set("ticketTypeId", selectedTicket.id);
+      url.searchParams.set("quantity", String(selectedQuantity));
+      if (validatedInviteCode) {
+        url.searchParams.set("inviteCode", validatedInviteCode);
+      }
+      return url.toString();
+    }
+
     async function createOrder(){
       if (!currentEvent || !latestEligibility) return;
 
@@ -1186,6 +1197,12 @@
 
       if (selectedQuantity <= 0 || selectedQuantity > currentPurchaseLimit) {
         alert("目前張數超出可購買上限");
+        return;
+      }
+
+      // 啟用座位圖就跳到選位頁
+      if (currentEvent.seatMapEnabled === true) {
+        location.href = buildSeatPickerUrl();
         return;
       }
 
@@ -1301,6 +1318,7 @@
         : (event.inviteCodeEnabled === true ? `<span class="pill">可使用邀請碼</span>` : "");
 
       const totalPrice = (selectedTicket?.price || 0) * Math.max(selectedQuantity, 0);
+      const isSeatMapMode = event.seatMapEnabled === true;
 
       app.className = "";
       app.innerHTML = `
@@ -1369,9 +1387,11 @@
           <div class="side">
             <div class="side-card">
               <div class="side-head">
-                <h2 class="side-title">確認報名資訊</h2>
+                <h2 class="side-title">${isSeatMapMode ? "確認票種與張數" : "確認報名資訊"}</h2>
                 <div class="side-sub">
-                  請確認你的資格、票種、張數與活動資訊無誤後，再送出報名。
+                  ${isSeatMapMode
+                    ? "這場活動啟用了座位圖。確認票種與張數後，下一步會進入選位頁面。"
+                    : "請確認你的資格、票種、張數與活動資訊無誤後，再送出報名。"}
                 </div>
               </div>
 
@@ -1394,6 +1414,11 @@
 
                   <div class="k">可再買</div>
                   <div class="v">${currentPurchaseLimit >= 999 ? "不限" : `${esc(currentPurchaseLimit)} 張`}</div>
+
+                  ${isSeatMapMode ? `
+                    <div class="k">座位模式</div>
+                    <div class="v">需進入選位頁選擇座位</div>
+                  ` : ``}
                 </div>
 
                 <div class="status-box ${statusBlock.className}">
@@ -1432,7 +1457,9 @@
                 </div>
 
                 <button class="main-cta" id="submitBtn" ${submitDisabled ? "disabled" : ""}>
-                  ${esc(eligibility.actionText || "確認報名 / 購票")}
+                  ${isSeatMapMode
+                    ? `下一步：前往選位`
+                    : esc(eligibility.actionText || "確認報名 / 購票")}
                 </button>
 
                 <div class="row" style="margin-top:10px;">
@@ -1446,6 +1473,7 @@
                     : `這場活動目前沒有額外資格名單限制。`}
                   ${validatedInviteCode ? `\n目前已套用邀請碼。` : ``}
                   ${currentPurchaseLimit <= 0 ? `\n你目前已達此活動可購買張數上限。` : ``}
+                  ${isSeatMapMode ? `\n此活動啟用了座位圖，確認後將跳至選位頁。` : ``}
                 </div>
               </div>
             </div>

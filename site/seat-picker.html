@@ -1,0 +1,1716 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>選擇座位</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --line-strong:rgba(17,24,39,.14);
+      --shadow:0 18px 50px rgba(15,23,42,.08);
+      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --black:#111111;
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+
+      --seat-available:#ffffff;
+      --seat-available-border:#111827;
+
+      --seat-selected:#111827;
+      --seat-selected-border:#111827;
+
+      --seat-sold:#6b7280;
+      --seat-sold-border:#6b7280;
+
+      --seat-disabled:#d1d5db;
+      --seat-disabled-border:#9ca3af;
+
+      --seat-locked:#fb923c;
+      --seat-locked-border:#ea580c;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html, body{
+      margin:0;
+      padding:0;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
+        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      max-width:1440px;
+      margin:0 auto;
+      padding:28px 18px 64px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .back{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#374151;
+      font-size:14px;
+      font-weight:800;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.8);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .ghost-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      font-size:14px;
+      font-weight:900;
+      color:#111827;
+      cursor:pointer;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0, 1.3fr) minmax(340px, .75fr);
+      gap:22px;
+      align-items:start;
+    }
+
+    @media (max-width:1120px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .canvas-toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .title{
+      margin:0;
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .canvas-wrap{
+      position:relative;
+      overflow:auto;
+      background:#f8fafc;
+      min-height:760px;
+      max-height:80vh;
+    }
+
+    .stage{
+      position:relative;
+      width:1200px;
+      height:900px;
+      margin:0 auto;
+      background:#f3f4f6;
+      transform-origin:top left;
+      user-select:none;
+    }
+
+    .seatmap-image{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      pointer-events:none;
+    }
+
+    .seat{
+      position:absolute;
+      width:18px;
+      height:18px;
+      border-radius:4px;
+      border:1.5px solid var(--seat-available-border);
+      background:var(--seat-available);
+      box-shadow:0 2px 6px rgba(0,0,0,.08);
+      cursor:pointer;
+      transform-origin:center center;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .seat:hover{
+      transform:scale(1.08);
+      z-index:5;
+    }
+
+    .seat.selected{
+      background:var(--seat-selected);
+      border-color:var(--seat-selected-border);
+      box-shadow:0 0 0 3px rgba(17,24,39,.18);
+      z-index:8;
+    }
+
+    .seat.sold{
+      background:var(--seat-sold);
+      border-color:var(--seat-sold-border);
+      cursor:not-allowed;
+      opacity:.95;
+    }
+
+    .seat.disabled{
+      background:var(--seat-disabled);
+      border-color:var(--seat-disabled-border);
+      cursor:not-allowed;
+      opacity:.85;
+    }
+
+    .seat.locked{
+      background:var(--seat-locked);
+      border-color:var(--seat-locked-border);
+      cursor:not-allowed;
+    }
+
+    .seat.not-allowed{
+      background:#e5e7eb;
+      border-color:#d1d5db;
+      cursor:not-allowed;
+      opacity:.55;
+    }
+
+    .seat-label{
+      position:absolute;
+      left:50%;
+      top:100%;
+      transform:translateX(-50%);
+      margin-top:3px;
+      font-size:9px;
+      white-space:nowrap;
+      color:#111827;
+      pointer-events:none;
+      font-weight:900;
+      background:rgba(255,255,255,.92);
+      padding:1px 4px;
+      border-radius:6px;
+      border:1px solid rgba(17,24,39,.08);
+    }
+
+    .legend{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px 18px 18px;
+      border-top:1px solid var(--line);
+      background:#fff;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      font-weight:900;
+      color:#374151;
+    }
+
+    .legend-dot{
+      width:16px;
+      height:16px;
+      border-radius:4px;
+      border:1.5px solid #111827;
+      background:#fff;
+    }
+
+    .side{
+      position:sticky;
+      top:18px;
+      display:grid;
+      gap:16px;
+    }
+
+    @media (max-width:1120px){
+      .side{
+        position:static;
+      }
+    }
+
+    .side-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .side-head{
+      padding:20px 20px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .side-title{
+      margin:0;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .side-sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .side-body{
+      padding:18px 20px 20px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:100px 1fr;
+      gap:8px 10px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+    }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .v{
+      color:#111827;
+      font-size:13px;
+      font-weight:900;
+      line-height:1.7;
+      word-break:break-word;
+    }
+
+    .status-box{
+      border-radius:18px;
+      padding:14px;
+      margin-top:14px;
+      border:1px solid var(--line);
+      background:#fafafa;
+    }
+
+    .status-box.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.12);
+      color:var(--green);
+    }
+
+    .status-box.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.12);
+      color:var(--red);
+    }
+
+    .status-box.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
+      color:var(--blue);
+    }
+
+    .status-box.orange{
+      background:var(--orange-bg);
+      border-color:rgba(194,65,12,.12);
+      color:var(--orange);
+    }
+
+    .status-title{
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.6;
+    }
+
+    .status-desc{
+      margin-top:6px;
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .selected-list{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:12px 14px;
+    }
+
+    .selected-seat{
+      padding:8px 0;
+      border-top:1px dashed var(--line);
+      font-size:14px;
+      line-height:1.8;
+      font-weight:900;
+    }
+
+    .selected-seat:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .main-cta{
+      width:100%;
+      margin-top:16px;
+      border:none;
+      background:var(--black);
+      color:#fff;
+      border-radius:18px;
+      padding:16px 18px;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+      box-shadow:0 14px 28px rgba(17,17,17,.16);
+    }
+
+    .main-cta:hover{
+      transform:translateY(-1px);
+    }
+
+    .main-cta[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .notice{
+      margin-top:14px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.9;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .loading, .empty{
+      max-width:900px;
+      margin:32px auto;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .modal-back{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.38);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+
+    .modal-back.show{
+      display:flex;
+    }
+
+    .modal{
+      width:min(560px, 100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:26px;
+      box-shadow:0 28px 80px rgba(15,23,42,.22);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      padding:18px 20px 14px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+
+    .modal-title{
+      margin:0;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .modal-sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .modal-body{
+      padding:18px 20px 20px;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="back" id="backLink" href="index.html">← 返回購票頁</a>
+      <div class="top-actions">
+        <a class="ghost-btn" href="member.html">會員中心</a>
+      </div>
+    </div>
+
+    <div id="app" class="loading">載入中...</div>
+  </div>
+
+  <div class="modal-back" id="modalBack">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title" id="modalTitle">提示</h3>
+        <div class="modal-sub" id="modalSub">-</div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      collection,
+      getDocs,
+      addDoc,
+      query,
+      where,
+      serverTimestamp,
+      writeBatch,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
+
+    const app = document.getElementById("app");
+    const params = new URLSearchParams(location.search);
+
+    const eventId = norm(params.get("id"));
+    const inviteCodeFromUrl = norm(params.get("inviteCode"));
+    const ticketTypeIdFromUrl = norm(params.get("ticketTypeId"));
+    const quantityFromUrl = Number(params.get("quantity") || 0);
+
+    const backLink = document.getElementById("backLink");
+
+    const modalBack = document.getElementById("modalBack");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSub = document.getElementById("modalSub");
+    const modalBody = document.getElementById("modalBody");
+
+    const HOLD_MINUTES = 5;
+    const REFRESH_INTERVAL_MS = 10000;
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let currentEvent = null;
+    let currentMatchedRecord = null;
+    let validatedInviteCode = inviteCodeFromUrl || "";
+
+    let selectedTicketType = null;
+    let requestedQuantity = quantityFromUrl > 0 ? quantityFromUrl : 1;
+    let currentPurchaseLimit = 1;
+    let currentPurchasedCount = 0;
+
+    let seats = [];
+    let selectedSeatIds = [];
+    let zoomScale = 1;
+    let refreshTimer = null;
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
+
+    function formatPrice(value){
+      const num = Number(value || 0);
+      if (!num) return "免費";
+      return `NT$ ${num.toLocaleString("zh-Hant")}`;
+    }
+
+    function getEventStatus(event){
+      const now = new Date();
+      const saleStart = toDate(event.saleStartAt);
+      const saleEnd = toDate(event.saleEndAt);
+      const published = event.published === true;
+
+      if (!published) return { text:"未公開", key:"muted" };
+      if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming" };
+      if (saleEnd && now > saleEnd) return { text:"已截止", key:"ended" };
+      return { text:"受理中", key:"selling" };
+    }
+
+    async function getEventById(id){
+      const snap = await getDoc(doc(db, "events", id));
+      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+    }
+
+    async function loadCurrentUserProfile(){
+      if (!currentUser) {
+        currentUserProfile = null;
+        return;
+      }
+      const snap = await getDoc(doc(db, "users", currentUser.uid));
+      currentUserProfile = snap.exists() ? (snap.data() || {}) : {};
+    }
+
+    function isSaleOpen(event){
+      const now = new Date();
+      const saleStart = toDate(event.saleStartAt);
+      const saleEnd = toDate(event.saleEndAt);
+      if (saleStart && now < saleStart) return false;
+      if (saleEnd && now > saleEnd) return false;
+      return true;
+    }
+
+    function getUserFieldValue(field, user, profile){
+      const key = lower(field);
+
+      if (key === "email") return norm(profile?.schoolEmail || profile?.email || user?.email || "");
+      if (key === "schoolemail") return norm(profile?.schoolEmail || user?.email || "");
+      if (key === "studentid") return norm(profile?.studentId || profile?.studentCode || "");
+      if (key === "studentcode") return norm(profile?.studentCode || profile?.studentId || "");
+      if (key === "verifykey") return norm(profile?.verifyKey || "");
+      if (key === "verifiedschoolid") return norm(profile?.verifiedSchoolId || "");
+      if (key === "name") return norm(profile?.name || "");
+      if (key === "class") return norm(profile?.class || "");
+      if (key === "seat") return norm(profile?.seat || "");
+      if (key === "group") return norm(profile?.group || "");
+
+      return norm(profile?.[field] || profile?.[key] || "");
+    }
+
+    async function checkAllowedUser(event, user, profile){
+      const fields = Array.isArray(event.allowedUserMatchFields)
+        ? event.allowedUserMatchFields.map(norm).filter(Boolean)
+        : [];
+
+      if (!fields.length) {
+        return { matched:false, reason:"missing_match_fields", record:null };
+      }
+
+      const values = fields.map(field => getUserFieldValue(field, user, profile));
+      if (values.some(v => !norm(v))) {
+        return { matched:false, reason:"missing_user_fields", record:null };
+      }
+
+      const matchKey = values.join("｜");
+      const snap = await getDoc(doc(db, "events", event.id, "allowedUsers", matchKey));
+
+      if (!snap.exists()) {
+        return { matched:false, reason:"not_in_allowed_list", record:null };
+      }
+
+      const data = snap.data() || {};
+      if (data.canRegister === false) {
+        return { matched:false, reason:"blocked_by_record", record:data };
+      }
+
+      return { matched:true, reason:"matched", record:data };
+    }
+
+    function validateInviteCodeOnClient(event, code){
+      const input = lower(code);
+      if (!input) return { ok:false, message:"請先輸入邀請碼" };
+
+      const invites = Array.isArray(event.inviteCodes) ? event.inviteCodes : [];
+      const found = invites.find(item => {
+        const itemCode = lower(item?.code || "");
+        return itemCode && itemCode === input && item?.enabled === true;
+      });
+
+      if (!found) return { ok:false, message:"邀請碼無效或未啟用" };
+
+      const maxUses = Number(found.maxUses || 0);
+      const usedCount = Number(found.usedCount || 0);
+
+      if (maxUses > 0 && usedCount >= maxUses) {
+        return { ok:false, message:"此邀請碼已達使用上限" };
+      }
+
+      return { ok:true, item:found };
+    }
+
+    function getTicketTypes(event){
+      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      if (raw.length) {
+        return raw.map((item, index) => ({
+          id: norm(item.id || `ticket_${index+1}`),
+          name: norm(item.name || `票種 ${index+1}`),
+          price: Number(item.price || 0),
+          description: norm(item.description || ""),
+          enabled: item.enabled !== false,
+          maxPerUser: Number(item.maxPerUser || 0)
+        })).filter(item => item.enabled !== false);
+      }
+
+      return [{
+        id:"general",
+        name:"一般報名",
+        price:0,
+        description:"此活動目前未細分票種，將以一般報名方式建立資料。",
+        enabled:true,
+        maxPerUser:0
+      }];
+    }
+
+    async function getCurrentPurchasedCount(eventId, uid){
+      if (!uid) return 0;
+
+      const q = query(
+        collection(db, "events", eventId, "orders"),
+        where("uid", "==", uid)
+      );
+      const snap = await getDocs(q);
+
+      let total = 0;
+      snap.forEach(docSnap => {
+        const data = docSnap.data() || {};
+        const status = norm(data.status || "").toLowerCase();
+        if (["cancelled", "void", "refunded"].includes(status)) return;
+        total += Number(data.quantity || 1);
+      });
+
+      return total;
+    }
+
+    function resolvePurchaseLimit(event, ticket, matchedRecord){
+      const limits = [];
+
+      const recordLimit = Number(matchedRecord?.maxTickets || 0);
+      const ticketLimit = Number(ticket?.maxPerUser || 0);
+      const eventLimit = Number(event?.maxTicketsPerUserDefault || 0);
+
+      if (recordLimit > 0) limits.push(recordLimit);
+      if (ticketLimit > 0) limits.push(ticketLimit);
+      if (eventLimit > 0) limits.push(eventLimit);
+
+      if (!limits.length) return 999;
+      return Math.min(...limits);
+    }
+
+    function closeModal(){
+      modalBack.classList.remove("show");
+      modalTitle.textContent = "提示";
+      modalSub.textContent = "-";
+      modalBody.innerHTML = "";
+    }
+
+    modalBack.addEventListener("click", (e) => {
+      if (e.target === modalBack) closeModal();
+    });
+
+    function showModal({ title, sub = "", body = "" }){
+      modalTitle.textContent = title || "提示";
+      modalSub.innerHTML = sub || "";
+      modalBody.innerHTML = body || "";
+      modalBack.classList.add("show");
+    }
+
+    function getHoldExpireMs(seat){
+      const heldUntil = toDate(seat.heldUntil);
+      return heldUntil ? heldUntil.getTime() : 0;
+    }
+
+    function isSeatExpired(seat){
+      const expireMs = getHoldExpireMs(seat);
+      if (!expireMs) return false;
+      return Date.now() > expireMs;
+    }
+
+    function getSeatVisualState(seat){
+      const heldBy = norm(seat.heldBy || "");
+      const status = norm(seat.status || "available");
+      const enabled = seat.enabled !== false;
+
+      if (!enabled || status === "disabled") return "disabled";
+      if (status === "sold") return "sold";
+
+      if (heldBy) {
+        if (isSeatExpired(seat)) return "available";
+        if (heldBy === currentUser?.uid) return "mine";
+        return "locked";
+      }
+
+      return "available";
+    }
+
+    function canSeatBeChosen(seat){
+      const visualState = getSeatVisualState(seat);
+      if (!["available", "mine"].includes(visualState)) return { ok:false, reason:visualState };
+
+      if (!selectedTicketType) return { ok:false, reason:"no_ticket_type" };
+
+      const seatRoles = Array.isArray(seat.allowedRoles) ? seat.allowedRoles.map(norm).filter(Boolean) : [];
+      const seatTags = Array.isArray(seat.allowedTags) ? seat.allowedTags.map(norm).filter(Boolean) : [];
+      const seatTicketTypes = Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes.map(norm).filter(Boolean) : [];
+
+      const userRole = norm(currentMatchedRecord?.purchaseRole || "");
+      const userTags = Array.isArray(currentMatchedRecord?.purchaseTags) ? currentMatchedRecord.purchaseTags.map(norm) : [];
+
+      if (seatTicketTypes.length && !seatTicketTypes.includes(selectedTicketType.id)) {
+        return { ok:false, reason:"ticket_type_not_allowed" };
+      }
+
+      if (seatRoles.length && !seatRoles.includes(userRole)) {
+        return { ok:false, reason:"role_not_allowed" };
+      }
+
+      if (seatTags.length) {
+        const hasTag = userTags.some(tag => seatTags.includes(tag));
+        if (!hasTag) return { ok:false, reason:"tag_not_allowed" };
+      }
+
+      return { ok:true, reason:"ok" };
+    }
+
+    async function holdSeat(seatId){
+      const ref = doc(db, "events", currentEvent.id, "seats", seatId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error("座位不存在");
+
+      const seat = { seatId, ...(snap.data() || {}) };
+      const visualState = getSeatVisualState(seat);
+      const check = canSeatBeChosen(seat);
+
+      if (!check.ok) throw new Error("此座位目前不可選");
+      if (!["available", "mine"].includes(visualState)) throw new Error("此座位目前已被鎖定或售出");
+
+      const heldUntil = new Date(Date.now() + HOLD_MINUTES * 60 * 1000);
+
+      await updateDoc(ref, {
+        heldBy: currentUser.uid,
+        heldUntil,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    async function releaseSeat(seatId){
+      const ref = doc(db, "events", currentEvent.id, "seats", seatId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return;
+
+      const seat = snap.data() || {};
+      if (norm(seat.heldBy || "") !== currentUser.uid) return;
+
+      await updateDoc(ref, {
+        heldBy: "",
+        heldUntil: null,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    async function releaseSelectedSeats(){
+      const ids = [...selectedSeatIds];
+      if (!ids.length) return;
+
+      for (const id of ids) {
+        try {
+          await releaseSeat(id);
+        } catch (e) {
+          console.warn("release seat failed:", id, e);
+        }
+      }
+
+      selectedSeatIds = [];
+      await loadSeats();
+      renderPage();
+    }
+
+    async function releaseExpiredMineSeats(){
+      const mineExpired = seats.filter(seat => {
+        return norm(seat.heldBy || "") === currentUser?.uid && isSeatExpired(seat);
+      });
+
+      for (const seat of mineExpired) {
+        try {
+          await updateDoc(doc(db, "events", currentEvent.id, "seats", seat.seatId), {
+            heldBy: "",
+            heldUntil: null,
+            updatedAt: serverTimestamp()
+          });
+        } catch (e) {
+          console.warn("release expired mine seat failed:", seat.seatId, e);
+        }
+      }
+
+      if (mineExpired.length) {
+        selectedSeatIds = selectedSeatIds.filter(id => !mineExpired.some(seat => seat.seatId === id));
+      }
+    }
+
+    function getMyHoldRemainingMs(){
+      const selectedSeats = seats.filter(seat => selectedSeatIds.includes(seat.seatId));
+      if (!selectedSeats.length) return 0;
+
+      const expiries = selectedSeats
+        .map(getHoldExpireMs)
+        .filter(ms => ms > 0);
+
+      if (!expiries.length) return 0;
+
+      return Math.max(0, Math.min(...expiries) - Date.now());
+    }
+
+    function formatCountdown(ms){
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const min = Math.floor(total / 60);
+      const sec = total % 60;
+      return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    }
+
+    async function toggleSeatSelection(seatId){
+      const seat = seats.find(item => item.seatId === seatId);
+      if (!seat) return;
+
+      const exists = selectedSeatIds.includes(seatId);
+
+      if (exists) {
+        try {
+          await releaseSeat(seatId);
+          selectedSeatIds = selectedSeatIds.filter(id => id !== seatId);
+          await loadSeats();
+          renderPage();
+        } catch (e) {
+          console.error(e);
+          alert(e.message || "取消座位失敗");
+        }
+        return;
+      }
+
+      if (selectedSeatIds.length >= requestedQuantity) {
+        alert(`本次最多可選 ${requestedQuantity} 張`);
+        return;
+      }
+
+      try {
+        await holdSeat(seatId);
+        selectedSeatIds.push(seatId);
+        await loadSeats();
+        renderPage();
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "鎖定座位失敗");
+      }
+    }
+
+    async function clearSelectedSeats(){
+      await releaseSelectedSeats();
+    }
+
+    function applyZoom(){
+      const stage = document.getElementById("stage");
+      if (!stage) return;
+      stage.style.transform = `scale(${zoomScale})`;
+      stage.style.width = "1200px";
+      stage.style.height = "900px";
+      stage.parentElement.style.minHeight = `${Math.max(720, 900 * zoomScale)}px`;
+    }
+
+    function formatSelectedSeatLabel(seat){
+      return norm(seat.label || `${seat.sectionId || ""} ${seat.row || ""}-${seat.seatNumber || ""}` || seat.seatId);
+    }
+
+    async function loadSeats(){
+      const snap = await getDocs(collection(db, "events", currentEvent.id, "seats"));
+      const rows = [];
+      snap.forEach(docSnap => {
+        const data = docSnap.data() || {};
+        rows.push({
+          seatId: norm(data.seatId || docSnap.id),
+          ...data
+        });
+      });
+      seats = rows;
+
+      await releaseExpiredMineSeats();
+
+      const stillMine = seats.filter(seat => {
+        return norm(seat.heldBy || "") === currentUser?.uid && !isSeatExpired(seat);
+      }).map(seat => seat.seatId);
+
+      selectedSeatIds = selectedSeatIds.filter(id => stillMine.includes(id));
+    }
+
+    function sortSeatsByCenterThenFront(a, b){
+      const ax = Number(a.x || 0);
+      const bx = Number(b.x || 0);
+      const ay = Number(a.y || 0);
+      const by = Number(b.y || 0);
+
+      const centerX = 600;
+      const distA = Math.abs(ax - centerX);
+      const distB = Math.abs(bx - centerX);
+
+      if (distA !== distB) return distA - distB;
+      return ay - by;
+    }
+
+    async function autoSelectSeats(){
+      if (!selectedTicketType) {
+        alert("請先確認票種");
+        return;
+      }
+
+      if (!requestedQuantity || requestedQuantity <= 0) {
+        alert("請先確認張數");
+        return;
+      }
+
+      await releaseSelectedSeats();
+      await loadSeats();
+
+      const candidateSeats = seats
+        .filter(seat => canSeatBeChosen(seat).ok)
+        .slice();
+
+      if (!candidateSeats.length) {
+        alert("目前沒有可選座位");
+        return;
+      }
+
+      const sectionMap = new Map();
+      for (const seat of candidateSeats) {
+        const sectionKey = norm(seat.sectionId || seat.sectionName || "default");
+        if (!sectionMap.has(sectionKey)) sectionMap.set(sectionKey, []);
+        sectionMap.get(sectionKey).push(seat);
+      }
+
+      let bestGroup = null;
+
+      for (const [, sectionSeats] of sectionMap.entries()) {
+        const rowMap = new Map();
+
+        for (const seat of sectionSeats) {
+          const rowKey = norm(seat.row || "NO_ROW");
+          if (!rowMap.has(rowKey)) rowMap.set(rowKey, []);
+          rowMap.get(rowKey).push(seat);
+        }
+
+        for (const [, rowSeats] of rowMap.entries()) {
+          const sortedRowSeats = rowSeats.slice().sort((a, b) => {
+            const na = Number(a.seatNumber || 0);
+            const nb = Number(b.seatNumber || 0);
+            if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+            return Number(a.x || 0) - Number(b.x || 0);
+          });
+
+          let run = [];
+          for (let i = 0; i < sortedRowSeats.length; i++) {
+            const current = sortedRowSeats[i];
+            const prev = sortedRowSeats[i - 1];
+
+            const currNo = Number(current.seatNumber || 0);
+            const prevNo = Number(prev?.seatNumber || 0);
+
+            if (
+              i === 0 ||
+              (
+                !isNaN(currNo) &&
+                !isNaN(prevNo) &&
+                currNo === prevNo + 1
+              )
+            ) {
+              run.push(current);
+            } else {
+              run = [current];
+            }
+
+            if (run.length >= requestedQuantity) {
+              const chunk = run.slice(run.length - requestedQuantity);
+              chunk.sort(sortSeatsByCenterThenFront);
+
+              const score = chunk.reduce((sum, seat) => {
+                const distCenter = Math.abs(Number(seat.x || 0) - 600);
+                const frontBias = Number(seat.y || 0);
+                return sum + distCenter + frontBias * 0.08;
+              }, 0);
+
+              if (!bestGroup || score < bestGroup.score) {
+                bestGroup = {
+                  seats: chunk,
+                  score
+                };
+              }
+            }
+          }
+        }
+      }
+
+      let picked = [];
+      if (!bestGroup) {
+        const fallback = candidateSeats
+          .slice()
+          .sort(sortSeatsByCenterThenFront)
+          .slice(0, requestedQuantity);
+
+        if (fallback.length < requestedQuantity) {
+          alert("找不到足夠座位");
+          return;
+        }
+        picked = fallback;
+      } else {
+        picked = bestGroup.seats;
+      }
+
+      try {
+        for (const seat of picked) {
+          await holdSeat(seat.seatId);
+        }
+
+        selectedSeatIds = picked.map(seat => seat.seatId);
+        await loadSeats();
+        renderPage();
+        alert(`已自動選擇 ${picked.length} 個座位`);
+      } catch (e) {
+        console.error(e);
+        await releaseSelectedSeats();
+        alert(e.message || "自動選位失敗，請再試一次");
+      }
+    }
+
+    async function resolveEligibilityAndSetup(){
+      if (!currentUser) {
+        throw new Error("請先登入");
+      }
+
+      if (currentEvent.allowedUsersEnabled === true) {
+        const hasCampusVerify = !!norm(currentUserProfile?.verifiedSchoolId || "");
+
+        if (!hasCampusVerify && !validatedInviteCode) {
+          throw new Error("尚未完成校園驗證，也未提供邀請碼");
+        }
+
+        if (validatedInviteCode) {
+          const inviteCheck = validateInviteCodeOnClient(currentEvent, validatedInviteCode);
+          if (!inviteCheck.ok) {
+            throw new Error(inviteCheck.message || "邀請碼無效");
+          }
+          currentMatchedRecord = {
+            purchaseRole: "invite",
+            purchaseTags: ["invite"],
+            maxTickets: currentEvent.maxTicketsPerUserDefault || 1
+          };
+        } else {
+          const result = await checkAllowedUser(currentEvent, currentUser, currentUserProfile);
+          if (!result.matched) {
+            throw new Error("你目前不符合此活動資格");
+          }
+          currentMatchedRecord = result.record || {};
+        }
+      } else {
+        currentMatchedRecord = {
+          purchaseRole: "general",
+          purchaseTags: [],
+          maxTickets: currentEvent.maxTicketsPerUserDefault || 1
+        };
+      }
+
+      const ticketTypes = getTicketTypes(currentEvent);
+      selectedTicketType = ticketTypes.find(item => item.id === ticketTypeIdFromUrl) || ticketTypes[0] || null;
+
+      currentPurchasedCount = await getCurrentPurchasedCount(currentEvent.id, currentUser.uid);
+      currentPurchaseLimit = resolvePurchaseLimit(currentEvent, selectedTicketType, currentMatchedRecord);
+
+      const remain = Math.max(0, currentPurchaseLimit - currentPurchasedCount);
+      if (remain <= 0) {
+        throw new Error("你已達此活動可購買上限");
+      }
+
+      requestedQuantity = Math.max(1, Math.min(requestedQuantity || 1, remain));
+    }
+
+    async function submitSeatOrder(){
+      if (!currentUser) {
+        alert("請先登入");
+        return;
+      }
+
+      if (!selectedTicketType) {
+        alert("缺少票種資料");
+        return;
+      }
+
+      if (selectedSeatIds.length !== requestedQuantity) {
+        alert(`請先選滿 ${requestedQuantity} 個座位`);
+        return;
+      }
+
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      const oldText = submitBtn.textContent;
+      submitBtn.textContent = "建立中…";
+
+      try {
+        const latestPurchased = await getCurrentPurchasedCount(currentEvent.id, currentUser.uid);
+        const remain = Math.max(0, currentPurchaseLimit - latestPurchased);
+
+        if (requestedQuantity > remain) {
+          throw new Error("目前剩餘可購買張數不足");
+        }
+
+        const latestSeatDocs = await Promise.all(
+          selectedSeatIds.map(id => getDoc(doc(db, "events", currentEvent.id, "seats", id)))
+        );
+
+        const latestSeats = latestSeatDocs.map(s => s.exists() ? ({ seatId: s.id, ...(s.data() || {}) }) : null);
+        if (latestSeats.some(item => !item)) {
+          throw new Error("部分座位不存在，請重新選位");
+        }
+
+        for (const seat of latestSeats) {
+          const visualState = getSeatVisualState(seat);
+          if (visualState !== "mine") {
+            throw new Error(`座位 ${seat.label || seat.seatId} 已不在你的保留狀態中，請重新選位`);
+          }
+
+          const expireMs = getHoldExpireMs(seat);
+          if (!expireMs || expireMs <= Date.now()) {
+            throw new Error(`座位 ${seat.label || seat.seatId} 已過期，請重新選位`);
+          }
+
+          const check = canSeatBeChosen(seat);
+          if (!check.ok) {
+            throw new Error(`座位 ${seat.label || seat.seatId} 不符合你的可選條件`);
+          }
+        }
+
+        const totalAmount = latestSeats.reduce((sum, seat) => {
+          const seatPrice = Number(seat.price || selectedTicketType.price || 0);
+          return sum + seatPrice;
+        }, 0);
+
+        const orderPayload = {
+          uid: currentUser.uid,
+          email: currentUser.email || "",
+          eventId: currentEvent.id,
+          eventTitle: currentEvent.title || "",
+          ticketTypeId: selectedTicketType.id,
+          ticketTypeName: selectedTicketType.name,
+          ticketPrice: Number(selectedTicketType.price || 0),
+          quantity: requestedQuantity,
+          totalAmount,
+          seats: latestSeats.map(seat => seat.seatId),
+          seatLabels: latestSeats.map(seat => norm(seat.label || seat.seatId)),
+          inviteCode: validatedInviteCode || "",
+          verifiedSchoolId: norm(currentUserProfile?.verifiedSchoolId || ""),
+          verifiedSchoolName: norm(currentUserProfile?.verifiedSchoolName || ""),
+          verifyMethod: norm(currentUserProfile?.verifyMethod || ""),
+          schoolEmail: norm(currentUserProfile?.schoolEmail || ""),
+          matchedRole: norm(currentMatchedRecord?.purchaseRole || ""),
+          matchedTags: Array.isArray(currentMatchedRecord?.purchaseTags) ? currentMatchedRecord.purchaseTags : [],
+          status: "registered",
+          paymentStatus: totalAmount > 0 ? "pending" : "free",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        const orderRef = await addDoc(collection(db, "events", currentEvent.id, "orders"), orderPayload);
+
+        const batch = writeBatch(db);
+        latestSeats.forEach(seat => {
+          batch.update(doc(db, "events", currentEvent.id, "seats", seat.seatId), {
+            status: "sold",
+            orderId: orderRef.id,
+            soldAt: serverTimestamp(),
+            soldToUid: currentUser.uid,
+            heldBy: "",
+            heldUntil: null
+          });
+        });
+        await batch.commit();
+
+        selectedSeatIds = [];
+
+        showModal({
+          title:"選位成功",
+          sub:"你的訂單已建立完成。",
+          body:`
+            <div class="small">
+              活動：${esc(currentEvent.title || "-")}<br>
+              票種：${esc(selectedTicketType.name || "-")}<br>
+              座位：${esc(latestSeats.map(seat => norm(seat.label || seat.seatId)).join("、"))}<br>
+              張數：${requestedQuantity}<br>
+              金額：${esc(formatPrice(totalAmount))}
+            </div>
+            <div class="modal-actions">
+              <button class="btn" id="goMemberBtn">前往會員中心</button>
+              <button class="btn btn-primary" id="stayBtn">留在此頁</button>
+            </div>
+          `
+        });
+
+        document.getElementById("goMemberBtn").onclick = () => {
+          location.href = "member.html";
+        };
+        document.getElementById("stayBtn").onclick = closeModal;
+
+        await loadSeats();
+        renderPage();
+
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "建立訂單失敗");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = oldText;
+      }
+    }
+
+    function renderSeatMapHtml(){
+      return seats.map(seat => {
+        const selected = selectedSeatIds.includes(seat.seatId);
+        const visualState = getSeatVisualState(seat);
+        const canChoose = canSeatBeChosen(seat).ok;
+
+        let className = "seat";
+        if (selected) {
+          className += " selected";
+        } else if (visualState === "sold") {
+          className += " sold";
+        } else if (visualState === "disabled") {
+          className += " disabled";
+        } else if (visualState === "locked") {
+          className += " locked";
+        } else if (!canChoose) {
+          className += " not-allowed";
+        }
+
+        return `
+          <div
+            class="${className}"
+            data-seat-id="${esc(seat.seatId)}"
+            style="
+              left:${Number(seat.x || 0)}px;
+              top:${Number(seat.y || 0)}px;
+              transform:rotate(${Number(seat.rotation || 0)}deg);
+            "
+            title="${esc(formatSelectedSeatLabel(seat))}"
+          >
+            <div class="seat-label">${esc(formatSelectedSeatLabel(seat))}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPage(){
+      const status = getEventStatus(currentEvent);
+      const selectedSeats = seats.filter(seat => selectedSeatIds.includes(seat.seatId));
+      const totalAmount = selectedSeats.reduce((sum, seat) => {
+        const seatPrice = Number(seat.price || selectedTicketType?.price || 0);
+        return sum + seatPrice;
+      }, 0);
+
+      const remain = Math.max(0, currentPurchaseLimit - currentPurchasedCount);
+      const holdRemainingMs = getMyHoldRemainingMs();
+      const holdCountdown = holdRemainingMs > 0 ? formatCountdown(holdRemainingMs) : "";
+
+      app.className = "";
+      app.innerHTML = `
+        <div class="layout">
+          <div class="card">
+            <div class="canvas-toolbar">
+              <div>
+                <h1 class="title">${esc(currentEvent.title || "選擇座位")}</h1>
+                <div class="sub">
+                  狀態：${esc(status.text)}｜活動時間：${esc(formatDateTime(currentEvent.eventStartAt))} ～ ${esc(formatDateTime(currentEvent.eventEndAt))}
+                </div>
+              </div>
+
+              <div class="row">
+                <span class="pill">票種：${esc(selectedTicketType?.name || "-")}</span>
+                <span class="pill">本次需選：${requestedQuantity} 張</span>
+                <span class="pill">已選：${selectedSeatIds.length} 張</span>
+                <button class="btn btn-sm" id="zoomOutBtn">－</button>
+                <button class="btn btn-sm" id="zoomResetBtn">100%</button>
+                <button class="btn btn-sm" id="zoomInBtn">＋</button>
+              </div>
+            </div>
+
+            <div class="canvas-wrap">
+              <div class="stage" id="stage">
+                ${currentEvent.seatMapImage ? `<img class="seatmap-image" src="${esc(currentEvent.seatMapImage)}" alt="seat map" />` : ""}
+                ${renderSeatMapHtml()}
+              </div>
+            </div>
+
+            <div class="legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#fff;border-color:#111827;"></span>可選</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#111827;border-color:#111827;"></span>已選 / 我的保留</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#6b7280;border-color:#6b7280;"></span>已售</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#fb923c;border-color:#ea580c;"></span>他人鎖定中</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#d1d5db;border-color:#9ca3af;"></span>停用 / 不可選</div>
+            </div>
+          </div>
+
+          <div class="side">
+            <div class="side-card">
+              <div class="side-head">
+                <h2 class="side-title">確認選位</h2>
+                <div class="side-sub">
+                  請先選滿指定張數，再建立訂單。
+                </div>
+              </div>
+
+              <div class="side-body">
+                <div class="kv">
+                  <div class="k">登入帳號</div>
+                  <div class="v">${esc(currentUser?.email || "-")}</div>
+
+                  <div class="k">票種</div>
+                  <div class="v">${esc(selectedTicketType?.name || "-")}</div>
+
+                  <div class="k">已購買</div>
+                  <div class="v">${currentPurchasedCount} 張</div>
+
+                  <div class="k">可再買</div>
+                  <div class="v">${remain >= 999 ? "不限" : `${remain} 張`}</div>
+
+                  <div class="k">本次需選</div>
+                  <div class="v">${requestedQuantity} 張</div>
+                </div>
+
+                <div class="status-box ${selectedSeatIds.length === requestedQuantity ? "ok" : "orange"}">
+                  <div class="status-title">
+                    ${selectedSeatIds.length === requestedQuantity ? "已選滿指定座位" : "尚未選滿指定座位"}
+                  </div>
+                  <div class="status-desc">
+                    目前已選 ${selectedSeatIds.length} / ${requestedQuantity} 張
+                  </div>
+                </div>
+
+                <div class="status-box ${holdRemainingMs > 0 ? "info" : "orange"}">
+                  <div class="status-title">
+                    ${holdRemainingMs > 0 ? `保留倒數 ${holdCountdown}` : "尚未啟動保留倒數"}
+                  </div>
+                  <div class="status-desc">
+                    選到座位後會保留 ${HOLD_MINUTES} 分鐘，逾時會自動釋放。
+                  </div>
+                </div>
+
+                <div class="selected-list">
+                  <div class="small" style="font-weight:1000;">已選座位</div>
+                  ${
+                    selectedSeats.length
+                      ? selectedSeats.map(seat => `
+                          <div class="selected-seat">
+                            ${esc(formatSelectedSeatLabel(seat))}｜${esc(formatPrice(seat.price || selectedTicketType?.price || 0))}
+                          </div>
+                        `).join("")
+                      : `<div class="small" style="margin-top:8px;">尚未選擇任何座位</div>`
+                  }
+                </div>
+
+                <div class="selected-list">
+                  <div class="small" style="font-weight:1000;">總計</div>
+                  <div style="margin-top:8px;font-size:24px;font-weight:1000;">
+                    ${esc(formatPrice(totalAmount))}
+                  </div>
+                </div>
+
+                <button class="btn" id="autoSeatBtn" style="width:100%;margin-top:16px;">
+                  🎯 電腦幫我選位
+                </button>
+
+                <button class="main-cta" id="submitBtn" ${selectedSeatIds.length === requestedQuantity ? "" : "disabled"}>
+                  確認座位並建立訂單
+                </button>
+
+                <div class="row" style="margin-top:10px;">
+                  <button class="btn" id="clearBtn">清空已選</button>
+                </div>
+
+                <div class="notice">
+                  ${validatedInviteCode ? `目前已套用邀請碼：${validatedInviteCode}\n` : ""}
+                  系統會依你的活動資格、票種與座位限制，判斷哪些座位可選。
+                  \n電腦自動選位會優先找同區、同排、連號、靠中位置。
+                  \n你選到的座位會先被保留 ${HOLD_MINUTES} 分鐘。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll("[data-seat-id]").forEach(el => {
+        el.addEventListener("click", () => {
+          toggleSeatSelection(el.dataset.seatId);
+        });
+      });
+
+      document.getElementById("clearBtn").onclick = clearSelectedSeats;
+      document.getElementById("autoSeatBtn").onclick = autoSelectSeats;
+      document.getElementById("submitBtn").onclick = submitSeatOrder;
+      document.getElementById("zoomOutBtn").onclick = () => {
+        zoomScale = Math.max(0.4, Math.round((zoomScale - 0.1) * 10) / 10);
+        applyZoom();
+      };
+      document.getElementById("zoomResetBtn").onclick = () => {
+        zoomScale = 1;
+        applyZoom();
+      };
+      document.getElementById("zoomInBtn").onclick = () => {
+        zoomScale = Math.min(2.5, Math.round((zoomScale + 0.1) * 10) / 10);
+        applyZoom();
+      };
+
+      applyZoom();
+    }
+
+    async function refreshSeatsOnly(){
+      if (!currentEvent || !currentUser) return;
+      await loadSeats();
+      renderPage();
+    }
+
+    function startRefreshTimer(){
+      stopRefreshTimer();
+      refreshTimer = setInterval(async () => {
+        try {
+          await refreshSeatsOnly();
+        } catch (e) {
+          console.warn("refresh seats failed:", e);
+        }
+      }, REFRESH_INTERVAL_MS);
+    }
+
+    function stopRefreshTimer(){
+      if (refreshTimer) {
+        clearInterval(refreshTimer);
+        refreshTimer = null;
+      }
+    }
+
+    async function initPage(){
+      if (!eventId) {
+        app.className = "empty";
+        app.innerHTML = "缺少活動 ID。";
+        return;
+      }
+
+      if (!currentUser) {
+        app.className = "empty";
+        app.innerHTML = "請先登入後再進行選位。";
+        return;
+      }
+
+      currentEvent = await getEventById(eventId);
+      if (!currentEvent) {
+        app.className = "empty";
+        app.innerHTML = "找不到活動。";
+        return;
+      }
+
+      if (currentEvent.seatMapEnabled !== true) {
+        app.className = "empty";
+        app.innerHTML = "此活動目前未啟用座位圖。";
+        return;
+      }
+
+      backLink.href = `ticket.html?id=${encodeURIComponent(currentEvent.id)}&ticketTypeId=${encodeURIComponent(ticketTypeIdFromUrl || "")}&quantity=${encodeURIComponent(requestedQuantity)}${validatedInviteCode ? `&inviteCode=${encodeURIComponent(validatedInviteCode)}` : ""}`;
+
+      try {
+        await resolveEligibilityAndSetup();
+        await loadSeats();
+        renderPage();
+        startRefreshTimer();
+      } catch (e) {
+        console.error(e);
+        app.className = "empty";
+        app.innerHTML = esc(e.message || "目前無法進入選位流程");
+      }
+    }
+
+    window.addEventListener("beforeunload", () => {
+      stopRefreshTimer();
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user || null;
+      await loadCurrentUserProfile();
+      if (!currentUser) stopRefreshTimer();
+      await initPage();
+    });
+  </script>
+</body>
+</html>
