@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>活動詳情</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC";
+  background:#f6f7fb;
+}
+
+.wrap{
+  max-width:1000px;
+  margin:auto;
+  padding:24px 16px 40px;
+}
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+h1{margin:0 0 6px;font-size:22px;}
+h2{margin:0 0 10px;font-size:18px;}
+
+.small{color:#6b7280;font-size:13px;}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.pill{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.ok{color:#16a34a;}
+.warn{color:#dc2626;}
+.blue{color:#2563eb;}
+
+.list{
+  display:grid;
+  gap:10px;
+  margin-top:10px;
+}
+
+.item{
+  border:1px solid #eee;
+  border-radius:12px;
+  padding:10px;
+}
+
+.mono{
+  font-family:monospace;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+  <h1 id="title">載入中…</h1>
+  <div class="small" id="timeText"></div>
+  <div id="statusText" class="blue">載入中…</div>
+</div>
+
+<div class="card">
+  <h2>即時統計</h2>
+  <div id="stats"></div>
+</div>
+
+<div class="card">
+  <h2>工作人員</h2>
+  <div id="staffList" class="list"></div>
+</div>
+
+<div class="card">
+  <h2>核銷人員</h2>
+  <div id="checkinList" class="list"></div>
+</div>
+
+<div class="card">
+  <h2>訂單統計</h2>
+  <div id="orders"></div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+  authDomain:"concert-1ff7e.firebaseapp.com",
+  projectId:"concert-1ff7e"
+});
+
+const db=firebase.firestore();
+
+const params=new URLSearchParams(location.search);
+const eventId=params.get("eventId");
+
+const titleEl=document.getElementById("title");
+const timeText=document.getElementById("timeText");
+const statusText=document.getElementById("statusText");
+const statsDiv=document.getElementById("stats");
+const staffList=document.getElementById("staffList");
+const checkinList=document.getElementById("checkinList");
+const ordersDiv=document.getElementById("orders");
+
+function toMillis(t){
+  if(!t)return null;
+  if(t.toDate)return t.toDate().getTime();
+  return new Date(t).getTime();
+}
+
+function getStatus(e){
+  const now=Date.now();
+  const s=toMillis(e.eventStartAt);
+  const ed=toMillis(e.eventEndAt);
+
+  if(!s||!ed)return "時間未設定";
+  if(now<s)return "尚未開始";
+  if(now>ed)return "已結束";
+  return "進行中";
+}
+
+async function loadEvent(){
+  const doc=await db.collection("events").doc(eventId).get();
+  if(!doc.exists){
+    titleEl.textContent="找不到活動";
+    return;
+  }
+
+  const e=doc.data();
+
+  titleEl.textContent=e.title||eventId;
+
+  timeText.textContent=
+    new Date(toMillis(e.eventStartAt)).toLocaleString()+
+    " ~ "+
+    new Date(toMillis(e.eventEndAt)).toLocaleString();
+
+  const st=getStatus(e);
+
+  statusText.textContent=st;
+  statusText.className=
+    st==="進行中"?"ok":
+    st==="尚未開始"?"blue":"warn";
+}
+
+function watchStats(){
+  db.collection("events").doc(eventId)
+    .collection("tickets")
+    .onSnapshot(snap=>{
+      let total=0,checked=0;
+
+      snap.forEach(d=>{
+        total++;
+        if(d.data().checkedIn)checked++;
+      });
+
+      statsDiv.innerHTML=`
+        <div class="stat"><span>總票數</span><span>${total}</span></div>
+        <div class="stat"><span>已入場</span><span>${checked}</span></div>
+        <div class="stat"><span>未入場</span><span>${total-checked}</span></div>
+      `;
+    });
+}
+
+async function loadStaff(){
+  const snap=await db.collection("events")
+    .doc(eventId)
+    .collection("staffAssignments")
+    .get();
+
+  if(snap.empty){
+    staffList.innerHTML="沒有資料";
+    return;
+  }
+
+  staffList.innerHTML=snap.docs.map(d=>{
+    const x=d.data();
+    return `
+      <div class="item">
+        <div><b>${x.email||d.id}</b></div>
+        <div class="small">
+          角色：${x.roleInEvent||"-"}｜
+          team：${x.team||"-"}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadCheckin(){
+  const snap=await db.collection("events")
+    .doc(eventId)
+    .collection("checkinAssignments")
+    .get();
+
+  if(snap.empty){
+    checkinList.innerHTML="沒有資料";
+    return;
+  }
+
+  checkinList.innerHTML=snap.docs.map(d=>{
+    const x=d.data();
+    return `
+      <div class="item">
+        <div><b>${x.email||d.id}</b></div>
+        <div class="small">
+          入口：${x.gateName||"-"}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function watchOrders(){
+  db.collection("events")
+    .doc(eventId)
+    .collection("orders")
+    .onSnapshot(snap=>{
+      ordersDiv.innerHTML=`
+        <div class="stat">
+          <span>訂單數</span>
+          <span>${snap.size}</span>
+        </div>
+      `;
+    });
+}
+
+async function init(){
+  if(!eventId){
+    titleEl.textContent="缺少 eventId";
+    return;
+  }
+
+  await loadEvent();
+  watchStats();
+  loadStaff();
+  loadCheckin();
+  watchOrders();
+}
+
+init();
+</script>
+</body>
+</html>
