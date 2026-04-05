@@ -434,6 +434,51 @@
       background:#fff;
     }
 
+    .qty-wrap{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+    }
+
+    .qty-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:10px;
+    }
+
+    .qty-controls{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .qty-btn{
+      width:42px;
+      height:42px;
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      font-size:20px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .qty-btn[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .qty-value{
+      min-width:38px;
+      text-align:center;
+      font-size:18px;
+      font-weight:1000;
+    }
+
     .main-cta{
       width:100%;
       margin-top:16px;
@@ -551,6 +596,17 @@
       justify-content:flex-end;
       margin-top:16px;
     }
+
+    .input{
+      width:100%;
+      padding:14px 14px;
+      border:1px solid var(--line-strong);
+      border-radius:16px;
+      background:#fff;
+      color:#111827;
+      font-size:16px;
+      outline:none;
+    }
   </style>
 </head>
 <body>
@@ -577,10 +633,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
       getFirestore,
       doc,
@@ -590,7 +643,6 @@
       addDoc,
       query,
       where,
-      limit,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -625,6 +677,10 @@
     let selectedTicketId = "";
     let selectedTicket = null;
     let validatedInviteCode = inviteCodeFromUrl || "";
+    let selectedQuantity = 1;
+    let currentPurchaseLimit = 1;
+    let currentPurchasedCount = 0;
+    let currentMatchedRecord = null;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -700,7 +756,6 @@
       const now = new Date();
       const saleStart = toDate(event.saleStartAt);
       const saleEnd = toDate(event.saleEndAt);
-
       if (saleStart && now < saleStart) return false;
       if (saleEnd && now > saleEnd) return false;
       return true;
@@ -729,7 +784,7 @@
         : [];
 
       if (!fields.length) {
-        return { matched:false, reason:"missing_match_fields", matchKey:"" };
+        return { matched:false, reason:"missing_match_fields", matchKey:"", record:null };
       }
 
       const values = fields.map(field => getUserFieldValue(field, user, profile));
@@ -738,7 +793,8 @@
           matched:false,
           reason:"missing_user_fields",
           matchKey:values.join("｜"),
-          fields
+          fields,
+          record:null
         };
       }
 
@@ -750,7 +806,8 @@
           matched:false,
           reason:"not_in_allowed_list",
           matchKey,
-          fields
+          fields,
+          record:null
         };
       }
 
@@ -796,8 +853,67 @@
       return { ok:true, item:found };
     }
 
+    function getTicketTypes(event){
+      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      if (raw.length) {
+        return raw.map((item, index) => ({
+          id: norm(item.id || `ticket_${index+1}`),
+          name: norm(item.name || `票種 ${index+1}`),
+          price: Number(item.price || 0),
+          description: norm(item.description || ""),
+          enabled: item.enabled !== false,
+          maxPerUser: Number(item.maxPerUser || 0)
+        })).filter(item => item.enabled !== false);
+      }
+
+      return [{
+        id:"general",
+        name:"一般報名",
+        price:0,
+        description:"此活動目前未細分票種，將以一般報名方式建立資料。",
+        enabled:true,
+        maxPerUser:0
+      }];
+    }
+
+    async function getCurrentPurchasedCount(eventId, uid){
+      if (!uid) return 0;
+
+      const q = query(
+        collection(db, "events", eventId, "orders"),
+        where("uid", "==", uid)
+      );
+      const snap = await getDocs(q);
+
+      let total = 0;
+      snap.forEach(docSnap => {
+        const data = docSnap.data() || {};
+        const status = norm(data.status || "").toLowerCase();
+        if (["cancelled", "void", "refunded"].includes(status)) return;
+        total += Number(data.quantity || 1);
+      });
+
+      return total;
+    }
+
+    function resolvePurchaseLimit(event, ticket, matchedRecord){
+      const limits = [];
+
+      const recordLimit = Number(matchedRecord?.maxTickets || 0);
+      const ticketLimit = Number(ticket?.maxPerUser || 0);
+      const eventLimit = Number(event?.maxTicketsPerUserDefault || 0);
+
+      if (recordLimit > 0) limits.push(recordLimit);
+      if (ticketLimit > 0) limits.push(ticketLimit);
+      if (eventLimit > 0) limits.push(eventLimit);
+
+      if (!limits.length) return 999;
+      return Math.min(...limits);
+    }
+
     async function evaluateEligibility(event){
       const inviteEnabled = event.inviteCodeEnabled === true;
+      currentMatchedRecord = null;
 
       if (event.published !== true) {
         return { type:"event_unpublished", canSubmit:false, actionText:"目前不可報名" };
@@ -849,6 +965,7 @@
 
       const allowedResult = await checkAllowedUser(event, currentUser, currentUserProfile);
       if (allowedResult.matched) {
+        currentMatchedRecord = allowedResult.record || null;
         return {
           type:"eligible",
           canSubmit:true,
@@ -889,87 +1006,26 @@
     function getEligibilityBlock(eligibility){
       switch (eligibility.type) {
         case "event_unpublished":
-          return {
-            className:"muted",
-            title:"此活動目前尚未公開",
-            desc:"目前仍不能報名，請等待主辦單位開放。"
-          };
+          return { className:"muted", title:"此活動目前尚未公開", desc:"目前仍不能報名，請等待主辦單位開放。" };
         case "login_required":
-          return {
-            className:"info",
-            title:"請先登入會員帳號",
-            desc:"登入後可檢查你的資格狀態，再進入報名流程。"
-          };
+          return { className:"info", title:"請先登入會員帳號", desc:"登入後才能建立報名或購票資料。" };
         case "sale_not_open":
-          return {
-            className:"orange",
-            title:"目前不在報名期間",
-            desc:"請依活動開放時間再回來操作。"
-          };
+          return { className:"orange", title:"目前不在報名期間", desc:"請依活動開放時間再回來操作。" };
         case "open_registration":
-          return {
-            className:"ok",
-            title:"此活動可直接報名",
-            desc:"這場活動目前沒有額外資格名單限制。"
-          };
+          return { className:"ok", title:"此活動可直接報名", desc:"這場活動目前沒有額外資格名單限制。" };
         case "eligible":
-          return {
-            className:"ok",
-            title:"你目前符合此活動資格",
-            desc:"系統已成功比對到你的資格，可以直接完成報名或購票。"
-          };
+          return { className:"ok", title:"你目前符合此活動資格", desc:"系統已成功比對到你的資格，可以直接完成報名或購票。" };
         case "invite_override":
-          return {
-            className:"ok",
-            title:"已套用有效邀請碼",
-            desc:"你目前可使用邀請碼完成本次活動報名。"
-          };
+          return { className:"ok", title:"已套用有效邀請碼", desc:"你目前可使用邀請碼完成本次活動報名。" };
         case "verify_needed_but_invite_possible":
-          return {
-            className:"warn",
-            title:"你尚未完成校園驗證",
-            desc:"你可以先去校園驗證，或直接改用邀請碼參加。"
-          };
+          return { className:"warn", title:"你尚未完成校園驗證", desc:"你可以先去校園驗證，或直接改用邀請碼參加。" };
         case "not_eligible_but_invite_possible":
-          return {
-            className:"warn",
-            title:"你目前不在此活動名單中",
-            desc:"你可以改用邀請碼參加本次活動。"
-          };
+          return { className:"warn", title:"你目前不在此活動名單中", desc:"你可以改用邀請碼參加本次活動。" };
         case "not_eligible":
-          return {
-            className:"warn",
-            title:"你目前不符合此活動資格",
-            desc:"系統找不到你的活動資格資料，且此活動未開放邀請碼備援。"
-          };
+          return { className:"warn", title:"你目前不符合此活動資格", desc:"系統找不到你的活動資格資料，且此活動未開放邀請碼備援。" };
         default:
-          return {
-            className:"muted",
-            title:"目前無法判斷狀態",
-            desc:"請稍後再試。"
-          };
+          return { className:"muted", title:"目前無法判斷狀態", desc:"請稍後再試。" };
       }
-    }
-
-    function getTicketTypes(event){
-      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
-      if (raw.length) {
-        return raw.map((item, index) => ({
-          id: norm(item.id || `ticket_${index+1}`),
-          name: norm(item.name || `票種 ${index+1}`),
-          price: Number(item.price || 0),
-          description: norm(item.description || ""),
-          enabled: item.enabled !== false
-        })).filter(item => item.enabled !== false);
-      }
-
-      return [{
-        id:"general",
-        name:"一般報名",
-        price:0,
-        description:"此活動目前未細分票種，將以一般報名方式建立資料。",
-        enabled:true
-      }];
     }
 
     function closeModal(){
@@ -1070,6 +1126,30 @@
       selectedTicketId = ticketId;
       const ticketTypes = getTicketTypes(currentEvent);
       selectedTicket = ticketTypes.find(item => item.id === ticketId) || null;
+      updateQuantityBounds();
+      renderPage(currentEvent, latestEligibility);
+    }
+
+    function updateQuantityBounds(){
+      if (!currentEvent || !selectedTicket) {
+        currentPurchaseLimit = 1;
+        selectedQuantity = 1;
+        return;
+      }
+
+      const totalLimit = resolvePurchaseLimit(currentEvent, selectedTicket, currentMatchedRecord);
+      currentPurchaseLimit = Math.max(0, totalLimit - currentPurchasedCount);
+
+      if (currentPurchaseLimit <= 0) {
+        selectedQuantity = 0;
+      } else {
+        selectedQuantity = Math.max(1, Math.min(selectedQuantity || 1, currentPurchaseLimit));
+      }
+    }
+
+    function changeQuantity(delta){
+      if (currentPurchaseLimit <= 0) return;
+      selectedQuantity = Math.min(currentPurchaseLimit, Math.max(1, selectedQuantity + delta));
       renderPage(currentEvent, latestEligibility);
     }
 
@@ -1099,22 +1179,28 @@
         return;
       }
 
+      if (currentPurchaseLimit <= 0) {
+        alert("你此活動已達可購買上限");
+        return;
+      }
+
+      if (selectedQuantity <= 0 || selectedQuantity > currentPurchaseLimit) {
+        alert("目前張數超出可購買上限");
+        return;
+      }
+
       const submitBtn = document.getElementById("submitBtn");
       submitBtn.disabled = true;
       const oldText = submitBtn.textContent;
       submitBtn.textContent = "送出中…";
 
       try {
-        const existingQuery = query(
-          collection(db, "events", currentEvent.id, "orders"),
-          where("uid", "==", currentUser.uid),
-          where("ticketTypeId", "==", selectedTicket.id),
-          limit(1)
-        );
-        const existingSnap = await getDocs(existingQuery);
+        const freshPurchasedCount = await getCurrentPurchasedCount(currentEvent.id, currentUser.uid);
+        currentPurchasedCount = freshPurchasedCount;
+        updateQuantityBounds();
 
-        if (!existingSnap.empty) {
-          throw new Error("你已經報名過這個票種");
+        if (selectedQuantity <= 0 || selectedQuantity > currentPurchaseLimit) {
+          throw new Error("目前剩餘可購買張數不足，請重新確認");
         }
 
         const orderPayload = {
@@ -1125,12 +1211,16 @@
           ticketTypeId: selectedTicket.id,
           ticketTypeName: selectedTicket.name,
           ticketPrice: Number(selectedTicket.price || 0),
+          quantity: selectedQuantity,
+          totalAmount: Number(selectedTicket.price || 0) * selectedQuantity,
           inviteCode: validatedInviteCode || "",
           eligibilityType: latestEligibility.type,
           verifiedSchoolId: norm(currentUserProfile?.verifiedSchoolId || ""),
           verifiedSchoolName: norm(currentUserProfile?.verifiedSchoolName || ""),
           verifyMethod: norm(currentUserProfile?.verifyMethod || ""),
           schoolEmail: norm(currentUserProfile?.schoolEmail || ""),
+          matchedRole: norm(currentMatchedRecord?.purchaseRole || ""),
+          matchedTags: Array.isArray(currentMatchedRecord?.purchaseTags) ? currentMatchedRecord.purchaseTags : [],
           status: "registered",
           paymentStatus: Number(selectedTicket.price || 0) > 0 ? "pending" : "free",
           createdAt: serverTimestamp(),
@@ -1139,6 +1229,9 @@
 
         await addDoc(collection(db, "events", currentEvent.id, "orders"), orderPayload);
 
+        currentPurchasedCount += selectedQuantity;
+        updateQuantityBounds();
+
         showModal({
           title:"報名成功",
           sub:"你的活動資料已建立完成。",
@@ -1146,7 +1239,8 @@
             <div class="notice">
               活動：${esc(currentEvent.title || "-")}<br>
               票種：${esc(selectedTicket.name || "-")}<br>
-              金額：${esc(formatPrice(selectedTicket.price || 0))}<br>
+              張數：${esc(selectedQuantity)}<br>
+              金額：${esc(formatPrice((selectedTicket.price || 0) * selectedQuantity))}<br>
               ${validatedInviteCode ? `邀請碼：${esc(validatedInviteCode)}<br>` : ""}
               狀態：已建立報名 / 訂單資料
             </div>
@@ -1161,6 +1255,8 @@
           location.href = "member.html";
         };
         document.getElementById("successCloseBtn").onclick = closeModal;
+
+        await refreshPageState();
 
       } catch (e) {
         console.error(e);
@@ -1188,14 +1284,23 @@
         selectedTicketId = selectedTicket?.id || "";
       }
 
+      updateQuantityBounds();
+
       const userEmailText = currentUser?.email ? esc(currentUser.email) : "尚未登入";
       const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "");
       const verifiedSchoolHtml = verifiedSchoolName ? esc(verifiedSchoolName) : "未驗證";
 
-      const submitDisabled = !eligibility.canSubmit || !selectedTicket;
+      const submitDisabled =
+        !eligibility.canSubmit ||
+        !selectedTicket ||
+        currentPurchaseLimit <= 0 ||
+        selectedQuantity <= 0;
+
       const inviteText = validatedInviteCode
         ? `<span class="pill">已套用邀請碼：${esc(validatedInviteCode)}</span>`
         : (event.inviteCodeEnabled === true ? `<span class="pill">可使用邀請碼</span>` : "");
+
+      const totalPrice = (selectedTicket?.price || 0) * Math.max(selectedQuantity, 0);
 
       app.className = "";
       app.innerHTML = `
@@ -1223,7 +1328,10 @@
                         <div class="ticket-name">${esc(ticket.name)}</div>
                         <div class="ticket-price">${esc(formatPrice(ticket.price))}</div>
                       </div>
-                      <div class="ticket-desc">${esc(ticket.description || "此票種尚無額外說明")}</div>
+                      <div class="ticket-desc">
+                        ${esc(ticket.description || "此票種尚無額外說明")}
+                        ${ticket.maxPerUser > 0 ? `\n每帳號上限：${ticket.maxPerUser} 張` : ""}
+                      </div>
                     </div>
                   `).join("")}
                 </div>
@@ -1263,7 +1371,7 @@
               <div class="side-head">
                 <h2 class="side-title">確認報名資訊</h2>
                 <div class="side-sub">
-                  請確認你的資格、票種與活動資訊無誤後，再送出報名。
+                  請確認你的資格、票種、張數與活動資訊無誤後，再送出報名。
                 </div>
               </div>
 
@@ -1278,8 +1386,14 @@
                   <div class="k">票種</div>
                   <div class="v">${esc(selectedTicket?.name || "尚未選擇")}</div>
 
-                  <div class="k">金額</div>
+                  <div class="k">單價</div>
                   <div class="v">${esc(formatPrice(selectedTicket?.price || 0))}</div>
+
+                  <div class="k">已購買</div>
+                  <div class="v">${esc(currentPurchasedCount)} 張</div>
+
+                  <div class="k">可再買</div>
+                  <div class="v">${currentPurchaseLimit >= 999 ? "不限" : `${esc(currentPurchaseLimit)} 張`}</div>
                 </div>
 
                 <div class="status-box ${statusBlock.className}">
@@ -1291,6 +1405,29 @@
                   <div style="font-size:12px;color:#6b7280;font-weight:900;">目前套用</div>
                   <div style="margin-top:8px;font-size:14px;font-weight:1000;line-height:1.8;">
                     ${inviteText || `<span class="pill">未使用邀請碼</span>`}
+                  </div>
+                </div>
+
+                <div class="qty-wrap">
+                  <div style="font-size:12px;color:#6b7280;font-weight:900;">購買張數</div>
+                  <div class="qty-row">
+                    <div class="small">
+                      ${currentPurchaseLimit <= 0
+                        ? `<span style="color:#b91c1c;font-weight:900;">你已達可購買上限</span>`
+                        : `本次可購買上限：${currentPurchaseLimit >= 999 ? "不限" : `${currentPurchaseLimit} 張`}`}
+                    </div>
+                    <div class="qty-controls">
+                      <button class="qty-btn" id="qtyMinusBtn" ${currentPurchaseLimit <= 0 || selectedQuantity <= 1 ? "disabled" : ""}>−</button>
+                      <div class="qty-value">${selectedQuantity > 0 ? selectedQuantity : 0}</div>
+                      <button class="qty-btn" id="qtyPlusBtn" ${currentPurchaseLimit <= 0 || selectedQuantity >= currentPurchaseLimit ? "disabled" : ""}>＋</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="selected-box">
+                  <div style="font-size:12px;color:#6b7280;font-weight:900;">總計</div>
+                  <div style="margin-top:8px;font-size:22px;font-weight:1000;line-height:1.2;">
+                    ${esc(formatPrice(totalPrice))}
                   </div>
                 </div>
 
@@ -1307,7 +1444,8 @@
                   ${event.allowedUsersEnabled === true
                     ? `這場活動有活動資格名單限制，系統已重新檢查你的資格狀態。`
                     : `這場活動目前沒有額外資格名單限制。`}
-                  ${validatedInviteCode ? `\n目前已套用邀請碼，可直接進行後續流程。` : ``}
+                  ${validatedInviteCode ? `\n目前已套用邀請碼。` : ``}
+                  ${currentPurchaseLimit <= 0 ? `\n你目前已達此活動可購買張數上限。` : ``}
                 </div>
               </div>
             </div>
@@ -1318,6 +1456,11 @@
       [...document.querySelectorAll("[data-ticket-id]")].forEach(el => {
         el.onclick = () => selectTicket(el.dataset.ticketId);
       });
+
+      const qtyMinusBtn = document.getElementById("qtyMinusBtn");
+      const qtyPlusBtn = document.getElementById("qtyPlusBtn");
+      if (qtyMinusBtn) qtyMinusBtn.onclick = () => changeQuantity(-1);
+      if (qtyPlusBtn) qtyPlusBtn.onclick = () => changeQuantity(1);
 
       document.getElementById("submitBtn").onclick = createOrder;
       document.getElementById("inviteBtn").onclick = showInviteModal;
@@ -1344,6 +1487,18 @@
 
         latestEligibility = await evaluateEligibility(currentEvent);
         backLink.href = `event.html?id=${encodeURIComponent(currentEvent.id)}`;
+
+        const ticketTypes = getTicketTypes(currentEvent);
+        if (!selectedTicketId && ticketTypes.length) {
+          selectedTicketId = ticketTypes[0].id;
+          selectedTicket = ticketTypes[0];
+        } else {
+          selectedTicket = ticketTypes.find(item => item.id === selectedTicketId) || ticketTypes[0] || null;
+          selectedTicketId = selectedTicket?.id || "";
+        }
+
+        currentPurchasedCount = currentUser ? await getCurrentPurchasedCount(currentEvent.id, currentUser.uid) : 0;
+        updateQuantityBounds();
         renderPage(currentEvent, latestEligibility);
       } catch (e){
         console.error(e);

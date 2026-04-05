@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜座位編輯器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.10);
+      --line-strong:rgba(17,24,39,.16);
+      --shadow:0 16px 40px rgba(0,0,0,.08);
+      --black:#111;
+      --ok:#166534;
+      --warn:#b91c1c;
+      --blue:#1d4ed8;
+      --seat:#ffffff;
+      --seat-border:#111827;
+      --seat-selected:#111827;
+      --seat-disabled:#d1d5db;
+      --seat-sold:#6b7280;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    .wrap{
+      max-width:1440px;
+      margin:0 auto;
+      padding:22px 16px 30px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    h2{
+      margin:0;
+      font-size:17px;
+      font-weight:1000;
+    }
+
+    .sub{
+      margin-top:6px;
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111;
+      font-weight:1000;
+      font-size:15px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-danger{
+      color:#b91c1c;
+      background:#fff;
+      border-color:rgba(185,28,28,.20);
+    }
+
+    .btn-sm{
+      min-height:38px;
+      padding:8px 14px;
+      font-size:14px;
+    }
+
+    label{
+      display:block;
+      margin:12px 0 6px;
+      font-size:13px;
+      font-weight:1000;
+      color:#111827;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea{
+      width:100%;
+      padding:12px 13px;
+      border:1px solid var(--line-strong);
+      border-radius:14px;
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      outline:none;
+    }
+
+    textarea{
+      min-height:84px;
+      resize:vertical;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:280px minmax(0,1fr) 360px;
+      gap:16px;
+      align-items:start;
+    }
+
+    @media (max-width:1200px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .side-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .tool-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .ok{ color:var(--ok); font-weight:1000; }
+    .warn{ color:var(--warn); font-weight:1000; }
+
+    .canvas-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .canvas-toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      flex-wrap:wrap;
+    }
+
+    .canvas-wrap{
+      position:relative;
+      overflow:auto;
+      background:#f8fafc;
+      min-height:720px;
+      max-height:78vh;
+    }
+
+    .stage{
+      position:relative;
+      width:1200px;
+      height:900px;
+      margin:0 auto;
+      background:#f3f4f6;
+      transform-origin:top left;
+      user-select:none;
+    }
+
+    .seatmap-image{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      pointer-events:none;
+      opacity:1;
+    }
+
+    .seat{
+      position:absolute;
+      width:18px;
+      height:18px;
+      border-radius:4px;
+      border:1.5px solid var(--seat-border);
+      background:var(--seat);
+      cursor:pointer;
+      transform-origin:center center;
+      box-shadow:0 2px 6px rgba(0,0,0,.08);
+    }
+
+    .seat.selected{
+      background:var(--seat-selected);
+      border-color:var(--seat-selected);
+      box-shadow:0 0 0 3px rgba(17,24,39,.18);
+    }
+
+    .seat.disabled{
+      background:var(--seat-disabled);
+      border-color:#9ca3af;
+    }
+
+    .seat.sold{
+      background:var(--seat-sold);
+      border-color:var(--seat-sold);
+    }
+
+    .seat-label{
+      position:absolute;
+      left:50%;
+      top:100%;
+      transform:translateX(-50%);
+      margin-top:3px;
+      font-size:9px;
+      white-space:nowrap;
+      color:#111827;
+      pointer-events:none;
+      font-weight:900;
+      background:rgba(255,255,255,.92);
+      padding:1px 4px;
+      border-radius:6px;
+      border:1px solid rgba(17,24,39,.08);
+    }
+
+    .notice{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:#f9fafb;
+      font-size:13px;
+      line-height:1.8;
+      color:#4b5563;
+    }
+
+    .field-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:700px){
+      .field-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .checklist{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .check-item{
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      font-size:14px;
+      color:#374151;
+    }
+
+    .check-item input{
+      margin-top:2px;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .divider{
+      height:1px;
+      background:var(--line);
+      margin:14px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="card"></div>
+
+    <div id="app" style="display:none;">
+      <div class="card">
+        <div class="topbar">
+          <div>
+            <h1>座位編輯器</h1>
+            <div class="sub">
+              可針對單顆座位逐一設定位置、區域、價格、狀態與限制身份。這一版先完成單顆新增、拖曳與儲存。
+            </div>
+            <div class="sub small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout">
+        <!-- 左側工具 -->
+        <div class="side-card">
+          <h2>工具</h2>
+
+          <label>活動</label>
+          <select id="eventSel"></select>
+          <div id="eventMeta" class="small" style="margin-top:8px;">-</div>
+
+          <div class="divider"></div>
+
+          <div class="tool-list">
+            <button class="btn btn-primary" id="addSeatModeBtn">點擊新增座位：開</button>
+            <button class="btn" id="reloadSeatsBtn">重新載入座位</button>
+            <button class="btn" id="clearSelectionBtn">取消選取</button>
+            <button class="btn btn-primary" id="saveSeatBtn" disabled>儲存目前座位</button>
+            <button class="btn btn-danger" id="deleteSeatBtn" disabled>刪除目前座位</button>
+          </div>
+
+          <div class="notice">
+            操作方式：<br>
+            1. 先選活動<br>
+            2. 若活動有底圖會顯示在中間<br>
+            3. 保持「點擊新增座位：開」時，點畫布可新增一顆座位<br>
+            4. 點既有座位可選取，拖曳即可移動<br>
+            5. 右邊可修改該座位詳細設定
+          </div>
+        </div>
+
+        <!-- 中間畫布 -->
+        <div class="canvas-card">
+          <div class="canvas-toolbar">
+            <div class="row">
+              <span class="pill">畫布尺寸：1200 × 900</span>
+              <span class="pill">已載入座位：<span id="seatCountText" style="margin-left:6px;">0</span></span>
+            </div>
+
+            <div class="row">
+              <button class="btn btn-sm" id="zoomOutBtn">－ 縮小</button>
+              <button class="btn btn-sm" id="zoomResetBtn">100%</button>
+              <button class="btn btn-sm" id="zoomInBtn">＋ 放大</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap" id="canvasWrap">
+            <div class="stage" id="stage">
+              <img id="seatMapImage" class="seatmap-image" src="" alt="seat map" style="display:none;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側設定 -->
+        <div class="side-card">
+          <h2>座位設定</h2>
+          <div id="seatEditorEmpty" class="empty" style="margin-top:10px;">
+            尚未選取座位。請先點中一顆座位，或在畫布上新增一顆座位。
+          </div>
+
+          <div id="seatEditor" style="display:none;">
+            <div class="field-grid">
+              <div>
+                <label>seatId</label>
+                <input id="seatIdInput" type="text" placeholder="例如：A1-R01-S08" />
+              </div>
+              <div>
+                <label>顯示名稱</label>
+                <input id="seatLabelInput" type="text" placeholder="例如：A1 01排 08號" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>區域 sectionId</label>
+                <input id="sectionIdInput" type="text" placeholder="例如：A1" />
+              </div>
+              <div>
+                <label>區域名稱</label>
+                <input id="sectionNameInput" type="text" placeholder="例如：A1區" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>樓層</label>
+                <input id="floorInput" type="text" placeholder="例如：1F" />
+              </div>
+              <div>
+                <label>價格</label>
+                <input id="priceInput" type="number" min="0" placeholder="例如：1200" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>排 row</label>
+                <input id="rowInput" type="text" placeholder="例如：01" />
+              </div>
+              <div>
+                <label>座號 seatNumber</label>
+                <input id="seatNumberInput" type="text" placeholder="例如：08" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>X</label>
+                <input id="xInput" type="number" />
+              </div>
+              <div>
+                <label>Y</label>
+                <input id="yInput" type="number" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>旋轉 rotation</label>
+                <input id="rotationInput" type="number" value="0" />
+              </div>
+              <div>
+                <label>狀態</label>
+                <select id="statusInput">
+                  <option value="available">available</option>
+                  <option value="disabled">disabled</option>
+                  <option value="sold">sold</option>
+                </select>
+              </div>
+            </div>
+
+            <label>開放角色（逗號分隔）</label>
+            <input id="rolesInput" type="text" placeholder="例如：general,vip" />
+
+            <label>開放標籤（逗號分隔）</label>
+            <input id="tagsInput" type="text" placeholder="例如：student,teacher" />
+
+            <label>開放票種（逗號分隔）</label>
+            <input id="ticketTypesInput" type="text" placeholder="例如：general,vip" />
+
+            <div class="checklist">
+              <label class="check-item">
+                <input id="enabledInput" type="checkbox" checked />
+                <span>此座位啟用 enabled</span>
+              </label>
+
+              <label class="check-item">
+                <input id="wheelchairInput" type="checkbox" />
+                <span>輪椅席 isWheelchair</span>
+              </label>
+
+              <label class="check-item">
+                <input id="companionInput" type="checkbox" />
+                <span>陪同席 isCompanionSeat</span>
+              </label>
+            </div>
+
+            <div id="seatMsg" class="small" style="margin-top:12px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const who = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const eventSel = document.getElementById("eventSel");
+    const eventMeta = document.getElementById("eventMeta");
+
+    const addSeatModeBtn = document.getElementById("addSeatModeBtn");
+    const reloadSeatsBtn = document.getElementById("reloadSeatsBtn");
+    const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+    const saveSeatBtn = document.getElementById("saveSeatBtn");
+    const deleteSeatBtn = document.getElementById("deleteSeatBtn");
+
+    const canvasWrap = document.getElementById("canvasWrap");
+    const stage = document.getElementById("stage");
+    const seatMapImage = document.getElementById("seatMapImage");
+    const seatCountText = document.getElementById("seatCountText");
+
+    const zoomOutBtn = document.getElementById("zoomOutBtn");
+    const zoomResetBtn = document.getElementById("zoomResetBtn");
+    const zoomInBtn = document.getElementById("zoomInBtn");
+
+    const seatEditorEmpty = document.getElementById("seatEditorEmpty");
+    const seatEditor = document.getElementById("seatEditor");
+    const seatMsg = document.getElementById("seatMsg");
+
+    const seatIdInput = document.getElementById("seatIdInput");
+    const seatLabelInput = document.getElementById("seatLabelInput");
+    const sectionIdInput = document.getElementById("sectionIdInput");
+    const sectionNameInput = document.getElementById("sectionNameInput");
+    const floorInput = document.getElementById("floorInput");
+    const priceInput = document.getElementById("priceInput");
+    const rowInput = document.getElementById("rowInput");
+    const seatNumberInput = document.getElementById("seatNumberInput");
+    const xInput = document.getElementById("xInput");
+    const yInput = document.getElementById("yInput");
+    const rotationInput = document.getElementById("rotationInput");
+    const statusInput = document.getElementById("statusInput");
+    const rolesInput = document.getElementById("rolesInput");
+    const tagsInput = document.getElementById("tagsInput");
+    const ticketTypesInput = document.getElementById("ticketTypesInput");
+    const enabledInput = document.getElementById("enabledInput");
+    const wheelchairInput = document.getElementById("wheelchairInput");
+    const companionInput = document.getElementById("companionInput");
+
+    let currentUser = null;
+    let currentRole = "";
+    let currentEventId = "";
+    let currentEventData = null;
+
+    let addSeatMode = true;
+    let zoomScale = 1;
+
+    let seatMap = new Map();
+    let selectedSeatId = "";
+    let dragState = null;
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function splitCsv(v){
+      return norm(v)
+        .split(",")
+        .map(x => norm(x))
+        .filter(Boolean);
+    }
+
+    function showGate(html){
+      gate.innerHTML = html;
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    async function doLogout(){
+      await firebase.auth().signOut();
+    }
+    logoutBtn.onclick = doLogout;
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"尚未授權" };
+
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+
+      return {
+        ok:true,
+        role:norm(u.role),
+        userData:u
+      };
+    }
+
+    function resetSeatEditor(){
+      selectedSeatId = "";
+      saveSeatBtn.disabled = true;
+      deleteSeatBtn.disabled = true;
+      seatEditor.style.display = "none";
+      seatEditorEmpty.style.display = "block";
+      seatMsg.innerHTML = "";
+
+      seatIdInput.value = "";
+      seatLabelInput.value = "";
+      sectionIdInput.value = "";
+      sectionNameInput.value = "";
+      floorInput.value = "";
+      priceInput.value = "";
+      rowInput.value = "";
+      seatNumberInput.value = "";
+      xInput.value = "";
+      yInput.value = "";
+      rotationInput.value = "0";
+      statusInput.value = "available";
+      rolesInput.value = "";
+      tagsInput.value = "";
+      ticketTypesInput.value = "";
+      enabledInput.checked = true;
+      wheelchairInput.checked = false;
+      companionInput.checked = false;
+
+      renderSeats();
+    }
+
+    function showSeatEditor(seat){
+      seatEditorEmpty.style.display = "none";
+      seatEditor.style.display = "block";
+      saveSeatBtn.disabled = false;
+      deleteSeatBtn.disabled = false;
+
+      seatIdInput.value = norm(seat.seatId || "");
+      seatLabelInput.value = norm(seat.label || "");
+      sectionIdInput.value = norm(seat.sectionId || "");
+      sectionNameInput.value = norm(seat.sectionName || "");
+      floorInput.value = norm(seat.floor || "");
+      priceInput.value = Number(seat.price || 0);
+      rowInput.value = norm(seat.row || "");
+      seatNumberInput.value = norm(seat.seatNumber || "");
+      xInput.value = Number(seat.x || 0);
+      yInput.value = Number(seat.y || 0);
+      rotationInput.value = Number(seat.rotation || 0);
+      statusInput.value = norm(seat.status || "available");
+      rolesInput.value = Array.isArray(seat.allowedRoles) ? seat.allowedRoles.join(",") : "";
+      tagsInput.value = Array.isArray(seat.allowedTags) ? seat.allowedTags.join(",") : "";
+      ticketTypesInput.value = Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes.join(",") : "";
+      enabledInput.checked = seat.enabled !== false;
+      wheelchairInput.checked = seat.isWheelchair === true;
+      companionInput.checked = seat.isCompanionSeat === true;
+
+      seatMsg.innerHTML = "";
+    }
+
+    function buildSeatPayloadFromEditor(){
+      const seatId = norm(seatIdInput.value);
+
+      return {
+        seatId,
+        sectionId: norm(sectionIdInput.value),
+        sectionName: norm(sectionNameInput.value),
+        floor: norm(floorInput.value),
+        row: norm(rowInput.value),
+        seatNumber: norm(seatNumberInput.value),
+        label: norm(seatLabelInput.value) || seatId,
+        x: Number(xInput.value || 0),
+        y: Number(yInput.value || 0),
+        rotation: Number(rotationInput.value || 0),
+        price: Number(priceInput.value || 0),
+        status: norm(statusInput.value || "available"),
+        enabled: enabledInput.checked,
+        allowedRoles: splitCsv(rolesInput.value),
+        allowedTags: splitCsv(tagsInput.value),
+        allowedTicketTypes: splitCsv(ticketTypesInput.value),
+        isWheelchair: wheelchairInput.checked,
+        isCompanionSeat: companionInput.checked,
+        heldBy: "",
+        heldUntil: null,
+        orderId: ""
+      };
+    }
+
+    function updateSelectedSeatFromEditorToMemory(){
+      if (!selectedSeatId || !seatMap.has(selectedSeatId)) return;
+
+      const payload = buildSeatPayloadFromEditor();
+      const old = seatMap.get(selectedSeatId);
+
+      const nextId = payload.seatId || selectedSeatId;
+      if (nextId !== selectedSeatId) {
+        seatMap.delete(selectedSeatId);
+        seatMap.set(nextId, { ...old, ...payload });
+        selectedSeatId = nextId;
+      } else {
+        seatMap.set(selectedSeatId, { ...old, ...payload });
+      }
+
+      renderSeats();
+    }
+
+    [
+      seatIdInput, seatLabelInput, sectionIdInput, sectionNameInput, floorInput,
+      priceInput, rowInput, seatNumberInput, xInput, yInput, rotationInput,
+      statusInput, rolesInput, tagsInput, ticketTypesInput, enabledInput,
+      wheelchairInput, companionInput
+    ].forEach(el => {
+      el.addEventListener("input", updateSelectedSeatFromEditorToMemory);
+      el.addEventListener("change", updateSelectedSeatFromEditorToMemory);
+    });
+
+    function getSeatClass(seat){
+      let cls = "seat";
+      if (seat.status === "disabled" || seat.enabled === false) cls += " disabled";
+      if (seat.status === "sold") cls += " sold";
+      if (selectedSeatId === seat.seatId) cls += " selected";
+      return cls;
+    }
+
+    function renderSeats(){
+      [...stage.querySelectorAll(".seat")].forEach(el => el.remove());
+
+      const seats = [...seatMap.values()];
+      seatCountText.textContent = seats.length;
+
+      seats.forEach(seat => {
+        const el = document.createElement("div");
+        el.className = getSeatClass(seat);
+        el.style.left = `${Number(seat.x || 0)}px`;
+        el.style.top = `${Number(seat.y || 0)}px`;
+        el.style.transform = `rotate(${Number(seat.rotation || 0)}deg)`;
+        el.dataset.seatId = seat.seatId;
+
+        const label = document.createElement("div");
+        label.className = "seat-label";
+        label.textContent = norm(seat.label || seat.seatId || "seat");
+        el.appendChild(label);
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectSeat(seat.seatId);
+        });
+
+        el.addEventListener("mousedown", (e) => {
+          e.stopPropagation();
+          selectSeat(seat.seatId);
+          startDragSeat(e, seat.seatId);
+        });
+
+        stage.appendChild(el);
+      });
+    }
+
+    function selectSeat(seatId){
+      selectedSeatId = seatId;
+      const seat = seatMap.get(seatId);
+      if (!seat) return resetSeatEditor();
+      showSeatEditor(seat);
+      renderSeats();
+    }
+
+    function stagePointFromMouse(e){
+      const rect = stage.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / zoomScale;
+      const y = (e.clientY - rect.top) / zoomScale;
+      return { x, y };
+    }
+
+    function startDragSeat(e, seatId){
+      const seat = seatMap.get(seatId);
+      if (!seat) return;
+
+      const pt = stagePointFromMouse(e);
+      dragState = {
+        seatId,
+        offsetX: pt.x - Number(seat.x || 0),
+        offsetY: pt.y - Number(seat.y || 0)
+      };
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragState) return;
+      const seat = seatMap.get(dragState.seatId);
+      if (!seat) return;
+
+      const pt = stagePointFromMouse(e);
+      seat.x = Math.round(pt.x - dragState.offsetX);
+      seat.y = Math.round(pt.y - dragState.offsetY);
+
+      if (selectedSeatId === seat.seatId) {
+        xInput.value = seat.x;
+        yInput.value = seat.y;
+      }
+
+      seatMap.set(seat.seatId, seat);
+      renderSeats();
+    });
+
+    window.addEventListener("mouseup", () => {
+      dragState = null;
+    });
+
+    stage.addEventListener("click", (e) => {
+      if (!currentEventId) return;
+      if (!addSeatMode) return;
+      if (e.target !== stage && e.target !== seatMapImage) return;
+
+      const pt = stagePointFromMouse(e);
+      const nextIndex = seatMap.size + 1;
+      const seatId = `seat_${Date.now()}_${nextIndex}`;
+
+      const seat = {
+        seatId,
+        sectionId: "",
+        sectionName: "",
+        floor: "1F",
+        row: "",
+        seatNumber: "",
+        label: `新座位 ${nextIndex}`,
+        x: Math.round(pt.x - 9),
+        y: Math.round(pt.y - 9),
+        rotation: 0,
+        price: 0,
+        status: "available",
+        enabled: true,
+        allowedRoles: [],
+        allowedTags: [],
+        allowedTicketTypes: [],
+        isWheelchair: false,
+        isCompanionSeat: false,
+        heldBy: "",
+        heldUntil: null,
+        orderId: ""
+      };
+
+      seatMap.set(seatId, seat);
+      selectSeat(seatId);
+      renderSeats();
+      seatMsg.innerHTML = `<span class="ok">已新增新座位，請記得儲存。</span>`;
+    });
+
+    clearSelectionBtn.onclick = resetSeatEditor;
+
+    addSeatModeBtn.onclick = () => {
+      addSeatMode = !addSeatMode;
+      addSeatModeBtn.textContent = `點擊新增座位：${addSeatMode ? "開" : "關"}`;
+      addSeatModeBtn.classList.toggle("btn-primary", addSeatMode);
+    };
+
+    function applyZoom(){
+      stage.style.transform = `scale(${zoomScale})`;
+      stage.style.width = "1200px";
+      stage.style.height = "900px";
+      const scaledWidth = 1200 * zoomScale;
+      const scaledHeight = 900 * zoomScale;
+      stage.parentElement.style.minHeight = `${Math.max(720, scaledHeight)}px`;
+      stage.style.margin = "0 auto";
+    }
+
+    zoomOutBtn.onclick = () => {
+      zoomScale = Math.max(0.4, Math.round((zoomScale - 0.1) * 10) / 10);
+      applyZoom();
+    };
+    zoomResetBtn.onclick = () => {
+      zoomScale = 1;
+      applyZoom();
+    };
+    zoomInBtn.onclick = () => {
+      zoomScale = Math.min(2.5, Math.round((zoomScale + 0.1) * 10) / 10);
+      applyZoom();
+    };
+
+    async function loadEvents(){
+      eventSel.innerHTML = `<option value="">載入中…</option>`;
+
+      const snap = await db.collection("events").get();
+      const rows = snap.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() || {})
+      }));
+
+      rows.sort((a, b) => norm(a.title).localeCompare(norm(b.title), "zh-Hant"));
+
+      if (!rows.length) {
+        eventSel.innerHTML = `<option value="">目前沒有活動</option>`;
+        return;
+      }
+
+      eventSel.innerHTML = rows.map(item => `
+        <option value="${esc(item.id)}">${esc(item.title || item.id)}（${esc(item.id)}）</option>
+      `).join("");
+
+      currentEventId = eventSel.value;
+      await loadEventData();
+    }
+
+    async function loadEventData(){
+      currentEventId = norm(eventSel.value);
+      seatMap.clear();
+      resetSeatEditor();
+      renderSeats();
+
+      if (!currentEventId) {
+        currentEventData = null;
+        eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
+        seatMapImage.style.display = "none";
+        seatMapImage.src = "";
+        return;
+      }
+
+      const snap = await db.collection("events").doc(currentEventId).get();
+      currentEventData = snap.exists ? (snap.data() || {}) : null;
+
+      if (!currentEventData) {
+        eventMeta.innerHTML = `<span class="warn">找不到活動資料</span>`;
+        return;
+      }
+
+      const title = norm(currentEventData.title || currentEventId);
+      const seatMapEnabled = currentEventData.seatMapEnabled === true;
+      const seatMapImageUrl = norm(currentEventData.seatMapImage || "");
+
+      eventMeta.innerHTML = `
+        活動：<b>${esc(title)}</b><br>
+        seatMapEnabled：<span class="mono">${seatMapEnabled ? "true" : "false"}</span><br>
+        底圖：<span class="mono">${seatMapImageUrl ? "已設定" : "未設定"}</span>
+      `;
+
+      if (seatMapImageUrl) {
+        seatMapImage.src = seatMapImageUrl;
+        seatMapImage.style.display = "block";
+      } else {
+        seatMapImage.src = "";
+        seatMapImage.style.display = "none";
+      }
+
+      await loadSeats();
+    }
+
+    async function loadSeats(){
+      if (!currentEventId) return;
+
+      seatMap.clear();
+      resetSeatEditor();
+      renderSeats();
+
+      const snap = await db.collection("events").doc(currentEventId).collection("seats").get();
+      snap.forEach(doc => {
+        const seat = doc.data() || {};
+        const seatId = norm(seat.seatId || doc.id);
+        seatMap.set(seatId, { seatId, ...seat });
+      });
+
+      renderSeats();
+    }
+
+    reloadSeatsBtn.onclick = loadSeats;
+    eventSel.onchange = loadEventData;
+
+    async function saveCurrentSeat(){
+      if (!currentEventId) {
+        alert("請先選擇活動");
+        return;
+      }
+      if (!selectedSeatId) {
+        alert("請先選取座位");
+        return;
+      }
+
+      const payload = buildSeatPayloadFromEditor();
+      if (!payload.seatId) {
+        seatMsg.innerHTML = `<span class="warn">seatId 不可空白</span>`;
+        return;
+      }
+
+      saveSeatBtn.disabled = true;
+      const oldText = saveSeatBtn.textContent;
+      saveSeatBtn.textContent = "儲存中…";
+      seatMsg.innerHTML = "";
+
+      try{
+        await db.collection("events")
+          .doc(currentEventId)
+          .collection("seats")
+          .doc(payload.seatId)
+          .set({
+            ...payload,
+            updatedAt: new Date(),
+            updatedByUid: currentUser ? currentUser.uid : ""
+          }, { merge:true });
+
+        if (payload.seatId !== selectedSeatId && seatMap.has(selectedSeatId)) {
+          await db.collection("events")
+            .doc(currentEventId)
+            .collection("seats")
+            .doc(selectedSeatId)
+            .delete();
+
+          seatMap.delete(selectedSeatId);
+          seatMap.set(payload.seatId, payload);
+          selectedSeatId = payload.seatId;
+        } else {
+          seatMap.set(payload.seatId, payload);
+          selectedSeatId = payload.seatId;
+        }
+
+        renderSeats();
+        seatMsg.innerHTML = `<span class="ok">座位已儲存</span>`;
+      }catch(e){
+        console.error(e);
+        seatMsg.innerHTML = `<span class="warn">儲存失敗：${esc(e.message || e)}</span>`;
+      }finally{
+        saveSeatBtn.disabled = false;
+        saveSeatBtn.textContent = oldText;
+      }
+    }
+
+    saveSeatBtn.onclick = saveCurrentSeat;
+
+    async function deleteCurrentSeat(){
+      if (!currentEventId || !selectedSeatId) return;
+      const ok = confirm(`確定要刪除座位「${selectedSeatId}」嗎？`);
+      if (!ok) return;
+
+      deleteSeatBtn.disabled = true;
+      const oldText = deleteSeatBtn.textContent;
+      deleteSeatBtn.textContent = "刪除中…";
+
+      try{
+        await db.collection("events")
+          .doc(currentEventId)
+          .collection("seats")
+          .doc(selectedSeatId)
+          .delete();
+
+        seatMap.delete(selectedSeatId);
+        resetSeatEditor();
+        renderSeats();
+      }catch(e){
+        console.error(e);
+        alert("刪除失敗：" + (e.message || e));
+      }finally{
+        deleteSeatBtn.disabled = false;
+        deleteSeatBtn.textContent = oldText;
+      }
+    }
+
+    deleteSeatBtn.onclick = deleteCurrentSeat;
+
+    firebase.auth().onAuthStateChanged(async user => {
+      currentUser = user || null;
+
+      if (!user) {
+        showGate(`
+          <h1>座位編輯器</h1>
+          <div class="sub">請先登入後台帳號。</div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
+          </div>
+        `);
+
+        document.getElementById("loginBtn").onclick = async () => {
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+        };
+        return;
+      }
+
+      try{
+        const r = await loadMyRole(user.uid);
+        if (!r.ok) {
+          showGate(`
+            <h1>無法進入</h1>
+            <div class="sub warn">${esc(r.reason)}</div>
+            <div style="margin-top:16px;">
+              <button class="btn" id="outBtn">登出</button>
+            </div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        currentRole = r.role;
+
+        const allowed = ["platform_super","platform_admin","org_super","org_admin"];
+        if (!allowed.includes(currentRole)) {
+          showGate(`
+            <h1>權限不足</h1>
+            <div class="sub warn">你的角色無法使用座位編輯器。</div>
+            <div style="margin-top:16px;">
+              <button class="btn" id="outBtn">登出</button>
+            </div>
+          `);
+          document.getElementById("outBtn").onclick = doLogout;
+          return;
+        }
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        who.textContent = user.email || user.uid;
+        roleText.textContent = currentRole || "-";
+
+        applyZoom();
+        await loadEvents();
+
+      }catch(e){
+        console.error(e);
+        showGate(`
+          <h1>發生錯誤</h1>
+          <div class="sub warn">無法讀取資料，請查看 Console。</div>
+          <div style="margin-top:16px;">
+            <button class="btn" id="outBtn">登出</button>
+          </div>
+        `);
+        document.getElementById("outBtn").onclick = doLogout;
+      }
+    });
+  </script>
+</body>
+</html>
