@@ -2,100 +2,307 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>活動詳情</title>
+<title>後台｜活動詳情</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC";
-  background:#f6f7fb;
-}
+  :root{
+    --bg:#f6f7fb;
+    --card:#fff;
+    --text:#111827;
+    --muted:#6b7280;
+    --line:rgba(17,24,39,.08);
+    --shadow:0 12px 28px rgba(0,0,0,.06);
+    --ok:#16a34a;
+    --warn:#dc2626;
+    --blue:#2563eb;
+    --dark:#111827;
+  }
 
-.wrap{
-  max-width:1000px;
-  margin:auto;
-  padding:24px 16px 40px;
-}
+  *{ box-sizing:border-box; }
 
-.card{
-  background:#fff;
-  border-radius:18px;
-  padding:16px;
-  margin-bottom:16px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
 
-h1{margin:0 0 6px;font-size:22px;}
-h2{margin:0 0 10px;font-size:18px;}
+  .wrap{
+    max-width:1100px;
+    margin:auto;
+    padding:24px 16px 40px;
+  }
 
-.small{color:#6b7280;font-size:13px;}
+  .card{
+    background:#fff;
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:16px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+  }
 
-.stat{
-  display:flex;
-  justify-content:space-between;
-  margin-top:8px;
-}
+  h1{
+    margin:0;
+    font-size:24px;
+    font-weight:900;
+  }
 
-.pill{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-}
+  h2{
+    margin:0;
+    font-size:18px;
+    font-weight:900;
+  }
 
-.ok{color:#16a34a;}
-.warn{color:#dc2626;}
-.blue{color:#2563eb;}
+  .sub{
+    color:var(--muted);
+    margin-top:6px;
+    font-size:14px;
+    line-height:1.7;
+  }
 
-.list{
-  display:grid;
-  gap:10px;
-  margin-top:10px;
-}
+  .small{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.7;
+  }
 
-.item{
-  border:1px solid #eee;
-  border-radius:12px;
-  padding:10px;
-}
+  .mono{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
 
-.mono{
-  font-family:monospace;
-  font-size:12px;
-}
+  .row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-top:12px;
+  }
+
+  .grid3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:12px;
+  }
+
+  .grid4{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:12px;
+  }
+
+  @media (max-width:980px){
+    .grid4{ grid-template-columns:repeat(2,1fr); }
+  }
+
+  @media (max-width:780px){
+    .grid, .grid3{ grid-template-columns:1fr; }
+  }
+
+  @media (max-width:620px){
+    .grid4{ grid-template-columns:1fr; }
+  }
+
+  .stat{
+    background:#fafafa;
+    border:1px solid #eef0f3;
+    border-radius:14px;
+    padding:14px;
+  }
+
+  .stat span{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.6;
+  }
+
+  .stat b{
+    display:block;
+    margin-top:6px;
+    font-size:26px;
+    line-height:1.1;
+  }
+
+  .list{
+    margin-top:12px;
+    display:grid;
+    gap:10px;
+  }
+
+  .item{
+    border:1px solid #eee;
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+  }
+
+  .itemTitle{
+    font-weight:900;
+    line-height:1.6;
+  }
+
+  .itemMeta{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.7;
+    word-break:break-word;
+  }
+
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#eee;
+    margin-left:6px;
+    font-weight:800;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:6px 10px;
+    font-size:12px;
+    font-weight:900;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+
+  .pill.ok{
+    color:var(--ok);
+    background:rgba(22,163,74,.06);
+    border-color:rgba(22,163,74,.16);
+  }
+
+  .pill.warn{
+    color:var(--warn);
+    background:rgba(220,38,38,.06);
+    border-color:rgba(220,38,38,.16);
+  }
+
+  .pill.blue{
+    color:var(--blue);
+    background:rgba(37,99,235,.06);
+    border-color:rgba(37,99,235,.16);
+  }
+
+  .ok{ color:var(--ok); }
+  .warn{ color:var(--warn); }
+  .blue{ color:var(--blue); }
+
+  .btn{
+    padding:10px 14px;
+    border:none;
+    border-radius:12px;
+    background:#111827;
+    color:#fff;
+    font-weight:900;
+    cursor:pointer;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  }
+
+  .btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(0,0,0,.08);
+  }
+
+  .btn.secondary{
+    background:#fff;
+    color:#111827;
+    border:1px solid #ddd;
+  }
+
+  .empty{
+    color:var(--muted);
+    padding:8px 0;
+    line-height:1.8;
+  }
+
+  .divider{
+    height:1px;
+    background:#eceff3;
+    margin:16px 0;
+  }
 </style>
 </head>
 
 <body>
 <div class="wrap">
 
-<div class="card">
-  <h1 id="title">載入中…</h1>
-  <div class="small" id="timeText"></div>
-  <div id="statusText" class="blue">載入中…</div>
-</div>
+  <div class="card">
+    <div class="topbar">
+      <div>
+        <h1>活動詳情</h1>
+        <div class="sub">此頁只專注顯示單一活動的完整資訊，不顯示其他活動內容。</div>
+      </div>
 
-<div class="card">
-  <h2>即時統計</h2>
-  <div id="stats"></div>
-</div>
+      <div class="row">
+        <a class="btn secondary" href="admin-events-overview.html">← 返回活動總覽</a>
+        <a class="btn secondary" href="admin-events.html">活動管理</a>
+        <a class="btn" id="staffAssignBtn" href="#">工作人員指派</a>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-  <h2>工作人員</h2>
-  <div id="staffList" class="list"></div>
-</div>
+  <div class="card" id="eventInfo">
+    載入中…
+  </div>
 
-<div class="card">
-  <h2>核銷人員</h2>
-  <div id="checkinList" class="list"></div>
-</div>
+  <div class="card">
+    <h2>統計</h2>
+    <div class="grid4" id="stats"></div>
+  </div>
 
-<div class="card">
-  <h2>訂單統計</h2>
-  <div id="orders"></div>
-</div>
+  <div class="card">
+    <h2>工作人員</h2>
+    <div class="sub">此區顯示一般工作人員、服務中心、活動管理員等活動內身份，不含核銷人員。</div>
+    <div class="list" id="staff"></div>
+  </div>
+
+  <div class="card">
+    <h2>核銷人員</h2>
+    <div class="sub">此區只顯示核銷相關人員與入口配置。</div>
+    <div class="list" id="checkin"></div>
+  </div>
+
+  <div class="card">
+    <h2>訂單</h2>
+    <div class="sub">顯示最近的訂單資料。之後若你要，我可以再幫你加上付款狀態統計與更多欄位。</div>
+    <div class="list" id="orders"></div>
+  </div>
+
+  <div class="card">
+    <h2>票券</h2>
+    <div class="sub">顯示最近的票券狀況。已核銷與未核銷會清楚分開顯示。</div>
+    <div class="list" id="tickets"></div>
+  </div>
 
 </div>
 
@@ -103,162 +310,288 @@ h2{margin:0 0 10px;font-size:18px;}
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-  authDomain:"concert-1ff7e.firebaseapp.com",
-  projectId:"concert-1ff7e"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain:"concert-1ff7e.firebaseapp.com",
+    projectId:"concert-1ff7e"
+  });
+}
+const db = firebase.firestore();
 
-const db=firebase.firestore();
+const url = new URL(location.href);
+const eventId = url.searchParams.get("eventId");
 
-const params=new URLSearchParams(location.search);
-const eventId=params.get("eventId");
+function goBack(){
+  location.href="admin-events-overview.html";
+}
 
-const titleEl=document.getElementById("title");
-const timeText=document.getElementById("timeText");
-const statusText=document.getElementById("statusText");
-const statsDiv=document.getElementById("stats");
-const staffList=document.getElementById("staffList");
-const checkinList=document.getElementById("checkinList");
-const ordersDiv=document.getElementById("orders");
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    "\"":"&quot;",
+    "'":"&#39;"
+  }[m]));
+}
+
+function norm(v){
+  return String(v ?? "").trim();
+}
 
 function toMillis(t){
-  if(!t)return null;
-  if(t.toDate)return t.toDate().getTime();
-  return new Date(t).getTime();
+  if(!t) return null;
+  if(t.toDate) return t.toDate().getTime();
+  const d = new Date(t);
+  return isNaN(d.getTime()) ? null : d.getTime();
 }
 
-function getStatus(e){
-  const now=Date.now();
-  const s=toMillis(e.eventStartAt);
-  const ed=toMillis(e.eventEndAt);
-
-  if(!s||!ed)return "時間未設定";
-  if(now<s)return "尚未開始";
-  if(now>ed)return "已結束";
-  return "進行中";
+function formatTime(t){
+  const ms = toMillis(t);
+  if(!ms) return "-";
+  return new Date(ms).toLocaleString("zh-Hant",{hour12:false});
 }
 
-async function loadEvent(){
-  const doc=await db.collection("events").doc(eventId).get();
-  if(!doc.exists){
-    titleEl.textContent="找不到活動";
-    return;
+function formatMoney(n){
+  const num = Number(n || 0);
+  return num.toLocaleString("zh-Hant");
+}
+
+function getStatus(event){
+  const now = Date.now();
+  const saleStart = toMillis(event.saleStartAt);
+  const saleEnd = toMillis(event.saleEndAt);
+  const start = toMillis(event.eventStartAt);
+  const end = toMillis(event.eventEndAt);
+
+  if (start && now < start) {
+    if (saleStart && now < saleStart) return { text:"尚未開始 / 尚未開賣", className:"blue" };
+    return { text:"尚未開始", className:"blue" };
   }
 
-  const e=doc.data();
-
-  titleEl.textContent=e.title||eventId;
-
-  timeText.textContent=
-    new Date(toMillis(e.eventStartAt)).toLocaleString()+
-    " ~ "+
-    new Date(toMillis(e.eventEndAt)).toLocaleString();
-
-  const st=getStatus(e);
-
-  statusText.textContent=st;
-  statusText.className=
-    st==="進行中"?"ok":
-    st==="尚未開始"?"blue":"warn";
-}
-
-function watchStats(){
-  db.collection("events").doc(eventId)
-    .collection("tickets")
-    .onSnapshot(snap=>{
-      let total=0,checked=0;
-
-      snap.forEach(d=>{
-        total++;
-        if(d.data().checkedIn)checked++;
-      });
-
-      statsDiv.innerHTML=`
-        <div class="stat"><span>總票數</span><span>${total}</span></div>
-        <div class="stat"><span>已入場</span><span>${checked}</span></div>
-        <div class="stat"><span>未入場</span><span>${total-checked}</span></div>
-      `;
-    });
-}
-
-async function loadStaff(){
-  const snap=await db.collection("events")
-    .doc(eventId)
-    .collection("staffAssignments")
-    .get();
-
-  if(snap.empty){
-    staffList.innerHTML="沒有資料";
-    return;
+  if (start && end && now >= start && now <= end) {
+    if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
+      return { text:"進行中 / 開賣中", className:"ok" };
+    }
+    return { text:"進行中", className:"ok" };
   }
 
-  staffList.innerHTML=snap.docs.map(d=>{
-    const x=d.data();
-    return `
-      <div class="item">
-        <div><b>${x.email||d.id}</b></div>
-        <div class="small">
-          角色：${x.roleInEvent||"-"}｜
-          team：${x.team||"-"}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-async function loadCheckin(){
-  const snap=await db.collection("events")
-    .doc(eventId)
-    .collection("checkinAssignments")
-    .get();
-
-  if(snap.empty){
-    checkinList.innerHTML="沒有資料";
-    return;
+  if ((saleEnd && now > saleEnd) || (end && now > end)) {
+    return { text:"已結束 / 已截止", className:"warn" };
   }
 
-  checkinList.innerHTML=snap.docs.map(d=>{
-    const x=d.data();
-    return `
-      <div class="item">
-        <div><b>${x.email||d.id}</b></div>
-        <div class="small">
-          入口：${x.gateName||"-"}
-        </div>
-      </div>
-    `;
-  }).join("");
+  return { text:"活動資訊", className:"blue" };
 }
 
-function watchOrders(){
-  db.collection("events")
-    .doc(eventId)
-    .collection("orders")
-    .onSnapshot(snap=>{
-      ordersDiv.innerHTML=`
-        <div class="stat">
-          <span>訂單數</span>
-          <span>${snap.size}</span>
-        </div>
-      `;
-    });
-}
+async function load(){
+  const eventInfoEl = document.getElementById("eventInfo");
+  const statsEl = document.getElementById("stats");
+  const staffEl = document.getElementById("staff");
+  const checkinEl = document.getElementById("checkin");
+  const ordersEl = document.getElementById("orders");
+  const ticketsEl = document.getElementById("tickets");
+  const staffAssignBtn = document.getElementById("staffAssignBtn");
 
-async function init(){
   if(!eventId){
-    titleEl.textContent="缺少 eventId";
+    eventInfoEl.innerHTML = `<div class="empty">缺少 eventId，無法載入活動。</div>`;
     return;
   }
 
-  await loadEvent();
-  watchStats();
-  loadStaff();
-  loadCheckin();
-  watchOrders();
+  staffAssignBtn.href = `admin-staff-assign.html?eventId=${encodeURIComponent(eventId)}`;
+
+  const eventSnap = await db.doc(`events/${eventId}`).get();
+  if (!eventSnap.exists) {
+    eventInfoEl.innerHTML = `<div class="empty">找不到此活動。</div>`;
+    return;
+  }
+
+  const event = eventSnap.data() || {};
+  const status = getStatus(event);
+
+  eventInfoEl.innerHTML = `
+    <div class="topbar">
+      <div>
+        <h1>${esc(event.title || eventId)}</h1>
+        <div class="sub">
+          地點：${esc(event.location || "-")}<br>
+          活動時間：${esc(formatTime(event.eventStartAt))} ～ ${esc(formatTime(event.eventEndAt))}<br>
+          開賣時間：${esc(formatTime(event.saleStartAt))} ～ ${esc(formatTime(event.saleEndAt))}
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <span class="pill ${status.className}">${esc(status.text)}</span>
+          <span class="pill">${event.publishScope === "platform" ? "平台活動" : "校園活動"}</span>
+          <span class="pill">${event.published === true ? "公開" : "不公開"}</span>
+          <span class="pill">${esc(event.approvalStatus || "pending")}</span>
+          <span class="pill mono">${esc(eventId)}</span>
+        </div>
+      </div>
+
+      <div style="min-width:260px;">
+        <div class="small">
+          名額：<span class="mono">${esc(event.capacity ?? "-")}</span><br>
+          邀請碼功能：<span class="mono">${event.inviteCodeEnabled === true ? "true" : "false"}</span><br>
+          出入口數量：<span class="mono">${Array.isArray(event.gates) ? event.gates.length : 0}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div>
+      <div class="small" style="font-weight:900;color:#111827;">活動說明</div>
+      <div class="sub">${esc(event.description || "尚無活動說明").replace(/\n/g, "<br>")}</div>
+    </div>
+  `;
+
+  const [ordersSnap, ticketsSnap, staffSnap, checkinSnap] = await Promise.all([
+    db.collection(`events/${eventId}/orders`).get(),
+    db.collection(`events/${eventId}/tickets`).get(),
+    db.collection(`events/${eventId}/staffAssignments`).get(),
+    db.collection(`events/${eventId}/checkinAssignments`).get()
+  ]);
+
+  const orders = ordersSnap.docs.map(d => ({ id:d.id, ...(d.data() || {}) }));
+  const tickets = ticketsSnap.docs.map(d => ({ id:d.id, ...(d.data() || {}) }));
+  const staffAssignments = staffSnap.docs.map(d => ({ id:d.id, ...(d.data() || {}) }));
+  const checkinAssignments = checkinSnap.docs.map(d => ({ id:d.id, ...(d.data() || {}) }));
+
+  const checked = tickets.filter(t => t.checkedIn === true).length;
+  const notChecked = tickets.length - checked;
+  const inside = tickets.filter(t => t.status === "inside").length;
+  const exited = tickets.filter(t => t.status === "exited").length;
+
+  const nonCheckinStaff = staffAssignments.filter(s => {
+    const roleInEvent = norm(s.roleInEvent);
+    const canCheckin = s?.permissions?.canCheckin === true;
+    return !(roleInEvent === "checkin" || canCheckin);
+  });
+
+  const orderTotalAmount = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+  statsEl.innerHTML = `
+    <div class="stat">
+      <span>訂單數</span>
+      <b>${orders.length}</b>
+    </div>
+    <div class="stat">
+      <span>票券數</span>
+      <b>${tickets.length}</b>
+    </div>
+    <div class="stat">
+      <span>已核銷</span>
+      <b>${checked}</b>
+    </div>
+    <div class="stat">
+      <span>未核銷</span>
+      <b>${notChecked}</b>
+    </div>
+    <div class="stat">
+      <span>工作人員</span>
+      <b>${nonCheckinStaff.length}</b>
+    </div>
+    <div class="stat">
+      <span>核銷人員</span>
+      <b>${checkinAssignments.length}</b>
+    </div>
+    <div class="stat">
+      <span>在場中</span>
+      <b>${inside}</b>
+    </div>
+    <div class="stat">
+      <span>訂單總額</span>
+      <b>${formatMoney(orderTotalAmount)}</b>
+    </div>
+  `;
+
+  staffEl.innerHTML = nonCheckinStaff.length
+    ? nonCheckinStaff.map(s => `
+        <div class="item">
+          <div class="itemTitle">
+            ${esc(s.email || s.uid || "-")}
+            <span class="tag">${esc(s.roleInEvent || "staff")}</span>
+          </div>
+          <div class="itemMeta">
+            uid：<span class="mono">${esc(s.uid || s.id || "-")}</span><br>
+            分組：<span class="mono">${esc(s.groupName || "-")}</span><br>
+            備註：<span class="mono">${esc(s.note || "-")}</span><br>
+            權限：
+            <span class="mono">
+              canService=${s?.permissions?.canService === true ? "true" : "false"}｜
+              canViewOrders=${s?.permissions?.canViewOrders === true ? "true" : "false"}｜
+              canViewMembers=${s?.permissions?.canViewMembers === true ? "true" : "false"}
+            </span>
+          </div>
+        </div>
+      `).join("")
+    : `<div class="empty">目前沒有一般工作人員 / 服務中心 / 活動管理員資料。</div>`;
+
+  checkinEl.innerHTML = checkinAssignments.length
+    ? checkinAssignments.map(c => `
+        <div class="item">
+          <div class="itemTitle">
+            ${esc(c.email || c.uid || "-")}
+            <span class="tag">${esc(c.gateName || "未指定入口")}</span>
+          </div>
+          <div class="itemMeta">
+            uid：<span class="mono">${esc(c.uid || c.id || "-")}</span><br>
+            分組：<span class="mono">${esc(c.groupName || "-")}</span><br>
+            身份：<span class="mono">${esc(c.role || "checkin")}</span><br>
+            指派時間：<span class="mono">${esc(formatTime(c.assignedAt))}</span>
+          </div>
+        </div>
+      `).join("")
+    : `<div class="empty">目前沒有核銷人員資料。</div>`;
+
+  ordersEl.innerHTML = orders.length
+    ? orders
+        .sort((a,b) => (toMillis(b.createdAt) || 0) - (toMillis(a.createdAt) || 0))
+        .slice(0, 30)
+        .map(o => `
+          <div class="item">
+            <div class="itemTitle">
+              ${esc(o.email || o.userEmail || "-")}
+              <span class="tag">${esc(o.paymentStatus || "未標記")}</span>
+            </div>
+            <div class="itemMeta">
+              訂單ID：<span class="mono">${esc(o.id || "-")}</span><br>
+              姓名：<span class="mono">${esc(o.name || "-")}</span><br>
+              金額：<span class="mono">${formatMoney(o.total || 0)}</span><br>
+              建立時間：<span class="mono">${esc(formatTime(o.createdAt))}</span>
+            </div>
+          </div>
+        `).join("")
+    : `<div class="empty">目前沒有訂單資料。</div>`;
+
+  ticketsEl.innerHTML = tickets.length
+    ? tickets
+        .sort((a,b) => {
+          const aa = a.checkedIn === true ? 0 : 1;
+          const bb = b.checkedIn === true ? 0 : 1;
+          if (aa !== bb) return aa - bb;
+          return (toMillis(b.checkedInAt) || 0) - (toMillis(a.checkedInAt) || 0);
+        })
+        .slice(0, 50)
+        .map(t => `
+          <div class="item">
+            <div class="itemTitle">
+              ${esc(t.name || "-")}
+              <span class="tag ${t.checkedIn ? 'ok' : 'warn'}">${t.checkedIn ? '已入場' : '未入場'}</span>
+            </div>
+            <div class="itemMeta">
+              Email：<span class="mono">${esc(t.email || "-")}</span><br>
+              票券ID：<span class="mono">${esc(t.ticketId || t.id || "-")}</span><br>
+              狀態：<span class="mono">${esc(t.status || (t.checkedIn ? "inside" : "not_entered"))}</span><br>
+              核銷入口：<span class="mono">${esc(t.checkedInGate || "-")}</span><br>
+              入場時間：<span class="mono">${esc(formatTime(t.checkedInAt))}</span><br>
+              出場時間：<span class="mono">${esc(formatTime(t.checkedOutAt))}</span>
+            </div>
+          </div>
+        `).join("")
+    : `<div class="empty">目前沒有票券資料。</div>`;
 }
 
-init();
+load();
 </script>
 </body>
 </html>

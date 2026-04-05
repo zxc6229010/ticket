@@ -1,196 +1,252 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <title>會員中心</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{
-      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
-      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
-      --btn-h:46px; --btn-fs:16px; --r:18px;
-    }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0; background:var(--bg); color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
-    }
-    .wrap{ max-width:720px; margin:0 auto; padding:40px 18px; }
-    .card{
-      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
-    }
-    h1{ margin:0; font-size:20px; letter-spacing:.2px; }
-    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
-    .small{ font-size:13px; color:var(--muted); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>會員中心</title>
 
-    .row{ display:flex; gap:10px; flex-wrap:wrap; }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
-      border-radius:999px; border:1px solid var(--line);
-      background:#fff; font-weight:900; font-size:var(--btn-fs);
-      cursor:pointer; color:#111; text-decoration:none;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-      user-select:none;
-    }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
-    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+<style>
+:root{
+  --bg:#f6f7fb;
+  --card:#fff;
+  --text:#111;
+  --muted:rgba(17,17,17,.65);
+  --line:rgba(17,17,17,.08);
+  --shadow:0 14px 40px rgba(0,0,0,.06);
+  --ok:#166534;
+  --warn:#b91c1c;
+}
 
-    .pill{
-      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
-      border-radius:999px; font-size:13px; background:#fff;
-    }
-    .warn{ color:#b91c1c; font-weight:900; }
-    .ok{ color:#166534; font-weight:900; }
+*{ box-sizing:border-box; }
 
-    .kv{ margin-top:10px; display:grid; gap:10px; }
-    .kv .k{ font-weight:900; }
-    .kv .v{ color:#111; }
-  </style>
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+}
+
+.wrap{
+  max-width:900px;
+  margin:0 auto;
+  padding:40px 18px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin-bottom:18px;
+}
+
+h1{
+  margin:0;
+  font-size:22px;
+}
+
+.sub{
+  margin-top:6px;
+  font-size:14px;
+  color:var(--muted);
+}
+
+.label{
+  font-weight:900;
+  margin-top:14px;
+}
+
+.mono{
+  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas;
+}
+
+.ok{ color:var(--ok); font-weight:900; }
+.warn{ color:var(--warn); font-weight:900; }
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:44px;
+  padding:10px 18px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#111;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  text-decoration:none;
+}
+
+.btn-secondary{
+  background:#fff;
+  color:#111;
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.order{
+  border-top:1px solid var(--line);
+  padding:12px 0;
+}
+
+.order:first-child{
+  border-top:none;
+}
+
+.loading{
+  text-align:center;
+  color:var(--muted);
+  margin-top:30px;
+}
+</style>
 </head>
 
 <body>
-  <div class="wrap">
+<div class="wrap">
+
+  <div id="gate" class="card"></div>
+
+  <div id="app" style="display:none;">
+
+    <!-- 使用者 -->
     <div class="card">
       <h1>會員中心</h1>
-      <div class="sub">查看你的帳號狀態與校園身分綁定。</div>
-      <div class="sub small">登入：<span id="who" class="mono">-</span></div>
+      <div class="sub">
+        登入帳號：<span id="who" class="mono">-</span>
+      </div>
 
       <div class="row" style="margin-top:12px;">
-        <a class="btn btn-sm" href="dashboard.html">回主選單</a>
-        <button class="btn btn-sm" id="logoutBtn">登出</button>
+        <a class="btn btn-secondary" href="index.html">回首頁</a>
+        <a class="btn btn-secondary" href="campus-verify.html">校園驗證</a>
+        <button class="btn btn-secondary" id="logoutBtn">登出</button>
       </div>
     </div>
 
-    <div id="gate" class="card"></div>
-
-    <div id="app" style="display:none;">
-      <div class="card">
-        <div class="sub" style="margin:0;">校園身分</div>
-        <div id="status" class="sub" style="margin-top:8px;"></div>
-
-        <div class="kv" id="kv"></div>
-
-        <div class="small" style="margin-top:12px;">
-          說明：此頁顯示的 verifyKey 為你在學生身分驗證時綁定的唯一鍵（不顯示完整名單資料）。
-        </div>
-      </div>
+    <!-- 校園驗證 -->
+    <div class="card">
+      <h1>校園驗證狀態</h1>
+      <div id="verifyBlock" class="sub">載入中…</div>
     </div>
+
+    <!-- 訂單 -->
+    <div class="card">
+      <h1>我的報名 / 訂單</h1>
+      <div id="orders">載入中…</div>
+    </div>
+
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+</div>
 
-  <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
-    const db = firebase.firestore();
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-    const whoEl = document.getElementById("who");
-    const gate = document.getElementById("gate");
-    const app = document.getElementById("app");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const statusEl = document.getElementById("status");
-    const kvEl = document.getElementById("kv");
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+  authDomain: "concert-1ff7e.firebaseapp.com",
+  projectId: "concert-1ff7e"
+});
 
-    function norm(v){ return String(v ?? "").trim(); }
-    function esc(s){ return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+const db = firebase.firestore();
 
-    async function doLogout(){
-      try { await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
-    }
-    logoutBtn.onclick = doLogout;
+const gate = document.getElementById("gate");
+const app = document.getElementById("app");
+const who = document.getElementById("who");
+const verifyBlock = document.getElementById("verifyBlock");
+const ordersEl = document.getElementById("orders");
+const logoutBtn = document.getElementById("logoutBtn");
 
-    function showGate(html){
-      gate.innerHTML = html;
-      gate.style.display = "block";
-      app.style.display = "none";
-    }
+logoutBtn.onclick = () => firebase.auth().signOut();
 
-    function renderKV(items){
-      kvEl.innerHTML = items.map(({k,v}) => `
-        <div>
-          <div class="k">${esc(k)}</div>
-          <div class="v">${v}</div>
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[m]));
+}
+
+function showGate(text){
+  gate.style.display = "block";
+  app.style.display = "none";
+  gate.innerHTML = `<div class="warn">${text}</div>`;
+}
+
+async function loadUserData(uid){
+  const doc = await db.collection("users").doc(uid).get();
+  return doc.exists ? doc.data() : null;
+}
+
+async function loadOrders(uid){
+  const snap = await db.collection("orders")
+    .where("uid","==",uid)
+    .orderBy("createdAt","desc")
+    .get();
+
+  if (snap.empty){
+    ordersEl.innerHTML = `<div class="sub">目前沒有任何報名紀錄。</div>`;
+    return;
+  }
+
+  let html = "";
+
+  snap.forEach(doc=>{
+    const d = doc.data() || {};
+
+    html += `
+      <div class="order">
+        <div><b>${esc(d.eventTitle || "活動")}</b></div>
+        <div class="sub">
+          狀態：${esc(d.status || "-")}<br>
+          張數：${esc(d.quantity || 1)}<br>
+          建立時間：${d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString() : "-"}
         </div>
-      `).join("");
-    }
+      </div>
+    `;
+  });
 
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (!user) {
-        whoEl.textContent = "-";
-        showGate(`
-          <div class="warn">尚未登入</div>
-          <div class="sub">請先登入後再查看會員中心。</div>
-        `);
-        return;
-      }
+  ordersEl.innerHTML = html;
+}
 
-      whoEl.textContent = user.email || "-";
-      gate.style.display = "none";
-      app.style.display = "block";
+firebase.auth().onAuthStateChanged(async user=>{
+  if (!user){
+    showGate("請先登入");
+    return;
+  }
 
-      try {
-        const uref = db.collection("users").doc(user.uid);
-        const usnap = await uref.get();
-        if (!usnap.exists) {
-          statusEl.innerHTML = `<span class="warn">尚未建立會員資料</span>`;
-          renderKV([
-            { k:"Email", v:`<span class="mono">${esc(user.email || "")}</span>` }
-          ]);
-          return;
-        }
+  gate.style.display = "none";
+  app.style.display = "block";
 
-        const u = usnap.data() || {};
-        const verifiedSchoolId = norm(u.verifiedSchoolId || "");
-        const verifyKey = norm(u.verifyKey || "");
-        const verifiedAt = u.verifiedAt ? (u.verifiedAt.toDate ? u.verifiedAt.toDate() : new Date(u.verifiedAt)) : null;
+  who.textContent = user.email || user.uid;
 
-        if (!verifiedSchoolId || !verifyKey) {
-          statusEl.innerHTML = `<span class="warn">尚未完成校園認證</span>`;
-          renderKV([
-            { k:"Email", v:`<span class="mono">${esc(user.email || "")}</span>` },
-            { k:"狀態", v:`<span class="pill">未認證</span>` }
-          ]);
-          return;
-        }
+  const userData = await loadUserData(user.uid);
 
-        // 取學校名稱（只讀 partnerSchools）
-        let schoolName = verifiedSchoolId;
-        try{
-          const ssnap = await db.collection("partnerSchools").doc(verifiedSchoolId).get();
-          if (ssnap.exists) schoolName = norm(ssnap.data()?.name || verifiedSchoolId);
-        }catch(e){
-          // 若 rules 不讓讀 partnerSchools，至少顯示 id
-        }
+  if (!userData || !userData.verifiedSchoolId){
+    verifyBlock.innerHTML = `
+      <span class="warn">尚未完成校園驗證</span><br>
+      <a href="campus-verify.html" class="btn" style="margin-top:10px;">前往驗證</a>
+    `;
+  }else{
+    verifyBlock.innerHTML = `
+      <span class="ok">已完成校園驗證</span><br>
+      學校：${esc(userData.verifiedSchoolName || userData.verifiedSchoolId)}<br>
+      信箱：${esc(userData.schoolEmail || userData.email || "-")}<br>
+      驗證方式：${esc(userData.verifyMethod || "-")}
+    `;
+  }
 
-        // ✅ 預設把 verifyKey 第一段當作「學號」顯示（你可之後改）
-        const studentNoGuess = verifyKey.split("｜")[0] || verifyKey;
-
-        statusEl.innerHTML = `<span class="ok">✅ 已完成校園認證</span>`;
-        renderKV([
-          { k:"學校", v:`<span class="pill">${esc(schoolName)}</span> <span class="small mono">(${esc(verifiedSchoolId)})</span>` },
-          { k:"學號（由 verifyKey 推算）", v:`<span class="mono">${esc(studentNoGuess)}</span>` },
-          { k:"verifyKey", v:`<span class="mono">${esc(verifyKey)}</span>` },
-          { k:"認證時間", v:`<span class="mono">${esc(verifiedAt ? verifiedAt.toLocaleString() : "-")}</span>` }
-        ]);
-
-      } catch (e) {
-        console.error(e);
-        statusEl.innerHTML = `<span class="warn">載入失敗</span>`;
-      }
-    });
-  </script>
+  await loadOrders(user.uid);
+});
+</script>
 </body>
 </html>

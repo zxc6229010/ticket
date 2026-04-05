@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>活動詳情</title>
+  <title>購票 / 報名</title>
 
   <style>
     :root{
@@ -95,7 +95,7 @@
 
     .layout{
       display:grid;
-      grid-template-columns:minmax(0, 1.4fr) minmax(320px, .78fr);
+      grid-template-columns:minmax(0, 1.18fr) minmax(320px, .82fr);
       gap:22px;
       align-items:start;
     }
@@ -116,7 +116,7 @@
 
     .hero{
       position:relative;
-      min-height:420px;
+      min-height:290px;
       background:
         linear-gradient(180deg, rgba(15,23,42,.06), rgba(15,23,42,.38)),
         linear-gradient(135deg, #dbeafe 0%, #f5f3ff 40%, #fde68a 100%);
@@ -136,8 +136,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.00) 0%, rgba(17,24,39,.72) 100%);
+      background:linear-gradient(180deg, rgba(255,255,255,.00) 0%, rgba(17,24,39,.72) 100%);
       pointer-events:none;
     }
 
@@ -145,16 +144,8 @@
       position:absolute;
       inset:auto 0 0 0;
       z-index:2;
-      padding:26px 26px 24px;
+      padding:24px;
       color:#fff;
-    }
-
-    .hero-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      flex-wrap:wrap;
     }
 
     .status{
@@ -171,76 +162,27 @@
     .status-ended{ background:rgba(107,114,128,.18); color:#f3f4f6; border:1px solid rgba(255,255,255,.16); }
     .status-muted{ background:rgba(107,114,128,.18); color:#f3f4f6; border:1px solid rgba(255,255,255,.16); }
 
-    .hero-tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin:14px 0 0;
-    }
-
-    .hero-pill{
-      display:inline-flex;
-      align-items:center;
-      padding:7px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.14);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.18);
-      font-size:12px;
-      font-weight:900;
-      backdrop-filter:blur(10px);
-    }
-
     .hero-title{
       margin:14px 0 0;
-      font-size:clamp(28px, 4vw, 42px);
+      font-size:clamp(26px, 3.8vw, 38px);
       line-height:1.2;
       font-weight:1000;
       letter-spacing:-.03em;
-      max-width:880px;
     }
 
-    .hero-meta{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0, 1fr));
-      gap:10px;
-    }
-
-    @media (max-width:720px){
-      .hero-meta{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .hero-meta-card{
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.16);
-      border-radius:18px;
-      padding:12px 14px;
-      backdrop-filter:blur(10px);
-    }
-
-    .hero-meta-label{
-      font-size:12px;
-      font-weight:800;
-      opacity:.82;
-    }
-
-    .hero-meta-value{
-      margin-top:6px;
+    .hero-sub{
+      margin-top:10px;
       font-size:14px;
-      line-height:1.6;
-      font-weight:900;
-      word-break:break-word;
+      line-height:1.8;
+      opacity:.95;
     }
 
     .main-body{
-      padding:26px;
+      padding:24px;
     }
 
     .section{
-      margin-top:26px;
+      margin-top:24px;
     }
 
     .section:first-child{
@@ -269,9 +211,7 @@
     }
 
     @media (max-width:720px){
-      .info-grid{
-        grid-template-columns:1fr;
-      }
+      .info-grid{ grid-template-columns:1fr; }
     }
 
     .info-card{
@@ -295,6 +235,61 @@
       color:#111827;
       line-height:1.7;
       font-weight:900;
+      word-break:break-word;
+    }
+
+    .ticket-list{
+      display:grid;
+      gap:12px;
+    }
+
+    .ticket-card{
+      border:1.5px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      cursor:pointer;
+      transition:border-color .12s ease, transform .12s ease, box-shadow .12s ease;
+    }
+
+    .ticket-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 14px 28px rgba(15,23,42,.08);
+    }
+
+    .ticket-card.active{
+      border-color:#111827;
+      box-shadow:0 16px 32px rgba(17,24,39,.12);
+    }
+
+    .ticket-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .ticket-name{
+      font-size:17px;
+      font-weight:1000;
+      line-height:1.5;
+    }
+
+    .ticket-price{
+      font-size:18px;
+      font-weight:1000;
+      color:#111827;
+      white-space:nowrap;
+    }
+
+    .ticket-desc{
+      margin-top:8px;
+      font-size:13px;
+      color:#6b7280;
+      line-height:1.8;
+      white-space:pre-wrap;
       word-break:break-word;
     }
 
@@ -322,8 +317,7 @@
     .side-head{
       padding:20px 20px 16px;
       border-bottom:1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
 
     .side-title{
@@ -346,7 +340,7 @@
 
     .kv{
       display:grid;
-      grid-template-columns:90px 1fr;
+      grid-template-columns:96px 1fr;
       gap:8px 10px;
       padding:10px 0;
       border-top:1px dashed var(--line);
@@ -371,18 +365,10 @@
       word-break:break-word;
     }
 
-    .user-status{
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:14px;
-      background:#fff;
-      margin-top:16px;
-    }
-
     .status-box{
       border-radius:18px;
       padding:14px;
-      margin-top:12px;
+      margin-top:14px;
       border:1px solid var(--line);
       background:#fafafa;
     }
@@ -429,6 +415,25 @@
       line-height:1.8;
     }
 
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .selected-box{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+    }
+
     .main-cta{
       width:100%;
       margin-top:16px;
@@ -453,19 +458,6 @@
       cursor:not-allowed;
       transform:none;
       box-shadow:none;
-    }
-
-    .sub-actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    @media (max-width:560px){
-      .sub-actions{
-        grid-template-columns:1fr;
-      }
     }
 
     .secondary-btn{
@@ -559,34 +551,12 @@
       justify-content:flex-end;
       margin-top:16px;
     }
-
-    .input{
-      width:100%;
-      padding:14px 14px;
-      border:1px solid var(--line-strong);
-      border-radius:16px;
-      background:#fff;
-      color:#111827;
-      font-size:16px;
-      outline:none;
-    }
-
-    .text-link{
-      font-size:13px;
-      font-weight:900;
-      color:#111827;
-      text-decoration:underline;
-      cursor:pointer;
-      background:none;
-      border:none;
-      padding:0;
-    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <a class="back" href="index.html">← 返回活動列表</a>
+      <a class="back" id="backLink" href="index.html">← 返回活動詳情</a>
       <div class="top-actions">
         <a class="ghost-btn" href="member.html">會員中心</a>
       </div>
@@ -616,7 +586,12 @@
       doc,
       getDoc,
       collection,
-      getDocs
+      getDocs,
+      addDoc,
+      query,
+      where,
+      limit,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -635,6 +610,8 @@
     const app = document.getElementById("app");
     const params = new URLSearchParams(location.search);
     const eventId = norm(params.get("id"));
+    const inviteCodeFromUrl = norm(params.get("inviteCode"));
+    const backLink = document.getElementById("backLink");
 
     const modalBack = document.getElementById("modalBack");
     const modalTitle = document.getElementById("modalTitle");
@@ -645,6 +622,9 @@
     let currentUserProfile = null;
     let currentEvent = null;
     let latestEligibility = null;
+    let selectedTicketId = "";
+    let selectedTicket = null;
+    let validatedInviteCode = inviteCodeFromUrl || "";
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -684,14 +664,10 @@
       });
     }
 
-    function formatDateOnly(input){
-      const d = toDate(input);
-      if (!d) return "-";
-      return d.toLocaleDateString("zh-Hant", {
-        year:"numeric",
-        month:"2-digit",
-        day:"2-digit"
-      });
+    function formatPrice(value){
+      const num = Number(value || 0);
+      if (!num) return "免費";
+      return `NT$ ${num.toLocaleString("zh-Hant")}`;
     }
 
     function getEventStatus(event){
@@ -700,16 +676,10 @@
       const saleEnd = toDate(event.saleEndAt);
       const published = event.published === true;
 
-      if (!published) {
-        return { text:"未公開", className:"status-muted", key:"muted" };
-      }
-      if (saleStart && now < saleStart) {
-        return { text:"即將開賣", className:"status-upcoming", key:"upcoming" };
-      }
-      if (saleEnd && now > saleEnd) {
-        return { text:"已截止", className:"status-ended", key:"ended" };
-      }
-      return { text:"熱賣中", className:"status-selling", key:"selling" };
+      if (!published) return { text:"未公開", className:"status-muted", key:"muted" };
+      if (saleStart && now < saleStart) return { text:"即將開賣", className:"status-upcoming", key:"upcoming" };
+      if (saleEnd && now > saleEnd) return { text:"已截止", className:"status-ended", key:"ended" };
+      return { text:"受理中", className:"status-selling", key:"selling" };
     }
 
     async function getEventById(id){
@@ -736,69 +706,21 @@
       return true;
     }
 
-    function buildHeroTags(event){
-      const tags = [];
-
-      if (norm(event.ownerSchoolId) && norm(event.ownerSchoolId) !== "__global__") {
-        tags.push("校園活動");
-      } else {
-        tags.push("平台活動");
-      }
-
-      if (event.allowedUsersEnabled === true) {
-        tags.push("需資格判斷");
-      }
-
-      if (event.inviteCodeEnabled === true) {
-        tags.push("可用邀請碼");
-      }
-
-      if (event.published !== true) {
-        tags.push("未公開");
-      }
-
-      return tags;
-    }
-
     function getUserFieldValue(field, user, profile){
       const key = lower(field);
 
-      if (key === "email") {
-        return norm(profile?.schoolEmail || profile?.email || user?.email || "");
-      }
-      if (key === "schoolemail") {
-        return norm(profile?.schoolEmail || user?.email || "");
-      }
-      if (key === "studentid") {
-        return norm(profile?.studentId || profile?.studentCode || "");
-      }
-      if (key === "studentcode") {
-        return norm(profile?.studentCode || profile?.studentId || "");
-      }
-      if (key === "verifykey") {
-        return norm(profile?.verifyKey || "");
-      }
-      if (key === "verifiedschoolid") {
-        return norm(profile?.verifiedSchoolId || "");
-      }
-      if (key === "name") {
-        return norm(profile?.name || "");
-      }
-      if (key === "class") {
-        return norm(profile?.class || "");
-      }
-      if (key === "seat") {
-        return norm(profile?.seat || "");
-      }
-      if (key === "group") {
-        return norm(profile?.group || "");
-      }
+      if (key === "email") return norm(profile?.schoolEmail || profile?.email || user?.email || "");
+      if (key === "schoolemail") return norm(profile?.schoolEmail || user?.email || "");
+      if (key === "studentid") return norm(profile?.studentId || profile?.studentCode || "");
+      if (key === "studentcode") return norm(profile?.studentCode || profile?.studentId || "");
+      if (key === "verifykey") return norm(profile?.verifyKey || "");
+      if (key === "verifiedschoolid") return norm(profile?.verifiedSchoolId || "");
+      if (key === "name") return norm(profile?.name || "");
+      if (key === "class") return norm(profile?.class || "");
+      if (key === "seat") return norm(profile?.seat || "");
+      if (key === "group") return norm(profile?.group || "");
 
       return norm(profile?.[field] || profile?.[key] || "");
-    }
-
-    function makeMatchKey(fields, user, profile){
-      return fields.map(field => getUserFieldValue(field, user, profile)).join("｜");
     }
 
     async function checkAllowedUser(event, user, profile){
@@ -807,21 +729,15 @@
         : [];
 
       if (!fields.length) {
-        return {
-          matched: false,
-          reason: "missing_match_fields",
-          matchKey: ""
-        };
+        return { matched:false, reason:"missing_match_fields", matchKey:"" };
       }
 
       const values = fields.map(field => getUserFieldValue(field, user, profile));
-      const hasMissing = values.some(v => !norm(v));
-
-      if (hasMissing) {
+      if (values.some(v => !norm(v))) {
         return {
-          matched: false,
-          reason: "missing_user_fields",
-          matchKey: values.join("｜"),
+          matched:false,
+          reason:"missing_user_fields",
+          matchKey:values.join("｜"),
           fields
         };
       }
@@ -831,8 +747,8 @@
 
       if (!snap.exists()) {
         return {
-          matched: false,
-          reason: "not_in_allowed_list",
+          matched:false,
+          reason:"not_in_allowed_list",
           matchKey,
           fields
         };
@@ -841,104 +757,132 @@
       const data = snap.data() || {};
       if (data.canRegister === false) {
         return {
-          matched: false,
-          reason: "blocked_by_record",
+          matched:false,
+          reason:"blocked_by_record",
           matchKey,
           fields,
-          record: data
+          record:data
         };
       }
 
       return {
-        matched: true,
-        reason: "matched",
+        matched:true,
+        reason:"matched",
         matchKey,
         fields,
-        record: data
+        record:data
       };
     }
 
+    function validateInviteCodeOnClient(event, code){
+      const input = lower(code);
+      if (!input) return { ok:false, message:"請先輸入邀請碼" };
+
+      const invites = Array.isArray(event.inviteCodes) ? event.inviteCodes : [];
+      const found = invites.find(item => {
+        const itemCode = lower(item?.code || "");
+        return itemCode && itemCode === input && item?.enabled === true;
+      });
+
+      if (!found) return { ok:false, message:"邀請碼無效或未啟用" };
+
+      const maxUses = Number(found.maxUses || 0);
+      const usedCount = Number(found.usedCount || 0);
+
+      if (maxUses > 0 && usedCount >= maxUses) {
+        return { ok:false, message:"此邀請碼已達使用上限" };
+      }
+
+      return { ok:true, item:found };
+    }
+
     async function evaluateEligibility(event){
-      const status = getEventStatus(event);
       const inviteEnabled = event.inviteCodeEnabled === true;
 
       if (event.published !== true) {
-        return {
-          type: "event_unpublished",
-          canDirectBuy: false,
-          canUseInviteCode: false,
-          actionText: "目前不可報名"
-        };
+        return { type:"event_unpublished", canSubmit:false, actionText:"目前不可報名" };
       }
 
       if (!currentUser) {
         return {
-          type: "login_required",
-          canDirectBuy: false,
-          canUseInviteCode: inviteEnabled,
-          actionText: inviteEnabled ? "登入 / 使用邀請碼" : "請先登入"
+          type:"login_required",
+          canSubmit:false,
+          canUseInviteCode:inviteEnabled,
+          actionText: inviteEnabled ? "登入後繼續 / 邀請碼" : "請先登入"
         };
       }
 
       if (!isSaleOpen(event)) {
-        return {
-          type: "sale_not_open",
-          canDirectBuy: false,
-          canUseInviteCode: false,
-          actionText: status.key === "upcoming" ? "尚未開賣" : "已截止"
-        };
+        return { type:"sale_not_open", canSubmit:false, actionText:"不在報名期間" };
       }
 
       if (event.allowedUsersEnabled !== true) {
         return {
-          type: "open_registration",
-          canDirectBuy: true,
-          canUseInviteCode: inviteEnabled,
-          actionText: "我要購票 / 報名"
+          type:"open_registration",
+          canSubmit:true,
+          canUseInviteCode:inviteEnabled,
+          actionText:"確認報名 / 購票"
         };
       }
 
       const hasCampusVerify = !!norm(currentUserProfile?.verifiedSchoolId || "");
       if (!hasCampusVerify) {
+        if (validatedInviteCode) {
+          const inviteResult = validateInviteCodeOnClient(event, validatedInviteCode);
+          if (inviteResult.ok) {
+            return {
+              type:"invite_override",
+              canSubmit:true,
+              canUseInviteCode:true,
+              actionText:"使用邀請碼報名"
+            };
+          }
+        }
+
         return {
-          type: "verify_needed_but_invite_possible",
-          canDirectBuy: false,
-          canUseInviteCode: inviteEnabled,
-          actionText: inviteEnabled ? "校園驗證 / 邀請碼參加" : "先完成校園驗證"
+          type:"verify_needed_but_invite_possible",
+          canSubmit:false,
+          canUseInviteCode:inviteEnabled,
+          actionText: inviteEnabled ? "校園驗證 / 邀請碼" : "先完成校園驗證"
         };
       }
 
       const allowedResult = await checkAllowedUser(event, currentUser, currentUserProfile);
-
       if (allowedResult.matched) {
         return {
-          type: "eligible",
-          canDirectBuy: true,
-          canUseInviteCode: inviteEnabled,
-          actionText: "我要購票 / 報名",
-          matchKey: allowedResult.matchKey,
-          fields: allowedResult.fields
+          type:"eligible",
+          canSubmit:true,
+          canUseInviteCode:inviteEnabled,
+          actionText:"確認報名 / 購票"
         };
       }
 
       if (inviteEnabled) {
+        if (validatedInviteCode) {
+          const inviteResult = validateInviteCodeOnClient(event, validatedInviteCode);
+          if (inviteResult.ok) {
+            return {
+              type:"invite_override",
+              canSubmit:true,
+              canUseInviteCode:true,
+              actionText:"使用邀請碼報名"
+            };
+          }
+        }
+
         return {
-          type: "not_eligible_but_invite_possible",
-          canDirectBuy: false,
-          canUseInviteCode: true,
-          actionText: "輸入邀請碼參加",
-          reason: allowedResult.reason,
-          matchKey: allowedResult.matchKey
+          type:"not_eligible_but_invite_possible",
+          canSubmit:false,
+          canUseInviteCode:true,
+          actionText:"輸入邀請碼"
         };
       }
 
       return {
-        type: "not_eligible",
-        canDirectBuy: false,
-        canUseInviteCode: false,
-        actionText: "目前不符合資格",
-        reason: allowedResult.reason,
-        matchKey: allowedResult.matchKey
+        type:"not_eligible",
+        canSubmit:false,
+        canUseInviteCode:false,
+        actionText:"目前不符合資格"
       };
     }
 
@@ -946,69 +890,86 @@
       switch (eligibility.type) {
         case "event_unpublished":
           return {
-            className: "muted",
-            title: "此活動目前尚未公開",
-            desc: "目前仍不能報名，請等待主辦單位開放。"
+            className:"muted",
+            title:"此活動目前尚未公開",
+            desc:"目前仍不能報名，請等待主辦單位開放。"
           };
         case "login_required":
           return {
-            className: "info",
-            title: "請先登入會員帳號",
-            desc: eligibility.canUseInviteCode
-              ? "登入後可檢查你的校園資格，若不符合也可直接輸入邀請碼參加。"
-              : "登入後才能檢查校園資格並進入報名流程。"
+            className:"info",
+            title:"請先登入會員帳號",
+            desc:"登入後可檢查你的資格狀態，再進入報名流程。"
           };
         case "sale_not_open":
           return {
-            className: "orange",
-            title: "目前不在開賣期間",
-            desc: "請依活動開賣時間再回來查看，系統目前不開放報名。"
+            className:"orange",
+            title:"目前不在報名期間",
+            desc:"請依活動開放時間再回來操作。"
           };
         case "open_registration":
           return {
-            className: "ok",
-            title: "此活動目前可直接報名",
-            desc: "這場活動沒有額外資格名單限制，可直接進入報名或購票流程。"
-          };
-        case "verify_needed_but_invite_possible":
-          return {
-            className: "warn",
-            title: "你尚未完成校園驗證",
-            desc: "你可以先完成校園驗證來檢查是否符合資格；若不想等待，也可以直接使用邀請碼參加。"
+            className:"ok",
+            title:"此活動可直接報名",
+            desc:"這場活動目前沒有額外資格名單限制。"
           };
         case "eligible":
           return {
-            className: "ok",
-            title: "你目前符合此活動資格",
-            desc: "系統已成功比對到你的活動資格名單，可以直接進入報名或購票流程。"
+            className:"ok",
+            title:"你目前符合此活動資格",
+            desc:"系統已成功比對到你的資格，可以直接完成報名或購票。"
+          };
+        case "invite_override":
+          return {
+            className:"ok",
+            title:"已套用有效邀請碼",
+            desc:"你目前可使用邀請碼完成本次活動報名。"
+          };
+        case "verify_needed_but_invite_possible":
+          return {
+            className:"warn",
+            title:"你尚未完成校園驗證",
+            desc:"你可以先去校園驗證，或直接改用邀請碼參加。"
           };
         case "not_eligible_but_invite_possible":
           return {
-            className: "warn",
-            title: "你目前不在此活動名單中",
-            desc: "你目前不符合此活動資格，但仍可改用邀請碼參加。"
+            className:"warn",
+            title:"你目前不在此活動名單中",
+            desc:"你可以改用邀請碼參加本次活動。"
           };
         case "not_eligible":
           return {
-            className: "warn",
-            title: "你目前不符合此活動資格",
-            desc: "系統找不到你的資格資料，且這場活動未開放邀請碼備援。"
+            className:"warn",
+            title:"你目前不符合此活動資格",
+            desc:"系統找不到你的活動資格資料，且此活動未開放邀請碼備援。"
           };
         default:
           return {
-            className: "muted",
-            title: "無法判斷目前狀態",
-            desc: "請稍後再試。"
+            className:"muted",
+            title:"目前無法判斷狀態",
+            desc:"請稍後再試。"
           };
       }
     }
 
-    function openTicketPage(eventId, extra = {}){
-      const sp = new URLSearchParams({ id: eventId });
-      Object.entries(extra).forEach(([k, v]) => {
-        if (norm(v)) sp.set(k, v);
-      });
-      location.href = `ticket.html?${sp.toString()}`;
+    function getTicketTypes(event){
+      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      if (raw.length) {
+        return raw.map((item, index) => ({
+          id: norm(item.id || `ticket_${index+1}`),
+          name: norm(item.name || `票種 ${index+1}`),
+          price: Number(item.price || 0),
+          description: norm(item.description || ""),
+          enabled: item.enabled !== false
+        })).filter(item => item.enabled !== false);
+      }
+
+      return [{
+        id:"general",
+        name:"一般報名",
+        price:0,
+        description:"此活動目前未細分票種，將以一般報名方式建立資料。",
+        enabled:true
+      }];
     }
 
     function closeModal(){
@@ -1029,155 +990,184 @@
       modalBack.classList.add("show");
     }
 
-    function validateInviteCodeOnClient(event, code){
-      const input = lower(code);
-      if (!input) return { ok:false, message:"請先輸入邀請碼" };
-
-      const invites = Array.isArray(event.inviteCodes) ? event.inviteCodes : [];
-      const found = invites.find(item => {
-        const itemCode = lower(item?.code || "");
-        return itemCode && itemCode === input && item?.enabled === true;
-      });
-
-      if (!found) {
-        return { ok:false, message:"邀請碼無效或未啟用" };
-      }
-
-      const maxUses = Number(found.maxUses || 0);
-      const usedCount = Number(found.usedCount || 0);
-
-      if (maxUses > 0 && usedCount >= maxUses) {
-        return { ok:false, message:"此邀請碼已達使用上限" };
-      }
-
-      return { ok:true, item:found };
-    }
-
-    function showInviteCodeModal(event){
+    function showInviteModal(){
       showModal({
-        title: "使用邀請碼參加",
-        sub: "若你不在本活動資格名單中，仍可輸入邀請碼加入本次活動。",
-        body: `
-          <input class="input" id="inviteCodeInput" placeholder="請輸入邀請碼" />
-          <div class="notice" id="inviteMsg">輸入後系統會先做前端檢查，再帶你進入報名流程。</div>
+        title:"輸入邀請碼",
+        sub:"若你不在活動資格名單中，仍可用邀請碼參加。",
+        body:`
+          <input class="input" id="inviteInput" placeholder="請輸入邀請碼" />
+          <div class="notice" id="inviteCheckMsg">系統會先在前端檢查邀請碼是否有效。</div>
           <div class="modal-actions">
             <button class="secondary-btn" id="inviteCancelBtn">取消</button>
-            <button class="ghost-btn" id="inviteConfirmBtn" style="border-color:#111;">確認邀請碼</button>
+            <button class="ghost-btn" id="inviteApplyBtn" style="border-color:#111;">套用邀請碼</button>
           </div>
         `
       });
 
       document.getElementById("inviteCancelBtn").onclick = closeModal;
-      document.getElementById("inviteConfirmBtn").onclick = () => {
-        const code = norm(document.getElementById("inviteCodeInput").value);
-        const inviteMsg = document.getElementById("inviteMsg");
-        const result = validateInviteCodeOnClient(event, code);
+      document.getElementById("inviteApplyBtn").onclick = async () => {
+        const code = norm(document.getElementById("inviteInput").value);
+        const inviteCheckMsg = document.getElementById("inviteCheckMsg");
+        const result = validateInviteCodeOnClient(currentEvent, code);
 
         if (!result.ok) {
-          inviteMsg.innerHTML = `<span style="color:#b91c1c;font-weight:900;">${esc(result.message)}</span>`;
+          inviteCheckMsg.innerHTML = `<span style="color:#b91c1c;font-weight:900;">${esc(result.message)}</span>`;
           return;
         }
 
-        inviteMsg.innerHTML = `<span style="color:#166534;font-weight:900;">邀請碼有效，正在前往報名頁…</span>`;
-        setTimeout(() => {
-          openTicketPage(event.id, { inviteCode: code });
-        }, 250);
+        validatedInviteCode = code;
+        inviteCheckMsg.innerHTML = `<span style="color:#166534;font-weight:900;">邀請碼有效，已套用。</span>`;
+        await refreshPageState();
+        setTimeout(closeModal, 250);
       };
     }
 
-    function showLoginModal(event){
+    function showNeedLoginModal(){
       showModal({
-        title: "請先登入會員帳號",
-        sub: "登入後可立即檢查活動資格，若不符合也可視活動規則改用邀請碼參加。",
-        body: `
-          <div class="notice">你目前尚未登入。請先進入會員中心登入後，再回到這頁繼續。</div>
+        title:"請先登入會員帳號",
+        sub:"登入後才能建立報名或購票資料。",
+        body:`
+          <div class="notice">請先到會員中心登入，再回來繼續完成本活動報名。</div>
           <div class="modal-actions">
-            <button class="secondary-btn" id="loginCloseBtn">稍後再說</button>
-            <button class="ghost-btn" id="loginGoBtn" style="border-color:#111;">前往會員中心</button>
+            <button class="secondary-btn" id="needLoginCloseBtn">取消</button>
+            <button class="ghost-btn" id="needLoginGoBtn" style="border-color:#111;">前往會員中心</button>
           </div>
         `
       });
 
-      document.getElementById("loginCloseBtn").onclick = closeModal;
-      document.getElementById("loginGoBtn").onclick = () => {
+      document.getElementById("needLoginCloseBtn").onclick = closeModal;
+      document.getElementById("needLoginGoBtn").onclick = () => {
         location.href = "member.html";
       };
     }
 
-    function showVerifyOrInviteModal(event){
+    function showNeedVerifyModal(){
       showModal({
-        title: "尚未完成校園驗證",
-        sub: "你目前還沒有綁定校園身份，因此系統無法直接判斷是否符合本活動資格。",
-        body: `
+        title:"尚未完成校園驗證",
+        sub:"系統目前無法確認你的校園身份。",
+        body:`
           <div class="notice">
-            你可以先完成校園驗證，再由系統自動檢查活動資格。<br>
-            ${event.inviteCodeEnabled === true ? `若不想等待，也可以直接使用邀請碼參加。` : `此活動目前未開放邀請碼備援。`}
+            你可以先完成校園驗證，再由系統判斷是否符合活動資格。<br>
+            ${currentEvent.inviteCodeEnabled === true ? `若不想等待，也可以直接使用邀請碼。` : ``}
           </div>
           <div class="modal-actions">
-            <button class="secondary-btn" id="verifyGoBtn">前往校園驗證</button>
-            ${event.inviteCodeEnabled === true ? `<button class="ghost-btn" id="verifyInviteBtn" style="border-color:#111;">輸入邀請碼</button>` : ``}
-            <button class="secondary-btn" id="verifyCancelBtn">取消</button>
+            <button class="secondary-btn" id="needVerifyGoBtn">前往校園驗證</button>
+            ${currentEvent.inviteCodeEnabled === true ? `<button class="ghost-btn" id="needVerifyInviteBtn" style="border-color:#111;">輸入邀請碼</button>` : ``}
+            <button class="secondary-btn" id="needVerifyCloseBtn">取消</button>
           </div>
         `
       });
 
-      document.getElementById("verifyGoBtn").onclick = () => {
+      document.getElementById("needVerifyGoBtn").onclick = () => {
         location.href = "campus-verify.html";
       };
-      const inviteBtn = document.getElementById("verifyInviteBtn");
-      if (inviteBtn) {
-        inviteBtn.onclick = () => showInviteCodeModal(event);
-      }
-      document.getElementById("verifyCancelBtn").onclick = closeModal;
+      const inviteBtn = document.getElementById("needVerifyInviteBtn");
+      if (inviteBtn) inviteBtn.onclick = showInviteModal;
+      document.getElementById("needVerifyCloseBtn").onclick = closeModal;
     }
 
-    async function handlePrimaryAction(){
+    function selectTicket(ticketId){
+      selectedTicketId = ticketId;
+      const ticketTypes = getTicketTypes(currentEvent);
+      selectedTicket = ticketTypes.find(item => item.id === ticketId) || null;
+      renderPage(currentEvent, latestEligibility);
+    }
+
+    async function createOrder(){
       if (!currentEvent || !latestEligibility) return;
 
-      const eligibility = latestEligibility;
-
-      if (eligibility.type === "event_unpublished" || eligibility.type === "sale_not_open") {
+      if (!currentUser) {
+        showNeedLoginModal();
         return;
       }
 
-      if (eligibility.type === "login_required") {
-        showLoginModal(currentEvent);
+      if (!selectedTicket) {
+        alert("請先選擇票種");
         return;
       }
 
-      if (eligibility.type === "open_registration" || eligibility.type === "eligible") {
-        openTicketPage(currentEvent.id);
+      if (!latestEligibility.canSubmit) {
+        if (latestEligibility.type === "verify_needed_but_invite_possible") {
+          showNeedVerifyModal();
+          return;
+        }
+        if (latestEligibility.type === "not_eligible_but_invite_possible") {
+          showInviteModal();
+          return;
+        }
+        alert("你目前無法完成此活動報名");
         return;
       }
 
-      if (eligibility.type === "verify_needed_but_invite_possible") {
-        showVerifyOrInviteModal(currentEvent);
-        return;
-      }
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = true;
+      const oldText = submitBtn.textContent;
+      submitBtn.textContent = "送出中…";
 
-      if (eligibility.type === "not_eligible_but_invite_possible") {
-        showInviteCodeModal(currentEvent);
-        return;
-      }
+      try {
+        const existingQuery = query(
+          collection(db, "events", currentEvent.id, "orders"),
+          where("uid", "==", currentUser.uid),
+          where("ticketTypeId", "==", selectedTicket.id),
+          limit(1)
+        );
+        const existingSnap = await getDocs(existingQuery);
 
-      if (eligibility.type === "not_eligible") {
+        if (!existingSnap.empty) {
+          throw new Error("你已經報名過這個票種");
+        }
+
+        const orderPayload = {
+          uid: currentUser.uid,
+          email: currentUser.email || "",
+          eventId: currentEvent.id,
+          eventTitle: currentEvent.title || "",
+          ticketTypeId: selectedTicket.id,
+          ticketTypeName: selectedTicket.name,
+          ticketPrice: Number(selectedTicket.price || 0),
+          inviteCode: validatedInviteCode || "",
+          eligibilityType: latestEligibility.type,
+          verifiedSchoolId: norm(currentUserProfile?.verifiedSchoolId || ""),
+          verifiedSchoolName: norm(currentUserProfile?.verifiedSchoolName || ""),
+          verifyMethod: norm(currentUserProfile?.verifyMethod || ""),
+          schoolEmail: norm(currentUserProfile?.schoolEmail || ""),
+          status: "registered",
+          paymentStatus: Number(selectedTicket.price || 0) > 0 ? "pending" : "free",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        await addDoc(collection(db, "events", currentEvent.id, "orders"), orderPayload);
+
         showModal({
-          title: "目前不符合活動資格",
-          sub: "系統找不到你的活動資格資料。",
-          body: `
+          title:"報名成功",
+          sub:"你的活動資料已建立完成。",
+          body:`
             <div class="notice">
-              若你認為自己應該可以參加，請先確認：<br>
-              1. 你的校園驗證資料是否正確<br>
-              2. 主辦單位是否已將你加入本活動名單<br>
-              3. 是否有其他指定參加資格
+              活動：${esc(currentEvent.title || "-")}<br>
+              票種：${esc(selectedTicket.name || "-")}<br>
+              金額：${esc(formatPrice(selectedTicket.price || 0))}<br>
+              ${validatedInviteCode ? `邀請碼：${esc(validatedInviteCode)}<br>` : ""}
+              狀態：已建立報名 / 訂單資料
             </div>
             <div class="modal-actions">
-              <button class="secondary-btn" id="noEligibleCloseBtn">我知道了</button>
+              <button class="secondary-btn" id="successGoMemberBtn">前往會員中心</button>
+              <button class="ghost-btn" id="successCloseBtn" style="border-color:#111;">留在此頁</button>
             </div>
           `
         });
 
-        document.getElementById("noEligibleCloseBtn").onclick = closeModal;
+        document.getElementById("successGoMemberBtn").onclick = () => {
+          location.href = "member.html";
+        };
+        document.getElementById("successCloseBtn").onclick = closeModal;
+
+      } catch (e) {
+        console.error(e);
+        alert(e.message || "建立訂單失敗，請稍後再試");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = oldText;
       }
     }
 
@@ -1187,20 +1177,25 @@
         ? `<img src="${esc(event.coverImage)}" alt="${esc(event.title || "活動圖片")}">`
         : ``;
 
-      const tags = buildHeroTags(event);
       const statusBlock = getEligibilityBlock(eligibility);
+      const ticketTypes = getTicketTypes(event);
+
+      if (!selectedTicketId && ticketTypes.length) {
+        selectedTicketId = ticketTypes[0].id;
+        selectedTicket = ticketTypes[0];
+      } else {
+        selectedTicket = ticketTypes.find(item => item.id === selectedTicketId) || ticketTypes[0] || null;
+        selectedTicketId = selectedTicket?.id || "";
+      }
 
       const userEmailText = currentUser?.email ? esc(currentUser.email) : "尚未登入";
       const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "");
-      const verifiedSchoolHtml = verifiedSchoolName
-        ? `${esc(verifiedSchoolName)}`
-        : `未驗證`;
+      const verifiedSchoolHtml = verifiedSchoolName ? esc(verifiedSchoolName) : "未驗證";
 
-      const sideActionDisabled =
-        eligibility.type === "event_unpublished" ||
-        eligibility.type === "sale_not_open";
-
-      const actionText = eligibility.actionText || "我要購票 / 報名";
+      const submitDisabled = !eligibility.canSubmit || !selectedTicket;
+      const inviteText = validatedInviteCode
+        ? `<span class="pill">已套用邀請碼：${esc(validatedInviteCode)}</span>`
+        : (event.inviteCodeEnabled === true ? `<span class="pill">可使用邀請碼</span>` : "");
 
       app.className = "";
       app.innerHTML = `
@@ -1209,42 +1204,31 @@
             <div class="hero">
               ${coverHtml}
               <div class="hero-inner">
-                <div class="hero-top">
-                  <div class="status ${status.className}">${esc(status.text)}</div>
-                </div>
-
-                <div class="hero-tags">
-                  ${tags.map(tag => `<span class="hero-pill">${esc(tag)}</span>`).join("")}
-                </div>
-
+                <div class="status ${status.className}">${esc(status.text)}</div>
                 <h1 class="hero-title">${esc(event.title || "未命名活動")}</h1>
-
-                <div class="hero-meta">
-                  <div class="hero-meta-card">
-                    <div class="hero-meta-label">活動時間</div>
-                    <div class="hero-meta-value">
-                      ${esc(formatDateTime(event.eventStartAt))}<br>
-                      至 ${esc(formatDateTime(event.eventEndAt))}
-                    </div>
-                  </div>
-
-                  <div class="hero-meta-card">
-                    <div class="hero-meta-label">活動地點</div>
-                    <div class="hero-meta-value">${esc(event.location || "尚未提供")}</div>
-                  </div>
-
-                  <div class="hero-meta-card">
-                    <div class="hero-meta-label">報名區間</div>
-                    <div class="hero-meta-value">
-                      ${esc(formatDateTime(event.saleStartAt))}<br>
-                      至 ${esc(formatDateTime(event.saleEndAt))}
-                    </div>
-                  </div>
+                <div class="hero-sub">
+                  活動時間：${esc(formatDateTime(event.eventStartAt))} ～ ${esc(formatDateTime(event.eventEndAt))}<br>
+                  活動地點：${esc(event.location || "-")}
                 </div>
               </div>
             </div>
 
             <div class="main-body">
+              <div class="section">
+                <div class="section-title">票種 / 報名方案</div>
+                <div class="ticket-list">
+                  ${ticketTypes.map(ticket => `
+                    <div class="ticket-card ${selectedTicketId === ticket.id ? "active" : ""}" data-ticket-id="${esc(ticket.id)}">
+                      <div class="ticket-top">
+                        <div class="ticket-name">${esc(ticket.name)}</div>
+                        <div class="ticket-price">${esc(formatPrice(ticket.price))}</div>
+                      </div>
+                      <div class="ticket-desc">${esc(ticket.description || "此票種尚無額外說明")}</div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+
               <div class="section">
                 <div class="section-title">活動資訊</div>
                 <div class="info-grid">
@@ -1264,25 +1248,12 @@
                     <div class="info-label">開賣截止</div>
                     <div class="info-value">${esc(formatDateTime(event.saleEndAt))}</div>
                   </div>
-                  <div class="info-card">
-                    <div class="info-label">活動日期</div>
-                    <div class="info-value">${esc(formatDateOnly(event.eventStartAt))}</div>
-                  </div>
-                  <div class="info-card">
-                    <div class="info-label">主辦歸屬</div>
-                    <div class="info-value">${esc(norm(event.ownerSchoolId || "__global__"))}</div>
-                  </div>
                 </div>
               </div>
 
               <div class="section">
-                <div class="section-title">活動介紹</div>
-                <div class="section-text">${esc(event.description || "尚無活動介紹")}</div>
-              </div>
-
-              <div class="section">
-                <div class="section-title">注意事項</div>
-                <div class="section-text">${esc(event.notice || "尚無注意事項")}</div>
+                <div class="section-title">說明</div>
+                <div class="section-text">${esc(event.notice || event.description || "尚無說明")}</div>
               </div>
             </div>
           </div>
@@ -1290,51 +1261,53 @@
           <div class="side">
             <div class="side-card">
               <div class="side-head">
-                <h2 class="side-title">報名 / 購票</h2>
+                <h2 class="side-title">確認報名資訊</h2>
                 <div class="side-sub">
-                  先檢查你的身分狀態與活動資格，再進入下一步流程。
+                  請確認你的資格、票種與活動資訊無誤後，再送出報名。
                 </div>
               </div>
 
               <div class="side-body">
                 <div class="kv">
-                  <div class="k">目前狀態</div>
-                  <div class="v">${esc(status.text)}</div>
-
-                  <div class="k">活動地點</div>
-                  <div class="v">${esc(event.location || "-")}</div>
-
                   <div class="k">登入帳號</div>
                   <div class="v">${userEmailText}</div>
 
                   <div class="k">校園驗證</div>
                   <div class="v">${verifiedSchoolHtml}</div>
+
+                  <div class="k">票種</div>
+                  <div class="v">${esc(selectedTicket?.name || "尚未選擇")}</div>
+
+                  <div class="k">金額</div>
+                  <div class="v">${esc(formatPrice(selectedTicket?.price || 0))}</div>
                 </div>
 
-                <div class="user-status">
-                  <div style="font-size:13px;color:#6b7280;font-weight:900;">你的資格狀態</div>
-                  <div class="status-box ${statusBlock.className}">
-                    <div class="status-title">${esc(statusBlock.title)}</div>
-                    <div class="status-desc">${esc(statusBlock.desc)}</div>
+                <div class="status-box ${statusBlock.className}">
+                  <div class="status-title">${esc(statusBlock.title)}</div>
+                  <div class="status-desc">${esc(statusBlock.desc)}</div>
+                </div>
+
+                <div class="selected-box">
+                  <div style="font-size:12px;color:#6b7280;font-weight:900;">目前套用</div>
+                  <div style="margin-top:8px;font-size:14px;font-weight:1000;line-height:1.8;">
+                    ${inviteText || `<span class="pill">未使用邀請碼</span>`}
                   </div>
                 </div>
 
-                <button class="main-cta" id="buyBtn" ${sideActionDisabled ? "disabled" : ""}>
-                  ${esc(actionText)}
+                <button class="main-cta" id="submitBtn" ${submitDisabled ? "disabled" : ""}>
+                  ${esc(eligibility.actionText || "確認報名 / 購票")}
                 </button>
 
-                <div class="sub-actions">
-                  <button class="secondary-btn" id="campusVerifyBtn">校園驗證</button>
-                  <button class="secondary-btn" id="inviteCodeBtn" ${event.inviteCodeEnabled === true ? "" : "disabled"}>輸入邀請碼</button>
+                <div class="row" style="margin-top:10px;">
+                  <button class="secondary-btn" id="inviteBtn" ${event.inviteCodeEnabled === true ? "" : "disabled"}>輸入邀請碼</button>
+                  <button class="secondary-btn" id="verifyBtn">校園驗證</button>
                 </div>
 
                 <div class="notice">
                   ${event.allowedUsersEnabled === true
-                    ? `這場活動有資格名單限制，系統會先檢查你的校園驗證與名單資格。`
-                    : `這場活動目前沒有活動名單限制，可直接進入報名流程。`}
-                  ${event.inviteCodeEnabled === true
-                    ? `\n若你不在名單中，也可以改用邀請碼參加。`
-                    : ``}
+                    ? `這場活動有活動資格名單限制，系統已重新檢查你的資格狀態。`
+                    : `這場活動目前沒有額外資格名單限制。`}
+                  ${validatedInviteCode ? `\n目前已套用邀請碼，可直接進行後續流程。` : ``}
                 </div>
               </div>
             </div>
@@ -1342,25 +1315,25 @@
         </div>
       `;
 
-      document.getElementById("buyBtn").onclick = handlePrimaryAction;
-      document.getElementById("campusVerifyBtn").onclick = () => {
+      [...document.querySelectorAll("[data-ticket-id]")].forEach(el => {
+        el.onclick = () => selectTicket(el.dataset.ticketId);
+      });
+
+      document.getElementById("submitBtn").onclick = createOrder;
+      document.getElementById("inviteBtn").onclick = showInviteModal;
+      document.getElementById("verifyBtn").onclick = () => {
         location.href = "campus-verify.html";
-      };
-      document.getElementById("inviteCodeBtn").onclick = () => {
-        if (event.inviteCodeEnabled === true) {
-          showInviteCodeModal(event);
-        }
       };
     }
 
-    async function loadEventPage(){
+    async function refreshPageState(){
       if (!eventId){
         app.className = "empty";
         app.innerHTML = "缺少活動 ID。";
         return;
       }
 
-      try{
+      try {
         currentEvent = await getEventById(eventId);
 
         if (!currentEvent){
@@ -1370,18 +1343,19 @@
         }
 
         latestEligibility = await evaluateEligibility(currentEvent);
+        backLink.href = `event.html?id=${encodeURIComponent(currentEvent.id)}`;
         renderPage(currentEvent, latestEligibility);
       } catch (e){
         console.error(e);
         app.className = "empty";
-        app.innerHTML = "活動載入失敗，請稍後再試。";
+        app.innerHTML = "頁面載入失敗，請稍後再試。";
       }
     }
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user || null;
       await loadCurrentUserProfile();
-      await loadEventPage();
+      await refreshPageState();
     });
   </script>
 </body>

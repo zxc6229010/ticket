@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜會員查詢</title>
+  <title>後台｜會員 / 帳號查詢中心</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -22,6 +22,7 @@
     }
 
     *{ box-sizing:border-box; }
+
     body{
       margin:0;
       background:var(--bg);
@@ -30,10 +31,11 @@
     }
 
     .wrap{
-      max-width:960px;
+      max-width:1080px;
       margin:0 auto;
-      padding:48px 32px;
+      padding:48px 24px;
     }
+
     @media (max-width:640px){
       .wrap{ padding:28px 16px; }
     }
@@ -44,7 +46,7 @@
       border-radius:18px;
       box-shadow:var(--shadow2);
       padding:16px;
-      margin-bottom:22px;
+      margin-bottom:18px;
     }
 
     .header{
@@ -53,6 +55,7 @@
       align-items:flex-start;
       gap:12px;
       margin-bottom:12px;
+      flex-wrap:wrap;
     }
 
     h1{
@@ -60,6 +63,7 @@
       font-size:22px;
       letter-spacing:.2px;
     }
+
     h2{
       margin:0;
       font-size:16px;
@@ -72,9 +76,11 @@
       line-height:1.6;
       font-size:14px;
     }
+
     .small{
       font-size:13px;
       color:var(--muted);
+      line-height:1.6;
     }
 
     label{
@@ -111,14 +117,17 @@
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
     }
+
     .btn:hover{
       box-shadow:0 10px 22px rgba(0,0,0,.08);
       transform:translateY(-1px);
     }
+
     .btn:active{
       transform:translateY(0) scale(.98);
       box-shadow:none;
     }
+
     .btn[disabled]{
       opacity:.55;
       cursor:not-allowed;
@@ -131,6 +140,7 @@
       color:#fff;
       border-color:#111;
     }
+
     .btn-sm{
       height:40px;
       padding:8px calc(var(--btn-b) * 1.25);
@@ -151,7 +161,8 @@
       gap:12px;
       align-items:start;
     }
-    @media (max-width:640px){
+
+    @media (max-width:720px){
       .grid{ grid-template-columns:1fr; }
     }
 
@@ -173,7 +184,11 @@
       padding:10px 0;
       border-top:1px solid var(--line);
     }
-    .kv:first-child{ border-top:none; padding-top:0; }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
 
     .pill{
       display:inline-flex;
@@ -189,25 +204,62 @@
 
     .ok{ color:#166534; font-weight:900; }
     .warn{ color:#b91c1c; font-weight:900; }
+    .blue{ color:#1d4ed8; font-weight:900; }
+
+    .resultList{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .resultItem{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .itemTitle{
+      font-weight:900;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .itemMeta{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      margin-top:6px;
+      word-break:break-word;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <!-- Gate -->
     <div id="loginGate" class="section"></div>
 
-    <!-- App -->
     <div id="adminApp" style="display:none;">
       <div class="section">
         <div class="header">
           <div>
-            <h1>會員查詢</h1>
-            <div class="sub">用 Email 或 校園身分碼（verifyKey）查詢會員驗證狀態。</div>
+            <h1>會員 / 帳號查詢中心</h1>
+            <div class="sub">
+              使用單一欄位查詢 email、uid、學號、姓名、schoolId、orgId、verifyKey 等資訊。
+            </div>
           </div>
 
           <div style="text-align:right;">
             <div class="small" id="who"></div>
+            <div class="small" id="scopeText" style="margin-top:4px;"></div>
             <div style="margin-top:8px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
               <a href="dashboard.html" class="btn btn-sm">回主選單</a>
               <button class="btn btn-sm" id="logoutBtn">登出</button>
@@ -217,11 +269,8 @@
 
         <div class="grid">
           <div>
-            <label>Email（擇一填）</label>
-            <input id="emailInput" type="text" placeholder="example@gmail.com" />
-
-            <label style="margin-top:12px;">校園身分碼 verifyKey（擇一填）</label>
-            <input id="keyInput" type="text" class="mono" placeholder="例如：112233｜A123456789" />
+            <label>查詢條件</label>
+            <input id="searchInput" type="text" placeholder="可輸入 email / uid / 學號 / 姓名 / schoolId / orgId / verifyKey" />
 
             <div class="form-actions">
               <button class="btn" id="clearBtn">清除</button>
@@ -229,16 +278,17 @@
             </div>
 
             <div class="small" style="margin-top:10px;">
-              提醒：若 Firestore Rules 尚未放行平台端讀取 users，會查不到資料。
+              系統會在你有權限的資料範圍內搜尋相符的會員 / 帳號。
             </div>
           </div>
 
           <div>
-            <label>快速提示</label>
-            <div class="small" style="line-height:1.7;">
-              1. Email 建議全小寫<br>
-              2. verifyKey 要完全一致（包含分隔符號）<br>
-              3. 查不到時，可能是尚未驗證或欄位未寫入<br>
+            <label>本頁整合內容</label>
+            <div class="small" style="line-height:1.8;">
+              1. 平台端可查全部帳號與會員<br>
+              2. 校方 / 組織方只可查自己範圍<br>
+              3. 可檢視後台角色、校園驗證資訊、基本欄位<br>
+              4. 後續可再擴充活動報名狀態 / 最近活動資料
             </div>
           </div>
         </div>
@@ -251,36 +301,39 @@
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    // ===== Firebase Init =====
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e"
+      });
+    }
 
     const db = firebase.firestore();
 
-    // ===== DOM =====
     const loginGate = document.getElementById("loginGate");
     const adminApp  = document.getElementById("adminApp");
     const whoEl     = document.getElementById("who");
+    const scopeText = document.getElementById("scopeText");
 
     const logoutBtn = document.getElementById("logoutBtn");
-    const emailInput= document.getElementById("emailInput");
-    const keyInput  = document.getElementById("keyInput");
+    const searchInput = document.getElementById("searchInput");
 
     const clearBtn  = document.getElementById("clearBtn");
     const searchBtn = document.getElementById("searchBtn");
 
     const resultBox = document.getElementById("resultBox");
 
-    // ===== Utils =====
+    let currentRole = "";
+    let mySchoolId = "";
+    let myOrgId = "";
+    let currentUserEmail = "";
+
     function norm(s){ return String(s ?? "").trim(); }
     function lower(s){ return norm(s).toLowerCase(); }
 
@@ -331,74 +384,129 @@
       resultBox.innerHTML = html;
     }
 
-    function renderUser(u){
+    function canAccessUser(u){
+      if (["platform_super", "platform_admin"].includes(currentRole)) {
+        return true;
+      }
+
+      const userSchoolId = norm(u.schoolId || u.orgSchoolId || u.verifiedSchoolId || "");
+      const userOrgId = norm(u.orgId || "");
+
+      if (["org_super", "org_admin", "org_staff"].includes(currentRole)) {
+        if (mySchoolId && userSchoolId === mySchoolId) return true;
+        if (myOrgId && userOrgId === myOrgId) return true;
+        return false;
+      }
+
+      return false;
+    }
+
+    function userMatches(u, q){
+      const keyword = lower(q);
+
+      const fields = [
+        u.email,
+        u.uid,
+        u.studentId,
+        u.name,
+        u.displayName,
+        u.schoolId,
+        u.orgSchoolId,
+        u.orgId,
+        u.verifyKey,
+        u.role,
+        u.verifiedSchoolName,
+        u.verifiedSchoolId
+      ].map(v => lower(v));
+
+      return fields.some(v => v.includes(keyword));
+    }
+
+    function renderUserCard(u, uid){
       const email = norm(u.email);
       const verified = u.verified === true;
       const schoolName = norm(u.verifiedSchoolName);
-      const schoolId = norm(u.verifiedSchoolId);
+      const schoolId = norm(u.verifiedSchoolId || u.schoolId || u.orgSchoolId);
       const verifyKey = norm(u.verifyKey);
       const verifiedAt = u.verifiedAt ? u.verifiedAt.toDate?.() : null;
-
-      const timeText = verifiedAt ? verifiedAt.toLocaleString() : "-";
+      const timeText = verifiedAt ? verifiedAt.toLocaleString("zh-Hant") : "-";
+      const verifyMethod = norm(u.verifyMethod || u.verifiedMethod || "-");
+      const role = norm(u.role || "-");
+      const enabled = u.enabled === true;
+      const orgId = norm(u.orgId || "-");
+      const studentId = norm(u.studentId || "-");
+      const name = norm(u.name || u.displayName || "-");
 
       return `
-        <div class="row" style="margin-bottom:10px;">
-          <span class="pill">${verified ? `<span class="ok">已驗證</span>` : `<span class="warn">未驗證</span>`}</span>
-        </div>
+        <div class="resultItem">
+          <div class="itemTop">
+            <div>
+              <div class="itemTitle">
+                ${escapeHtml(email || "(無 email)")}
+              </div>
+              <div class="itemMeta">
+                uid：<span class="mono">${escapeHtml(uid || "-")}</span>
+              </div>
+            </div>
 
-        <div class="kv">
-          <div class="small">Email</div>
-          <div><span class="mono">${escapeHtml(email || "-")}</span></div>
-        </div>
+            <div class="row">
+              <span class="pill">${enabled ? `<span class="ok">啟用中</span>` : `<span class="warn">已停用</span>`}</span>
+              <span class="pill">${verified ? `<span class="ok">已驗證</span>` : `<span class="warn">未驗證</span>`}</span>
+              <span class="pill">${escapeHtml(role || "-")}</span>
+            </div>
+          </div>
 
-        <div class="kv">
-          <div class="small">學校</div>
-          <div>${escapeHtml(schoolName || "-")}</div>
-        </div>
+          <div class="kv">
+            <div class="small">姓名</div>
+            <div>${escapeHtml(name)}</div>
+          </div>
 
-        <div class="kv">
-          <div class="small">schoolId</div>
-          <div><span class="mono">${escapeHtml(schoolId || "-")}</span></div>
-        </div>
+          <div class="kv">
+            <div class="small">學號</div>
+            <div><span class="mono">${escapeHtml(studentId)}</span></div>
+          </div>
 
-        <div class="kv">
-          <div class="small">verifyKey</div>
-          <div><span class="mono">${escapeHtml(verifyKey || "-")}</span></div>
-        </div>
+          <div class="kv">
+            <div class="small">schoolId</div>
+            <div><span class="mono">${escapeHtml(norm(u.schoolId || u.orgSchoolId || "-"))}</span></div>
+          </div>
 
-        <div class="kv">
-          <div class="small">驗證時間</div>
-          <div>${escapeHtml(timeText)}</div>
+          <div class="kv">
+            <div class="small">orgId</div>
+            <div><span class="mono">${escapeHtml(orgId)}</span></div>
+          </div>
+
+          <div class="kv">
+            <div class="small">驗證學校</div>
+            <div>
+              ${escapeHtml(schoolName || "-")}
+              <div class="small"><span class="mono">${escapeHtml(schoolId || "-")}</span></div>
+            </div>
+          </div>
+
+          <div class="kv">
+            <div class="small">驗證方式</div>
+            <div>${escapeHtml(verifyMethod || "-")}</div>
+          </div>
+
+          <div class="kv">
+            <div class="small">verifyKey</div>
+            <div><span class="mono">${escapeHtml(verifyKey || "-")}</span></div>
+          </div>
+
+          <div class="kv">
+            <div class="small">驗證時間</div>
+            <div>${escapeHtml(timeText)}</div>
+          </div>
         </div>
       `;
     }
 
-    async function lookupByEmail(email){
-      const q = await db.collection("users")
-        .where("email", "==", email)
-        .limit(5)
-        .get();
-      return q;
-    }
-
-    async function lookupByVerifyKey(verifyKey){
-      const q = await db.collection("users")
-        .where("verifyKey", "==", verifyKey)
-        .limit(5)
-        .get();
-      return q;
-    }
-
     async function doSearch(){
-      const email = lower(emailInput.value);
-      const verifyKey = norm(keyInput.value);
+      const q = norm(searchInput.value);
 
-      if (!email && !verifyKey) {
-        alert("請輸入 Email 或 verifyKey 擇一");
-        return;
-      }
-      if (email && verifyKey) {
-        alert("一次只查一個條件：Email 或 verifyKey（擇一）");
+      if (!q) {
+        alert("請輸入查詢條件");
         return;
       }
 
@@ -407,20 +515,39 @@
       setResult(`<div class="small">查詢中…</div>`);
 
       try {
-        const snap = email ? await lookupByEmail(email) : await lookupByVerifyKey(verifyKey);
+        // 為了支援單一欄位多條件查詢，直接載入 users 再於前端依權限與關鍵字過濾
+        const snap = await db.collection("users").limit(3000).get();
 
-        if (snap.empty) {
-          setResult(`<div class="warn">查無資料</div><div class="small" style="margin-top:6px;">可能尚未驗證、或欄位未寫入。</div>`);
+        const rows = [];
+        snap.forEach(doc => {
+          const u = { uid: doc.id, ...(doc.data() || {}) };
+          if (!canAccessUser(u)) return;
+          if (!userMatches(u, q)) return;
+          rows.push(u);
+        });
+
+        rows.sort((a, b) => {
+          return lower(a.email || a.uid).localeCompare(lower(b.email || b.uid), "zh-Hant");
+        });
+
+        if (!rows.length) {
+          setResult(`
+            <div class="warn">查無資料</div>
+            <div class="small" style="margin-top:6px;">
+              可能原因：查詢值不符、資料尚未建立，或你目前沒有查看該筆資料的權限。
+            </div>
+          `);
           return;
         }
 
-        // 多筆時也顯示（避免 email 重複寫入造成混亂）
-        const blocks = snap.docs.map((d) => {
-          const u = d.data() || {};
-          return `<div class="section" style="box-shadow:none; margin:12px 0 0; padding:14px;">${renderUser(u)}</div>`;
-        });
+        const html = `
+          <div class="small">共找到 ${rows.length} 筆資料</div>
+          <div class="resultList">
+            ${rows.map(u => renderUserCard(u, u.uid)).join("")}
+          </div>
+        `;
 
-        setResult(blocks.join(""));
+        setResult(html);
 
       } catch (e) {
         console.error(e);
@@ -438,22 +565,21 @@
     }
 
     clearBtn.onclick = () => {
-      emailInput.value = "";
-      keyInput.value = "";
+      searchInput.value = "";
       setResult("尚未查詢");
     };
+
     searchBtn.onclick = doSearch;
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doSearch();
+    });
 
-    // Enter 直接查
-    emailInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
-    keyInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
-
-    // ===== Auth Gate + Role Gate =====
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         whoEl.textContent = "";
+        scopeText.textContent = "";
         showGate({
-          title: "會員查詢",
+          title: "會員 / 帳號查詢中心",
           message: "請先使用 Email / 密碼登入後台。",
           showLogin: true,
           showLogout: false
@@ -462,7 +588,6 @@
       }
 
       try {
-        // 讀取使用者權限
         const userDoc = await db.collection("users").doc(user.uid).get();
 
         if (!userDoc.exists) {
@@ -486,19 +611,31 @@
           return;
         }
 
-        // ✅ 只允許 platform_super / platform_admin
         const role = String(u.role || "").trim();
-        if (!["platform_super", "platform_admin"].includes(role)) {
+        const allowed = ["platform_super", "platform_admin", "org_super", "org_admin", "org_staff"];
+
+        if (!allowed.includes(role)) {
           showGate({
             title: "權限不足",
-            message: "你沒有權限使用會員查詢功能。",
+            message: "你沒有權限使用會員 / 帳號查詢功能。",
             showLogin: false,
             showLogout: true
           });
           return;
         }
 
-        whoEl.textContent = (user.email || "").toLowerCase();
+        currentRole = role;
+        mySchoolId = norm(u.schoolId || u.orgSchoolId || "");
+        myOrgId = norm(u.orgId || "");
+        currentUserEmail = lower(user.email || "");
+
+        whoEl.textContent = currentUserEmail || "";
+        if (["platform_super", "platform_admin"].includes(currentRole)) {
+          scopeText.textContent = "查詢範圍：全部帳號 / 全部會員";
+        } else {
+          scopeText.textContent = `查詢範圍：schoolId=${mySchoolId || "-"} / orgId=${myOrgId || "-"}`;
+        }
+
         loginGate.style.display = "none";
         adminApp.style.display = "block";
         setResult("尚未查詢");

@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜名單匯入與驗證設定</title>
+  <title>後台｜活動名單匯入與資格設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -30,7 +30,7 @@
     }
 
     .wrap{
-      max-width:960px;
+      max-width:1160px;
       margin:0 auto;
       padding:48px 16px;
     }
@@ -49,12 +49,19 @@
       justify-content:space-between;
       align-items:flex-start;
       gap:12px;
+      flex-wrap:wrap;
     }
 
     h1{
       margin:0;
       font-size:22px;
       letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
     }
 
     .sub{
@@ -67,6 +74,7 @@
     .small{
       font-size:13px;
       color:var(--muted);
+      line-height:1.6;
     }
 
     label{
@@ -137,6 +145,12 @@
       border-color:#111;
     }
 
+    .btn-danger{
+      border-color:rgba(239,68,68,.35);
+      color:#b91c1c;
+      background:#fff;
+    }
+
     .btn-sm{
       height:40px;
       padding:8px calc(var(--btn-b) * 1.25);
@@ -149,8 +163,14 @@
       gap:12px;
     }
 
-    @media (max-width:720px){
-      .grid{ grid-template-columns:1fr; }
+    .grid3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:860px){
+      .grid,.grid3{ grid-template-columns:1fr; }
     }
 
     .box{
@@ -212,6 +232,72 @@
       border-radius:14px;
       background:#fff;
     }
+
+    .tableWrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      margin-top:12px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+    }
+
+    th, td{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      font-size:14px;
+      vertical-align:top;
+    }
+
+    th{
+      background:#fafafa;
+      font-weight:900;
+    }
+
+    tr:last-child td{
+      border-bottom:none;
+    }
+
+    .list{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .itemTitle{
+      font-weight:900;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .itemMeta{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      word-break:break-word;
+      margin-top:6px;
+    }
   </style>
 </head>
 
@@ -223,13 +309,13 @@
       <div class="section">
         <div class="header">
           <div>
-            <h1>名單匯入與驗證設定</h1>
-            <div class="sub">第一次設定欄位建議由超級管理員完成；校方之後只能用相同欄位補匯入，並可暫停 / 恢復驗證。</div>
+            <h1>活動名單匯入與資格設定</h1>
+            <div class="sub">此頁以活動為單位管理可參加名單。不同活動可有不同資格名單，不再與單一校園名單綁死。</div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
               角色：<span id="roleText" class="mono">-</span>
             </div>
-            <div id="superNotice" class="notice" style="display:none;"></div>
+            <div id="eventNotice" class="notice" style="display:none;"></div>
           </div>
 
           <div class="row" style="justify-content:flex-end;">
@@ -242,20 +328,18 @@
       <div class="section">
         <div class="grid">
           <div>
-            <label>選擇校園</label>
-            <select id="schoolSel"></select>
-            <div id="schoolMeta" class="small" style="margin-top:8px;"></div>
+            <label>選擇活動</label>
+            <select id="eventSel"></select>
+            <div id="eventMeta" class="small" style="margin-top:8px;"></div>
           </div>
 
           <div>
-            <label>校園驗證狀態</label>
+            <label>目前活動名單狀態</label>
             <div class="box">
-              <div class="row" style="justify-content:space-between;">
-                <div>
-                  <div>verifyEnabled：<span id="verifyEnabledText" class="mono">-</span></div>
-                  <div class="small">校方可用此按鈕暫停 / 恢復學生驗證。</div>
-                </div>
-                <button class="btn btn-sm" id="toggleVerifyBtn" disabled>載入後可操作</button>
+              <div>資格名單啟用：<span id="allowedEnabledText" class="mono">-</span></div>
+              <div style="margin-top:8px;">比對欄位：<span id="matchFieldsText" class="mono">-</span></div>
+              <div class="small" style="margin-top:8px;">
+                你可為每個活動設定不同名單與不同欄位，不同活動彼此互不影響。
               </div>
             </div>
           </div>
@@ -263,32 +347,44 @@
       </div>
 
       <div class="section">
-        <h1 style="margin:0; font-size:16px; font-weight:900;">步驟 1｜上傳名單檔案</h1>
+        <h2>步驟 1｜上傳名單檔案</h2>
         <div class="sub">支援 CSV / XLSX。第一列必須是欄位名稱。</div>
 
         <div class="row" style="margin-top:12px;">
           <input id="file" type="file" accept=".csv,.xlsx" />
           <button class="btn" id="parseBtn">讀取檔案</button>
+          <button class="btn" id="downloadSampleBtn">下載範本</button>
         </div>
 
         <div id="fileInfo" class="small" style="margin-top:10px;"></div>
       </div>
 
       <div class="section" id="configSection">
-        <h1 style="margin:0; font-size:16px; font-weight:900;">步驟 2｜設定要驗證的欄位</h1>
+        <h2>步驟 2｜設定比對欄位</h2>
         <div class="sub">
-          <span class="pill">verifyFields</span>＝學生要填的欄位｜
-          <span class="pill">verifyKeyFields</span>＝用來組 verifyKey 的欄位
+          系統會用你勾選的欄位組成 <span class="mono">matchKey</span>。<br>
+          建議至少勾選 <span class="mono">email</span> 或 <span class="mono">studentId</span>。
         </div>
 
         <div class="grid" style="margin-top:12px;">
           <div>
-            <div class="small" style="margin-bottom:8px;">verifyFields（學生輸入欄位）</div>
-            <div class="box" id="verifyFieldsBox"></div>
+            <div class="small" style="margin-bottom:8px;">matchFields（活動資格比對欄位）</div>
+            <div class="box" id="matchFieldsBox"></div>
           </div>
+
           <div>
-            <div class="small" style="margin-bottom:8px;">verifyKeyFields（比對用欄位）</div>
-            <div class="box" id="verifyKeyFieldsBox"></div>
+            <div class="small" style="margin-bottom:8px;">建議</div>
+            <div class="box">
+              <div class="small">
+                常見欄位範例：<br>
+                <span class="pill">email</span>
+                <span class="pill">studentId</span>
+                <span class="pill">name</span>
+                <span class="pill">class</span>
+                <span class="pill">group</span>
+                <span class="pill">canRegister</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -296,10 +392,10 @@
       </div>
 
       <div class="section">
-        <h1 style="margin:0; font-size:16px; font-weight:900;">步驟 3｜匯入到資料庫</h1>
+        <h2>步驟 3｜匯入到資料庫</h2>
         <div class="sub">
-          每一列會用 verifyKeyFields 組成 <span class="mono">verifyKey</span>，寫入
-          <span class="mono">partnerSchools/{schoolId}/records</span>。同 verifyKey 重複會跳過。
+          每一列會寫入 <span class="mono">events/{eventId}/allowedUsers</span>。<br>
+          文件 ID 會使用 <span class="mono">matchKey</span>；若重複則跳過。
         </div>
 
         <div class="row" style="margin-top:12px; justify-content:flex-end;">
@@ -320,6 +416,41 @@
 
         <div id="log" class="small" style="margin-top:10px;"></div>
       </div>
+
+      <div class="section">
+        <div class="header">
+          <div>
+            <h2>目前活動名單</h2>
+            <div class="sub">可搜尋、查看、刪除單筆，或清空整個活動名單。</div>
+          </div>
+          <div class="row">
+            <button class="btn btn-sm" id="reloadAllowedBtn">重新載入</button>
+            <button class="btn btn-sm btn-danger" id="clearAllowedBtn">清空全部名單</button>
+          </div>
+        </div>
+
+        <div class="grid3" style="margin-top:12px;">
+          <div>
+            <label style="margin-top:0;">搜尋</label>
+            <input type="text" id="allowedSearch" placeholder="搜尋 email / studentId / name / 其他欄位" />
+          </div>
+          <div>
+            <label style="margin-top:0;">篩選 canRegister</label>
+            <select id="registerFilter">
+              <option value="all">全部</option>
+              <option value="true">canRegister = true</option>
+              <option value="false">canRegister = false</option>
+              <option value="missing">未設定</option>
+            </select>
+          </div>
+          <div>
+            <label style="margin-top:0;">目前筆數</label>
+            <div class="box"><span id="allowedCount" class="mono">0</span></div>
+          </div>
+        </div>
+
+        <div id="allowedList" class="list"></div>
+      </div>
     </div>
   </div>
 
@@ -329,11 +460,13 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e"
+      });
+    }
 
     const db = firebase.firestore();
 
@@ -341,22 +474,21 @@
     const app = document.getElementById("app");
     const whoEl = document.getElementById("who");
     const roleText = document.getElementById("roleText");
-    const superNotice = document.getElementById("superNotice");
+    const eventNotice = document.getElementById("eventNotice");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    const schoolSel = document.getElementById("schoolSel");
-    const schoolMeta = document.getElementById("schoolMeta");
-
-    const verifyEnabledText = document.getElementById("verifyEnabledText");
-    const toggleVerifyBtn = document.getElementById("toggleVerifyBtn");
+    const eventSel = document.getElementById("eventSel");
+    const eventMeta = document.getElementById("eventMeta");
+    const allowedEnabledText = document.getElementById("allowedEnabledText");
+    const matchFieldsText = document.getElementById("matchFieldsText");
 
     const fileEl = document.getElementById("file");
     const parseBtn = document.getElementById("parseBtn");
+    const downloadSampleBtn = document.getElementById("downloadSampleBtn");
     const fileInfo = document.getElementById("fileInfo");
 
     const configSection = document.getElementById("configSection");
-    const verifyFieldsBox = document.getElementById("verifyFieldsBox");
-    const verifyKeyFieldsBox = document.getElementById("verifyKeyFieldsBox");
+    const matchFieldsBox = document.getElementById("matchFieldsBox");
     const configHint = document.getElementById("configHint");
 
     const importBtn = document.getElementById("importBtn");
@@ -369,14 +501,20 @@
     const resultCard = document.getElementById("resultCard");
     const resultSummary = document.getElementById("resultSummary");
 
+    const reloadAllowedBtn = document.getElementById("reloadAllowedBtn");
+    const clearAllowedBtn = document.getElementById("clearAllowedBtn");
+    const allowedSearch = document.getElementById("allowedSearch");
+    const registerFilter = document.getElementById("registerFilter");
+    const allowedCount = document.getElementById("allowedCount");
+    const allowedList = document.getElementById("allowedList");
+
     let currentUser = null;
     let currentRole = "";
-    let schoolDoc = null;
-    let schoolId = "";
+    let currentUserData = null;
+    let eventDoc = null;
+    let eventId = "";
     let parsed = null;
-
-    let canSetupConfig = false;
-    let canOverrideLocked = false;
+    let allowedCache = [];
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -432,14 +570,14 @@
       resultSummary.innerHTML = `
         總列數：<span class="mono">${total}</span><br>
         新增：<span class="mono">${ok}</span><br>
-        跳過（verifyKey 已存在 / 本次重複）：<span class="mono">${skip}</span><br>
-        略過（verifyKey 欄位缺值 / 不合法）：<span class="mono">${bad}</span>
+        跳過（matchKey 已存在 / 本次重複）：<span class="mono">${skip}</span><br>
+        略過（缺少比對欄位 / 不合法）：<span class="mono">${bad}</span>
       `;
     }
 
-    function getSchoolIdFromUrl(){
+    function getEventIdFromUrl(){
       const params = new URLSearchParams(location.search);
-      return norm(params.get("schoolId"));
+      return norm(params.get("eventId"));
     }
 
     async function loadUserRole(uid){
@@ -456,202 +594,142 @@
       };
     }
 
-    async function loadSchoolOptions(userData){
-      schoolSel.innerHTML = "";
-
-      if (currentRole === "platform_super" || currentRole === "platform_admin") {
-        const snap = await db.collection("partnerSchools").get();
-        const docs = snap.docs.slice().sort((a, b) => {
-          const nameA = norm(a.data()?.name).toLowerCase();
-          const nameB = norm(b.data()?.name).toLowerCase();
-          return nameA.localeCompare(nameB, "zh-Hant");
-        });
-
-        if (!docs.length) {
-          schoolSel.innerHTML = `<option value="">（目前沒有校園）</option>`;
-          return;
-        }
-
-        docs.forEach(doc => {
-          const school = doc.data() || {};
-          schoolSel.insertAdjacentHTML(
-            "beforeend",
-            `<option value="${esc(doc.id)}">${esc(school.name || doc.id)}（${esc(doc.id)}）</option>`
-          );
-        });
-        return;
-      }
-
-      const allowedIds = Array.isArray(userData.allowedSchoolIds) ? userData.allowedSchoolIds : [];
-      const singleId = norm(userData.schoolId || userData.orgSchoolId || "");
-      const ids = allowedIds.length ? allowedIds : (singleId ? [singleId] : []);
-
-      if (!ids.length) {
-        schoolSel.innerHTML = `<option value="">（你的帳號未綁定校園）</option>`;
-        return;
-      }
-
-      for (const id of ids) {
-        const doc = await db.collection("partnerSchools").doc(id).get();
-        if (!doc.exists) continue;
-
-        const school = doc.data() || {};
-        schoolSel.insertAdjacentHTML(
-          "beforeend",
-          `<option value="${esc(doc.id)}">${esc(school.name || doc.id)}（${esc(doc.id)}）</option>`
-        );
-      }
+    function isPlatformRole(role){
+      return role === "platform_super" || role === "platform_admin";
     }
 
-    function renderSuperNotice(){
-      const locked = schoolDoc?.verifyLocked === true;
-      const isSuper = currentRole === "platform_super";
+    function canManageEvent(e){
+      if (!e) return false;
+      if (isPlatformRole(currentRole)) return true;
 
-      if (!isSuper) {
-        superNotice.style.display = "none";
-        superNotice.innerHTML = "";
+      const mySchoolId = norm(currentUserData?.schoolId || currentUserData?.orgSchoolId || "");
+      const eventSchoolId = norm(e.ownerSchoolId || "");
+      return !!mySchoolId && mySchoolId === eventSchoolId;
+    }
+
+    async function loadEventOptions(){
+      eventSel.innerHTML = "";
+
+      const snap = await db.collection("events").get();
+      const docs = snap.docs
+        .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
+        .filter(canManageEvent)
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+
+      if (!docs.length) {
+        eventSel.innerHTML = `<option value="">（目前沒有可管理活動）</option>`;
         return;
       }
 
-      superNotice.style.display = "block";
+      docs.forEach(e => {
+        const title = norm(e.title || e.id);
+        eventSel.insertAdjacentHTML(
+          "beforeend",
+          `<option value="${esc(e.id)}">${esc(title)}（${esc(e.id)}）</option>`
+        );
+      });
+    }
 
-      if (locked) {
-        superNotice.innerHTML = `
+    function renderEventNotice(){
+      if (currentRole === "platform_super") {
+        eventNotice.style.display = "block";
+        eventNotice.innerHTML = `
           <div class="ok">你是超級管理員</div>
           <div class="small" style="margin-top:6px;">
-            此校目前已鎖定，但你仍可直接修改 verifyFields / verifyKeyFields，並重新匯入。
+            你可以替任一活動設定 matchFields、重新匯入名單，並直接清空整個活動名單。
+          </div>
+        `;
+      } else if (isPlatformRole(currentRole)) {
+        eventNotice.style.display = "block";
+        eventNotice.innerHTML = `
+          <div class="ok">你是平台管理員</div>
+          <div class="small" style="margin-top:6px;">
+            可管理所有活動名單與資格資料。
           </div>
         `;
       } else {
-        superNotice.innerHTML = `
-          <div class="ok">你是超級管理員且尚未鎖定</div>
+        eventNotice.style.display = "block";
+        eventNotice.innerHTML = `
+          <div class="ok">你是校方 / 組織管理者</div>
           <div class="small" style="margin-top:6px;">
-            請先設定 verifyFields / verifyKeyFields，再匯入。匯入成功後會自動鎖定。
+            只能管理自己校園的活動名單。
           </div>
         `;
       }
     }
 
-    async function loadSchool(id){
-      schoolId = id;
+    async function loadEvent(id){
+      eventId = id;
       parsed = null;
+      allowedCache = [];
 
       fileInfo.textContent = "";
-      verifyFieldsBox.innerHTML = "";
-      verifyKeyFieldsBox.innerHTML = "";
+      matchFieldsBox.innerHTML = "";
       importBtn.disabled = true;
       setLog("");
       resetProgress();
       resetResultCard();
+      allowedList.innerHTML = "";
+      allowedCount.textContent = "0";
 
-      if (!schoolId) {
-        schoolMeta.innerHTML = `<span class="warn">請先選擇校園</span>`;
-        verifyEnabledText.textContent = "-";
-        toggleVerifyBtn.disabled = true;
-        superNotice.style.display = "none";
+      if (!eventId) {
+        eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
+        allowedEnabledText.textContent = "-";
+        matchFieldsText.textContent = "-";
         return;
       }
 
-      const doc = await db.collection("partnerSchools").doc(schoolId).get();
+      const doc = await db.collection("events").doc(eventId).get();
       if (!doc.exists) {
-        schoolMeta.innerHTML = `<span class="warn">找不到校園文件：${esc(schoolId)}</span>`;
-        verifyEnabledText.textContent = "-";
-        toggleVerifyBtn.disabled = true;
-        superNotice.style.display = "none";
+        eventMeta.innerHTML = `<span class="warn">找不到活動文件：${esc(eventId)}</span>`;
+        allowedEnabledText.textContent = "-";
+        matchFieldsText.textContent = "-";
         return;
       }
 
-      schoolDoc = doc.data() || {};
+      eventDoc = doc.data() || {};
 
-      const name = schoolDoc.name || "(未命名)";
-      const locked = schoolDoc.verifyLocked === true;
-      const verifyEnabled = schoolDoc.verifyEnabled === true;
+      const title = eventDoc.title || "(未命名)";
+      const ownerSchoolId = norm(eventDoc.ownerSchoolId || "-");
+      const enabled = eventDoc.allowedUsersEnabled !== false;
+      const existingMatchFields = Array.isArray(eventDoc.allowedUserMatchFields) ? eventDoc.allowedUserMatchFields : [];
 
-      canOverrideLocked = currentRole === "platform_super";
-      canSetupConfig = currentRole === "platform_super";
-
-      schoolMeta.innerHTML = `
-        校園：<b>${esc(name)}</b>｜
-        verifyLocked：<span class="mono">${locked ? "true" : "false"}</span>｜
-        importColumns：<span class="mono">${Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns.length : 0}</span>
+      eventMeta.innerHTML = `
+        活動：<b>${esc(title)}</b>｜
+        ownerSchoolId：<span class="mono">${esc(ownerSchoolId)}</span>｜
+        published：<span class="mono">${eventDoc.published === true ? "true" : "false"}</span>
       `;
 
-      verifyEnabledText.textContent = verifyEnabled ? "true" : "false";
-      toggleVerifyBtn.disabled = false;
-      toggleVerifyBtn.textContent = verifyEnabled ? "暫停驗證" : "恢復驗證";
+      allowedEnabledText.textContent = enabled ? "true" : "false";
+      matchFieldsText.textContent = existingMatchFields.length ? existingMatchFields.join("｜") : "-";
 
-      renderSuperNotice();
+      configHint.innerHTML = `
+        <span class="ok">此活動的名單與其他活動分開管理。</span><br>
+        匯入後會把資料寫進 <span class="mono">events/${esc(eventId)}/allowedUsers</span>。
+      `;
 
-      if (canSetupConfig) {
-        configSection.classList.remove("disabled-wrap");
-
-        configHint.innerHTML = canOverrideLocked && locked
-          ? `<span class="ok">此校已鎖定，但你是超級管理員，仍可修改欄位設定。</span>`
-          : `<span class="ok">可設定 verifyFields / verifyKeyFields。匯入後會自動鎖定。</span>`;
-
-        const existingVerifyFields = Array.isArray(schoolDoc.verifyFields) ? schoolDoc.verifyFields : [];
-        const existingVerifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) ? schoolDoc.verifyKeyFields : [];
-
-        verifyFieldsBox.innerHTML = existingVerifyFields.length
-          ? existingVerifyFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ")
-          : `<span class="small">讀取檔案後可設定</span>`;
-
-        verifyKeyFieldsBox.innerHTML = existingVerifyKeyFields.length
-          ? existingVerifyKeyFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ")
-          : `<span class="small">讀取檔案後可設定</span>`;
+      if (existingMatchFields.length) {
+        matchFieldsBox.innerHTML = existingMatchFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ");
       } else {
-        configSection.classList.add("disabled-wrap");
-
-        const cols = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
-        const verifyFields = Array.isArray(schoolDoc.verifyFields) ? schoolDoc.verifyFields : [];
-        const verifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) ? schoolDoc.verifyKeyFields : [];
-
-        configHint.innerHTML = `
-          <span class="warn">欄位設定已鎖定</span>（或你不是超級管理員）。<br>
-          非超級管理員只能補匯入，且檔案欄位必須與 <span class="mono">importColumns</span> 完全一致（包含順序）。
-          ${cols.length ? "" : `<br><span class="warn">此校尚未完成第一次設定，請聯絡超級管理員。</span>`}
-        `;
-
-        verifyFieldsBox.innerHTML = verifyFields.length
-          ? verifyFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ")
-          : `<span class="warn">（未設定）</span>`;
-
-        verifyKeyFieldsBox.innerHTML = verifyKeyFields.length
-          ? verifyKeyFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ")
-          : `<span class="warn">（未設定）</span>`;
+        matchFieldsBox.innerHTML = `<span class="small">讀取檔案後可設定</span>`;
       }
+
+      await loadAllowedUsers();
     }
-
-    toggleVerifyBtn.onclick = async () => {
-      if (!schoolId) return;
-
-      try {
-        toggleVerifyBtn.disabled = true;
-
-        const now = schoolDoc.verifyEnabled === true;
-        await db.collection("partnerSchools").doc(schoolId).update({
-          verifyEnabled: !now,
-          verifyEnabledUpdatedAt: new Date()
-        });
-
-        await loadSchool(schoolId);
-      } catch (e) {
-        console.error(e);
-        alert("變更失敗，可能是權限不足。");
-      } finally {
-        toggleVerifyBtn.disabled = false;
-      }
-    };
 
     function parseCSV(text){
       const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
       if (!lines.length) throw new Error("CSV 內容為空");
 
-      const headers = lines[0].split(",").map(item => norm(item));
+      const headers = parseCsvLine(lines[0]).map(item => norm(item));
       const rows = [];
 
       for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(",");
+        const cols = parseCsvLine(lines[i]);
         const row = {};
         headers.forEach((header, index) => {
           row[header] = norm(cols[index] ?? "");
@@ -660,6 +738,34 @@
       }
 
       return { headers, rows };
+    }
+
+    function parseCsvLine(line){
+      const result = [];
+      let current = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        const next = line[i + 1];
+
+        if (ch === '"') {
+          if (inQuotes && next === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === "," && !inQuotes) {
+          result.push(current);
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+
+      result.push(current);
+      return result;
     }
 
     function parseXLSX(buffer){
@@ -701,43 +807,20 @@
       return checks.filter(item => item.checked).map(item => norm(item.dataset.col));
     }
 
-    function headersEqual(a, b){
-      if (!Array.isArray(a) || !Array.isArray(b)) return false;
-      if (a.length !== b.length) return false;
-
-      for (let i = 0; i < a.length; i++) {
-        if (norm(a[i]) !== norm(b[i])) return false;
-      }
-
-      return true;
-    }
-
     function updateImportBtn(){
-      if (!schoolId || !parsed) {
+      if (!eventId || !parsed) {
         importBtn.disabled = true;
         return;
       }
 
-      if (currentRole !== "platform_super") {
-        const importColumns = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
-        if (!importColumns.length) {
-          importBtn.disabled = true;
-          return;
-        }
-
-        importBtn.disabled = !headersEqual(importColumns, parsed.headers);
-        return;
-      }
-
-      const verifyFields = readChecks(verifyFieldsBox);
-      const verifyKeyFields = readChecks(verifyKeyFieldsBox);
-      importBtn.disabled = !(verifyFields.length && verifyKeyFields.length);
+      const matchFields = readChecks(matchFieldsBox);
+      importBtn.disabled = matchFields.length === 0;
     }
 
     parseBtn.onclick = async () => {
       try {
-        if (!schoolId) {
-          alert("請先選擇校園");
+        if (!eventId) {
+          alert("請先選擇活動");
           return;
         }
 
@@ -774,38 +857,18 @@
           欄位：${data.headers.map(header => `<span class="pill">${esc(header)}</span>`).join(" ")}
         `;
 
-        if (currentRole === "platform_super") {
-          const defaultVerifyFields = Array.isArray(schoolDoc.verifyFields) && schoolDoc.verifyFields.length
-            ? new Set(schoolDoc.verifyFields)
-            : new Set(data.headers);
+        const currentMatchFields = Array.isArray(eventDoc.allowedUserMatchFields) && eventDoc.allowedUserMatchFields.length
+          ? new Set(eventDoc.allowedUserMatchFields)
+          : new Set(
+              data.headers.filter(h => ["email","studentId"].includes(norm(h)))
+            );
 
-          const defaultVerifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) && schoolDoc.verifyKeyFields.length
-            ? new Set(schoolDoc.verifyKeyFields)
-            : new Set(data.headers);
-
-          buildChecks(verifyFieldsBox, data.headers, defaultVerifyFields);
-          buildChecks(verifyKeyFieldsBox, data.headers, defaultVerifyKeyFields);
-
-          verifyFieldsBox.onchange = updateImportBtn;
-          verifyKeyFieldsBox.onchange = updateImportBtn;
-        } else {
-          const importColumns = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
-
-          if (!importColumns.length) {
-            setLog(`<span class="warn">此校尚未由超級管理員完成第一次設定，請聯絡超級管理員。</span>`);
-          } else if (!headersEqual(importColumns, data.headers)) {
-            setLog(`
-              <div class="warn">欄位不一致，禁止匯入。</div>
-              <div class="small">
-                既有 importColumns：${importColumns.map(header => `<span class="pill">${esc(header)}</span>`).join(" ")}<br>
-                這次檔案欄位：${data.headers.map(header => `<span class="pill">${esc(header)}</span>`).join(" ")}<br>
-                請使用與第一次完全相同欄位與順序的檔案。
-              </div>
-            `);
-          } else {
-            setLog(`<span class="ok">欄位一致，可以補匯入。</span>`);
-          }
+        if (!currentMatchFields.size && data.headers.length) {
+          currentMatchFields.add(data.headers[0]);
         }
+
+        buildChecks(matchFieldsBox, data.headers, currentMatchFields);
+        matchFieldsBox.onchange = updateImportBtn;
 
         updateImportBtn();
       } catch (e) {
@@ -816,86 +879,75 @@
       }
     };
 
-    function makeVerifyKey(row, keyFields){
-      return keyFields.map(field => norm(row[field])).join("｜");
+    function downloadSampleFile(){
+      const headers = ["email","studentId","name","class","group","canRegister"];
+      const sampleRows = [
+        ["a@example.com","112233","王小明","306","A","true"],
+        ["b@example.com","223344","李小華","307","B","true"]
+      ];
+
+      const csv = [
+        headers.join(","),
+        ...sampleRows.map(row => row.join(","))
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "event_allowed_users_sample.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    downloadSampleBtn.onclick = downloadSampleFile;
+
+    function makeMatchKey(row, fields){
+      return fields.map(field => norm(row[field])).join("｜");
     }
 
     async function importRecords(){
-      if (!schoolId || !parsed) return;
+      if (!eventId || !parsed) return;
 
       const rows = parsed.rows;
       const headers = parsed.headers;
+      const matchFields = readChecks(matchFieldsBox);
 
-      let verifyFields = [];
-      let verifyKeyFields = [];
+      if (!matchFields.length) {
+        alert("請至少勾選 1 個比對欄位");
+        return;
+      }
 
-      if (currentRole === "platform_super") {
-        verifyFields = readChecks(verifyFieldsBox);
-        verifyKeyFields = readChecks(verifyKeyFieldsBox);
-
-        if (!verifyFields.length) {
-          alert("請至少勾選 1 個 verifyFields");
-          return;
-        }
-
-        if (!verifyKeyFields.length) {
-          alert("請至少勾選 1 個 verifyKeyFields");
-          return;
-        }
-      } else {
-        verifyFields = Array.isArray(schoolDoc.verifyFields) ? schoolDoc.verifyFields : [];
-        verifyKeyFields = Array.isArray(schoolDoc.verifyKeyFields) ? schoolDoc.verifyKeyFields : [];
-        const importColumns = Array.isArray(schoolDoc.importColumns) ? schoolDoc.importColumns : [];
-
-        if (!importColumns.length) {
-          alert("此校尚未完成第一次設定，請聯絡超級管理員。");
-          return;
-        }
-
-        if (!headersEqual(importColumns, headers)) {
-          alert("欄位不一致，禁止匯入。請使用與第一次相同欄位與順序的檔案。");
-          return;
-        }
-
-        if (!verifyFields.length || !verifyKeyFields.length) {
-          alert("此校驗證設定不完整，請聯絡超級管理員。");
-          return;
-        }
+      if (!matchFields.some(field => ["email","studentId"].includes(norm(field)))) {
+        const ok = confirm("你目前沒有勾選 email 或 studentId。這通常不建議，確定仍要匯入嗎？");
+        if (!ok) return;
       }
 
       importBtn.disabled = true;
       parseBtn.disabled = true;
-      schoolSel.disabled = true;
-      toggleVerifyBtn.disabled = true;
-
+      eventSel.disabled = true;
       const oldText = importBtn.textContent;
       importBtn.textContent = "匯入中…";
+
       setLog("準備匯入…");
       setProgress(0, rows.length, "準備資料");
       resetResultCard();
 
       try {
-        const schoolRef = db.collection("partnerSchools").doc(schoolId);
+        const eventRef = db.collection("events").doc(eventId);
+        await eventRef.set({
+          allowedUserMatchFields: matchFields,
+          allowedUserImportColumns: headers,
+          allowedUsersEnabled: true,
+          allowedUsersConfiguredAt: new Date()
+        }, { merge: true });
 
-        if (currentRole === "platform_super") {
-          await schoolRef.set({
-            importColumns: headers,
-            verifyFields,
-            verifyKeyFields,
-            verifyLocked: true,
-            verifyEnabled: true,
-            verifyConfiguredAt: new Date()
-          }, { merge: true });
-        }
-
-        const updatedDoc = await schoolRef.get();
-        schoolDoc = updatedDoc.data() || {};
-        renderSuperNotice();
-
-        const recordsRef = schoolRef.collection("records");
+        const allowedRef = eventRef.collection("allowedUsers");
 
         setProgress(0, rows.length, "讀取既有資料");
-        const existingSnap = await recordsRef.get();
+        const existingSnap = await allowedRef.get();
         const existingKeySet = new Set(existingSnap.docs.map(doc => doc.id));
 
         let ok = 0;
@@ -917,7 +969,7 @@
           }
 
           let missing = false;
-          for (const field of verifyKeyFields) {
+          for (const field of matchFields) {
             if (!norm(row[field])) {
               missing = true;
               break;
@@ -929,34 +981,40 @@
             continue;
           }
 
-          const verifyKey = makeVerifyKey(row, verifyKeyFields);
-          if (!verifyKey || verifyKey.split("｜").every(item => !item)) {
+          const matchKey = makeMatchKey(row, matchFields);
+          if (!matchKey || matchKey.split("｜").every(item => !item)) {
             bad++;
             continue;
           }
 
-          if (existingKeySet.has(verifyKey) || pendingNewKeys.has(verifyKey)) {
+          if (existingKeySet.has(matchKey) || pendingNewKeys.has(matchKey)) {
             skip++;
             continue;
           }
 
-          const recordRef = recordsRef.doc(verifyKey);
-
+          const docRef = allowedRef.doc(matchKey);
           const payload = {
-            verifyKey,
+            matchKey,
+            matchFields,
             createdAt: new Date(),
-            usedByUid: "",
-            usedAt: null
+            updatedAt: new Date()
           };
 
           headers.forEach(header => {
-            payload[header] = norm(row[header]);
+            const rawValue = norm(row[header]);
+            if (norm(header).toLowerCase() === "canregister") {
+              payload[header] = rawValue.toLowerCase() === "true";
+            } else if (norm(header).toLowerCase() === "cancheckin") {
+              payload[header] = rawValue.toLowerCase() === "true";
+            } else {
+              payload[header] = rawValue;
+            }
           });
 
-          batch.set(recordRef, payload, { merge: false });
+          batch.set(docRef, payload, { merge:false });
           batchCount++;
           ok++;
-          pendingNewKeys.add(verifyKey);
+          pendingNewKeys.add(matchKey);
 
           if (batchCount >= 400) {
             await batch.commit();
@@ -970,7 +1028,7 @@
           await batch.commit();
         }
 
-        await loadSchool(schoolId);
+        await loadEvent(eventId);
 
         setProgress(rows.length, rows.length, "匯入完成");
 
@@ -984,8 +1042,8 @@
         setLog(`
           <span class="ok">匯入完成</span><br>
           新增：<span class="mono">${ok}</span>｜
-          跳過（verifyKey 已存在 / 本次重複）：<span class="mono">${skip}</span>｜
-          略過（verifyKey 欄位缺值 / 不合法）：<span class="mono">${bad}</span>
+          跳過：<span class="mono">${skip}</span>｜
+          略過：<span class="mono">${bad}</span>
         `);
 
         alert(`匯入完成
@@ -994,8 +1052,6 @@
 新增：${ok}
 跳過：${skip}
 略過：${bad}`);
-
-        updateImportBtn();
       } catch (e) {
         console.error(e);
         alert("匯入失敗：\n" + (e.message || e));
@@ -1003,16 +1059,168 @@
         importBtn.textContent = oldText;
         importBtn.disabled = false;
         parseBtn.disabled = false;
-        schoolSel.disabled = false;
-        toggleVerifyBtn.disabled = false;
+        eventSel.disabled = false;
         updateImportBtn();
       }
     }
 
     importBtn.onclick = importRecords;
 
-    schoolSel.onchange = async () => {
-      await loadSchool(schoolSel.value);
+    function recordMatches(item){
+      const q = norm(allowedSearch.value).toLowerCase();
+      const rf = registerFilter.value;
+
+      if (rf === "true" && item.canRegister !== true) return false;
+      if (rf === "false" && item.canRegister !== false) return false;
+      if (rf === "missing" && item.canRegister !== undefined) return false;
+
+      if (!q) return true;
+
+      const fields = Object.values(item).map(v => norm(v).toLowerCase());
+      return fields.some(v => v.includes(q));
+    }
+
+    function renderAllowedList(){
+      const rows = allowedCache.filter(recordMatches);
+      allowedCount.textContent = rows.length;
+
+      if (!rows.length) {
+        allowedList.innerHTML = `<div class="small">目前沒有符合條件的活動名單資料。</div>`;
+        return;
+      }
+
+      allowedList.innerHTML = rows.map(item => `
+        <div class="item">
+          <div class="itemTop">
+            <div style="min-width:0; flex:1;">
+              <div class="itemTitle">
+                ${esc(item.name || item.email || item.studentId || item.matchKey || "(未命名)")} 
+                <span class="pill mono">${esc(item.matchKey || "-")}</span>
+                ${
+                  item.canRegister === true
+                    ? `<span class="pill ok">canRegister = true</span>`
+                    : item.canRegister === false
+                      ? `<span class="pill warn">canRegister = false</span>`
+                      : ``
+                }
+              </div>
+              <div class="itemMeta">
+                email：<span class="mono">${esc(item.email || "-")}</span><br>
+                studentId：<span class="mono">${esc(item.studentId || "-")}</span><br>
+                group：<span class="mono">${esc(item.group || "-")}</span><br>
+                class：<span class="mono">${esc(item.class || "-")}</span><br>
+                updatedAt：<span class="mono">${esc(item.updatedAt?.toDate ? item.updatedAt.toDate().toLocaleString("zh-Hant", { hour12:false }) : "-")}</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <button class="btn btn-sm btn-danger" data-del-record="${esc(item.id)}">刪除</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      allowedList.querySelectorAll("[data-del-record]").forEach(btn => {
+        btn.onclick = () => deleteAllowedRecord(btn.dataset.delRecord);
+      });
+    }
+
+    async function loadAllowedUsers(){
+      if (!eventId) {
+        allowedCache = [];
+        renderAllowedList();
+        return;
+      }
+
+      allowedList.innerHTML = `<div class="small">讀取中…</div>`;
+
+      try {
+        const snap = await db.collection("events").doc(eventId).collection("allowedUsers").get();
+        allowedCache = snap.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() || {})
+        }));
+
+        allowedCache.sort((a, b) => {
+          const ta = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
+          const tb = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+
+        renderAllowedList();
+      } catch (e) {
+        console.error(e);
+        allowedList.innerHTML = `<div class="warn">讀取活動名單失敗</div>`;
+      }
+    }
+
+    async function deleteAllowedRecord(docId){
+      if (!eventId || !docId) return;
+      const ok = confirm(`確定要刪除這筆活動資格資料嗎？\n\n${docId}`);
+      if (!ok) return;
+
+      try {
+        await db.collection("events").doc(eventId).collection("allowedUsers").doc(docId).delete();
+        await loadAllowedUsers();
+      } catch (e) {
+        console.error(e);
+        alert("刪除失敗，可能是權限不足。");
+      }
+    }
+
+    async function clearAllAllowedRecords(){
+      if (!eventId) return;
+      const ok = confirm(`確定要清空此活動全部名單嗎？\n\n活動：${eventId}\n\n此動作無法復原。`);
+      if (!ok) return;
+
+      clearAllowedBtn.disabled = true;
+
+      try {
+        const ref = db.collection("events").doc(eventId).collection("allowedUsers");
+        const snap = await ref.get();
+
+        if (snap.empty) {
+          alert("目前沒有可刪除的資料。");
+          return;
+        }
+
+        let batch = db.batch();
+        let count = 0;
+        let processed = 0;
+
+        for (const doc of snap.docs) {
+          batch.delete(doc.ref);
+          count++;
+          processed++;
+
+          if (count >= 400) {
+            await batch.commit();
+            batch = db.batch();
+            count = 0;
+          }
+        }
+
+        if (count > 0) {
+          await batch.commit();
+        }
+
+        await loadAllowedUsers();
+        alert(`已清空 ${processed} 筆活動名單資料`);
+      } catch (e) {
+        console.error(e);
+        alert("清空失敗，可能是權限不足。");
+      } finally {
+        clearAllowedBtn.disabled = false;
+      }
+    }
+
+    reloadAllowedBtn.onclick = loadAllowedUsers;
+    clearAllowedBtn.onclick = clearAllAllowedRecords;
+    allowedSearch.oninput = renderAllowedList;
+    registerFilter.onchange = renderAllowedList;
+
+    eventSel.onchange = async () => {
+      await loadEvent(eventSel.value);
       updateImportBtn();
     };
 
@@ -1021,7 +1229,7 @@
 
       if (!user) {
         showGate(`
-          <h1>名單匯入與驗證設定</h1>
+          <h1>活動名單匯入與資格設定</h1>
           <div class="sub">請先使用 Email / 密碼登入後台。</div>
           <div style="margin-top:16px;">
             <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
@@ -1055,10 +1263,11 @@
         }
 
         currentRole = result.role;
+        currentUserData = result.userData || {};
         whoEl.textContent = user.email || "";
-        roleText.textContent = currentRole || "-";
+        roleText.textContent = currentRole || "";
 
-        if (!["platform_super", "platform_admin", "org_admin"].includes(currentRole)) {
+        if (!["platform_super", "platform_admin", "org_super", "org_admin"].includes(currentRole)) {
           showGate(`
             <h1>權限不足</h1>
             <div class="sub warn">你的角色無法使用此功能。</div>
@@ -1074,15 +1283,15 @@
         gate.style.display = "none";
         app.style.display = "block";
 
-        await loadSchoolOptions(result.userData);
+        renderEventNotice();
+        await loadEventOptions();
 
-        const urlSchoolId = getSchoolIdFromUrl();
-        const hasUrlSchool = urlSchoolId && [...schoolSel.options].some(option => option.value === urlSchoolId);
+        const urlEventId = getEventIdFromUrl();
+        const hasUrlEvent = urlEventId && [...eventSel.options].some(option => option.value === urlEventId);
+        const firstEventId = eventSel.value || (eventSel.options[0] ? eventSel.options[0].value : "");
+        eventSel.value = hasUrlEvent ? urlEventId : firstEventId;
 
-        const firstSchoolId = schoolSel.value || (schoolSel.options[0] ? schoolSel.options[0].value : "");
-        schoolSel.value = hasUrlSchool ? urlSchoolId : firstSchoolId;
-
-        await loadSchool(schoolSel.value);
+        await loadEvent(eventSel.value);
       } catch (e) {
         console.error(e);
         showGate(`

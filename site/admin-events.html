@@ -341,6 +341,13 @@
     .inline-editor-host{
       margin-top:12px;
     }
+
+    .quick-links{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
   </style>
 </head>
 
@@ -354,7 +361,7 @@
           <div>
             <h1>活動管理</h1>
             <div class="sub">
-              可建立活動、管理活動、設定邀請碼，並查看目前的發布審核狀態。
+              可建立活動、管理活動、設定邀請碼與出入口。活動內工作人員、核銷人員、服務中心與權限，請至「工作人員指派」頁面設定。
             </div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
@@ -373,12 +380,12 @@
         <div class="modeCardWrap">
           <div class="modeCard active" id="openCreateMode">
             <div class="modeTitle">建立活動</div>
-            <div class="sub">建立新活動、設定活動類型、主辦對象、時間、邀請碼等內容。</div>
+            <div class="sub">建立新活動、設定活動類型、主辦對象、時間、邀請碼與出入口等內容。</div>
           </div>
 
           <div class="modeCard" id="openManageMode">
             <div class="modeTitle">管理活動</div>
-            <div class="sub">查看既有活動、編輯內容、刪除活動與確認目前審核 / 公開狀態。</div>
+            <div class="sub">查看既有活動、編輯內容、刪除活動、查看詳情與前往工作人員指派。</div>
           </div>
         </div>
       </div>
@@ -397,11 +404,12 @@
           </div>
 
           <div>
-            <label>公開 / 不公開 說明</label>
+            <label>本頁定位</label>
             <div class="box">
               <div class="small">
-                <span class="ok">公開</span>：通常代表前台可見，但仍建議先通過平台審核。<br>
-                <span class="warn">不公開</span>：前台不顯示，通常用於草稿、測試或待審核狀態。
+                <span class="ok">本頁</span>：活動內容管理（標題、時間、邀請碼、出入口）<br>
+                <span class="ok">工作人員指派頁</span>：設定核銷人員、服務中心、活動內身份與權限<br>
+                <span class="ok">活動詳情頁</span>：查看單一活動完整資訊與統計
               </div>
             </div>
           </div>
@@ -448,9 +456,7 @@
               <option value="approved">approved（已通過）</option>
               <option value="rejected">rejected（已退回）</option>
             </select>
-            <div class="small" id="approvalHint" style="margin-top:8px;">
-              -
-            </div>
+            <div class="small" id="approvalHint" style="margin-top:8px;">-</div>
           </div>
         </div>
 
@@ -537,8 +543,10 @@
 
         <div class="divider"></div>
 
-        <h2>出入口與核銷人員設定</h2>
-        <div class="sub">請在活動層級設定出入口名稱，並為每個出入口指定核銷人員。</div>
+        <h2>出入口設定</h2>
+        <div class="sub">
+          此處僅管理活動的出入口名稱。核銷人員綁定、服務中心、人員權限與入口指派，請至「工作人員指派」頁面設定。
+        </div>
 
         <div style="margin-top:12px;">
           <div class="row" style="justify-content:space-between;">
@@ -559,7 +567,7 @@
       <div class="section hidden" id="manageSection">
         <h2>活動清單</h2>
         <div class="sub">
-          點「編輯」會直接在該活動卡片下方展開編輯區。平台端可看到全部活動；校方只看自己校園活動。
+          點「編輯」會直接在該活動卡片下方展開編輯區。若要查看單一活動完整資訊，請點「活動詳情」；若要設定工作人員、核銷人員或活動內權限，請點「工作人員指派」。
         </div>
         <div class="list" id="list"></div>
       </div>
@@ -641,7 +649,6 @@
     let editingId = "";
     let inviteCodesState = [];
     let gateAssignmentsState = [];
-    let staffOptionsState = [];
     let currentView = "create";
 
     let schoolNameMap = {};
@@ -762,41 +769,6 @@
         });
       } catch (e) {
         console.warn("organizations 目前無法讀取或尚未建立");
-      }
-    }
-
-    async function loadStaffOptions(){
-      staffOptionsState = [];
-
-      try {
-        const snap = await db.collection("users")
-          .where("enabled", "==", true)
-          .get();
-
-        snap.forEach(doc => {
-          const u = doc.data() || {};
-          const role = norm(u.role);
-          if (!["org_staff", "org_admin", "org_super", "platform_admin", "platform_super"].includes(role)) {
-            return;
-          }
-
-          if (!isPlatform()) {
-            const schoolId = norm(u.schoolId || u.orgSchoolId || "");
-            if (schoolId !== mySchoolId) return;
-          }
-
-          staffOptionsState.push({
-            uid: doc.id,
-            email: norm(u.email || ""),
-            role
-          });
-        });
-
-        staffOptionsState.sort((a, b) => {
-          return (a.email || a.uid).localeCompare(b.email || b.uid, "zh-Hant");
-        });
-      } catch (e) {
-        console.error("loadStaffOptions failed:", e);
       }
     }
 
@@ -972,54 +944,36 @@
         return;
       }
 
-      gateAssignList.innerHTML = gateAssignmentsState.map((item, idx) => {
-        const selectedUid = norm(item.staffUid || "");
-        const staffOptionsHtml = `
-          <option value="">（未指定）</option>
-          ${staffOptionsState.map(s => `
-            <option value="${esc(s.uid)}" ${selectedUid === s.uid ? "selected" : ""}>
-              ${esc(s.email || s.uid)}｜${esc(s.role)}
-            </option>
-          `).join("")}
-        `;
-
-        return `
-          <div class="gateItem">
-            <div class="gateTop">
-              <div class="pill">出入口 ${idx + 1}</div>
-              <div class="row">
-                <button class="btn btn-sm btn-danger" type="button" onclick="removeGateAssign(${idx})">刪除</button>
-              </div>
-            </div>
-
-            <div class="grid">
-              <div>
-                <label style="margin-top:0;">出入口名稱</label>
-                <input
-                  type="text"
-                  value="${esc(item.name || "")}"
-                  oninput="updateGateAssign(${idx}, 'name', this.value)"
-                  placeholder="例如：A入口 / 北門 / 側門"
-                />
-              </div>
-
-              <div>
-                <label style="margin-top:0;">核銷人員</label>
-                <select onchange="updateGateAssign(${idx}, 'staffUid', this.value)">
-                  ${staffOptionsHtml}
-                </select>
-              </div>
+      gateAssignList.innerHTML = gateAssignmentsState.map((item, idx) => `
+        <div class="gateItem">
+          <div class="gateTop">
+            <div class="pill">出入口 ${idx + 1}</div>
+            <div class="row">
+              <button class="btn btn-sm btn-danger" type="button" onclick="removeGateAssign(${idx})">刪除</button>
             </div>
           </div>
-        `;
-      }).join("");
+
+          <div>
+            <label style="margin-top:0;">出入口名稱</label>
+            <input
+              type="text"
+              value="${esc(item.name || "")}"
+              oninput="updateGateAssign(${idx}, 'name', this.value)"
+              placeholder="例如：A入口 / 北門 / 側門"
+            />
+          </div>
+
+          <div class="small" style="margin-top:8px;">
+            核銷人員與活動內身份請至「工作人員指派」頁面設定。
+          </div>
+        </div>
+      `).join("");
     }
 
     function buildGateAssignmentsPayload(){
       return gateAssignmentsState
         .map(item => ({
-          name: norm(item.name || ""),
-          staffUid: norm(item.staffUid || "")
+          name: norm(item.name || "")
         }))
         .filter(item => item.name);
     }
@@ -1087,8 +1041,7 @@
 
     addGateBtn.onclick = () => {
       gateAssignmentsState.push({
-        name: "",
-        staffUid: ""
+        name: ""
       });
       renderGateAssignments();
     };
@@ -1336,6 +1289,11 @@
                   邀請碼數量：<span class="mono">${inviteCount}</span><br>
                   出入口數量：<span class="mono">${gateCount}</span>
                 </div>
+
+                <div class="quick-links">
+                  <a class="btn btn-sm" href="admin-event-detail.html?eventId=${encodeURIComponent(id)}">活動詳情</a>
+                  <a class="btn btn-sm" href="admin-staff-assign.html?eventId=${encodeURIComponent(id)}">工作人員指派</a>
+                </div>
               </div>
 
               <div class="right">
@@ -1396,8 +1354,7 @@
 
         gateAssignmentsState = Array.isArray(e.gates)
           ? e.gates.map(item => ({
-              name: norm(item.name || ""),
-              staffUid: norm(item.staffUid || "")
+              name: norm(item.name || "")
             }))
           : [];
         renderGateAssignments();
@@ -1436,28 +1393,8 @@
       if (!ok) return;
 
       try {
+        // 刪除 staffAssignments / checkinAssignments / 其他子集合資料本身若要完整刪，建議之後做 cloud function
         await db.collection("events").doc(eventId).delete();
-
-        try {
-          const oldAssignedSnap = await db.collection("users")
-            .where("assignedCheckinEventId", "==", eventId)
-            .get();
-
-          if (!oldAssignedSnap.empty) {
-            const clearBatch = db.batch();
-            oldAssignedSnap.forEach(doc => {
-              clearBatch.update(doc.ref, {
-                assignedCheckinEventId: "",
-                assignedCheckinGateName: "",
-                updatedAt: new Date(),
-                updatedByUid: currentUser ? currentUser.uid : ""
-              });
-            });
-            await clearBatch.commit();
-          }
-        } catch (e) {
-          console.warn("清除核銷人員指派失敗：", e);
-        }
 
         resetEditor();
         await loadEvents();
@@ -1535,46 +1472,6 @@
         } else {
           await db.collection("events").doc(editingId).update(payload);
           eventId = editingId;
-        }
-
-        try {
-          const oldAssignSnap = await db.collection("events")
-            .doc(eventId)
-            .collection("checkinAssignments")
-            .get();
-
-          if (!oldAssignSnap.empty) {
-            const batch = db.batch();
-            oldAssignSnap.forEach(doc => {
-              batch.delete(doc.ref);
-            });
-            await batch.commit();
-          }
-
-          if (gates.length) {
-            const batch = db.batch();
-
-            gates.forEach(item => {
-              if (!item.staffUid) return;
-
-              const ref = db.collection("events")
-                .doc(eventId)
-                .collection("checkinAssignments")
-                .doc(item.staffUid);
-
-              batch.set(ref, {
-                uid: item.staffUid,
-                gateName: item.name,
-                assignedAt: new Date(),
-                assignedBy: currentUser.uid
-              });
-            });
-
-            await batch.commit();
-          }
-        } catch (assignErr) {
-          console.error(assignErr);
-          alert("活動已儲存，但同步核銷人員指派失敗：\n" + (assignErr.message || assignErr));
         }
 
         if (isEditing) {
@@ -1682,7 +1579,6 @@
         app.style.display = "block";
 
         await loadNameMaps();
-        await loadStaffOptions();
 
         mySchoolText.textContent = formatSchoolLabel(mySchoolId);
         myOrgText.textContent = formatOrgLabel(myOrgId);

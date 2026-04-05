@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜活動列表</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --r:20px;
+      --ok:#166534;
+      --warn:#b91c1c;
+      --blue:#1d4ed8;
+      --black:#111827;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 16px 40px;
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .grid4{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    @media (max-width:980px){
+      .grid4{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:620px){
+      .grid4{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:0 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
+    .btn-sm{
+      height:38px;
+      padding:0 14px;
+      font-size:14px;
+    }
+
+    input[type="text"], select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:15px;
+      background:#fff;
+      outline:none;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+      background:#fff;
+    }
+
+    .pill.ok{
+      color:var(--ok);
+      border-color:rgba(22,101,52,.18);
+      background:rgba(22,101,52,.05);
+    }
+
+    .pill.warn{
+      color:var(--warn);
+      border-color:rgba(185,28,28,.18);
+      background:rgba(185,28,28,.05);
+    }
+
+    .pill.blue{
+      color:var(--blue);
+      border-color:rgba(29,78,216,.18);
+      background:rgba(29,78,216,.05);
+    }
+
+    .statCard{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .statLabel{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .statValue{
+      margin-top:6px;
+      font-size:28px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .list{
+      display:grid;
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .activityCard{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:#fff;
+      padding:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.04);
+    }
+
+    .activityTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .activityTitle{
+      font-size:20px;
+      font-weight:900;
+      line-height:1.5;
+    }
+
+    .activityMeta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      word-break:break-word;
+    }
+
+    .summaryGrid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+
+    @media (max-width:980px){
+      .summaryGrid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media (max-width:620px){
+      .summaryGrid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .summaryBox{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:#fafafa;
+    }
+
+    .summaryLabel{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .summaryValue{
+      margin-top:4px;
+      font-size:22px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      padding:8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>活動列表</h1>
+            <div class="sub">顯示活動摘要與統計資訊。點入後可進一步查看單一活動詳情，不在這一頁塞入過多細節。</div>
+            <div class="small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>｜
+              學校：<span id="schoolText" class="mono">-</span>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">搜尋活動</div>
+            <input id="searchInput" type="text" placeholder="搜尋活動名稱、地點、活動ID" />
+          </div>
+
+          <div>
+            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">狀態篩選</div>
+            <select id="statusFilter">
+              <option value="all">全部活動</option>
+              <option value="selling">開賣中</option>
+              <option value="upcoming">尚未開始 / 尚未開賣</option>
+              <option value="ended">已結束 / 已截止</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:12px;">
+          <button class="btn" id="reloadBtn">重新載入</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid4">
+          <div class="statCard">
+            <div class="statLabel">活動總數</div>
+            <div class="statValue" id="sumEvents">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">訂單總數</div>
+            <div class="statValue" id="sumOrders">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">票券總數</div>
+            <div class="statValue" id="sumTickets">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">已核銷票券</div>
+            <div class="statValue" id="sumCheckedIn">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>活動摘要</h2>
+        <div class="sub">本頁只顯示摘要資訊；工作人員、核銷人員、訂單細節、票券細節請點進單一活動詳情頁查看。</div>
+        <div id="activityList" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const schoolText = document.getElementById("schoolText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const activityList = document.getElementById("activityList");
+
+    const sumEvents = document.getElementById("sumEvents");
+    const sumOrders = document.getElementById("sumOrders");
+    const sumTickets = document.getElementById("sumTickets");
+    const sumCheckedIn = document.getElementById("sumCheckedIn");
+
+    let currentRole = "";
+    let mySchoolId = "";
+    let myOrgId = "";
+    let allActivities = [];
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function toDate(value){
+      if (!value) return null;
+      if (typeof value.toDate === "function") return value.toDate();
+      if (value instanceof Date) return value;
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      });
+    }
+
+    function formatDateOnly(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleDateString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit"
+      });
+    }
+
+    function getEventStatus(event){
+      const now = Date.now();
+      const saleStart = toDate(event.saleStartAt)?.getTime() ?? null;
+      const saleEnd = toDate(event.saleEndAt)?.getTime() ?? null;
+      const eventStart = toDate(event.eventStartAt)?.getTime() ?? null;
+      const eventEnd = toDate(event.eventEndAt)?.getTime() ?? null;
+
+      if (eventStart && now < eventStart) {
+        if (saleStart && now < saleStart) {
+          return { text:"尚未開始 / 尚未開賣", key:"upcoming", className:"blue" };
+        }
+        return { text:"尚未開始", key:"upcoming", className:"blue" };
+      }
+
+      if (eventStart && eventEnd && now >= eventStart && now <= eventEnd) {
+        if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
+          return { text:"進行中 / 開賣中", key:"selling", className:"ok" };
+        }
+        return { text:"進行中", key:"selling", className:"ok" };
+      }
+
+      if ((saleEnd && now > saleEnd) || (eventEnd && now > eventEnd)) {
+        return { text:"已結束 / 已截止", key:"ended", className:"warn" };
+      }
+
+      return { text:"活動資訊", key:"all", className:"blue" };
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="font-size:22px; margin:0 0 6px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+
+      if (showLogin) {
+        document.getElementById("loginBtn").onclick = async () => {
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = async () => {
+          await firebase.auth().signOut();
+        };
+      }
+
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    logoutBtn.onclick = async () => {
+      await firebase.auth().signOut();
+    };
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+
+      return {
+        ok:true,
+        role:norm(u.role),
+        schoolId:norm(u.schoolId || u.orgSchoolId || ""),
+        orgId:norm(u.orgId || "")
+      };
+    }
+
+    async function loadEventSummary(eventDoc){
+      const eventId = eventDoc.id;
+      const event = eventDoc.data() || {};
+
+      const [ordersSnap, ticketsSnap, staffAssignmentsSnap, checkinAssignmentsSnap] = await Promise.all([
+        db.collection("events").doc(eventId).collection("orders").get().catch(() => null),
+        db.collection("events").doc(eventId).collection("tickets").get().catch(() => null),
+        db.collection("events").doc(eventId).collection("staffAssignments").get().catch(() => null),
+        db.collection("events").doc(eventId).collection("checkinAssignments").get().catch(() => null)
+      ]);
+
+      const orders = [];
+      const tickets = [];
+      const staffAssignments = [];
+      const checkinAssignments = [];
+
+      if (ordersSnap) ordersSnap.forEach(doc => orders.push({ id:doc.id, ...(doc.data() || {}) }));
+      if (ticketsSnap) ticketsSnap.forEach(doc => tickets.push({ id:doc.id, ...(doc.data() || {}) }));
+      if (staffAssignmentsSnap) staffAssignmentsSnap.forEach(doc => staffAssignments.push({ id:doc.id, ...(doc.data() || {}) }));
+      if (checkinAssignmentsSnap) checkinAssignmentsSnap.forEach(doc => checkinAssignments.push({ id:doc.id, ...(doc.data() || {}) }));
+
+      const checkedInCount = tickets.filter(t => t.checkedIn === true).length;
+
+      const nonCheckinStaffCount = staffAssignments.filter(a => {
+        const roleInEvent = norm(a.roleInEvent);
+        const canCheckin = a?.permissions?.canCheckin === true;
+        return !(roleInEvent === "checkin" || canCheckin);
+      }).length;
+
+      const checkinCount = checkinAssignments.length;
+
+      return {
+        id: eventId,
+        ...event,
+        counts: {
+          orders: orders.length,
+          tickets: tickets.length,
+          checkedIn: checkedInCount,
+          staff: nonCheckinStaffCount,
+          checkin: checkinCount
+        }
+      };
+    }
+
+    async function loadActivities(){
+      activityList.innerHTML = `<div class="empty">載入中...</div>`;
+
+      const snap = await db.collection("events").get();
+      let docs = snap.docs;
+
+      if (["org_super","org_admin","org_staff"].includes(currentRole)) {
+        docs = docs.filter(doc => norm(doc.data()?.ownerSchoolId) === mySchoolId);
+      }
+
+      const rows = [];
+      for (const doc of docs) {
+        const summary = await loadEventSummary(doc);
+        rows.push(summary);
+      }
+
+      rows.sort((a, b) => {
+        const ta = toDate(a.eventStartAt)?.getTime() ?? 0;
+        const tb = toDate(b.eventStartAt)?.getTime() ?? 0;
+        return ta - tb;
+      });
+
+      allActivities = rows;
+      renderActivities();
+      renderTopSummary();
+    }
+
+    function filteredActivities(){
+      const q = norm(searchInput.value).toLowerCase();
+      const sf = statusFilter.value;
+
+      return allActivities.filter(item => {
+        const status = getEventStatus(item);
+
+        if (sf !== "all" && status.key !== sf) return false;
+
+        if (!q) return true;
+
+        const fields = [
+          item.id,
+          item.title,
+          item.location,
+          item.description
+        ].map(v => norm(v).toLowerCase());
+
+        return fields.some(v => v.includes(q));
+      });
+    }
+
+    function renderTopSummary(){
+      const rows = filteredActivities();
+
+      sumEvents.textContent = rows.length;
+      sumOrders.textContent = rows.reduce((n, r) => n + (r.counts?.orders || 0), 0);
+      sumTickets.textContent = rows.reduce((n, r) => n + (r.counts?.tickets || 0), 0);
+      sumCheckedIn.textContent = rows.reduce((n, r) => n + (r.counts?.checkedIn || 0), 0);
+    }
+
+    function renderActivities(){
+      const rows = filteredActivities();
+
+      if (!rows.length) {
+        activityList.innerHTML = `<div class="empty">目前沒有符合條件的活動。</div>`;
+        renderTopSummary();
+        return;
+      }
+
+      activityList.innerHTML = rows.map(item => {
+        const status = getEventStatus(item);
+
+        return `
+          <div class="activityCard">
+            <div class="activityTop">
+              <div style="min-width:0; flex:1;">
+                <div class="activityTitle">${esc(item.title || "未命名活動")}</div>
+                <div class="activityMeta">
+                  活動ID：<span class="mono">${esc(item.id)}</span><br>
+                  活動日期：${esc(formatDateOnly(item.eventStartAt))}<br>
+                  地點：${esc(item.location || "-")}
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <span class="pill ${status.className}">${esc(status.text)}</span>
+                  <span class="pill">${item.publishScope === "platform" ? "平台活動" : "校園活動"}</span>
+                  <span class="pill">${item.published === true ? "公開" : "不公開"}</span>
+                  <span class="pill">${esc(item.approvalStatus || "pending")}</span>
+                </div>
+              </div>
+
+              <div class="row" style="justify-content:flex-end;">
+                <a class="btn btn-sm" href="admin-event-detail.html?eventId=${encodeURIComponent(item.id)}">查看詳情</a>
+              </div>
+            </div>
+
+            <div class="summaryGrid">
+              <div class="summaryBox">
+                <div class="summaryLabel">訂單數</div>
+                <div class="summaryValue">${esc(item.counts.orders)}</div>
+              </div>
+
+              <div class="summaryBox">
+                <div class="summaryLabel">票券數</div>
+                <div class="summaryValue">${esc(item.counts.tickets)}</div>
+              </div>
+
+              <div class="summaryBox">
+                <div class="summaryLabel">已核銷</div>
+                <div class="summaryValue">${esc(item.counts.checkedIn)}</div>
+              </div>
+
+              <div class="summaryBox">
+                <div class="summaryLabel">工作人員</div>
+                <div class="summaryValue">${esc(item.counts.staff)}</div>
+              </div>
+
+              <div class="summaryBox">
+                <div class="summaryLabel">核銷人員</div>
+                <div class="summaryValue">${esc(item.counts.checkin)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      renderTopSummary();
+    }
+
+    reloadBtn.onclick = loadActivities;
+    searchInput.oninput = renderActivities;
+    statusFilter.onchange = renderActivities;
+
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        showGate("活動列表", "請先使用 Email / 密碼登入後台。", true);
+        return;
+      }
+
+      try {
+        const r = await loadMyRole(user.uid);
+        if (!r.ok) {
+          showGate(r.reason, "你的帳號尚未被授權。", false);
+          return;
+        }
+
+        currentRole = r.role;
+        mySchoolId = r.schoolId;
+        myOrgId = r.orgId;
+
+        if (!["platform_super","platform_admin","org_super","org_admin","org_staff"].includes(currentRole)) {
+          showGate("權限不足", "此頁僅限平台 / 組織 / 校方後台角色使用。", false);
+          return;
+        }
+
+        whoEl.textContent = user.email || "-";
+        roleText.textContent = currentRole || "-";
+        schoolText.textContent = mySchoolId || "-";
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadActivities();
+      } catch (e) {
+        console.error(e);
+        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>

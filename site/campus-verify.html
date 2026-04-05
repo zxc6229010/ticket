@@ -13,19 +13,26 @@
       --muted:rgba(17,17,17,.65);
       --line:rgba(17,17,17,.10);
       --shadow:0 14px 40px rgba(0,0,0,.08);
+      --ok:#166534;
+      --warn:#b91c1c;
+      --blue:#1d4ed8;
     }
+
     *{ box-sizing:border-box; }
+
     body{
       margin:0;
       background:var(--bg);
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
+
     .wrap{
-      max-width:760px;
+      max-width:820px;
       margin:0 auto;
-      padding:48px 24px;
+      padding:48px 18px;
     }
+
     .card{
       background:#fff;
       border:1px solid var(--line);
@@ -34,8 +41,39 @@
       padding:18px;
       margin-bottom:18px;
     }
-    h1{ margin:0 0 6px; font-size:22px; }
-    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
+
+    h1{
+      margin:0 0 6px;
+      font-size:22px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+      margin-top:6px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
+
+    .ok{ color:var(--ok); font-weight:900; }
+    .warn{ color:var(--warn); font-weight:900; }
+    .blue{ color:var(--blue); font-weight:900; }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -49,13 +87,40 @@
       font-size:16px;
       font-weight:900;
       cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+      text-decoration:none;
     }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-secondary{
+      background:#fff;
+      color:#111;
+      border-color:var(--line);
+    }
+
     label{
       display:block;
       margin:14px 0 6px;
       font-weight:900;
     }
+
     input, select{
       width:100%;
       padding:12px;
@@ -65,10 +130,67 @@
       background:#fff;
       outline:none;
     }
-    .ok{ color:#166534; font-weight:900; }
-    .warn{ color:#b91c1c; font-weight:900; }
-    .mono{
-      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .notice{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:8px 12px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+    }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .v{
+      font-size:13px;
+      font-weight:900;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    @media (max-width:640px){
+      .kv{
+        grid-template-columns:98px 1fr;
+      }
     }
   </style>
 </head>
@@ -81,30 +203,86 @@
       <div class="card">
         <h1>校園身分驗證</h1>
         <div class="sub">
-          你只需要完成一次校園身份綁定。<br>
-          後續每場活動都會自動拿你的綁定資料去比對是否具備報名資格。
+          你只需要完成一次校園身分綁定。<br>
+          後續每場活動是否可報名，會再依照該活動的資格名單另外判斷。
         </div>
         <div class="sub" style="margin-top:8px;">
           目前登入：<span id="who" class="mono">-</span>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="callbackCard" style="display:none;">
+        <h2>驗證結果</h2>
+        <div id="callbackMsg" class="sub" style="margin-top:10px;">驗證中，請稍候…</div>
+      </div>
+
+      <div class="card" id="currentStatusCard">
+        <h2>目前綁定狀態</h2>
+        <div id="currentStatusBox" class="sub" style="margin-top:10px;">讀取中…</div>
+      </div>
+
+      <div class="card" id="selectSchoolCard">
+        <h2>選擇校園</h2>
+
         <label>校園</label>
         <select id="schoolId"></select>
 
-        <label>學號 / 身分代碼</label>
-        <input id="studentCode" type="text" placeholder="請輸入學號" />
+        <div id="schoolInfo" class="small" style="margin-top:10px;"></div>
 
-        <label>學校信箱</label>
-        <input id="schoolEmail" type="text" placeholder="例如：512345@gm.tgsh.tn.edu.tw" />
+        <div id="schoolDescription" class="notice hidden"></div>
+      </div>
 
-        <div style="margin-top:18px;">
-          <button class="btn" id="submitBtn">寄送驗證信</button>
+      <div class="card" id="modeCard">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <h2>驗證方式</h2>
+            <div class="sub" id="modeText">請先選擇校園</div>
+          </div>
+          <div id="modeBadgeWrap"></div>
         </div>
 
-        <div class="sub" id="msg" style="margin-top:12px;">
-          系統會把驗證信寄到你輸入的學校信箱。
+        <div id="lockedNotice" class="notice hidden"></div>
+
+        <!-- Email mode -->
+        <div id="emailModeWrap" class="hidden">
+          <label>學號 / 身分代碼</label>
+          <input id="studentCode" type="text" placeholder="請輸入學號或校方指定代碼" />
+
+          <label>學校信箱</label>
+          <input id="schoolEmail" type="text" placeholder="例如：512345@school.edu.tw" />
+
+          <div class="small" id="emailHint" style="margin-top:10px;">
+            系統會把驗證信寄到你輸入的學校信箱。
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button class="btn" id="emailVerifyBtn">寄送驗證信</button>
+          </div>
+        </div>
+
+        <!-- Google mode -->
+        <div id="googleModeWrap" class="hidden">
+          <div class="notice">
+            <div class="blue">此校使用 Google 校園帳號驗證</div>
+            <div class="small" id="googleHint" style="margin-top:6px;">
+              系統會檢查你目前登入的 Google 帳號是否符合該校規定網域。
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button class="btn" id="googleVerifyBtn">使用目前帳號完成驗證</button>
+          </div>
+        </div>
+
+        <div id="msg" class="sub" style="margin-top:14px;">
+          請先選擇校園。
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:flex-end;">
+          <a class="btn btn-secondary" href="member.html">回會員中心</a>
+          <button class="btn btn-secondary" id="logoutBtn">登出</button>
         </div>
       </div>
     </div>
@@ -124,17 +302,49 @@
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
     const who = document.getElementById("who");
+
+    const callbackCard = document.getElementById("callbackCard");
+    const callbackMsg = document.getElementById("callbackMsg");
+
+    const currentStatusCard = document.getElementById("currentStatusCard");
+    const currentStatusBox = document.getElementById("currentStatusBox");
+
+    const selectSchoolCard = document.getElementById("selectSchoolCard");
     const schoolIdEl = document.getElementById("schoolId");
+    const schoolInfo = document.getElementById("schoolInfo");
+    const schoolDescription = document.getElementById("schoolDescription");
+
+    const modeCard = document.getElementById("modeCard");
+    const modeText = document.getElementById("modeText");
+    const modeBadgeWrap = document.getElementById("modeBadgeWrap");
+    const lockedNotice = document.getElementById("lockedNotice");
+    const emailModeWrap = document.getElementById("emailModeWrap");
+    const googleModeWrap = document.getElementById("googleModeWrap");
+
     const studentCodeEl = document.getElementById("studentCode");
     const schoolEmailEl = document.getElementById("schoolEmail");
-    const submitBtn = document.getElementById("submitBtn");
+    const emailHint = document.getElementById("emailHint");
+    const googleHint = document.getElementById("googleHint");
+
+    const emailVerifyBtn = document.getElementById("emailVerifyBtn");
+    const googleVerifyBtn = document.getElementById("googleVerifyBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const msg = document.getElementById("msg");
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    let schoolsCache = [];
+    let currentSchool = null;
+    let tokenMode = false;
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -146,6 +356,19 @@
       }[m]));
     }
 
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function lower(v){
+      return norm(v).toLowerCase();
+    }
+
+    function getQueryToken(){
+      const sp = new URLSearchParams(location.search);
+      return norm(sp.get("token"));
+    }
+
     function showGate(title, text){
       gate.style.display = "block";
       app.style.display = "none";
@@ -155,10 +378,123 @@
       `;
     }
 
+    function getVerifyMode(school){
+      return norm(
+        school?.verifyMode ||
+        school?.campusVerifyMode ||
+        "email"
+      ).toLowerCase();
+    }
+
+    function getVerifyDescription(school){
+      return norm(
+        school?.verifyDescription ||
+        school?.campusVerifyDescription ||
+        school?.studentVerifyDescription ||
+        ""
+      );
+    }
+
+    function getEmailDomain(school){
+      return lower(
+        school?.schoolEmailDomain ||
+        school?.verifyEmailDomain ||
+        ""
+      );
+    }
+
+    function getGoogleDomain(school){
+      return lower(
+        school?.googleHostedDomain ||
+        school?.verifyGoogleDomain ||
+        school?.schoolGoogleDomain ||
+        ""
+      );
+    }
+
+    function getSchoolName(school){
+      return norm(school?.name || school?.id || "");
+    }
+
+    function isAlreadyBoundToOtherSchool(targetSchoolId){
+      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+      return !!verifiedSchoolId && verifiedSchoolId !== norm(targetSchoolId);
+    }
+
+    function renderCurrentStatus(){
+      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+      const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || "");
+      const verifyMethod = norm(currentUserProfile?.verifyMethod || "-");
+      const schoolEmail = norm(currentUserProfile?.schoolEmail || "");
+      const verifiedAtRaw = currentUserProfile?.verifiedAt;
+      let verifiedAtText = "-";
+
+      try {
+        if (verifiedAtRaw?.toDate) {
+          verifiedAtText = verifiedAtRaw.toDate().toLocaleString("zh-Hant", { hour12:false });
+        }
+      } catch (_) {}
+
+      if (!verifiedSchoolId) {
+        currentStatusBox.innerHTML = `
+          <div class="warn">目前尚未完成校園驗證</div>
+          <div class="small" style="margin-top:6px;">
+            完成一次校園綁定後，系統之後就能用你的校園身分去判斷活動資格。
+          </div>
+        `;
+        return;
+      }
+
+      currentStatusBox.innerHTML = `
+        <div class="ok">你目前已完成校園驗證</div>
+        <div class="kv" style="margin-top:10px;">
+          <div class="k">學校</div>
+          <div class="v">${esc(verifiedSchoolName || "-")} <span class="mono">${esc(verifiedSchoolId)}</span></div>
+
+          <div class="k">驗證方式</div>
+          <div class="v">${esc(verifyMethod || "-")}</div>
+
+          <div class="k">學校信箱</div>
+          <div class="v mono">${esc(schoolEmail || "-")}</div>
+
+          <div class="k">驗證時間</div>
+          <div class="v">${esc(verifiedAtText)}</div>
+        </div>
+      `;
+    }
+
+    async function doLogout(){
+      try {
+        await firebase.auth().signOut();
+      } catch (e) {
+        console.error(e);
+        alert("登出失敗");
+      }
+    }
+
+    logoutBtn.onclick = doLogout;
+
+    async function loadCurrentUserProfile(){
+      if (!currentUser) {
+        currentUserProfile = null;
+        return;
+      }
+
+      try {
+        const snap = await db.collection("users").doc(currentUser.uid).get();
+        currentUserProfile = snap.exists ? (snap.data() || {}) : {};
+      } catch (e) {
+        console.error(e);
+        currentUserProfile = {};
+      }
+
+      renderCurrentStatus();
+    }
+
     async function loadSchools(){
       schoolIdEl.innerHTML = `<option value="">載入中…</option>`;
 
-      try{
+      try {
         const snap = await db.collection("partnerSchools").get();
         const items = [];
 
@@ -167,11 +503,12 @@
           if (data.enabled === false) return;
           items.push({
             id: doc.id,
-            name: data.name || doc.id
+            ...data
           });
         });
 
-        items.sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
+        items.sort((a, b) => getSchoolName(a).localeCompare(getSchoolName(b), "zh-Hant"));
+        schoolsCache = items;
 
         if (!items.length) {
           schoolIdEl.innerHTML = `<option value="">沒有可用校園</option>`;
@@ -179,29 +516,153 @@
         }
 
         schoolIdEl.innerHTML = items.map(item => `
-          <option value="${esc(item.id)}">${esc(item.name)}（${esc(item.id)}）</option>
+          <option value="${esc(item.id)}">${esc(getSchoolName(item))}（${esc(item.id)}）</option>
         `).join("");
-      }catch(e){
+
+        const boundSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+        const preferred = items.find(item => item.id === boundSchoolId) || items[0];
+
+        currentSchool = preferred;
+        schoolIdEl.value = preferred.id;
+        renderSchoolMode();
+      } catch (e) {
         console.error(e);
         schoolIdEl.innerHTML = `<option value="">讀取校園失敗</option>`;
       }
     }
 
-    async function sendVerify(){
+    function renderSchoolMode(){
+      const schoolId = norm(schoolIdEl.value);
+      currentSchool = schoolsCache.find(item => item.id === schoolId) || null;
+
+      if (!currentSchool) {
+        schoolInfo.innerHTML = `<span class="warn">請先選擇校園</span>`;
+        schoolDescription.classList.add("hidden");
+        emailModeWrap.classList.add("hidden");
+        googleModeWrap.classList.add("hidden");
+        lockedNotice.classList.add("hidden");
+        modeBadgeWrap.innerHTML = "";
+        modeText.textContent = "請先選擇校園";
+        msg.innerHTML = "請先選擇校園。";
+        return;
+      }
+
+      const schoolName = getSchoolName(currentSchool);
+      const verifyEnabled = currentSchool.verifyEnabled === true;
+      const mode = getVerifyMode(currentSchool);
+      const desc = getVerifyDescription(currentSchool);
+      const emailDomain = getEmailDomain(currentSchool);
+      const googleDomain = getGoogleDomain(currentSchool);
+      const alreadyBoundOther = isAlreadyBoundToOtherSchool(currentSchool.id);
+      const alreadyBoundThis = norm(currentUserProfile?.verifiedSchoolId || "") === norm(currentSchool.id);
+
+      schoolInfo.innerHTML = `
+        校園：<b>${esc(schoolName)}</b>｜
+        schoolId：<span class="mono">${esc(currentSchool.id)}</span>｜
+        verifyEnabled：<span class="mono">${verifyEnabled ? "true" : "false"}</span>
+      `;
+
+      if (desc) {
+        schoolDescription.classList.remove("hidden");
+        schoolDescription.innerHTML = `
+          <div style="font-weight:900;">校方說明</div>
+          <div class="small" style="margin-top:6px;">${esc(desc).replace(/\n/g, "<br>")}</div>
+        `;
+      } else {
+        schoolDescription.classList.add("hidden");
+        schoolDescription.innerHTML = "";
+      }
+
+      emailModeWrap.classList.add("hidden");
+      googleModeWrap.classList.add("hidden");
+      lockedNotice.classList.add("hidden");
+      modeBadgeWrap.innerHTML = "";
+
+      emailVerifyBtn.disabled = false;
+      googleVerifyBtn.disabled = false;
+
+      if (!verifyEnabled) {
+        modeText.innerHTML = `<span class="warn">此校目前暫停驗證</span>`;
+        msg.innerHTML = `<span class="warn">此校目前已暫停校園驗證，請稍後再試或洽校方承辦單位。</span>`;
+        return;
+      }
+
+      if (alreadyBoundOther) {
+        lockedNotice.classList.remove("hidden");
+        lockedNotice.innerHTML = `
+          <div class="warn">你的帳號目前已綁定其他學校</div>
+          <div class="small" style="margin-top:6px;">
+            目前系統預設一個帳號同時間只能綁定一間學校。若要更改，請先由管理端協助處理。
+          </div>
+        `;
+        modeText.innerHTML = `<span class="warn">目前不可改綁到其他學校</span>`;
+        msg.innerHTML = `你的帳號已綁定：${esc(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "-")}`;
+        emailVerifyBtn.disabled = true;
+        googleVerifyBtn.disabled = true;
+        return;
+      }
+
+      if (alreadyBoundThis) {
+        lockedNotice.classList.remove("hidden");
+        lockedNotice.innerHTML = `
+          <div class="ok">你的帳號已完成這間學校的校園驗證</div>
+          <div class="small" style="margin-top:6px;">
+            不需要再次驗證。後續活動資格會在活動頁另外判斷。
+          </div>
+        `;
+      }
+
+      if (mode === "google") {
+        googleModeWrap.classList.remove("hidden");
+        modeText.textContent = "此校目前使用 Google 校園帳號驗證";
+        modeBadgeWrap.innerHTML = `<span class="pill">Google 驗證</span>`;
+        googleHint.innerHTML = `
+          系統會檢查你目前登入的 Google 帳號。
+          ${googleDomain ? `需符合網域：<span class="mono">${esc(googleDomain)}</span>` : `此校未設定網域限制時，會直接使用目前登入帳號綁定。`}
+        `;
+        msg.innerHTML = alreadyBoundThis
+          ? `你已完成此校驗證。`
+          : `請確認你目前登入的帳號就是學校 Google 帳號。`;
+      } else {
+        emailModeWrap.classList.remove("hidden");
+        modeText.textContent = "此校目前使用 Email 驗證";
+        modeBadgeWrap.innerHTML = `<span class="pill">Email 驗證</span>`;
+        emailHint.innerHTML = `
+          系統會把驗證信寄到你輸入的學校信箱。
+          ${emailDomain ? `信箱需符合網域：<span class="mono">${esc(emailDomain)}</span>` : ``}
+        `;
+        msg.innerHTML = alreadyBoundThis
+          ? `你已完成此校驗證。`
+          : `請輸入學校信箱與學號後寄送驗證信。`;
+      }
+    }
+
+    schoolIdEl.onchange = renderSchoolMode;
+
+    async function sendEmailVerification(){
       const user = firebase.auth().currentUser;
       if (!user) return alert("請先登入");
 
-      const schoolId = schoolIdEl.value.trim();
-      const studentCode = studentCodeEl.value.trim();
-      const schoolEmail = schoolEmailEl.value.trim().toLowerCase();
+      if (!currentSchool) return alert("請先選擇校園");
+      if (currentSchool.verifyEnabled !== true) return alert("此校目前暫停驗證");
+      if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
 
-      if (!schoolId) return alert("請選擇校園");
-      if (!studentCode) return alert("請輸入學號");
+      const schoolId = norm(currentSchool.id);
+      const studentCode = norm(studentCodeEl.value);
+      const schoolEmail = lower(schoolEmailEl.value);
+      const emailDomain = getEmailDomain(currentSchool);
+
+      if (!studentCode) return alert("請輸入學號 / 身分代碼");
       if (!schoolEmail) return alert("請輸入學校信箱");
 
-      submitBtn.disabled = true;
-      const oldText = submitBtn.textContent;
-      submitBtn.textContent = "寄送中…";
+      if (emailDomain && !schoolEmail.endsWith("@" + emailDomain) && schoolEmail !== emailDomain) {
+        alert("學校信箱網域不符合此校規定");
+        return;
+      }
+
+      emailVerifyBtn.disabled = true;
+      const oldText = emailVerifyBtn.textContent;
+      emailVerifyBtn.textContent = "寄送中…";
 
       try {
         const idToken = await user.getIdToken();
@@ -230,14 +691,101 @@
         console.error(e);
         msg.innerHTML = `<span class="warn">${esc(e.message || "寄送失敗")}</span>`;
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = oldText;
+        emailVerifyBtn.disabled = false;
+        emailVerifyBtn.textContent = oldText;
       }
     }
 
-    submitBtn.onclick = sendVerify;
+    async function verifyByGoogleAccount(){
+      const user = firebase.auth().currentUser;
+      if (!user) return alert("請先登入");
+      if (!currentSchool) return alert("請先選擇校園");
+      if (currentSchool.verifyEnabled !== true) return alert("此校目前暫停驗證");
+      if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
+
+      const email = lower(user.email || "");
+      if (!email) {
+        msg.innerHTML = `<span class="warn">目前登入帳號沒有 email，無法完成 Google 驗證。</span>`;
+        return;
+      }
+
+      const googleDomain = getGoogleDomain(currentSchool);
+      if (googleDomain && !email.endsWith("@" + googleDomain) && email !== googleDomain) {
+        msg.innerHTML = `<span class="warn">目前登入帳號網域不符合此校規定，請改用學校 Google 帳號登入。</span>`;
+        return;
+      }
+
+      googleVerifyBtn.disabled = true;
+      const oldText = googleVerifyBtn.textContent;
+      googleVerifyBtn.textContent = "驗證中…";
+
+      try {
+        await db.collection("users").doc(user.uid).set({
+          email: user.email || "",
+          verifiedSchoolId: currentSchool.id,
+          verifiedSchoolName: getSchoolName(currentSchool),
+          verifyMethod: "google",
+          verifiedAt: new Date(),
+          schoolEmail: user.email || "",
+          googleHostedDomain: googleDomain || ""
+        }, { merge: true });
+
+        await loadCurrentUserProfile();
+        renderSchoolMode();
+        msg.innerHTML = `<span class="ok">校園身分驗證成功，已完成綁定。</span>`;
+      } catch (e) {
+        console.error(e);
+        msg.innerHTML = `<span class="warn">${esc(e.message || "驗證失敗")}</span>`;
+      } finally {
+        googleVerifyBtn.disabled = false;
+        googleVerifyBtn.textContent = oldText;
+      }
+    }
+
+    async function confirmCampusVerificationToken(){
+      const token = getQueryToken();
+      if (!token) return;
+
+      tokenMode = true;
+      callbackCard.style.display = "block";
+      callbackMsg.innerHTML = "驗證中，請稍候…";
+
+      try {
+        const response = await fetch("/api/confirmCampusVerification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "驗證失敗");
+        }
+
+        callbackMsg.innerHTML = `
+          <span class="ok">校園身分綁定成功。</span>
+          <br><br>
+          之後每一場活動都會依照你的綁定資料判斷是否具備報名資格。
+        `;
+
+        if (currentUser) {
+          await loadCurrentUserProfile();
+        }
+      } catch (e) {
+        console.error(e);
+        callbackMsg.innerHTML = `<span class="warn">${esc(e.message || "驗證失敗")}</span>`;
+      }
+    }
+
+    emailVerifyBtn.onclick = sendEmailVerification;
+    googleVerifyBtn.onclick = verifyByGoogleAccount;
 
     firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
       if (!user) {
         showGate("請先登入", "你需要先登入網站帳號，才能進行校園身分驗證。");
         return;
@@ -247,7 +795,9 @@
       app.style.display = "block";
       who.textContent = user.email || user.uid || "-";
 
+      await loadCurrentUserProfile();
       await loadSchools();
+      await confirmCampusVerificationToken();
     });
   </script>
 </body>
