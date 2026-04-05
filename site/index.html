@@ -1,440 +1,287 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { initializeApp, getApps } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  query,
-  where,
-  doc,
-  getDoc,
-} from "firebase/firestore";
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>活動平台</title>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-  authDomain: "concert-1ff7e.firebaseapp.com",
-  projectId: "concert-1ff7e",
-  storageBucket: "concert-1ff7e.firebasestorage.app",
-  messagingSenderId: "704757384914",
-  appId: "1:704757384914:web:9f58e4085dd71180c5cf0b",
-};
-
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-function toDate(value: any): Date | null {
-  if (!value) return null;
-  if (typeof value?.toDate === "function") return value.toDate();
-  if (value instanceof Date) return value;
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
+<style>
+:root{
+  --bg:#f5f7fb;
+  --card:#fff;
+  --text:#111827;
+  --muted:#6b7280;
+  --line:rgba(17,24,39,.08);
+  --shadow:0 18px 50px rgba(15,23,42,.08);
+  --black:#111;
 }
 
-function formatDate(value: any) {
-  const d = toDate(value);
-  if (!d) return "-";
-  return d.toLocaleDateString("zh-Hant", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;
+  background:var(--bg);
+}
+
+/* ====== layout ====== */
+.wrap{
+  max-width:1200px;
+  margin:auto;
+  padding:24px;
+}
+
+/* ====== header ====== */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+
+.logo{
+  font-weight:900;
+  font-size:22px;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+}
+
+.btn{
+  padding:10px 16px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  cursor:pointer;
+  font-weight:800;
+}
+
+.btn.black{
+  background:#111;
+  color:#fff;
+}
+
+/* ===== hero ===== */
+.hero{
+  background:#fff;
+  border-radius:24px;
+  padding:24px;
+  box-shadow:var(--shadow);
+  margin-bottom:24px;
+}
+
+.hero h1{
+  margin:0;
+  font-size:28px;
+}
+
+/* ===== grid ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:18px;
+}
+
+/* ===== card ===== */
+.card{
+  background:#fff;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+}
+
+.card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+}
+
+.card-body{
+  padding:14px;
+}
+
+.title{
+  font-weight:900;
+  margin-bottom:6px;
+}
+
+.sub{
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* ===== badge ===== */
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  margin-top:8px;
+}
+
+.badge.green{ background:#dcfce7; color:#166534;}
+.badge.red{ background:#fee2e2; color:#b91c1c;}
+.badge.gray{ background:#f3f4f6; color:#6b7280;}
+.badge.blue{ background:#dbeafe; color:#1d4ed8;}
+
+.card-footer{
+  margin-top:auto;
+  padding:14px;
+}
+
+.card button{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.empty{
+  text-align:center;
+  color:#6b7280;
+  margin-top:40px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <!-- header -->
+  <div class="header">
+    <div class="logo">🎫 活動平台</div>
+    <div class="actions" id="authArea">
+      載入中...
+    </div>
+  </div>
+
+  <!-- hero -->
+  <div class="hero">
+    <h1>探索活動</h1>
+    <div class="sub">報名、選位、入場一站完成</div>
+  </div>
+
+  <!-- list -->
+  <div id="eventList" class="grid"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+  authDomain:"concert-1ff7e.firebaseapp.com",
+  projectId:"concert-1ff7e"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const eventList = document.getElementById("eventList");
+const authArea = document.getElementById("authArea");
+
+/* ===== auth UI ===== */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    authArea.innerHTML = `
+      <a class="btn" href="member.html">會員中心</a>
+      <button class="btn" onclick="logout()">登出</button>
+    `;
+  }else{
+    authArea.innerHTML = `
+      <a class="btn" href="login.html">登入</a>
+      <a class="btn black" href="register.html">註冊</a>
+    `;
+  }
+});
+
+function logout(){
+  auth.signOut();
+}
+
+/* ===== time ===== */
+function toDate(t){
+  if(!t) return null;
+  if(t.toDate) return t.toDate();
+  return new Date(t);
+}
+
+function getStatus(e){
+  const now = new Date();
+  const start = toDate(e.saleStartAt);
+  const end = toDate(e.saleEndAt);
+
+  if(e.published!==true) return {text:"未公開",cls:"gray"};
+  if(start && now<start) return {text:"即將開賣",cls:"blue"};
+  if(end && now>end) return {text:"已截止",cls:"red"};
+  return {text:"報名中",cls:"green"};
+}
+
+/* ===== load events ===== */
+async function loadEvents(){
+  const snap = await db.collection("events")
+    .where("published","==",true)
+    .get();
+
+  if(snap.empty){
+    eventList.innerHTML = `<div class="empty">目前沒有活動</div>`;
+    return;
+  }
+
+  eventList.innerHTML = "";
+
+  snap.forEach(doc=>{
+    const e = doc.data();
+    const status = getStatus(e);
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      ${e.coverImage ? `<img src="${e.coverImage}">` : ""}
+      <div class="card-body">
+        <div class="title">${e.title || "未命名活動"}</div>
+        <div class="sub">
+          ${formatTime(e.eventStartAt)}
+        </div>
+        <div class="badge ${status.cls}">
+          ${status.text}
+        </div>
+      </div>
+      <div class="card-footer">
+        <button onclick="go('${doc.id}')">
+          查看活動
+        </button>
+      </div>
+    `;
+
+    eventList.appendChild(card);
   });
 }
 
-function formatDateTime(value: any) {
-  const d = toDate(value);
-  if (!d) return "-";
-  return d.toLocaleString("zh-Hant", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+function formatTime(t){
+  const d = toDate(t);
+  if(!d) return "-";
+  return d.toLocaleString("zh-Hant");
 }
 
-function getStatus(event: any) {
-  const now = Date.now();
-  const saleStart = toDate(event.saleStartAt)?.getTime() ?? null;
-  const saleEnd = toDate(event.saleEndAt)?.getTime() ?? null;
-  const eventEnd = toDate(event.eventEndAt)?.getTime() ?? null;
-
-  if (event.published !== true) {
-    return { text: "未公開", key: "hidden", className: "bg-slate-100 text-slate-500" };
-  }
-  if (saleStart && now < saleStart) {
-    return { text: "尚未開賣", key: "upcoming", className: "bg-blue-50 text-blue-700" };
-  }
-  if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
-    return { text: "開賣中", key: "selling", className: "bg-emerald-50 text-emerald-700" };
-  }
-  if (eventEnd && now > eventEnd) {
-    return { text: "活動已結束", key: "ended", className: "bg-slate-100 text-slate-500" };
-  }
-  if (saleEnd && now > saleEnd) {
-    return { text: "已截止", key: "ended", className: "bg-slate-100 text-slate-500" };
-  }
-  return { text: "活動資訊", key: "all", className: "bg-slate-100 text-slate-500" };
+function go(id){
+  location.href = `ticket.html?id=${id}`;
 }
 
-async function getPublishedApprovedEvents() {
-  const q = query(
-    collection(db, "events"),
-    where("published", "==", true),
-    where("approvalStatus", "==", "approved")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
+loadEvents();
+</script>
 
-async function getEventById(eventId: string) {
-  const snap = await getDoc(doc(db, "events", eventId));
-  if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() };
-}
-
-function EventCard({ event, onOpen }: { event: any; onOpen: (id: string) => void }) {
-  const status = getStatus(event);
-  return (
-    <button
-      onClick={() => onOpen(event.id)}
-      className="group overflow-hidden rounded-[1.75rem] border border-black/5 bg-white text-left shadow-[0_18px_40px_rgba(17,24,39,0.06)] transition hover:-translate-y-1 hover:shadow-[0_26px_50px_rgba(17,24,39,0.10)]"
-    >
-      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-slate-200 to-slate-100">
-        {event.coverImage ? (
-          <img
-            src={event.coverImage}
-            alt={event.title || "活動圖片"}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-sm font-extrabold tracking-[0.25em] text-slate-400">
-            EVENT COVER
-          </div>
-        )}
-        <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-slate-900 shadow-sm backdrop-blur">
-          {status.text}
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
-      </div>
-
-      <div className="p-5">
-        <div className="text-sm font-bold tracking-[0.22em] text-slate-400">{formatDate(event.eventStartAt)}</div>
-        <h3 className="mt-2 text-2xl font-black leading-tight tracking-[-0.03em] text-slate-900">
-          {event.title || "未命名活動"}
-        </h3>
-        <p className="mt-3 text-sm leading-7 text-slate-500">
-          {event.location || "未提供地點"}・點入後可查看活動介紹、時間、地點與票券資訊。
-        </p>
-        <div className="mt-5 flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-500">查看活動內容</span>
-          <span className="rounded-full bg-slate-900 px-4 py-2 text-sm font-black text-white">
-            進入
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function EventDetail({ event, onBack }: { event: any; onBack: () => void }) {
-  const status = getStatus(event);
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
-      <button
-        onClick={onBack}
-        className="mb-5 inline-flex items-center gap-2 text-sm font-extrabold text-slate-600 transition hover:text-slate-900"
-      >
-        ← 返回活動列表
-      </button>
-
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_0.8fr]">
-        <section className="overflow-hidden rounded-[1.9rem] border border-black/5 bg-white shadow-[0_18px_40px_rgba(17,24,39,0.06)]">
-          <div className="aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-200 to-slate-100">
-            {event.coverImage ? (
-              <img src={event.coverImage} alt={event.title || "活動圖片"} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-base font-extrabold tracking-[0.3em] text-slate-400">
-                EVENT COVER
-              </div>
-            )}
-          </div>
-
-          <div className="p-6 md:p-7">
-            <div className={`inline-flex rounded-full px-3 py-1.5 text-xs font-black ${status.className}`}>
-              {status.text}
-            </div>
-            <h1 className="mt-4 text-4xl font-black leading-[1.18] tracking-[-0.04em] text-slate-900 md:text-5xl">
-              {event.title || "未命名活動"}
-            </h1>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-black/5 bg-slate-50 p-4">
-                <div className="text-xs font-extrabold tracking-[0.25em] text-slate-400">活動日期</div>
-                <div className="mt-2 text-base font-black text-slate-800">{formatDate(event.eventStartAt)}</div>
-              </div>
-              <div className="rounded-2xl border border-black/5 bg-slate-50 p-4">
-                <div className="text-xs font-extrabold tracking-[0.25em] text-slate-400">活動地點</div>
-                <div className="mt-2 text-base font-black text-slate-800">{event.location || "未提供地點"}</div>
-              </div>
-              <div className="rounded-2xl border border-black/5 bg-slate-50 p-4">
-                <div className="text-xs font-extrabold tracking-[0.25em] text-slate-400">開始時間</div>
-                <div className="mt-2 text-base font-black text-slate-800">{formatDateTime(event.eventStartAt)}</div>
-              </div>
-              <div className="rounded-2xl border border-black/5 bg-slate-50 p-4">
-                <div className="text-xs font-extrabold tracking-[0.25em] text-slate-400">結束時間</div>
-                <div className="mt-2 text-base font-black text-slate-800">{formatDateTime(event.eventEndAt)}</div>
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <h2 className="text-xl font-black tracking-[-0.03em]">活動介紹</h2>
-              <p className="mt-3 whitespace-pre-wrap text-[15px] leading-8 text-slate-600">
-                {event.description || "尚無活動介紹"}
-              </p>
-            </div>
-
-            <div className="mt-8">
-              <h2 className="text-xl font-black tracking-[-0.03em]">注意事項</h2>
-              <p className="mt-3 whitespace-pre-wrap text-[15px] leading-8 text-slate-600">
-                {event.notice || "尚無注意事項"}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <aside className="h-fit rounded-[1.9rem] border border-black/5 bg-white p-5 shadow-[0_18px_40px_rgba(17,24,39,0.06)] md:p-6">
-          <h2 className="text-xl font-black tracking-[-0.03em]">活動資訊</h2>
-          <div className="mt-4 divide-y divide-dashed divide-slate-200">
-            <div className="flex items-start justify-between gap-4 py-3 text-sm">
-              <span className="font-bold text-slate-500">開賣開始</span>
-              <span className="text-right font-black text-slate-800">{formatDateTime(event.saleStartAt)}</span>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3 text-sm">
-              <span className="font-bold text-slate-500">開賣截止</span>
-              <span className="text-right font-black text-slate-800">{formatDateTime(event.saleEndAt)}</span>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3 text-sm">
-              <span className="font-bold text-slate-500">活動日期</span>
-              <span className="text-right font-black text-slate-800">{formatDate(event.eventStartAt)}</span>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3 text-sm">
-              <span className="font-bold text-slate-500">活動地點</span>
-              <span className="text-right font-black text-slate-800">{event.location || "-"}</span>
-            </div>
-          </div>
-
-          <button className="mt-6 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 text-base font-black text-white shadow-[0_14px_30px_rgba(79,70,229,0.28)] transition hover:-translate-y-0.5">
-            我要購票 / 報名
-          </button>
-
-          <p className="mt-4 text-sm leading-7 text-slate-500">
-            下一步可以在這裡接票種清單、驗證流程、購票流程與選位功能。
-          </p>
-        </aside>
-      </div>
-    </div>
-  );
-}
-
-export default function TicketFrontpageMockup() {
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const rows = await getPublishedApprovedEvents();
-        rows.sort((a: any, b: any) => {
-          const ta = toDate(a.eventStartAt)?.getTime() ?? 0;
-          const tb = toDate(b.eventStartAt)?.getTime() ?? 0;
-          return ta - tb;
-        });
-        if (alive) setEvents(rows);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!selectedEventId) {
-      setSelectedEvent(null);
-      return;
-    }
-    let alive = true;
-    (async () => {
-      const data = await getEventById(selectedEventId);
-      if (alive) setSelectedEvent(data);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [selectedEventId]);
-
-  const filtered = useMemo(() => {
-    return events.filter((event) => {
-      const q = search.trim().toLowerCase();
-      const status = getStatus(event);
-      if (statusFilter !== "all" && status.key !== statusFilter) return false;
-      if (!q) return true;
-      return [event.title, event.location, event.description]
-        .map((v) => String(v ?? "").toLowerCase())
-        .some((v) => v.includes(q));
-    });
-  }, [events, search, statusFilter]);
-
-  if (selectedEvent && selectedEventId) {
-    return <EventDetail event={selectedEvent} onBack={() => setSelectedEventId(null)} />;
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f5f7fb] text-[#101828]">
-      <header className="sticky top-0 z-30 border-b border-black/5 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-500 to-sky-400 text-white shadow-lg shadow-indigo-500/20">
-              <span className="text-lg font-black">K</span>
-            </div>
-            <div>
-              <div className="text-lg font-black tracking-wide">KMSH TICKET</div>
-              <div className="text-[11px] tracking-[0.35em] text-[#9aa1af]">EVENT PLATFORM</div>
-            </div>
-          </div>
-
-          <div className="hidden items-center gap-8 text-sm font-semibold text-[#6b7280] md:flex">
-            <a href="#events" className="transition hover:text-[#111827]">活動列表</a>
-            <span className="transition hover:text-[#111827]">購票說明</span>
-            <span className="transition hover:text-[#111827]">平台介紹</span>
-          </div>
-
-          <button className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-bold text-[#111827] transition hover:-translate-y-0.5 hover:shadow-md">
-            登入
-          </button>
-        </div>
-      </header>
-
-      <main>
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.12),transparent_35%),radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_28%)]" />
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 md:grid-cols-[1.1fr_0.9fr] md:px-6 md:py-20">
-            <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-4 py-2 text-sm font-bold text-[#4b5563] shadow-sm backdrop-blur">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                已發布活動・立即查看
-              </div>
-
-              <h1 className="text-5xl font-black leading-[1.08] tracking-[-0.04em] text-[#111827] md:text-7xl">
-                像票務平台一樣，
-                <br />
-                好看又清楚。
-              </h1>
-
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#667085] md:text-xl">
-                活動首頁先看到重點，點進活動後再看完整介紹、時間、地點與票種，整體像正式票務網站，而不是普通查詢頁。
-              </p>
-
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <button className="rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-base font-black text-white shadow-[0_14px_30px_rgba(79,70,229,0.35)] transition hover:-translate-y-0.5">
-                  立即開始
-                </button>
-                <button className="rounded-full px-4 py-4 text-base font-bold text-[#6b7280] transition hover:text-[#111827]">
-                  查看活動
-                </button>
-              </div>
-            </div>
-
-            <div className="relative mx-auto w-full max-w-[520px]">
-              <div className="absolute -bottom-8 left-8 right-8 h-40 rounded-full bg-emerald-200/40 blur-3xl" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/60 bg-white p-5 shadow-[0_30px_60px_rgba(17,24,39,0.12)]">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-500 to-sky-400 shadow-lg" />
-                    <div>
-                      <div className="text-xs font-bold uppercase tracking-[0.25em] text-[#9aa1af]">2026 Ticket</div>
-                      <div className="mt-2 text-3xl font-black tracking-[0.08em]">EVENT PASS</div>
-                    </div>
-                  </div>
-                  <div className="rounded-2xl border border-black/10 px-3 py-2 text-xs font-bold text-[#6b7280]">QR</div>
-                </div>
-
-                <div className="mt-12 grid grid-cols-2 gap-8 text-sm text-[#6b7280]">
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#9aa1af]">Event</div>
-                    <div className="mt-2 text-base font-bold text-[#111827]">校園音樂祭</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#9aa1af]">Date</div>
-                    <div className="mt-2 text-base font-bold text-[#111827]">07 / 26</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#9aa1af]">Location</div>
-                    <div className="mt-2 text-base font-bold text-[#111827]">Tainan Arena</div>
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#9aa1af]">Status</div>
-                    <div className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-black text-emerald-600">
-                      SELLING
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="events" className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-10">
-          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="text-sm font-bold uppercase tracking-[0.24em] text-[#98a2b3]">Events</div>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.03em]">熱門活動</h2>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="搜尋活動名稱"
-                className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-              />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100"
-              >
-                <option value="all">全部狀態</option>
-                <option value="selling">開賣中</option>
-                <option value="upcoming">尚未開賣</option>
-                <option value="ended">已結束</option>
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="rounded-[1.75rem] border border-black/5 bg-white px-6 py-12 text-center text-slate-500 shadow-[0_18px_40px_rgba(17,24,39,0.06)]">
-              載入中...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="rounded-[1.75rem] border border-black/5 bg-white px-6 py-12 text-center text-slate-500 shadow-[0_18px_40px_rgba(17,24,39,0.06)]">
-              目前沒有符合條件的活動。
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((event) => (
-                <EventCard key={event.id} event={event} onOpen={setSelectedEventId} />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </div>
-  );
-}
+</body>
+</html>

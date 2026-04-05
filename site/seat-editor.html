@@ -30,6 +30,11 @@
       --seat-multi-border:#1d4ed8;
       --select-box:rgba(29,78,216,.10);
       --select-box-border:rgba(29,78,216,.45);
+      --vip:#d4af37;
+      --zone-a:#3b82f6;
+      --zone-b:#10b981;
+      --zone-c:#f59e0b;
+      --zone-d:#a855f7;
     }
 
     *{ box-sizing:border-box; }
@@ -42,7 +47,7 @@
     }
 
     .wrap{
-      max-width:1520px;
+      max-width:1600px;
       margin:0 auto;
       padding:22px 16px 30px;
     }
@@ -195,12 +200,12 @@
 
     .layout{
       display:grid;
-      grid-template-columns:300px minmax(0,1fr) 390px;
+      grid-template-columns:320px minmax(0,1fr) 420px;
       gap:16px;
       align-items:start;
     }
 
-    @media (max-width:1280px){
+    @media (max-width:1360px){
       .layout{
         grid-template-columns:1fr;
       }
@@ -267,6 +272,7 @@
       background:#f3f4f6;
       transform-origin:top left;
       user-select:none;
+      overflow:hidden;
     }
 
     .seatmap-image{
@@ -289,7 +295,7 @@
       cursor:pointer;
       transform-origin:center center;
       box-shadow:0 2px 6px rgba(0,0,0,.08);
-      transition:transform .08s ease, box-shadow .08s ease;
+      transition:transform .08s ease, box-shadow .08s ease, background .08s ease;
     }
 
     .seat:hover{
@@ -297,25 +303,25 @@
     }
 
     .seat.selected{
-      background:var(--seat-selected);
-      border-color:var(--seat-selected-border);
+      background:var(--seat-selected) !important;
+      border-color:var(--seat-selected-border) !important;
       box-shadow:0 0 0 3px rgba(17,24,39,.18);
     }
 
     .seat.multi{
-      background:var(--seat-multi);
-      border-color:var(--seat-multi-border);
+      background:var(--seat-multi) !important;
+      border-color:var(--seat-multi-border) !important;
       box-shadow:0 0 0 3px rgba(29,78,216,.18);
     }
 
     .seat.disabled{
-      background:var(--seat-disabled);
-      border-color:var(--seat-disabled-border);
+      background:var(--seat-disabled) !important;
+      border-color:var(--seat-disabled-border) !important;
     }
 
     .seat.sold{
-      background:var(--seat-sold);
-      border-color:var(--seat-sold-border);
+      background:var(--seat-sold) !important;
+      border-color:var(--seat-sold-border) !important;
     }
 
     .seat-label{
@@ -360,7 +366,7 @@
       gap:12px;
     }
 
-    @media (max-width:700px){
+    @media (max-width:760px){
       .field-grid{
         grid-template-columns:1fr;
       }
@@ -438,7 +444,7 @@
           <div>
             <h1>座位編輯器</h1>
             <div class="sub">
-              支援單顆座位編輯、拖曳移動、多選、框選與批次套用設定。
+              支援單顆座位編輯、拖曳移動、多選、框選、批次生成與批次套用設定。
             </div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
@@ -470,6 +476,7 @@
             <button class="btn" id="clearSelectionBtn">取消選取</button>
             <button class="btn btn-blue" id="selectAllBtn">全選目前座位</button>
             <button class="btn btn-primary" id="saveSeatBtn" disabled>儲存目前座位</button>
+            <button class="btn btn-primary" id="saveAllSeatsBtn">儲存全部座位</button>
             <button class="btn btn-danger" id="deleteSeatBtn" disabled>刪除目前座位</button>
           </div>
 
@@ -489,6 +496,73 @@
             <div class="selected-list" id="selectedSeatList">
               <div class="empty">尚未選取任何座位</div>
             </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <h2>批次生成座位</h2>
+          <div class="small" style="margin-top:8px;">
+            一次快速建立整區座位，之後再微調位置與設定。
+          </div>
+
+          <div class="batch-box">
+            <div class="field-grid">
+              <div>
+                <label>起始 X</label>
+                <input id="genStartX" type="number" value="100" />
+              </div>
+              <div>
+                <label>起始 Y</label>
+                <input id="genStartY" type="number" value="100" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>排數</label>
+                <input id="genRows" type="number" min="1" value="10" />
+              </div>
+              <div>
+                <label>每排座位數</label>
+                <input id="genCols" type="number" min="1" value="20" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>X 間距</label>
+                <input id="genGapX" type="number" value="24" />
+              </div>
+              <div>
+                <label>Y 間距</label>
+                <input id="genGapY" type="number" value="28" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>區域 sectionId</label>
+                <input id="genSectionId" type="text" placeholder="例如：A / VIP / B1" />
+              </div>
+              <div>
+                <label>區域名稱</label>
+                <input id="genSectionName" type="text" placeholder="例如：A區" />
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div>
+                <label>樓層</label>
+                <input id="genFloor" type="text" value="1F" />
+              </div>
+              <div>
+                <label>價格</label>
+                <input id="genPrice" type="number" min="0" value="0" />
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="generateSeatsBtn" style="margin-top:12px;">生成座位</button>
+            <div id="genMsg" class="small" style="margin-top:10px;"></div>
           </div>
         </div>
 
@@ -525,22 +599,22 @@
             <div class="field-grid">
               <div>
                 <label>seatId</label>
-                <input id="seatIdInput" type="text" placeholder="例如：A1-R01-S08" />
+                <input id="seatIdInput" type="text" placeholder="例如：A-R01-S08" />
               </div>
               <div>
                 <label>顯示名稱</label>
-                <input id="seatLabelInput" type="text" placeholder="例如：A1 01排 08號" />
+                <input id="seatLabelInput" type="text" placeholder="例如：A排08號" />
               </div>
             </div>
 
             <div class="field-grid">
               <div>
                 <label>區域 sectionId</label>
-                <input id="sectionIdInput" type="text" placeholder="例如：A1" />
+                <input id="sectionIdInput" type="text" placeholder="例如：A / VIP" />
               </div>
               <div>
                 <label>區域名稱</label>
-                <input id="sectionNameInput" type="text" placeholder="例如：A1區" />
+                <input id="sectionNameInput" type="text" placeholder="例如：A區" />
               </div>
             </div>
 
@@ -558,7 +632,7 @@
             <div class="field-grid">
               <div>
                 <label>排 row</label>
-                <input id="rowInput" type="text" placeholder="例如：01" />
+                <input id="rowInput" type="text" placeholder="例如：A / 01" />
               </div>
               <div>
                 <label>座號 seatNumber</label>
@@ -632,11 +706,11 @@
             <div class="field-grid">
               <div>
                 <label>區域 sectionId</label>
-                <input id="batchSectionIdInput" type="text" placeholder="例如：A1" />
+                <input id="batchSectionIdInput" type="text" placeholder="例如：A / VIP" />
               </div>
               <div>
                 <label>區域名稱</label>
-                <input id="batchSectionNameInput" type="text" placeholder="例如：A1區" />
+                <input id="batchSectionNameInput" type="text" placeholder="例如：A區" />
               </div>
             </div>
 
@@ -702,6 +776,29 @@
 
             <div id="batchMsg" class="small" style="margin-top:12px;"></div>
           </div>
+
+          <div class="divider"></div>
+
+          <h2>自動重新編號</h2>
+          <div class="small" style="margin-top:8px;">
+            會依照目前選取座位的排序重新編號。
+          </div>
+
+          <div class="batch-box">
+            <div class="field-grid">
+              <div>
+                <label>起始座號</label>
+                <input id="autoSeatStartInput" type="number" min="1" value="1" />
+              </div>
+              <div>
+                <label>座號補零位數</label>
+                <input id="autoPadInput" type="number" min="1" value="2" />
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="autoNumberBtn" style="margin-top:12px;">重新編號已選座位</button>
+            <div id="autoMsg" class="small" style="margin-top:10px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -739,9 +836,9 @@
     const clearSelectionBtn = document.getElementById("clearSelectionBtn");
     const selectAllBtn = document.getElementById("selectAllBtn");
     const saveSeatBtn = document.getElementById("saveSeatBtn");
+    const saveAllSeatsBtn = document.getElementById("saveAllSeatsBtn");
     const deleteSeatBtn = document.getElementById("deleteSeatBtn");
 
-    const canvasWrap = document.getElementById("canvasWrap");
     const stage = document.getElementById("stage");
     const seatMapImage = document.getElementById("seatMapImage");
     const seatCountText = document.getElementById("seatCountText");
@@ -793,6 +890,24 @@
     const deleteBatchBtn = document.getElementById("deleteBatchBtn");
     const batchMsg = document.getElementById("batchMsg");
 
+    const genStartX = document.getElementById("genStartX");
+    const genStartY = document.getElementById("genStartY");
+    const genRows = document.getElementById("genRows");
+    const genCols = document.getElementById("genCols");
+    const genGapX = document.getElementById("genGapX");
+    const genGapY = document.getElementById("genGapY");
+    const genSectionId = document.getElementById("genSectionId");
+    const genSectionName = document.getElementById("genSectionName");
+    const genFloor = document.getElementById("genFloor");
+    const genPrice = document.getElementById("genPrice");
+    const generateSeatsBtn = document.getElementById("generateSeatsBtn");
+    const genMsg = document.getElementById("genMsg");
+
+    const autoSeatStartInput = document.getElementById("autoSeatStartInput");
+    const autoPadInput = document.getElementById("autoPadInput");
+    const autoNumberBtn = document.getElementById("autoNumberBtn");
+    const autoMsg = document.getElementById("autoMsg");
+
     let currentUser = null;
     let currentRole = "";
     let currentEventId = "";
@@ -824,10 +939,7 @@
     }
 
     function splitCsv(v){
-      return norm(v)
-        .split(",")
-        .map(x => norm(x))
-        .filter(Boolean);
+      return norm(v).split(",").map(x => norm(x)).filter(Boolean);
     }
 
     function showGate(html){
@@ -844,10 +956,8 @@
     async function loadMyRole(uid){
       const snap = await db.collection("users").doc(uid).get();
       if (!snap.exists) return { ok:false, reason:"尚未授權" };
-
       const u = snap.data() || {};
       if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
-
       return {
         ok:true,
         role:norm(u.role),
@@ -855,11 +965,27 @@
       };
     }
 
+    function getSectionColor(sectionId){
+      const s = norm(sectionId).toUpperCase();
+      if (!s) return "";
+      if (s === "VIP") return getComputedStyle(document.documentElement).getPropertyValue("--vip").trim();
+      if (s === "A" || s.startsWith("A")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-a").trim();
+      if (s === "B" || s.startsWith("B")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-b").trim();
+      if (s === "C" || s.startsWith("C")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-c").trim();
+      if (s === "D" || s.startsWith("D")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-d").trim();
+      return "";
+    }
+
     function getSelectedSeatsArray(){
       return [...selectedSeatIds]
         .map(id => seatMap.get(id))
         .filter(Boolean)
-        .sort((a,b) => norm(a.label || a.seatId).localeCompare(norm(b.label || b.seatId), "zh-Hant"));
+        .sort((a, b) => {
+          const ay = Number(a.y || 0);
+          const by = Number(b.y || 0);
+          if (Math.abs(ay - by) > 8) return ay - by;
+          return Number(a.x || 0) - Number(b.x || 0);
+        });
     }
 
     function updateSelectedSeatList(){
@@ -878,7 +1004,6 @@
 
     function refreshSelectionUi(){
       updateSelectedSeatList();
-
       const hasSingle = !!selectedSeatId && seatMap.has(selectedSeatId);
       const hasAny = selectedSeatIds.size > 0;
 
@@ -892,6 +1017,7 @@
 
       applyBatchBtn.disabled = !hasAny;
       deleteBatchBtn.disabled = !hasAny;
+      autoNumberBtn.disabled = !hasAny;
     }
 
     function resetSeatEditor(){
@@ -952,7 +1078,6 @@
 
     function buildSeatPayloadFromEditor(){
       const seatId = norm(seatIdInput.value);
-
       return {
         seatId,
         sectionId: norm(sectionIdInput.value),
@@ -1013,11 +1138,9 @@
       let cls = "seat";
       if (seat.status === "disabled" || seat.enabled === false) cls += " disabled";
       if (seat.status === "sold") cls += " sold";
-
       if (selectedSeatIds.has(seat.seatId)) {
         cls += seat.seatId === selectedSeatId ? " selected" : " multi";
       }
-
       return cls;
     }
 
@@ -1033,7 +1156,12 @@
         el.style.left = `${Number(seat.x || 0)}px`;
         el.style.top = `${Number(seat.y || 0)}px`;
         el.style.transform = `rotate(${Number(seat.rotation || 0)}deg)`;
-        el.dataset.seatId = seat.seatId;
+
+        const zoneColor = getSectionColor(seat.sectionId);
+        if (zoneColor && !selectedSeatIds.has(seat.seatId) && seat.status !== "sold" && seat.status !== "disabled" && seat.enabled !== false) {
+          el.style.background = zoneColor;
+          el.style.borderColor = zoneColor;
+        }
 
         const label = document.createElement("div");
         label.className = "seat-label";
@@ -1061,6 +1189,7 @@
       selectedSeatIds.clear();
       resetSeatEditor();
       batchMsg.innerHTML = "";
+      autoMsg.innerHTML = "";
       renderSeats();
       refreshSelectionUi();
     }
@@ -1173,12 +1302,11 @@
       }
     });
 
-    window.addEventListener("mouseup", async () => {
+    window.addEventListener("mouseup", () => {
       if (dragState) {
         dragState = null;
         return;
       }
-
       if (boxSelectState) {
         finishBoxSelection();
       }
@@ -1223,7 +1351,6 @@
       if (!boxSelectState.keepMulti) {
         selectedSeatIds.clear();
       }
-
       hitIds.forEach(id => selectedSeatIds.add(id));
 
       selectedSeatId = hitIds[0] || [...selectedSeatIds][0] || "";
@@ -1246,7 +1373,6 @@
 
     stage.addEventListener("mousedown", (e) => {
       if (e.target !== stage && e.target !== seatMapImage) return;
-
       const pt = stagePointFromMouse(e);
       boxSelectState = {
         startX: pt.x,
@@ -1260,7 +1386,6 @@
     stage.addEventListener("click", (e) => {
       if (!currentEventId) return;
       if (e.target !== stage && e.target !== seatMapImage) return;
-
       if (boxSelectState) return;
 
       if (!addSeatMode) {
@@ -1379,6 +1504,8 @@
       selectedSeatIds.clear();
       seatMsg.innerHTML = "";
       batchMsg.innerHTML = "";
+      autoMsg.innerHTML = "";
+      genMsg.innerHTML = "";
       renderSeats();
       refreshSelectionUi();
 
@@ -1427,6 +1554,8 @@
       selectedSeatIds.clear();
       seatMsg.innerHTML = "";
       batchMsg.innerHTML = "";
+      autoMsg.innerHTML = "";
+      genMsg.innerHTML = "";
 
       const snap = await db.collection("events").doc(currentEventId).collection("seats").get();
       snap.forEach(doc => {
@@ -1505,6 +1634,63 @@
     }
 
     saveSeatBtn.onclick = saveCurrentSeat;
+
+    async function saveAllSeats(){
+      if (!currentEventId) {
+        alert("請先選擇活動");
+        return;
+      }
+
+      const seats = [...seatMap.values()];
+      if (!seats.length) {
+        alert("目前沒有座位可儲存");
+        return;
+      }
+
+      saveAllSeatsBtn.disabled = true;
+      const oldText = saveAllSeatsBtn.textContent;
+      saveAllSeatsBtn.textContent = "儲存全部中…";
+      seatMsg.innerHTML = "";
+      batchMsg.innerHTML = "";
+      genMsg.innerHTML = "";
+      autoMsg.innerHTML = "";
+
+      try{
+        const CHUNK = 400;
+
+        for (let i = 0; i < seats.length; i += CHUNK) {
+          const chunk = seats.slice(i, i + CHUNK);
+          const batch = db.batch();
+
+          chunk.forEach(seat => {
+            const payload = {
+              ...seat,
+              updatedAt: new Date(),
+              updatedByUid: currentUser ? currentUser.uid : ""
+            };
+
+            const ref = db.collection("events")
+              .doc(currentEventId)
+              .collection("seats")
+              .doc(norm(seat.seatId));
+
+            batch.set(ref, payload, { merge:true });
+          });
+
+          await batch.commit();
+        }
+
+        seatMsg.innerHTML = `<span class="ok">已儲存全部 ${seats.length} 顆座位</span>`;
+      }catch(e){
+        console.error(e);
+        seatMsg.innerHTML = `<span class="warn">儲存全部失敗：${esc(e.message || e)}</span>`;
+      }finally{
+        saveAllSeatsBtn.disabled = false;
+        saveAllSeatsBtn.textContent = oldText;
+      }
+    }
+
+    saveAllSeatsBtn.onclick = saveAllSeats;
 
     async function deleteCurrentSeat(){
       if (!currentEventId || !selectedSeatId) return;
@@ -1595,23 +1781,8 @@
         for (const id of ids) {
           const old = seatMap.get(id);
           if (!old) continue;
-
-          const next = {
-            ...old,
-            ...patch
-          };
-
+          const next = { ...old, ...patch };
           seatMap.set(id, next);
-
-          await db.collection("events")
-            .doc(currentEventId)
-            .collection("seats")
-            .doc(id)
-            .set({
-              ...next,
-              updatedAt: new Date(),
-              updatedByUid: currentUser ? currentUser.uid : ""
-            }, { merge:true });
         }
 
         if (selectedSeatId && seatMap.has(selectedSeatId)) {
@@ -1620,7 +1791,7 @@
 
         renderSeats();
         refreshSelectionUi();
-        batchMsg.innerHTML = `<span class="ok">已套用到 ${ids.length} 顆座位</span>`;
+        batchMsg.innerHTML = `<span class="ok">已套用到 ${ids.length} 顆座位，記得按「儲存全部座位」</span>`;
       }catch(e){
         console.error(e);
         batchMsg.innerHTML = `<span class="warn">批次套用失敗：${esc(e.message || e)}</span>`;
@@ -1650,14 +1821,21 @@
       batchMsg.innerHTML = "";
 
       try{
-        for (const id of ids) {
-          await db.collection("events")
-            .doc(currentEventId)
-            .collection("seats")
-            .doc(id)
-            .delete();
+        const CHUNK = 400;
+        for (let i = 0; i < ids.length; i += CHUNK) {
+          const chunk = ids.slice(i, i + CHUNK);
+          const batch = db.batch();
 
-          seatMap.delete(id);
+          chunk.forEach(id => {
+            const ref = db.collection("events")
+              .doc(currentEventId)
+              .collection("seats")
+              .doc(id);
+            batch.delete(ref);
+            seatMap.delete(id);
+          });
+
+          await batch.commit();
         }
 
         selectedSeatIds.clear();
@@ -1673,6 +1851,104 @@
         deleteBatchBtn.disabled = false;
         deleteBatchBtn.textContent = oldText;
       }
+    };
+
+    generateSeatsBtn.onclick = () => {
+      if (!currentEventId) {
+        alert("請先選擇活動");
+        return;
+      }
+
+      const startX = Number(genStartX.value || 0);
+      const startY = Number(genStartY.value || 0);
+      const rows = Number(genRows.value || 0);
+      const cols = Number(genCols.value || 0);
+      const gapX = Number(genGapX.value || 0);
+      const gapY = Number(genGapY.value || 0);
+      const sectionId = norm(genSectionId.value);
+      const sectionName = norm(genSectionName.value) || sectionId;
+      const floor = norm(genFloor.value) || "1F";
+      const price = Number(genPrice.value || 0);
+
+      if (rows <= 0 || cols <= 0) {
+        genMsg.innerHTML = `<span class="warn">排數與每排座位數必須大於 0</span>`;
+        return;
+      }
+
+      let created = 0;
+      const newIds = [];
+
+      for (let r = 0; r < rows; r++) {
+        const rowLabel = String.fromCharCode(65 + r);
+        for (let c = 0; c < cols; c++) {
+          const seatNum = String(c + 1).padStart(2, "0");
+          const seatId = `${sectionId || "SEC"}-${rowLabel}-${seatNum}-${Date.now()}-${r}-${c}`;
+
+          seatMap.set(seatId, {
+            seatId,
+            sectionId,
+            sectionName,
+            floor,
+            row: rowLabel,
+            seatNumber: seatNum,
+            label: `${rowLabel}${seatNum}`,
+            x: Math.round(startX + c * gapX),
+            y: Math.round(startY + r * gapY),
+            rotation: 0,
+            price,
+            status: "available",
+            enabled: true,
+            allowedRoles: [],
+            allowedTags: [],
+            allowedTicketTypes: [],
+            isWheelchair: false,
+            isCompanionSeat: false,
+            heldBy: "",
+            heldUntil: null,
+            orderId: ""
+          });
+
+          newIds.push(seatId);
+          created++;
+        }
+      }
+
+      selectedSeatIds = new Set(newIds);
+      selectedSeatId = newIds[0] || "";
+      if (selectedSeatId && seatMap.has(selectedSeatId)) {
+        showSeatEditor(seatMap.get(selectedSeatId));
+      }
+
+      renderSeats();
+      refreshSelectionUi();
+      genMsg.innerHTML = `<span class="ok">已生成 ${created} 顆座位，記得按「儲存全部座位」</span>`;
+    };
+
+    autoNumberBtn.onclick = () => {
+      if (!selectedSeatIds.size) {
+        autoMsg.innerHTML = `<span class="warn">請先選取座位</span>`;
+        return;
+      }
+
+      let current = Number(autoSeatStartInput.value || 1);
+      const pad = Math.max(1, Number(autoPadInput.value || 2));
+      const seats = getSelectedSeatsArray();
+
+      seats.forEach(seat => {
+        const num = String(current).padStart(pad, "0");
+        seat.seatNumber = num;
+        seat.label = `${norm(seat.row) || ""}${num}`;
+        seatMap.set(seat.seatId, seat);
+        current++;
+      });
+
+      if (selectedSeatId && seatMap.has(selectedSeatId)) {
+        showSeatEditor(seatMap.get(selectedSeatId));
+      }
+
+      renderSeats();
+      refreshSelectionUi();
+      autoMsg.innerHTML = `<span class="ok">已重新編號 ${seats.length} 顆座位，記得按「儲存全部座位」</span>`;
     };
 
     firebase.auth().onAuthStateChanged(async user => {
@@ -1712,7 +1988,6 @@
         }
 
         currentRole = r.role;
-
         const allowed = ["platform_super","platform_admin","org_super","org_admin"];
         if (!allowed.includes(currentRole)) {
           showGate(`

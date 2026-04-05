@@ -26,6 +26,8 @@
       --blue-bg:#dbeafe;
       --gray:#6b7280;
       --gray-bg:#f3f4f6;
+      --purple:#7c3aed;
+      --purple-bg:#ede9fe;
 
       --seat-available:#ffffff;
       --seat-available-border:#111827;
@@ -41,6 +43,15 @@
 
       --seat-locked:#fb923c;
       --seat-locked-border:#ea580c;
+
+      --seat-not-allowed:#e5e7eb;
+      --seat-not-allowed-border:#cbd5e1;
+
+      --zone-a:#3b82f6;
+      --zone-b:#10b981;
+      --zone-c:#f59e0b;
+      --zone-d:#a855f7;
+      --zone-vip:#ef4444;
     }
 
     *{ box-sizing:border-box; }
@@ -58,7 +69,7 @@
     a{ color:inherit; text-decoration:none; }
 
     .wrap{
-      max-width:1440px;
+      max-width:1480px;
       margin:0 auto;
       padding:28px 18px 64px;
     }
@@ -110,12 +121,12 @@
 
     .layout{
       display:grid;
-      grid-template-columns:minmax(0, 1.3fr) minmax(340px, .75fr);
+      grid-template-columns:minmax(0, 1.38fr) minmax(360px, .72fr);
       gap:22px;
       align-items:start;
     }
 
-    @media (max-width:1120px){
+    @media (max-width:1180px){
       .layout{
         grid-template-columns:1fr;
       }
@@ -135,14 +146,14 @@
       align-items:center;
       gap:12px;
       flex-wrap:wrap;
-      padding:16px 18px;
+      padding:18px 20px;
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
 
     .title{
       margin:0;
-      font-size:22px;
+      font-size:24px;
       font-weight:1000;
       letter-spacing:-.02em;
     }
@@ -223,6 +234,32 @@
       background:#f8fafc;
       min-height:760px;
       max-height:80vh;
+      padding:20px 20px 24px;
+    }
+
+    .stage-shell{
+      width:max-content;
+      margin:0 auto;
+    }
+
+    .stage-top{
+      display:flex;
+      justify-content:center;
+      margin-bottom:18px;
+    }
+
+    .stage-sign{
+      min-width:420px;
+      max-width:720px;
+      text-align:center;
+      padding:16px 26px;
+      border-radius:18px 18px 38px 38px;
+      background:linear-gradient(180deg, #111827 0%, #374151 100%);
+      color:#fff;
+      font-size:18px;
+      font-weight:1000;
+      letter-spacing:.12em;
+      box-shadow:0 16px 32px rgba(17,24,39,.18);
     }
 
     .stage{
@@ -230,9 +267,15 @@
       width:1200px;
       height:900px;
       margin:0 auto;
-      background:#f3f4f6;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.22)),
+        #f3f4f6;
+      border:1px solid rgba(17,24,39,.06);
+      border-radius:26px;
       transform-origin:top left;
       user-select:none;
+      overflow:hidden;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.32);
     }
 
     .seatmap-image{
@@ -254,7 +297,7 @@
       box-shadow:0 2px 6px rgba(0,0,0,.08);
       cursor:pointer;
       transform-origin:center center;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
     }
 
     .seat:hover{
@@ -290,10 +333,10 @@
     }
 
     .seat.not-allowed{
-      background:#e5e7eb;
-      border-color:#d1d5db;
+      background:var(--seat-not-allowed);
+      border-color:var(--seat-not-allowed-border);
       cursor:not-allowed;
-      opacity:.55;
+      opacity:.7;
     }
 
     .seat-label{
@@ -307,7 +350,7 @@
       color:#111827;
       pointer-events:none;
       font-weight:900;
-      background:rgba(255,255,255,.92);
+      background:rgba(255,255,255,.94);
       padding:1px 4px;
       border-radius:6px;
       border:1px solid rgba(17,24,39,.08);
@@ -317,7 +360,7 @@
       display:flex;
       gap:12px;
       flex-wrap:wrap;
-      padding:14px 18px 18px;
+      padding:16px 20px 20px;
       border-top:1px solid var(--line);
       background:#fff;
     }
@@ -337,6 +380,45 @@
       border-radius:4px;
       border:1.5px solid #111827;
       background:#fff;
+      flex-shrink:0;
+    }
+
+    .zone-legend{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+      gap:10px;
+      padding:0 20px 20px;
+    }
+
+    .zone-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px 12px;
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .zone-top{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      font-weight:1000;
+      color:#111827;
+    }
+
+    .zone-color{
+      width:14px;
+      height:14px;
+      border-radius:4px;
+      flex-shrink:0;
+    }
+
+    .zone-desc{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
     }
 
     .side{
@@ -346,7 +428,7 @@
       gap:16px;
     }
 
-    @media (max-width:1120px){
+    @media (max-width:1180px){
       .side{
         position:static;
       }
@@ -443,6 +525,12 @@
       color:var(--orange);
     }
 
+    .status-box.purple{
+      background:var(--purple-bg);
+      border-color:rgba(124,58,237,.12);
+      color:var(--purple);
+    }
+
     .status-title{
       font-size:14px;
       font-weight:1000;
@@ -453,6 +541,27 @@
       margin-top:6px;
       font-size:13px;
       line-height:1.8;
+    }
+
+    .detail-box{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .detail-title{
+      font-size:13px;
+      font-weight:1000;
+      color:#111827;
+    }
+
+    .detail-body{
+      margin-top:8px;
+      font-size:13px;
+      line-height:1.9;
+      color:#374151;
     }
 
     .selected-list{
@@ -617,6 +726,10 @@
       updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
@@ -663,6 +776,7 @@
     let selectedSeatIds = [];
     let zoomScale = 1;
     let refreshTimer = null;
+    let focusedSeatId = "";
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -672,10 +786,6 @@
         '"':"&quot;",
         "'":"&#39;"
       }[m]));
-    }
-
-    function norm(value){
-      return String(value ?? "").trim();
     }
 
     function lower(value){
@@ -732,15 +842,6 @@
       }
       const snap = await getDoc(doc(db, "users", currentUser.uid));
       currentUserProfile = snap.exists() ? (snap.data() || {}) : {};
-    }
-
-    function isSaleOpen(event){
-      const now = new Date();
-      const saleStart = toDate(event.saleStartAt);
-      const saleEnd = toDate(event.saleEndAt);
-      if (saleStart && now < saleStart) return false;
-      if (saleEnd && now > saleEnd) return false;
-      return true;
     }
 
     function getUserFieldValue(field, user, profile){
@@ -944,6 +1045,48 @@
       return { ok:true, reason:"ok" };
     }
 
+    function getSeatReasonText(seat){
+      const visualState = getSeatVisualState(seat);
+      const choice = canSeatBeChosen(seat);
+
+      if (selectedSeatIds.includes(seat.seatId)) return "你目前已選取此座位";
+      if (visualState === "mine") return "此座位目前由你保留中";
+      if (visualState === "sold") return "此座位已售出";
+      if (visualState === "disabled") return "此座位目前停用或不可販售";
+      if (visualState === "locked") return "此座位正被其他人暫時保留";
+      if (!choice.ok) {
+        if (choice.reason === "ticket_type_not_allowed") return "此座位不開放給目前票種";
+        if (choice.reason === "role_not_allowed") return "此座位不符合你的身份限制";
+        if (choice.reason === "tag_not_allowed") return "此座位不符合你的資格標籤";
+        if (choice.reason === "no_ticket_type") return "目前票種資料不完整";
+      }
+      return "此座位可選";
+    }
+
+    function getSeatReasonBadge(seat){
+      const visualState = getSeatVisualState(seat);
+      const choice = canSeatBeChosen(seat);
+
+      if (selectedSeatIds.includes(seat.seatId)) return { text:"已選", cls:"ok" };
+      if (visualState === "mine") return { text:"我的保留", cls:"info" };
+      if (visualState === "sold") return { text:"已售出", cls:"warn" };
+      if (visualState === "disabled") return { text:"停用", cls:"orange" };
+      if (visualState === "locked") return { text:"他人鎖定", cls:"orange" };
+      if (!choice.ok) return { text:"不可選", cls:"warn" };
+      return { text:"可選", cls:"ok" };
+    }
+
+    function getSectionColor(sectionId){
+      const s = lower(sectionId);
+      if (!s) return "";
+      if (s === "vip" || s.includes("vip")) return "var(--zone-vip)";
+      if (s === "a" || s.startsWith("a")) return "var(--zone-a)";
+      if (s === "b" || s.startsWith("b")) return "var(--zone-b)";
+      if (s === "c" || s.startsWith("c")) return "var(--zone-c)";
+      if (s === "d" || s.startsWith("d")) return "var(--zone-d)";
+      return "";
+    }
+
     async function holdSeat(seatId){
       const ref = doc(db, "events", currentEvent.id, "seats", seatId);
       const snap = await getDoc(ref);
@@ -953,7 +1096,7 @@
       const visualState = getSeatVisualState(seat);
       const check = canSeatBeChosen(seat);
 
-      if (!check.ok) throw new Error("此座位目前不可選");
+      if (!check.ok) throw new Error(getSeatReasonText(seat));
       if (!["available", "mine"].includes(visualState)) throw new Error("此座位目前已被鎖定或售出");
 
       const heldUntil = new Date(Date.now() + HOLD_MINUTES * 60 * 1000);
@@ -993,6 +1136,7 @@
       }
 
       selectedSeatIds = [];
+      focusedSeatId = "";
       await loadSeats();
       renderPage();
     }
@@ -1043,6 +1187,7 @@
       const seat = seats.find(item => item.seatId === seatId);
       if (!seat) return;
 
+      focusedSeatId = seatId;
       const exists = selectedSeatIds.includes(seatId);
 
       if (exists) {
@@ -1110,6 +1255,9 @@
       }).map(seat => seat.seatId);
 
       selectedSeatIds = selectedSeatIds.filter(id => stillMine.includes(id));
+      if (focusedSeatId && !seats.some(seat => seat.seatId === focusedSeatId)) {
+        focusedSeatId = "";
+      }
     }
 
     function sortSeatsByCenterThenFront(a, b){
@@ -1239,6 +1387,7 @@
         }
 
         selectedSeatIds = picked.map(seat => seat.seatId);
+        focusedSeatId = selectedSeatIds[0] || "";
         await loadSeats();
         renderPage();
         alert(`已自動選擇 ${picked.length} 個座位`);
@@ -1372,6 +1521,16 @@
           totalAmount,
           seats: latestSeats.map(seat => seat.seatId),
           seatLabels: latestSeats.map(seat => norm(seat.label || seat.seatId)),
+          seatDetails: latestSeats.map(seat => ({
+            seatId: seat.seatId,
+            label: norm(seat.label || seat.seatId),
+            sectionId: norm(seat.sectionId || ""),
+            sectionName: norm(seat.sectionName || ""),
+            row: norm(seat.row || ""),
+            seatNumber: norm(seat.seatNumber || ""),
+            price: Number(seat.price || selectedTicketType.price || 0)
+          })),
+          sectionIds: [...new Set(latestSeats.map(seat => norm(seat.sectionId || "")).filter(Boolean))],
           inviteCode: validatedInviteCode || "",
           verifiedSchoolId: norm(currentUserProfile?.verifiedSchoolId || ""),
           verifiedSchoolName: norm(currentUserProfile?.verifiedSchoolName || ""),
@@ -1388,7 +1547,39 @@
         const orderRef = await addDoc(collection(db, "events", currentEvent.id, "orders"), orderPayload);
 
         const batch = writeBatch(db);
+
         latestSeats.forEach(seat => {
+          const ticketRef = doc(collection(db, "events", currentEvent.id, "tickets"));
+
+          batch.set(ticketRef, {
+            ticketId: ticketRef.id,
+            orderId: orderRef.id,
+            uid: currentUser.uid,
+            email: currentUser.email || "",
+
+            eventId: currentEvent.id,
+            eventTitle: currentEvent.title || "",
+
+            ticketTypeId: selectedTicketType.id,
+            ticketTypeName: selectedTicketType.name,
+
+            seatId: seat.seatId,
+            seatLabel: norm(seat.label || seat.seatId),
+
+            qrCodeValue: `${currentEvent.id}::${ticketRef.id}`,
+            qrVersion: 1,
+
+            status: "valid",
+            checkinStatus: "unused",
+
+            checkedInAt: null,
+            checkedInByUid: "",
+            checkedInGate: "",
+
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+
           batch.update(doc(db, "events", currentEvent.id, "seats", seat.seatId), {
             status: "sold",
             orderId: orderRef.id,
@@ -1398,13 +1589,15 @@
             heldUntil: null
           });
         });
+
         await batch.commit();
 
         selectedSeatIds = [];
+        focusedSeatId = "";
 
         showModal({
           title:"選位成功",
-          sub:"你的訂單已建立完成。",
+          sub:"你的訂單與票券已建立完成。",
           body:`
             <div class="small">
               活動：${esc(currentEvent.title || "-")}<br>
@@ -1456,6 +1649,11 @@
           className += " not-allowed";
         }
 
+        const zoneColor = getSectionColor(seat.sectionId);
+        const colorStyle = zoneColor && !selected && visualState === "available" && canChoose
+          ? `background:${zoneColor};border-color:${zoneColor};`
+          : "";
+
         return `
           <div
             class="${className}"
@@ -1464,6 +1662,7 @@
               left:${Number(seat.x || 0)}px;
               top:${Number(seat.y || 0)}px;
               transform:rotate(${Number(seat.rotation || 0)}deg);
+              ${colorStyle}
             "
             title="${esc(formatSelectedSeatLabel(seat))}"
           >
@@ -1471,6 +1670,45 @@
           </div>
         `;
       }).join("");
+    }
+
+    function getFocusedSeat(){
+      if (!focusedSeatId) return null;
+      return seats.find(seat => seat.seatId === focusedSeatId) || null;
+    }
+
+    function renderFocusedSeatCard(){
+      const seat = getFocusedSeat();
+      if (!seat) {
+        return `
+          <div class="detail-box">
+            <div class="detail-title">座位詳細資訊</div>
+            <div class="detail-body">
+              目前尚未聚焦任何座位。<br>
+              你可以點一下座位查看更詳細的區域、價格與限制資訊。
+            </div>
+          </div>
+        `;
+      }
+
+      const badge = getSeatReasonBadge(seat);
+      return `
+        <div class="detail-box">
+          <div class="detail-title">座位詳細資訊</div>
+          <div class="detail-body">
+            <span class="pill">${esc(badge.text)}</span><br><br>
+            座位：${esc(formatSelectedSeatLabel(seat))}<br>
+            區域：${esc(seat.sectionName || seat.sectionId || "-")}<br>
+            排：${esc(seat.row || "-")}<br>
+            座號：${esc(seat.seatNumber || "-")}<br>
+            票價：${esc(formatPrice(seat.price || selectedTicketType?.price || 0))}<br>
+            限制原因：${esc(getSeatReasonText(seat))}<br>
+            開放角色：${esc((Array.isArray(seat.allowedRoles) && seat.allowedRoles.length) ? seat.allowedRoles.join("、") : "不限")}<br>
+            開放標籤：${esc((Array.isArray(seat.allowedTags) && seat.allowedTags.length) ? seat.allowedTags.join("、") : "不限")}<br>
+            開放票種：${esc((Array.isArray(seat.allowedTicketTypes) && seat.allowedTicketTypes.length) ? seat.allowedTicketTypes.join("、") : "不限")}
+          </div>
+        </div>
+      `;
     }
 
     function renderPage(){
@@ -1507,10 +1745,38 @@
               </div>
             </div>
 
+            <div class="zone-legend">
+              <div class="zone-card">
+                <div class="zone-top"><span class="zone-color" style="background:var(--zone-vip);"></span>VIP 區</div>
+                <div class="zone-desc">最優先區域 / 高價位座位</div>
+              </div>
+              <div class="zone-card">
+                <div class="zone-top"><span class="zone-color" style="background:var(--zone-a);"></span>A 區</div>
+                <div class="zone-desc">主舞台核心視野區</div>
+              </div>
+              <div class="zone-card">
+                <div class="zone-top"><span class="zone-color" style="background:var(--zone-b);"></span>B 區</div>
+                <div class="zone-desc">中前段一般座位區</div>
+              </div>
+              <div class="zone-card">
+                <div class="zone-top"><span class="zone-color" style="background:var(--zone-c);"></span>C 區</div>
+                <div class="zone-desc">中後段一般座位區</div>
+              </div>
+              <div class="zone-card">
+                <div class="zone-top"><span class="zone-color" style="background:var(--zone-d);"></span>D 區</div>
+                <div class="zone-desc">側區 / 後段座位區</div>
+              </div>
+            </div>
+
             <div class="canvas-wrap">
-              <div class="stage" id="stage">
-                ${currentEvent.seatMapImage ? `<img class="seatmap-image" src="${esc(currentEvent.seatMapImage)}" alt="seat map" />` : ""}
-                ${renderSeatMapHtml()}
+              <div class="stage-shell">
+                <div class="stage-top">
+                  <div class="stage-sign">STAGE 舞台</div>
+                </div>
+                <div class="stage" id="stage">
+                  ${currentEvent.seatMapImage ? `<img class="seatmap-image" src="${esc(currentEvent.seatMapImage)}" alt="seat map" />` : ""}
+                  ${renderSeatMapHtml()}
+                </div>
               </div>
             </div>
 
@@ -1519,7 +1785,8 @@
               <div class="legend-item"><span class="legend-dot" style="background:#111827;border-color:#111827;"></span>已選 / 我的保留</div>
               <div class="legend-item"><span class="legend-dot" style="background:#6b7280;border-color:#6b7280;"></span>已售</div>
               <div class="legend-item"><span class="legend-dot" style="background:#fb923c;border-color:#ea580c;"></span>他人鎖定中</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#d1d5db;border-color:#9ca3af;"></span>停用 / 不可選</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#d1d5db;border-color:#9ca3af;"></span>停用</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#e5e7eb;border-color:#cbd5e1;"></span>資格不符</div>
             </div>
           </div>
 
@@ -1568,6 +1835,15 @@
                   </div>
                 </div>
 
+                <div class="status-box purple">
+                  <div class="status-title">選位提示</div>
+                  <div class="status-desc">
+                    點選座位後，右側會顯示該座位的詳細資訊與限制原因。
+                  </div>
+                </div>
+
+                ${renderFocusedSeatCard()}
+
                 <div class="selected-list">
                   <div class="small" style="font-weight:1000;">已選座位</div>
                   ${
@@ -1614,6 +1890,7 @@
 
       document.querySelectorAll("[data-seat-id]").forEach(el => {
         el.addEventListener("click", () => {
+          focusedSeatId = el.dataset.seatId;
           toggleSeatSelection(el.dataset.seatId);
         });
       });

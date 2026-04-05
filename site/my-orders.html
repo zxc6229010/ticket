@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的訂單</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --shadow:0 18px 50px rgba(15,23,42,.08);
+      --black:#111;
+      --green:#166534;
+      --red:#b91c1c;
+      --orange:#c2410c;
+      --blue:#1d4ed8;
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+      color:var(--text);
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:28px 16px 60px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:20px;
+    }
+
+    .title{
+      font-size:24px;
+      font-weight:1000;
+    }
+
+    .btn{
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:var(--shadow);
+    }
+
+    .event{
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .status{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      margin-top:6px;
+    }
+
+    .status.ok{ background:#dcfce7; color:var(--green); }
+    .status.pending{ background:#ffedd5; color:var(--orange); }
+    .status.cancel{ background:#fee2e2; color:var(--red); }
+
+    .kv{
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .label{
+      color:var(--muted);
+    }
+
+    .value{
+      font-weight:900;
+    }
+
+    .empty{
+      text-align:center;
+      color:var(--muted);
+      margin-top:40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">我的訂單</div>
+      <a href="member.html" class="btn">← 返回會員中心</a>
+    </div>
+
+    <div id="list"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const list = document.getElementById("list");
+
+    function esc(s){
+      return String(s ?? "");
+    }
+
+    function formatPrice(v){
+      const n = Number(v || 0);
+      if (!n) return "免費";
+      return "NT$ " + n.toLocaleString();
+    }
+
+    function getStatusClass(status){
+      status = (status || "").toLowerCase();
+
+      if (["registered","paid","completed"].includes(status)) return "ok";
+      if (["pending"].includes(status)) return "pending";
+      return "cancel";
+    }
+
+    function getStatusText(status){
+      status = (status || "").toLowerCase();
+
+      if (status === "registered") return "已建立";
+      if (status === "paid") return "已付款";
+      if (status === "pending") return "待處理";
+      if (status === "cancelled") return "已取消";
+      return status || "-";
+    }
+
+    async function loadOrders(uid){
+      // ⚠️ 你的資料在 events/{eventId}/orders
+      // 所以要抓全部 events 再合併
+      const eventsSnap = await getDocs(collection(db, "events"));
+
+      let allOrders = [];
+
+      for (const ev of eventsSnap.docs){
+        const q = query(
+          collection(db, "events", ev.id, "orders"),
+          where("uid","==",uid)
+        );
+
+        const snap = await getDocs(q);
+
+        snap.forEach(doc => {
+          allOrders.push({
+            id: doc.id,
+            ...(doc.data() || {})
+          });
+        });
+      }
+
+      return allOrders;
+    }
+
+    function render(orders){
+      if (!orders.length){
+        list.innerHTML = `<div class="empty">目前沒有任何訂單</div>`;
+        return;
+      }
+
+      list.innerHTML = orders.map(o => {
+        return `
+          <div class="card">
+            <div class="event">${esc(o.eventTitle || "活動")}</div>
+
+            <div class="status ${getStatusClass(o.status)}">
+              ${getStatusText(o.status)}
+            </div>
+
+            <div class="kv">
+              <div><span class="label">票種：</span><span class="value">${esc(o.ticketTypeName || "-")}</span></div>
+              <div><span class="label">張數：</span><span class="value">${o.quantity || 0}</span></div>
+              <div><span class="label">金額：</span><span class="value">${formatPrice(o.totalAmount)}</span></div>
+              <div><span class="label">座位：</span><span class="value">${(o.seatLabels || []).join("、") || "-"}</span></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    onAuthStateChanged(auth, async user => {
+      if (!user){
+        list.innerHTML = `<div class="empty">請先登入</div>`;
+        return;
+      }
+
+      const orders = await loadOrders(user.uid);
+      render(orders);
+    });
+  </script>
+</body>
+</html>

@@ -7,20 +7,22 @@
 
 <style>
 :root{
-  --bg:#f6f7fb;
+  --bg:#f5f7fb;
   --card:#fff;
   --text:#111827;
   --muted:#6b7280;
   --line:rgba(17,24,39,.08);
-  --line-strong:rgba(17,24,39,.14);
-  --shadow:0 18px 50px rgba(15,23,42,.06);
+  --shadow:0 18px 50px rgba(15,23,42,.08);
   --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+  --black:#111;
   --ok:#166534;
+  --ok-bg:#dcfce7;
   --warn:#b91c1c;
+  --warn-bg:#fee2e2;
   --blue:#1d4ed8;
   --blue-bg:#dbeafe;
-  --red-bg:#fee2e2;
-  --gray-bg:#f8fafc;
+  --gray:#6b7280;
+  --gray-bg:#f3f4f6;
 }
 
 *{ box-sizing:border-box; }
@@ -28,68 +30,271 @@
 body{
   margin:0;
   background:
-    radial-gradient(circle at top left, rgba(255,255,255,.92), rgba(246,247,251,.98) 36%),
-    linear-gradient(180deg, #f8fafc 0%, #f6f7fb 100%);
+    radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
+    linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
   color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
 }
 
+a{ color:inherit; text-decoration:none; }
+
 .wrap{
-  max-width:1100px;
+  max-width:1120px;
   margin:0 auto;
-  padding:34px 18px 56px;
+  padding:28px 18px 64px;
 }
 
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:24px;
-  box-shadow:var(--shadow);
-  padding:20px;
-  margin-bottom:18px;
-}
-
-.hero{
+.topbar{
   display:flex;
   justify-content:space-between;
-  align-items:flex-start;
-  gap:16px;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
   flex-wrap:wrap;
 }
 
-h1{
+.back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:#374151;
+  font-size:14px;
+  font-weight:800;
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.8);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-soft);
+}
+
+.top-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.ghost-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  padding:10px 16px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow:var(--shadow-soft);
+  font-size:14px;
+  font-weight:900;
+  color:#111827;
+  cursor:pointer;
+}
+
+.hero{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:28px;
+  box-shadow:var(--shadow);
+  padding:22px;
+  margin-bottom:18px;
+}
+
+.hero-title{
   margin:0;
-  font-size:26px;
+  font-size:28px;
   font-weight:1000;
   letter-spacing:-.02em;
 }
 
-h2{
-  margin:0;
-  font-size:18px;
-  font-weight:1000;
-  letter-spacing:-.01em;
-}
-
-.sub{
+.hero-sub{
   margin-top:8px;
+  color:var(--muted);
   font-size:14px;
+  line-height:1.9;
+}
+
+.hero-meta{
+  margin-top:14px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  padding:7px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+  font-size:12px;
+  font-weight:1000;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+  gap:18px;
+  align-items:start;
+}
+
+@media (max-width:960px){
+  .layout{
+    grid-template-columns:1fr;
+  }
+}
+
+.sidebar{
+  position:sticky;
+  top:18px;
+  display:grid;
+  gap:14px;
+}
+
+@media (max-width:960px){
+  .sidebar{
+    position:static;
+  }
+}
+
+.side-card, .content-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.side-card-body{
+  padding:14px;
+}
+
+.menu{
+  display:grid;
+  gap:8px;
+}
+
+.menu-btn{
+  width:100%;
+  text-align:left;
+  min-height:46px;
+  padding:12px 14px;
+  border:none;
+  border-radius:14px;
+  background:#fff;
+  color:#111827;
+  font-size:14px;
+  font-weight:1000;
+  cursor:pointer;
+  border:1px solid transparent;
+}
+
+.menu-btn.active{
+  background:#111827;
+  color:#fff;
+}
+
+.menu-btn:hover{
+  border-color:var(--line);
+}
+
+.content-card{
+  padding:20px;
+}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+.section-title{
+  margin:0;
+  font-size:22px;
+  font-weight:1000;
+  letter-spacing:-.02em;
+}
+
+.section-sub{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.9;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:18px;
+}
+
+@media (max-width:760px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.info-box{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
+  padding:16px;
+  box-shadow:var(--shadow-soft);
+}
+
+.info-label{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:1000;
+  letter-spacing:.04em;
+}
+
+.info-value{
+  margin-top:8px;
+  font-size:15px;
+  font-weight:1000;
+  color:#111827;
+  line-height:1.8;
+  word-break:break-word;
+}
+
+.info-note{
+  margin-top:6px;
+  font-size:12px;
   color:var(--muted);
   line-height:1.8;
 }
 
-.small{
+.notice{
+  margin-top:18px;
+  padding:14px 16px;
+  border-radius:18px;
+  background:#fff;
+  border:1px solid var(--line);
   font-size:13px;
-  color:var(--muted);
-  line-height:1.8;
+  line-height:1.9;
+  color:#4b5563;
 }
 
-.mono{
-  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.notice.ok{
+  background:var(--ok-bg);
+  border-color:rgba(22,101,52,.12);
+  color:var(--ok);
 }
 
-.ok{ color:var(--ok); font-weight:900; }
-.warn{ color:var(--warn); font-weight:900; }
+.notice.warn{
+  background:var(--warn-bg);
+  border-color:rgba(185,28,28,.12);
+  color:var(--warn);
+}
+
+.notice.info{
+  background:var(--blue-bg);
+  border-color:rgba(29,78,216,.12);
+  color:var(--blue);
+}
 
 .row{
   display:flex;
@@ -98,161 +303,48 @@ h2{
   align-items:center;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px;
-}
-
-@media (max-width:900px){
-  .grid{ grid-template-columns:1fr; }
-}
-
 .btn{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   min-height:44px;
-  padding:10px 18px;
+  padding:10px 16px;
   border-radius:999px;
   border:1px solid var(--line);
-  background:#111;
-  color:#fff;
-  font-weight:1000;
-  cursor:pointer;
-  text-decoration:none;
-  transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-}
-
-.btn:hover{
-  transform:translateY(-1px);
-  box-shadow:0 10px 22px rgba(0,0,0,.08);
-}
-
-.btn:active{
-  transform:translateY(0) scale(.98);
-  box-shadow:none;
-}
-
-.btn[disabled]{
-  opacity:.55;
-  cursor:not-allowed;
-  transform:none;
-  box-shadow:none;
-}
-
-.btn-secondary{
   background:#fff;
   color:#111827;
+  font-size:14px;
+  font-weight:1000;
+  cursor:pointer;
+  box-shadow:var(--shadow-soft);
+}
+
+.btn-primary{
+  background:var(--black);
+  color:#fff;
+  border-color:var(--black);
 }
 
 .btn-danger{
-  background:#fff;
   color:#b91c1c;
   border-color:rgba(185,28,28,.18);
 }
 
-.notice{
-  margin-top:14px;
-  border:1px solid rgba(185,28,28,.12);
-  background:var(--red-bg);
-  color:#b91c1c;
-  border-radius:16px;
-  padding:12px 14px;
-  font-size:13px;
-  line-height:1.8;
-}
-
-.notice-blue{
-  margin-top:12px;
-  border:1px solid rgba(29,78,216,.12);
-  background:var(--blue-bg);
-  color:#1d4ed8;
-  border-radius:16px;
-  padding:12px 14px;
-  font-size:13px;
-  line-height:1.8;
-}
-
-.kv{
+.list{
   display:grid;
-  grid-template-columns:130px 1fr;
-  gap:8px 12px;
-  padding:12px 0;
-  border-top:1px dashed var(--line);
+  gap:12px;
+  margin-top:18px;
 }
 
-.kv:first-child{
-  border-top:none;
-  padding-top:0;
-}
-
-.k{
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.7;
-}
-
-.v{
-  font-size:14px;
-  font-weight:900;
-  line-height:1.8;
-  word-break:break-word;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-
-@media (max-width:700px){
-  .form-grid{ grid-template-columns:1fr; }
-}
-
-label{
-  display:block;
-  margin:12px 0 6px;
-  font-size:13px;
-  font-weight:1000;
-  color:#111827;
-}
-
-input, select{
-  width:100%;
-  padding:13px 14px;
-  border:1px solid var(--line-strong);
-  border-radius:16px;
+.item{
+  border:1px solid var(--line);
+  border-radius:20px;
   background:#fff;
-  color:#111827;
-  font-size:15px;
-  outline:none;
+  padding:16px;
+  box-shadow:var(--shadow-soft);
 }
 
-input[readonly]{
-  background:var(--gray-bg);
-  color:#4b5563;
-}
-
-.actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-  margin-top:14px;
-}
-
-.order{
-  border-top:1px solid var(--line);
-  padding:16px 0;
-}
-
-.order:first-child{
-  border-top:none;
-  padding-top:0;
-}
-
-.order-top{
+.item-top{
   display:flex;
   justify-content:space-between;
   align-items:flex-start;
@@ -260,43 +352,59 @@ input[readonly]{
   flex-wrap:wrap;
 }
 
-.order-title{
+.item-title{
   font-size:16px;
   font-weight:1000;
   line-height:1.6;
 }
 
-.order-badges{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
+.item-sub{
+  margin-top:6px;
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.9;
 }
 
-.badge{
+.status{
   display:inline-flex;
   align-items:center;
-  padding:6px 10px;
-  border:1px solid var(--line);
+  justify-content:center;
+  padding:7px 10px;
   border-radius:999px;
-  background:#fff;
   font-size:12px;
   font-weight:1000;
+  white-space:nowrap;
 }
 
-.badge.ok{
-  background:#dcfce7;
-  border-color:rgba(22,101,52,.12);
+.status-ok{
+  background:var(--ok-bg);
+  color:var(--ok);
 }
 
-.badge.warn{
-  background:#fee2e2;
-  border-color:rgba(185,28,28,.12);
+.status-warn{
+  background:var(--warn-bg);
+  color:var(--warn);
 }
 
-.loading{
+.status-gray{
+  background:var(--gray-bg);
+  color:var(--gray);
+}
+
+.loading, .empty{
+  margin-top:18px;
+  padding:18px;
   text-align:center;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#fff;
   color:var(--muted);
-  margin-top:30px;
+  font-size:14px;
+  line-height:1.9;
+}
+
+.mono{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 
 .hidden{
@@ -307,111 +415,154 @@ input[readonly]{
 
 <body>
 <div class="wrap">
-
-  <div id="gate" class="card"></div>
-
-  <div id="app" style="display:none;">
-
-    <div class="card">
-      <div class="hero">
-        <div>
-          <h1>會員中心</h1>
-          <div class="sub">
-            登入帳號：<span id="who" class="mono">-</span>
-          </div>
-        </div>
-
-        <div class="row">
-          <a class="btn btn-secondary" href="index.html">回首頁</a>
-          <a class="btn btn-secondary" href="campus-verify.html">校園驗證</a>
-          <button class="btn btn-secondary" id="logoutBtn">登出</button>
-        </div>
-      </div>
+  <div class="topbar">
+    <a class="back" href="index.html">← 返回首頁</a>
+    <div class="top-actions">
+      <a class="ghost-btn" href="my-tickets.html">我的票券</a>
+      <button class="ghost-btn" id="logoutTopBtn">登出</button>
     </div>
-
-    <div class="grid">
-      <!-- 左邊：基本資料 -->
-      <div>
-        <div class="card">
-          <h2>會員基本資料</h2>
-          <div id="profileReadonlyNotice" class="notice">
-            以下資料一經確認送出，即不可自行修改，請務必填寫正確真實資料。
-          </div>
-          <div id="profileUsageNotice" class="notice-blue">
-            以下資料將作為活動報名、票券核對、通知聯繫或現場身份查驗之用，請務必填寫正確且完整的資料。
-          </div>
-
-          <div class="form-grid" style="margin-top:14px;">
-            <div>
-              <label>姓名</label>
-              <input id="nameInput" type="text" readonly placeholder="未提供" />
-            </div>
-
-            <div>
-              <label>性別</label>
-              <input id="genderInput" type="text" readonly placeholder="未提供" />
-            </div>
-
-            <div>
-              <label>生日</label>
-              <input id="birthdayInput" type="text" readonly placeholder="未提供" />
-            </div>
-
-            <div>
-              <label>電子郵件</label>
-              <input id="emailInput" type="email" placeholder="請輸入電子郵件" />
-            </div>
-
-            <div>
-              <label>手機號碼</label>
-              <input id="phoneInput" type="text" placeholder="請輸入手機號碼" />
-            </div>
-          </div>
-
-          <div class="actions">
-            <button class="btn" id="saveProfileBtn">儲存聯絡資料</button>
-          </div>
-
-          <div id="profileMsg" class="small" style="margin-top:10px;"></div>
-        </div>
-
-        <div class="card">
-          <h2>帳號安全</h2>
-          <div class="sub">你可以在這裡修改密碼。</div>
-
-          <label>目前密碼</label>
-          <input id="currentPasswordInput" type="password" placeholder="請輸入目前密碼" />
-
-          <label>新密碼</label>
-          <input id="newPasswordInput" type="password" placeholder="請輸入新密碼（至少 6 碼）" />
-
-          <label>確認新密碼</label>
-          <input id="confirmPasswordInput" type="password" placeholder="請再次輸入新密碼" />
-
-          <div class="actions">
-            <button class="btn" id="changePasswordBtn">修改密碼</button>
-          </div>
-
-          <div id="passwordMsg" class="small" style="margin-top:10px;"></div>
-        </div>
-      </div>
-
-      <!-- 右邊：驗證狀態 -->
-      <div>
-        <div class="card">
-          <h2>校園驗證狀態</h2>
-          <div id="verifyBlock" class="sub" style="margin-top:12px;">載入中…</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>我的報名 / 訂單</h2>
-      <div id="orders" class="sub" style="margin-top:12px;">載入中…</div>
-    </div>
-
   </div>
 
+  <div id="gate" class="empty">載入中…</div>
+
+  <div id="app" class="hidden">
+    <div class="hero">
+      <h1 class="hero-title">會員中心</h1>
+      <div class="hero-sub">
+        在這裡可以查看你的基本資料、校園驗證、訂單與票券狀態。<br>
+        基本資料中的姓名、性別、生日比照拓元模式，會員不可自行修改。
+      </div>
+      <div class="hero-meta">
+        <span class="pill" id="heroUserText">登入帳號：-</span>
+        <span class="pill" id="heroVerifyText">校園驗證：-</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="sidebar">
+        <div class="side-card">
+          <div class="side-card-body">
+            <div class="menu">
+              <button class="menu-btn active" data-tab="profile">基本資料</button>
+              <button class="menu-btn" data-tab="orders">我的訂單</button>
+              <button class="menu-btn" data-tab="tickets">我的票券</button>
+              <button class="menu-btn" data-tab="security">帳號安全</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <!-- 基本資料 -->
+        <section class="section active" id="tab-profile">
+          <h2 class="section-title">基本資料</h2>
+          <div class="section-sub">
+            姓名、性別、生日為註冊後固定資料，會員不可自行修改。<br>
+            如資料有誤，請聯絡主辦單位或服務窗口協助處理。
+          </div>
+
+          <div class="grid">
+            <div class="info-box">
+              <div class="info-label">姓名</div>
+              <div class="info-value" id="profileName">-</div>
+              <div class="info-note">此欄位不可自行修改</div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">性別</div>
+              <div class="info-value" id="profileGender">-</div>
+              <div class="info-note">此欄位不可自行修改</div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">生日</div>
+              <div class="info-value" id="profileBirthday">-</div>
+              <div class="info-note">此欄位不可自行修改</div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">手機號碼</div>
+              <div class="info-value" id="profilePhone">-</div>
+              <div class="info-note">目前顯示註冊資料</div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">電子郵件</div>
+              <div class="info-value" id="profileEmail">-</div>
+              <div class="info-note">登入帳號 / 聯絡用信箱</div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-label">會員編號</div>
+              <div class="info-value mono" id="profileUid">-</div>
+              <div class="info-note">系統自動產生</div>
+            </div>
+          </div>
+
+          <div class="notice info" id="profileCustomNotice">
+            系統尚未設定會員說明欄位。
+          </div>
+
+          <div class="notice" id="verifyNoticeBox">
+            載入校園驗證狀態中…
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <a class="btn btn-primary" href="campus-verify.html">前往校園驗證</a>
+          </div>
+        </section>
+
+        <!-- 訂單 -->
+        <section class="section" id="tab-orders">
+          <h2 class="section-title">我的訂單</h2>
+          <div class="section-sub">
+            這裡會顯示你建立過的報名 / 購票訂單。<br>
+            一筆訂單可能對應多張票券。
+          </div>
+
+          <div id="ordersWrap" class="loading">載入訂單中…</div>
+        </section>
+
+        <!-- 票券 -->
+        <section class="section" id="tab-tickets">
+          <h2 class="section-title">我的票券</h2>
+          <div class="section-sub">
+            每張票券都有獨立 QR Code，入場時請出示單張票券。<br>
+            票券頁會顯示更完整的入場資訊。
+          </div>
+
+          <div class="notice info">
+            建議你在活動當天直接打開「我的票券」頁面，方便現場快速出示 QR Code。
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <a class="btn btn-primary" href="my-tickets.html">前往我的票券</a>
+          </div>
+
+          <div id="ticketSummaryWrap" class="list"></div>
+        </section>
+
+        <!-- 安全 -->
+        <section class="section" id="tab-security">
+          <h2 class="section-title">帳號安全</h2>
+          <div class="section-sub">
+            你可以從這裡進行密碼重設或登出帳號。
+          </div>
+
+          <div class="notice warn">
+            為了保護帳號安全，建議定期更新密碼，並避免與其他網站使用相同密碼。
+          </div>
+
+          <div class="row" style="margin-top:18px;">
+            <button class="btn btn-primary" id="resetPasswordBtn">寄送重設密碼信</button>
+            <button class="btn btn-danger" id="logoutBtn">登出帳號</button>
+          </div>
+
+          <div class="notice hidden" id="securityMsg"></div>
+        </section>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -419,47 +570,50 @@ input[readonly]{
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-  authDomain: "concert-1ff7e.firebaseapp.com",
-  projectId: "concert-1ff7e"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain: "concert-1ff7e.firebaseapp.com",
+    projectId: "concert-1ff7e",
+    storageBucket: "concert-1ff7e.firebasestorage.app",
+    messagingSenderId: "704757384914",
+    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+  });
+}
 
+const auth = firebase.auth();
 const db = firebase.firestore();
 
 const gate = document.getElementById("gate");
 const app = document.getElementById("app");
 
-const who = document.getElementById("who");
+const heroUserText = document.getElementById("heroUserText");
+const heroVerifyText = document.getElementById("heroVerifyText");
+
+const profileName = document.getElementById("profileName");
+const profileGender = document.getElementById("profileGender");
+const profileBirthday = document.getElementById("profileBirthday");
+const profilePhone = document.getElementById("profilePhone");
+const profileEmail = document.getElementById("profileEmail");
+const profileUid = document.getElementById("profileUid");
+const profileCustomNotice = document.getElementById("profileCustomNotice");
+const verifyNoticeBox = document.getElementById("verifyNoticeBox");
+
+const ordersWrap = document.getElementById("ordersWrap");
+const ticketSummaryWrap = document.getElementById("ticketSummaryWrap");
+
 const logoutBtn = document.getElementById("logoutBtn");
-
-const profileReadonlyNotice = document.getElementById("profileReadonlyNotice");
-const profileUsageNotice = document.getElementById("profileUsageNotice");
-
-const nameInput = document.getElementById("nameInput");
-const genderInput = document.getElementById("genderInput");
-const birthdayInput = document.getElementById("birthdayInput");
-const emailInput = document.getElementById("emailInput");
-const phoneInput = document.getElementById("phoneInput");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
-const profileMsg = document.getElementById("profileMsg");
-
-const currentPasswordInput = document.getElementById("currentPasswordInput");
-const newPasswordInput = document.getElementById("newPasswordInput");
-const confirmPasswordInput = document.getElementById("confirmPasswordInput");
-const changePasswordBtn = document.getElementById("changePasswordBtn");
-const passwordMsg = document.getElementById("passwordMsg");
-
-const verifyBlock = document.getElementById("verifyBlock");
-const ordersEl = document.getElementById("orders");
+const logoutTopBtn = document.getElementById("logoutTopBtn");
+const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+const securityMsg = document.getElementById("securityMsg");
 
 let currentUser = null;
 let currentUserData = null;
+let orderCache = [];
+let ticketCache = [];
 
-logoutBtn.onclick = () => firebase.auth().signOut();
-
-function esc(s){
-  return String(s ?? "").replace(/[&<>"']/g, m => ({
+function esc(value){
+  return String(value ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;",
     "<":"&lt;",
     ">":"&gt;",
@@ -468,309 +622,345 @@ function esc(s){
   }[m]));
 }
 
-function norm(v){
-  return String(v ?? "").trim();
+function norm(value){
+  return String(value ?? "").trim();
 }
 
-function formatGender(value){
-  const v = norm(value).toLowerCase();
-  if (v === "male") return "男性";
-  if (v === "female") return "女性";
-  if (v === "other") return "其他";
-  if (v === "undisclosed") return "不透露";
-  return norm(value) || "未提供";
+function lower(value){
+  return norm(value).toLowerCase();
 }
 
-function formatDateValue(value){
-  const v = norm(value);
-  if (!v) return "未提供";
-  return v;
+function toDate(input){
+  if (!input) return null;
+  if (typeof input.toDate === "function") return input.toDate();
+  const d = new Date(input);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDateTime(input){
+  const d = toDate(input);
+  if (!d) return "-";
+  return d.toLocaleString("zh-Hant", {
+    hour12:false,
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function formatPrice(value){
+  const num = Number(value || 0);
+  if (!num) return "免費";
+  return `NT$ ${num.toLocaleString("zh-Hant")}`;
+}
+
+function getTicketStatusMeta(ticket){
+  const status = lower(ticket.status || "valid");
+  const checked = ticket.checkedIn === true || lower(ticket.checkinStatus || "") === "checked_in";
+
+  if (checked) {
+    return {
+      text: "已入場",
+      className: "status-gray"
+    };
+  }
+
+  if (status === "valid") {
+    return {
+      text: "可入場",
+      className: "status-ok"
+    };
+  }
+
+  return {
+    text:
+      status === "cancelled" ? "已取消" :
+      status === "void" ? "已作廢" :
+      status === "refunded" ? "已退款" :
+      (status || "不可用"),
+    className: "status-warn"
+  };
 }
 
 function showGate(text){
+  gate.className = "empty";
+  gate.innerHTML = text;
   gate.style.display = "block";
-  app.style.display = "none";
-  gate.innerHTML = `<div class="warn">${esc(text)}</div>`;
+  app.classList.add("hidden");
 }
+
+function showApp(){
+  gate.style.display = "none";
+  app.classList.remove("hidden");
+}
+
+function switchTab(tab){
+  document.querySelectorAll(".menu-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+
+  document.querySelectorAll(".section").forEach(section => {
+    section.classList.remove("active");
+  });
+
+  const target = document.getElementById(`tab-${tab}`);
+  if (target) target.classList.add("active");
+}
+
+document.querySelectorAll(".menu-btn").forEach(btn => {
+  btn.onclick = () => switchTab(btn.dataset.tab);
+});
 
 async function loadUserData(uid){
-  const doc = await db.collection("users").doc(uid).get();
-  return doc.exists ? (doc.data() || {}) : null;
+  const snap = await db.collection("users").doc(uid).get();
+  return snap.exists ? (snap.data() || {}) : {};
 }
 
-async function loadProfileNotices(){
-  try{
-    const snap = await db.collection("settings").doc("memberProfile").get();
-    if (!snap.exists) return;
+async function loadOrders(uid){
+  try {
+    const snap = await db.collectionGroup("orders")
+      .where("uid", "==", uid)
+      .get();
 
-    const data = snap.data() || {};
-    const readonlyText = norm(data.profileReadonlyNotice);
-    const usageText = norm(data.profileUsageNotice);
+    const rows = [];
+    snap.forEach(docSnap => {
+      rows.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
 
-    if (readonlyText) {
-      profileReadonlyNotice.innerHTML = esc(readonlyText).replace(/\n/g, "<br>");
-    }
-    if (usageText) {
-      profileUsageNotice.innerHTML = esc(usageText).replace(/\n/g, "<br>");
-    }
-  }catch(e){
-    console.warn("讀取 memberProfile 設定失敗：", e);
-  }
-}
+    orderCache = rows.sort((a, b) => {
+      const ta = toDate(a.createdAt)?.getTime() || 0;
+      const tb = toDate(b.createdAt)?.getTime() || 0;
+      return tb - ta;
+    });
 
-function fillProfile(user, userData){
-  nameInput.value = norm(userData?.name || "");
-  genderInput.value = formatGender(userData?.gender || "");
-  birthdayInput.value = formatDateValue(userData?.birthday || "");
-  emailInput.value = norm(userData?.email || user?.email || "");
-  phoneInput.value = norm(userData?.phone || "");
-}
-
-async function saveProfile(){
-  if (!currentUser) return;
-
-  const email = norm(emailInput.value);
-  const phone = norm(phoneInput.value);
-
-  if (!email) {
-    profileMsg.innerHTML = `<span class="warn">請輸入電子郵件</span>`;
-    return;
-  }
-
-  saveProfileBtn.disabled = true;
-  const oldText = saveProfileBtn.textContent;
-  saveProfileBtn.textContent = "儲存中…";
-  profileMsg.innerHTML = "";
-
-  try{
-    await db.collection("users").doc(currentUser.uid).set({
-      email,
-      phone,
-      updatedAt: new Date()
-    }, { merge:true });
-
-    // 若 Auth email 不同，可一併提示，但先不直接改 Firebase Auth email
-    if (norm(currentUser.email) !== email) {
-      profileMsg.innerHTML = `<span class="ok">聯絡資料已儲存。</span><br><span class="small">注意：目前僅已更新會員資料中的 Email；若要同步登入帳號 Email，之後可再接 Firebase Auth Email 修改流程。</span>`;
-    } else {
-      profileMsg.innerHTML = `<span class="ok">聯絡資料已儲存。</span>`;
-    }
-
-    currentUserData = await loadUserData(currentUser.uid);
-    fillProfile(currentUser, currentUserData);
-  }catch(e){
+    renderOrders();
+  } catch (e) {
     console.error(e);
-    profileMsg.innerHTML = `<span class="warn">儲存失敗：${esc(e.message || e)}</span>`;
-  }finally{
-    saveProfileBtn.disabled = false;
-    saveProfileBtn.textContent = oldText;
+    ordersWrap.className = "empty";
+    ordersWrap.innerHTML = "訂單載入失敗，請稍後再試。";
   }
 }
 
-saveProfileBtn.onclick = saveProfile;
+async function loadTickets(uid){
+  try {
+    const snap = await db.collectionGroup("tickets")
+      .where("uid", "==", uid)
+      .get();
 
-async function changePassword(){
-  const user = firebase.auth().currentUser;
-  if (!user) return;
+    const rows = [];
+    snap.forEach(docSnap => {
+      rows.push({
+        id: docSnap.id,
+        ...docSnap.data()
+      });
+    });
 
-  const currentPassword = norm(currentPasswordInput.value);
-  const newPassword = norm(newPasswordInput.value);
-  const confirmPassword = norm(confirmPasswordInput.value);
+    ticketCache = rows.sort((a, b) => {
+      const ta = toDate(a.createdAt)?.getTime() || 0;
+      const tb = toDate(b.createdAt)?.getTime() || 0;
+      return tb - ta;
+    });
 
-  if (!currentPassword) {
-    passwordMsg.innerHTML = `<span class="warn">請輸入目前密碼</span>`;
-    return;
-  }
-  if (!newPassword || newPassword.length < 6) {
-    passwordMsg.innerHTML = `<span class="warn">新密碼至少需要 6 碼</span>`;
-    return;
-  }
-  if (newPassword !== confirmPassword) {
-    passwordMsg.innerHTML = `<span class="warn">兩次輸入的新密碼不一致</span>`;
-    return;
-  }
-
-  changePasswordBtn.disabled = true;
-  const oldText = changePasswordBtn.textContent;
-  changePasswordBtn.textContent = "處理中…";
-  passwordMsg.innerHTML = "";
-
-  try{
-    const credential = firebase.auth.EmailAuthProvider.credential(
-      user.email,
-      currentPassword
-    );
-
-    await user.reauthenticateWithCredential(credential);
-    await user.updatePassword(newPassword);
-
-    currentPasswordInput.value = "";
-    newPasswordInput.value = "";
-    confirmPasswordInput.value = "";
-
-    passwordMsg.innerHTML = `<span class="ok">密碼修改成功。</span>`;
-  }catch(e){
+    renderTicketSummary();
+  } catch (e) {
     console.error(e);
-
-    let message = "修改失敗，請稍後再試。";
-    if (e.code === "auth/wrong-password") {
-      message = "目前密碼錯誤。";
-    } else if (e.code === "auth/too-many-requests") {
-      message = "嘗試次數過多，請稍後再試。";
-    } else if (e.code === "auth/requires-recent-login") {
-      message = "登入狀態已過期，請重新登入後再試。";
-    }
-
-    passwordMsg.innerHTML = `<span class="warn">${esc(message)}</span>`;
-  }finally{
-    changePasswordBtn.disabled = false;
-    changePasswordBtn.textContent = oldText;
+    ticketSummaryWrap.innerHTML = `
+      <div class="empty">票券摘要載入失敗，請稍後再試。</div>
+    `;
   }
 }
 
-changePasswordBtn.onclick = changePassword;
+function renderOrders(){
+  if (!orderCache.length) {
+    ordersWrap.className = "empty";
+    ordersWrap.innerHTML = "目前沒有任何訂單。";
+    return;
+  }
 
-function renderVerifyBlock(userData){
-  if (!userData || !userData.verifiedSchoolId){
-    verifyBlock.innerHTML = `
-      <div class="warn">尚未完成校園驗證</div>
-      <div class="small" style="margin-top:8px;">
-        你目前尚未綁定校園身分，部分校園活動可能無法直接判斷資格。
+  ordersWrap.className = "list";
+  ordersWrap.innerHTML = orderCache.map(order => `
+    <div class="item">
+      <div class="item-top">
+        <div>
+          <div class="item-title">${esc(order.eventTitle || "未命名活動")}</div>
+          <div class="item-sub">
+            訂單 ID：<span class="mono">${esc(order.id)}</span><br>
+            票種：${esc(order.ticketTypeName || "-")}<br>
+            張數：${esc(order.quantity || 1)}<br>
+            金額：${esc(formatPrice(order.totalAmount || 0))}<br>
+            建立時間：${esc(formatDateTime(order.createdAt))}
+          </div>
+        </div>
+        <span class="status ${lower(order.status || "") === "registered" ? "status-ok" : "status-gray"}">
+          ${esc(order.status || "registered")}
+        </span>
       </div>
-      <div class="row" style="margin-top:12px;">
-        <a href="campus-verify.html" class="btn">前往驗證</a>
-      </div>
+    </div>
+  `).join("");
+}
+
+function renderTicketSummary(){
+  if (!ticketCache.length) {
+    ticketSummaryWrap.innerHTML = `
+      <div class="empty">目前沒有任何票券。</div>
     `;
     return;
   }
 
-  let verifiedAtText = "-";
-  try{
-    if (userData.verifiedAt?.toDate) {
-      verifiedAtText = userData.verifiedAt.toDate().toLocaleString("zh-Hant", { hour12:false });
-    }
-  }catch(_){}
+  const preview = ticketCache.slice(0, 4);
 
-  verifyBlock.innerHTML = `
-    <div class="ok">已完成校園驗證</div>
-    <div class="kv" style="margin-top:12px;">
-      <div class="k">學校</div>
-      <div class="v">${esc(userData.verifiedSchoolName || userData.verifiedSchoolId || "-")}</div>
-
-      <div class="k">學校信箱</div>
-      <div class="v mono">${esc(userData.schoolEmail || userData.email || "-")}</div>
-
-      <div class="k">驗證方式</div>
-      <div class="v">${esc(userData.verifyMethod || "-")}</div>
-
-      <div class="k">驗證時間</div>
-      <div class="v">${esc(verifiedAtText)}</div>
-    </div>
-  `;
-}
-
-async function loadOrders(uid){
-  try{
-    const snap = await db.collectionGroup("orders")
-      .where("uid","==",uid)
-      .get();
-
-    if (snap.empty){
-      ordersEl.innerHTML = `<div class="small">目前沒有任何報名紀錄。</div>`;
-      return;
-    }
-
-    const rows = [];
-    snap.forEach(docSnap => {
-      const d = docSnap.data() || {};
-      rows.push({
-        id: docSnap.id,
-        ...d
-      });
-    });
-
-    rows.sort((a, b) => {
-      const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-      const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-      return tb - ta;
-    });
-
-    let html = "";
-
-    rows.forEach(d => {
-      let createdAtText = "-";
-      try{
-        if (d.createdAt?.toDate) {
-          createdAtText = d.createdAt.toDate().toLocaleString("zh-Hant", { hour12:false });
-        }
-      }catch(_){}
-
-      const statusText = norm(d.status || "-");
-      const paymentStatusText = norm(d.paymentStatus || "-");
-      const quantity = Number(d.quantity || 1);
-      const totalAmount = Number(d.totalAmount || 0);
-
-      html += `
-        <div class="order">
-          <div class="order-top">
-            <div>
-              <div class="order-title">${esc(d.eventTitle || "未命名活動")}</div>
-              <div class="small" style="margin-top:6px;">
-                票種：${esc(d.ticketTypeName || d.ticketTypeId || "-")}<br>
-                建立時間：${esc(createdAtText)}
-              </div>
-            </div>
-
-            <div class="order-badges">
-              <span class="badge">${esc(statusText)}</span>
-              <span class="badge">${esc(paymentStatusText)}</span>
-              ${norm(d.inviteCode) ? `<span class="badge ok">邀請碼</span>` : ``}
+  ticketSummaryWrap.innerHTML = preview.map(ticket => {
+    const meta = getTicketStatusMeta(ticket);
+    return `
+      <div class="item">
+        <div class="item-top">
+          <div>
+            <div class="item-title">${esc(ticket.eventTitle || "未命名活動")}</div>
+            <div class="item-sub">
+              票券 ID：<span class="mono">${esc(ticket.id)}</span><br>
+              票種：${esc(ticket.ticketTypeName || "-")}<br>
+              座位：${esc(ticket.seatLabel || "-")}
             </div>
           </div>
-
-          <div class="kv" style="margin-top:12px;">
-            <div class="k">張數</div>
-            <div class="v">${esc(quantity)}</div>
-
-            <div class="k">金額</div>
-            <div class="v">${esc(totalAmount ? `NT$ ${totalAmount.toLocaleString("zh-Hant")}` : "免費")}</div>
-
-            <div class="k">驗證學校</div>
-            <div class="v">${esc(d.verifiedSchoolName || d.verifiedSchoolId || "-")}</div>
-
-            <div class="k">邀請碼</div>
-            <div class="v mono">${esc(d.inviteCode || "-")}</div>
-          </div>
+          <span class="status ${meta.className}">${esc(meta.text)}</span>
         </div>
-      `;
-    });
+      </div>
+    `;
+  }).join("");
 
-    ordersEl.innerHTML = html;
-  }catch(e){
-    console.error(e);
-    ordersEl.innerHTML = `<div class="warn">讀取訂單失敗，請稍後再試。</div>`;
+  if (ticketCache.length > 4) {
+    ticketSummaryWrap.insertAdjacentHTML("beforeend", `
+      <div class="notice info">
+        目前共有 ${ticketCache.length} 張票券，更多內容請點擊上方「前往我的票券」查看。
+      </div>
+    `);
   }
 }
 
-firebase.auth().onAuthStateChanged(async user => {
-  if (!user){
-    showGate("請先登入");
+function renderProfile(user, data){
+  const name = norm(data.name || data.fullName || data.memberName || "");
+  const gender = norm(data.gender || "");
+  const birthday = norm(data.birthday || data.birthdate || "");
+  const phone = norm(data.phone || data.mobile || "");
+  const email = norm(data.email || user.email || "");
+  const uid = norm(user.uid || "");
+
+  profileName.textContent = name || "未提供";
+  profileGender.textContent = gender || "未提供";
+  profileBirthday.textContent = birthday || "未提供";
+  profilePhone.textContent = phone || "未提供";
+  profileEmail.textContent = email || "未提供";
+  profileUid.textContent = uid || "-";
+
+  const customNotice =
+    norm(data.profileNotice || "") ||
+    norm(data.memberNotice || "") ||
+    norm(data.profileDescription || "");
+
+  if (customNotice) {
+    profileCustomNotice.className = "notice info";
+    profileCustomNotice.innerHTML = customNotice.replace(/\n/g, "<br>");
+  } else {
+    profileCustomNotice.className = "notice info";
+    profileCustomNotice.innerHTML = "系統尚未設定會員說明欄位。";
+  }
+
+  const verifiedSchoolId = norm(data.verifiedSchoolId || "");
+  const verifiedSchoolName = norm(data.verifiedSchoolName || verifiedSchoolId);
+  const verifyMethod = norm(data.verifyMethod || "");
+  const schoolEmail = norm(data.schoolEmail || data.email || user.email || "");
+
+  if (!verifiedSchoolId) {
+    heroVerifyText.textContent = "校園驗證：尚未完成";
+    verifyNoticeBox.className = "notice warn";
+    verifyNoticeBox.innerHTML = `
+      <b>尚未完成校園驗證</b><br>
+      你目前尚未綁定校園身份。若活動需要校園資格驗證，可能無法報名。<br>
+      請點下方按鈕前往校園驗證頁面。
+    `;
+  } else {
+    heroVerifyText.textContent = `校園驗證：已完成（${verifiedSchoolName}）`;
+    verifyNoticeBox.className = "notice ok";
+    verifyNoticeBox.innerHTML = `
+      <b>已完成校園驗證</b><br>
+      學校：${esc(verifiedSchoolName)}<br>
+      信箱：${esc(schoolEmail || "-")}<br>
+      驗證方式：${esc(verifyMethod || "-")}
+    `;
+  }
+}
+
+async function doLogout(){
+  try {
+    await auth.signOut();
+  } catch (e) {
+    console.error(e);
+    alert("登出失敗");
+  }
+}
+
+logoutBtn.onclick = doLogout;
+logoutTopBtn.onclick = doLogout;
+
+resetPasswordBtn.onclick = async () => {
+  securityMsg.classList.add("hidden");
+  securityMsg.innerHTML = "";
+
+  const email = norm(currentUser?.email || currentUserData?.email || "");
+  if (!email) {
+    securityMsg.className = "notice warn";
+    securityMsg.innerHTML = "目前找不到可寄送的電子郵件地址。";
+    securityMsg.classList.remove("hidden");
     return;
   }
 
-  currentUser = user;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    securityMsg.className = "notice ok";
+    securityMsg.innerHTML = `已寄送重設密碼信到：${esc(email)}，請到信箱收信。`;
+    securityMsg.classList.remove("hidden");
+  } catch (e) {
+    console.error(e);
+    securityMsg.className = "notice warn";
+    securityMsg.innerHTML = `寄送失敗：${esc(e.message || "請稍後再試")}`;
+    securityMsg.classList.remove("hidden");
+  }
+};
 
-  gate.style.display = "none";
-  app.style.display = "block";
+auth.onAuthStateChanged(async user => {
+  currentUser = user || null;
 
-  who.textContent = user.email || user.uid;
+  if (!user) {
+    showGate("請先登入會員帳號。");
+    return;
+  }
 
-  await loadProfileNotices();
+  try {
+    heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
+    currentUserData = await loadUserData(user.uid);
 
-  currentUserData = await loadUserData(user.uid) || {};
-  fillProfile(user, currentUserData);
-  renderVerifyBlock(currentUserData);
-  await loadOrders(user.uid);
+    renderProfile(user, currentUserData);
+    showApp();
+
+    ordersWrap.className = "loading";
+    ordersWrap.innerHTML = "訂單載入中…";
+
+    ticketSummaryWrap.innerHTML = `<div class="loading">票券摘要載入中…</div>`;
+
+    await Promise.all([
+      loadOrders(user.uid),
+      loadTickets(user.uid)
+    ]);
+
+  } catch (e) {
+    console.error(e);
+    showGate("會員中心載入失敗，請稍後再試。");
+  }
 });
 </script>
 </body>

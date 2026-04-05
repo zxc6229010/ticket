@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的票券</title>
+
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --shadow:0 18px 50px rgba(15,23,42,.08);
+      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --ok:#166534;
+      --ok-bg:#dcfce7;
+      --warn:#b91c1c;
+      --warn-bg:#fee2e2;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+      --black:#111111;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
+        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      max-width:1120px;
+      margin:0 auto;
+      padding:28px 18px 64px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .back{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:#374151;
+      font-size:14px;
+      font-weight:800;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.8);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .ghost-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      font-size:14px;
+      font-weight:900;
+      color:#111827;
+      cursor:pointer;
+    }
+
+    .hero{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      padding:22px;
+      margin-bottom:18px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:28px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .hero-sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+    }
+
+    .hero-meta{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+      flex-wrap:wrap;
+    }
+
+    .toolbar-left{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .toolbar-right{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .input, .select{
+      min-height:44px;
+      padding:10px 14px;
+      border:1px solid rgba(17,24,39,.12);
+      border-radius:14px;
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      outline:none;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .input{
+      min-width:250px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:16px;
+    }
+
+    @media (max-width:880px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .ticket-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .ticket-head{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .ticket-head-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .ticket-title{
+      font-size:18px;
+      font-weight:1000;
+      line-height:1.5;
+      margin:0;
+      letter-spacing:-.01em;
+    }
+
+    .ticket-sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
+    }
+
+    .status-valid{
+      background:var(--blue-bg);
+      color:var(--blue);
+    }
+
+    .status-used{
+      background:var(--gray-bg);
+      color:var(--gray);
+    }
+
+    .status-invalid{
+      background:var(--warn-bg);
+      color:var(--warn);
+    }
+
+    .ticket-body{
+      padding:18px;
+    }
+
+    .ticket-layout{
+      display:grid;
+      grid-template-columns:1fr 220px;
+      gap:16px;
+      align-items:start;
+    }
+
+    @media (max-width:640px){
+      .ticket-layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .info-box{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:90px 1fr;
+      gap:8px 10px;
+      padding:8px 0;
+      border-top:1px dashed var(--line);
+    }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .v{
+      font-size:13px;
+      color:#111827;
+      font-weight:900;
+      line-height:1.8;
+      word-break:break-word;
+    }
+
+    .qr-box{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:#fff;
+      padding:14px;
+      text-align:center;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .qr-title{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:1000;
+      margin-bottom:10px;
+      letter-spacing:.04em;
+    }
+
+    .qr-canvas-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:214px;
+    }
+
+    canvas.qr{
+      background:#fff;
+      border-radius:12px;
+      padding:10px;
+      max-width:100%;
+      height:auto;
+    }
+
+    .ticket-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn-primary{
+      background:var(--black);
+      color:#fff;
+      border-color:var(--black);
+    }
+
+    .notice{
+      margin-top:14px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.9;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .empty, .loading{
+      padding:40px 18px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+    }
+
+    .modal-back{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.38);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+
+    .modal-back.show{
+      display:flex;
+    }
+
+    .modal{
+      width:min(560px, 100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:26px;
+      box-shadow:0 28px 80px rgba(15,23,42,.22);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      padding:18px 20px 14px;
+      border-bottom:1px solid var(--line);
+      background:#fff;
+    }
+
+    .modal-title{
+      margin:0;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-.02em;
+    }
+
+    .modal-sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .modal-body{
+      padding:18px 20px 20px;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:16px;
+    }
+
+    .big-qr-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:8px 0;
+    }
+
+    .big-qr-note{
+      margin-top:12px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.8;
+      text-align:center;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="back" href="member.html">← 返回會員中心</a>
+      <div class="top-actions">
+        <a class="ghost-btn" href="index.html">活動首頁</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1 class="hero-title">我的票券</h1>
+      <div class="hero-sub">
+        這裡會顯示你名下所有可入場的票券。<br>
+        每一張票都有獨立 QR Code，入場時請直接出示單張票券頁面。
+      </div>
+      <div class="hero-meta">
+        <span class="pill" id="heroUserText">登入狀態：讀取中…</span>
+        <span class="pill" id="heroCountText">票券數量：–</span>
+      </div>
+    </div>
+
+    <div id="app" class="loading">載入中…</div>
+  </div>
+
+  <div class="modal-back" id="modalBack">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title" id="modalTitle">票券 QR Code</h3>
+        <div class="modal-sub" id="modalSub">-</div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collectionGroup,
+      query,
+      where,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.esm.min.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
+
+    const app = document.getElementById("app");
+    const heroUserText = document.getElementById("heroUserText");
+    const heroCountText = document.getElementById("heroCountText");
+
+    const modalBack = document.getElementById("modalBack");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSub = document.getElementById("modalSub");
+    const modalBody = document.getElementById("modalBody");
+
+    let currentUser = null;
+    let ticketCache = [];
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
+
+    function formatPrice(value){
+      const num = Number(value || 0);
+      if (!num) return "免費";
+      return `NT$ ${num.toLocaleString("zh-Hant")}`;
+    }
+
+    function getTicketStatusMeta(ticket){
+      const status = lower(ticket.status || "valid");
+      const checked = ticket.checkedIn === true || lower(ticket.checkinStatus || "") === "checked_in";
+
+      if (checked) {
+        return {
+          text: "已入場",
+          className: "status-used"
+        };
+      }
+
+      if (status === "valid") {
+        return {
+          text: "可入場",
+          className: "status-valid"
+        };
+      }
+
+      return {
+        text:
+          status === "cancelled" ? "已取消" :
+          status === "void" ? "已作廢" :
+          status === "refunded" ? "已退款" :
+          (status || "不可用"),
+        className: "status-invalid"
+      };
+    }
+
+    function closeModal(){
+      modalBack.classList.remove("show");
+      modalTitle.textContent = "票券 QR Code";
+      modalSub.textContent = "-";
+      modalBody.innerHTML = "";
+    }
+
+    modalBack.addEventListener("click", (e) => {
+      if (e.target === modalBack) closeModal();
+    });
+
+    async function showTicketModal(ticketId){
+      const ticket = ticketCache.find(item => item.id === ticketId);
+      if (!ticket) return;
+
+      modalTitle.textContent = ticket.eventTitle || "票券";
+      modalSub.innerHTML = `
+        ${esc(ticket.ticketTypeName || "-")}｜${esc(ticket.seatLabel || "-")}
+      `;
+
+      modalBody.innerHTML = `
+        <div class="big-qr-wrap">
+          <canvas id="bigQrCanvas" class="qr"></canvas>
+        </div>
+        <div class="big-qr-note">
+          票券 ID：<span class="mono">${esc(ticket.id)}</span><br>
+          QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`)}</span>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="closeModalBtn">關閉</button>
+        </div>
+      `;
+
+      modalBack.classList.add("show");
+      document.getElementById("closeModalBtn").onclick = closeModal;
+
+      const canvas = document.getElementById("bigQrCanvas");
+      await QRCode.toCanvas(
+        canvas,
+        ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`,
+        {
+          width: 280,
+          margin: 2
+        }
+      );
+      canvas.classList.add("qr");
+    }
+
+    async function drawQrToCanvas(canvasId, value){
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      await QRCode.toCanvas(canvas, value, {
+        width: 180,
+        margin: 2
+      });
+      canvas.classList.add("qr");
+    }
+
+    function sortTickets(list){
+      return list.slice().sort((a, b) => {
+        const ta = toDate(a.createdAt)?.getTime() || 0;
+        const tb = toDate(b.createdAt)?.getTime() || 0;
+        return tb - ta;
+      });
+    }
+
+    function renderTickets(tickets){
+      if (!tickets.length) {
+        heroCountText.textContent = "票券數量：0";
+        app.className = "empty";
+        app.innerHTML = `
+          目前沒有任何票券。<br>
+          你可以先到活動頁完成報名或購票。
+        `;
+        return;
+      }
+
+      heroCountText.textContent = `票券數量：${tickets.length}`;
+      app.className = "";
+      app.innerHTML = `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 座位" />
+          </div>
+          <div class="toolbar-right">
+            <select id="statusFilter" class="select">
+              <option value="all">全部狀態</option>
+              <option value="valid">可入場</option>
+              <option value="used">已入場</option>
+              <option value="invalid">不可用</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid" id="ticketGrid"></div>
+      `;
+
+      const searchInput = document.getElementById("searchInput");
+      const statusFilter = document.getElementById("statusFilter");
+      const ticketGrid = document.getElementById("ticketGrid");
+
+      const paint = async () => {
+        const q = lower(searchInput.value);
+        const f = statusFilter.value;
+
+        const filtered = tickets.filter(ticket => {
+          const meta = getTicketStatusMeta(ticket);
+          const statusKey =
+            meta.className === "status-valid" ? "valid" :
+            meta.className === "status-used" ? "used" :
+            "invalid";
+
+          if (f !== "all" && f !== statusKey) return false;
+
+          if (!q) return true;
+
+          const hay = [
+            ticket.eventTitle,
+            ticket.ticketTypeName,
+            ticket.seatLabel,
+            ticket.id,
+            ticket.orderId,
+            ticket.email
+          ].map(lower).join(" ");
+
+          return hay.includes(q);
+        });
+
+        if (!filtered.length) {
+          ticketGrid.innerHTML = `
+            <div class="empty" style="grid-column:1/-1;">
+              找不到符合條件的票券。
+            </div>
+          `;
+          return;
+        }
+
+        ticketGrid.innerHTML = filtered.map((ticket, index) => {
+          const meta = getTicketStatusMeta(ticket);
+          const qrCanvasId = `qr_${index}_${ticket.id}`;
+
+          return `
+            <div class="ticket-card">
+              <div class="ticket-head">
+                <div class="ticket-head-top">
+                  <div>
+                    <h2 class="ticket-title">${esc(ticket.eventTitle || "未命名活動")}</h2>
+                    <div class="ticket-sub">
+                      票種：${esc(ticket.ticketTypeName || "-")}<br>
+                      座位：${esc(ticket.seatLabel || "-")}
+                    </div>
+                  </div>
+                  <span class="status ${meta.className}">${esc(meta.text)}</span>
+                </div>
+              </div>
+
+              <div class="ticket-body">
+                <div class="ticket-layout">
+                  <div class="info-box">
+                    <div class="kv">
+                      <div class="k">票券 ID</div>
+                      <div class="v mono">${esc(ticket.id)}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">訂單 ID</div>
+                      <div class="v mono">${esc(ticket.orderId || "-")}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">持票者</div>
+                      <div class="v">${esc(ticket.email || "-")}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">票價</div>
+                      <div class="v">${esc(formatPrice(ticket.ticketPrice || 0))}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">建立時間</div>
+                      <div class="v">${esc(formatDateTime(ticket.createdAt))}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">核銷時間</div>
+                      <div class="v">${esc(formatDateTime(ticket.checkedInAt))}</div>
+                    </div>
+                    <div class="kv">
+                      <div class="k">核銷入口</div>
+                      <div class="v">${esc(ticket.checkedInGate || "-")}</div>
+                    </div>
+                  </div>
+
+                  <div class="qr-box">
+                    <div class="qr-title">入場 QR Code</div>
+                    <div class="qr-canvas-wrap">
+                      <canvas id="${qrCanvasId}"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ticket-actions">
+                  <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
+                </div>
+
+                <div class="notice">
+                  ${meta.className === "status-valid"
+                    ? "此票券目前可正常入場。請在現場出示此 QR Code 給工作人員掃描。"
+                    : meta.className === "status-used"
+                    ? `此票券已完成入場核銷${ticket.checkedInGate ? `（入口：${ticket.checkedInGate}）` : ""}。`
+                    : "此票券目前不可入場，若有問題請洽主辦單位或服務台。"}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        for (let i = 0; i < filtered.length; i++) {
+          const ticket = filtered[i];
+          const qrCanvasId = `qr_${i}_${ticket.id}`;
+          await drawQrToCanvas(
+            qrCanvasId,
+            ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`
+          );
+        }
+
+        document.querySelectorAll("[data-view-ticket]").forEach(btn => {
+          btn.onclick = () => showTicketModal(btn.dataset.viewTicket);
+        });
+      };
+
+      searchInput.addEventListener("input", paint);
+      statusFilter.addEventListener("change", paint);
+
+      paint();
+    }
+
+    async function loadTickets(uid){
+      const q = query(
+        collectionGroup(db, "tickets"),
+        where("uid", "==", uid)
+      );
+
+      const snap = await getDocs(q);
+      const rows = [];
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data() || {};
+        rows.push({
+          id: docSnap.id,
+          ...data
+        });
+      });
+
+      ticketCache = sortTickets(rows);
+      renderTickets(ticketCache);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user || null;
+
+      if (!user){
+        heroUserText.textContent = "登入狀態：尚未登入";
+        heroCountText.textContent = "票券數量：–";
+        app.className = "empty";
+        app.innerHTML = `
+          請先登入會員帳號後再查看票券。
+        `;
+        return;
+      }
+
+      heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
+      app.className = "loading";
+      app.innerHTML = "載入中…";
+
+      try {
+        await loadTickets(user.uid);
+      } catch (e) {
+        console.error(e);
+        app.className = "empty";
+        app.innerHTML = "票券載入失敗，請稍後再試。";
+      }
+    });
+  </script>
+</body>
+</html>
