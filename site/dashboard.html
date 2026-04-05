@@ -22,7 +22,7 @@
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:960px; margin:0 auto; padding:48px 24px; }
+    .wrap{ max-width:1160px; margin:0 auto; padding:48px 24px; }
     @media (max-width:640px){ .wrap{ padding:28px 16px; } }
 
     .card{
@@ -34,7 +34,7 @@
       margin-bottom:18px;
     }
 
-    h1{ margin:0 0 6px; font-size:22px; }
+    h1{ margin:0 0 6px; font-size:24px; }
     .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
     .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
 
@@ -73,7 +73,7 @@
 
     .grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
       gap:14px;
     }
     .tile{
@@ -82,7 +82,7 @@
       border-radius:18px;
       padding:16px;
       box-shadow:0 10px 26px rgba(0,0,0,.05);
-      min-height:120px;
+      min-height:132px;
       display:flex;
       flex-direction:column;
       gap:8px;
@@ -144,6 +144,38 @@
       opacity:0;
       transform: translateY(6px);
     }
+
+    .section-title{
+      margin:0 0 10px;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:12px;
+    }
+
+    .mini{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .mini h4{
+      margin:0 0 6px;
+      font-size:14px;
+      font-weight:1000;
+    }
+
+    .mini p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+    }
   </style>
 </head>
 
@@ -183,6 +215,40 @@
         </div>
       </div>
 
+      <div class="card">
+        <div class="section-title">快速入口</div>
+        <div class="mini-grid">
+          <div class="mini">
+            <h4>前台首頁</h4>
+            <p>快速回到前台活動首頁查看目前活動狀態。</p>
+            <div style="margin-top:10px;">
+              <a class="btn" href="index.html">前往首頁</a>
+            </div>
+          </div>
+          <div class="mini">
+            <h4>會員中心</h4>
+            <p>檢查前台會員資料、票券、訂單頁面是否正常。</p>
+            <div style="margin-top:10px;">
+              <a class="btn" href="member.html">前往會員中心</a>
+            </div>
+          </div>
+          <div class="mini">
+            <h4>我的票券</h4>
+            <p>測試使用者端票券顯示與 QR Code 相關流程。</p>
+            <div style="margin-top:10px;">
+              <a class="btn" href="my-tickets.html">前往票券頁</a>
+            </div>
+          </div>
+          <div class="mini">
+            <h4>我的訂單</h4>
+            <p>快速檢查前台訂單頁面與資料是否正確串接。</p>
+            <div style="margin-top:10px;">
+              <a class="btn" href="my-orders.html">前往訂單頁</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="pinnedSection" class="card pinned-wrap" style="display:none;">
         <div class="pinned-title">
           <span>📌 置頂功能</span>
@@ -193,7 +259,14 @@
         <div class="grid" id="pinnedTiles"></div>
       </div>
 
-      <div class="grid" id="tiles"></div>
+      <div class="card">
+        <div class="section-title">後台功能</div>
+        <div class="hint" style="margin-bottom:12px;">
+          下面功能會依照平台設定與組織設定顯示。  
+          你在 <span class="mono">admin-dashboard-settings.html</span> 設定不同角色顯示內容的機制會保留並繼續生效。
+        </div>
+        <div class="grid" id="tiles"></div>
+      </div>
     </div>
   </div>
 
@@ -211,7 +284,9 @@
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     const pageRoot = document.getElementById("pageRoot");
@@ -312,15 +387,12 @@
 
         const loginEmail = document.getElementById("loginEmail");
         const loginPassword = document.getElementById("loginPassword");
-
         const trySubmit = (ev) => {
           if (ev.key === "Enter") loginBtn.click();
         };
-
         loginEmail?.addEventListener("keydown", trySubmit);
         loginPassword?.addEventListener("keydown", trySubmit);
       }
-
     }
 
     window.doLogout = async () => {
@@ -332,23 +404,29 @@
       }
     };
 
+    // 這裡是重點：保留「admin-dashboard-settings」用 id 控制顯示的機制
     const FEATURES = [
-      { id:"admin-events",       title:"🎟️ 活動管理",           desc:"建立活動、票種、限制條件", ready:true, href:"admin-events.html" },
-      { id:"partner-schools",    title:"🏫 特約校園管理",         desc:"新增 / 停用校園，設定認證方式", ready:true, href:"partner-schools.html" },
-      { id:"import-verify",      title:"📥 名單匯入 / 驗證設定",   desc:"匯入名單、暫停 / 恢復驗證", ready:true, href:"admin-studentslist-import.html" },
-      { id:"member-lookup",      title:"🔎 會員查詢",             desc:"email / verifyKey 查詢會員狀態", ready:true, href:"admin-member-lookup.html" },
-      { id:"admin-orders",       title:"🧾 訂單 / 報名資料",       desc:"報名清單、匯出、入場狀態", ready:true, href:"admin-event-orders.html" },
+      { id:"admin-events",             title:"🎟️ 活動管理",               desc:"建立活動、設定票種、邀請碼、資格與基本資訊。", ready:true, href:"admin-events.html" },
+      { id:"admin-event-orders",       title:"🧾 活動訂單管理",             desc:"查看訂單、報名資料、後台人工處理訂單。", ready:true, href:"admin-event-orders.html" },
+      { id:"partner-schools",          title:"🏫 特約校園管理",             desc:"新增 / 停用校園，設定校園驗證方式。", ready:true, href:"partner-schools.html" },
+      { id:"import-verify",            title:"📥 名單匯入 / 驗證設定",       desc:"匯入資格名單、驗證名單與相關資料。", ready:true, href:"admin-studentslist-import.html" },
+      { id:"member-lookup",            title:"🔎 會員查詢",                 desc:"查詢會員資料、驗證狀態與帳號資訊。", ready:true, href:"admin-member-lookup.html" },
 
-      { id:"admin-user-assign",  title:"🧑‍💼 人事派發 / 審核",      desc:"審核後台帳號、分派組織/學校/職位", ready:true, href:"admin-staff-users.html" },
-      { id:"admin-org-overview", title:"🏢 全組織管理狀況",         desc:"查看各組織管理/服務人員狀態", ready:true, href:"admin-org-overview.html" },
-      { id:"org-team",           title:"👥 組織團隊 / 工作組別",     desc:"org_super 管理組織管理員/服務員與組別", ready:true, href:"org-team.html" },
+      { id:"seat-editor",              title:"🪑 座位編輯器",               desc:"設定座位圖、座位位置、區域、價格與可售狀態。", ready:true, href:"seat-editor.html" },
+      { id:"staff-checkin",            title:"✅ 核銷人員掃碼",             desc:"工作人員使用 QR 掃描進行票券核銷。", ready:true, href:"staff-checkin.html" },
+      { id:"service-center",           title:"🛠️ 服務中心",               desc:"活動現場查票、查單、協助處理會員問題。", ready:true, href:"service-center.html" },
 
-      { id:"staff-scan",         title:"✅ 核銷人員掃碼",           desc:"staff 只能掃碼核銷指定活動", ready:true, href:"staff-checkin.html" },
-      { id:"service-checkin",    title:"🛠️ 服務中心查詢 / 核銷",     desc:"條碼槍輸入協助查詢與核銷", ready:true, href:"service-center.html" },
+      { id:"admin-staff-users",        title:"🧑‍💼 後台人員 / 審核",        desc:"審核後台帳號、分派角色與工作權限。", ready:true, href:"admin-staff-users.html" },
+      { id:"admin-user-assignment",    title:"🪪 使用者權限配置",           desc:"設定使用者可看到哪些後台功能與入口。", ready:true, href:"admin-user-assignment.html" },
+      { id:"admin-org-overview",       title:"🏢 全組織管理狀況",           desc:"查看各組織的人員與管理現況。", ready:true, href:"admin-org-overview.html" },
+      { id:"org-team",                 title:"👥 組織團隊 / 工作組別",       desc:"管理組織人員、工作組別與團隊配置。", ready:true, href:"org-team.html" },
 
-      { id:"dash-settings",      title:"⚙️ 初選單顯示設定",     desc:"設定各角色顯示/置頂（平台上限）", ready:true, href:"admin-dashboard-settings.html" },
+      { id:"admin-dashboard-settings", title:"⚙️ 初選單顯示設定",          desc:"設定不同角色在 dashboard 顯示 / 置頂哪些功能。", ready:true, href:"admin-dashboard-settings.html" },
+      { id:"admin-impersonate",        title:"🧪 身分 / 學校模擬",          desc:"platform_super 模擬其他帳號測試頁面與權限。", ready:true, href:"admin-impersonate.html" },
 
-{ id:"admin-impersonate", title:"🧪 身分/學校測試切換", desc:"platform_super 模擬其他帳號測試", ready:true, href:"admin-impersonate.html" },
+      { id:"admin-platform-users",     title:"🌐 平台使用者管理",           desc:"管理平台層帳號與高權限人員。", ready:true, href:"admin-platform-users.html" },
+      { id:"admin-school-overview",    title:"🏫 校園總覽",                 desc:"查看各校園啟用狀態與管理情況。", ready:true, href:"admin-school-overview.html" },
+      { id:"admin-dashboard-home",     title:"📊 後台總覽",                 desc:"查看後台總覽、主要資料與統計。", ready:true, href:"dashboard.html" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -437,24 +515,29 @@
       const sysRoles = (sys && sys.roles) ? sys.roles : {};
       const sysParsed = parseRoleCfg(sysRoles[role] || {});
 
-      // fallback：至少 platform_super 不會只剩一格
-const fallbackVisible = (role === "platform_super")
-  ? [
-      "admin-events",
-      "partner-schools",
-      "import-verify",
-      "member-lookup",
-      "admin-orders",
-      "admin-user-assign",
-      "admin-org-overview",
-      "org-team",
-      "staff-scan",
-      "service-checkin",
-      "dash-settings",
-      "admin-impersonate",
-      
-    ]
-  : [];
+      // fallback：至少 platform_super 不會空白
+      const fallbackVisible = (role === "platform_super")
+        ? [
+            "admin-dashboard-home",
+            "admin-events",
+            "admin-event-orders",
+            "partner-schools",
+            "import-verify",
+            "member-lookup",
+            "seat-editor",
+            "staff-checkin",
+            "service-center",
+            "admin-staff-users",
+            "admin-user-assignment",
+            "admin-org-overview",
+            "org-team",
+            "admin-dashboard-settings",
+            "admin-impersonate",
+            "admin-platform-users",
+            "admin-school-overview"
+          ]
+        : [];
+
       const maxVisible = sysParsed.visible.length ? sysParsed.visible : fallbackVisible;
       const maxPinned  = sysParsed.pinned.length ? sysParsed.pinned : [];
 
@@ -483,6 +566,21 @@ const fallbackVisible = (role === "platform_super")
         finalPinned = finalPinned.filter(id => allowSet2.has(id));
       }
 
+      // 自動補幾個常用功能給高權限者，避免明明做了但進不去
+      const autoAddForHighRoles = ["platform_super","platform_admin","org_super","org_admin"];
+      if (autoAddForHighRoles.includes(role)) {
+        [
+          "admin-events",
+          "admin-event-orders",
+          "seat-editor",
+          "staff-checkin",
+          "service-center",
+          "admin-dashboard-settings"
+        ].forEach(id => {
+          if (!finalVisible.includes(id)) finalVisible.push(id);
+        });
+      }
+
       pinnedRoleTag.textContent = role;
 
       if (finalPinned.length){
@@ -494,7 +592,7 @@ const fallbackVisible = (role === "platform_super")
       }
 
       const pinSet = new Set(finalPinned);
-      const normalIds = finalVisible.filter(id => !pinSet.has(id));
+      const normalIds = sortByFeatureOrder(finalVisible.filter(id => !pinSet.has(id)));
       renderTiles(tiles, normalIds);
     }
 
@@ -668,6 +766,7 @@ const fallbackVisible = (role === "platform_super")
 
         updateImpersonateBanner();
 
+        // 保留你原本那個「不同身分顯示不同功能」設定來源
         startSysListener();
 
         const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
