@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜活動工作人員指派</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --r:20px;
+      --ok:#166534;
+      --warn:#b91c1c;
+      --blue:#1d4ed8;
+      --black:#111827;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 16px 40px;
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+    }
+
+    h3{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    @media (max-width:900px){
+      .grid3{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:0 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
+    .btn-danger{
+      color:#b91c1c;
+      border-color:rgba(185,28,28,.16);
+    }
+
+    .btn-sm{
+      height:38px;
+      padding:0 14px;
+      font-size:14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+      background:#fff;
+    }
+
+    .pill.ok{
+      color:var(--ok);
+      border-color:rgba(22,101,52,.18);
+      background:rgba(22,101,52,.05);
+    }
+
+    .pill.warn{
+      color:var(--warn);
+      border-color:rgba(185,28,28,.18);
+      background:rgba(185,28,28,.05);
+    }
+
+    .pill.blue{
+      color:var(--blue);
+      border-color:rgba(29,78,216,.18);
+      background:rgba(29,78,216,.05);
+    }
+
+    label{
+      display:block;
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    input[type="text"], select, textarea{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:15px;
+      background:#fff;
+      outline:none;
+    }
+
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+
+    .box{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .statGrid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    @media (max-width:980px){
+      .statGrid{
+        grid-template-columns:repeat(2,1fr);
+      }
+    }
+
+    @media (max-width:640px){
+      .statGrid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .statCard{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .statLabel{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .statValue{
+      margin-top:6px;
+      font-size:26px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      padding:8px 0;
+    }
+
+    .assignList{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+    }
+
+    .assignItem{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+      background:#fff;
+      box-shadow:0 10px 24px rgba(0,0,0,.04);
+    }
+
+    .assignTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    .assignTitle{
+      font-size:16px;
+      font-weight:900;
+      line-height:1.6;
+    }
+
+    .assignMeta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+      word-break:break-word;
+    }
+
+    .permGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:10px;
+    }
+
+    @media (max-width:760px){
+      .permGrid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .checkItem{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .checkItem input{
+      width:auto;
+      margin:0;
+      transform:scale(1.05);
+    }
+
+    .mutedBox{
+      border:1px dashed var(--line);
+      border-radius:16px;
+      padding:12px;
+      background:#fafafa;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .divider{
+      height:1px;
+      background:var(--line);
+      margin:16px 0;
+    }
+
+    .msg{
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .msg.ok{
+      color:var(--ok);
+      font-weight:900;
+    }
+
+    .msg.warn{
+      color:var(--warn);
+      font-weight:900;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>活動工作人員指派</h1>
+            <div class="sub">
+              先選活動，再將帳號指派為該活動的工作人員。帳號本身不代表可操作活動，必須指派到活動內的身份後，才能進入相關功能頁面。
+            </div>
+            <div class="small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>｜
+              學校：<span id="schoolText" class="mono">-</span>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label>選擇活動</label>
+            <select id="eventSelect"></select>
+            <div class="small" id="eventHint" style="margin-top:8px;">-</div>
+          </div>
+
+          <div>
+            <label>活動摘要</label>
+            <div class="box">
+              <div class="small">
+                活動名稱：<span id="eventTitleText" class="mono">-</span><br>
+                活動日期：<span id="eventDateText" class="mono">-</span><br>
+                地點：<span id="eventLocationText" class="mono">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="statGrid">
+          <div class="statCard">
+            <div class="statLabel">活動內工作人員</div>
+            <div class="statValue" id="staffCount">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">核銷人員</div>
+            <div class="statValue" id="checkinCount">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">服務中心</div>
+            <div class="statValue" id="serviceCount">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">活動管理員</div>
+            <div class="statValue" id="managerCount">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>新增 / 修改指派</h2>
+        <div class="sub">請先選擇活動，再指派帳號到此活動內的身份與權限。若該人員在同一時段已被指派到其他活動，系統會阻擋。</div>
+
+        <div class="divider"></div>
+
+        <div class="grid3">
+          <div>
+            <label>選擇帳號</label>
+            <select id="userSelect"></select>
+          </div>
+
+          <div>
+            <label>活動內身份</label>
+            <select id="roleInEventSelect">
+              <option value="checkin">核銷人員</option>
+              <option value="service_center">服務中心</option>
+              <option value="staff">一般工作人員</option>
+              <option value="manager">活動管理員</option>
+            </select>
+          </div>
+
+          <div>
+            <label>入口（可空）</label>
+            <select id="gateSelect">
+              <option value="">未指定入口</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
+          <div>
+            <label>分組（可空）</label>
+            <input id="groupNameInput" type="text" placeholder="例如：A組 / VIP組 / 報到組" />
+          </div>
+
+          <div>
+            <label>備註（可空）</label>
+            <input id="noteInput" type="text" placeholder="例如：只負責北門、場內支援..." />
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>權限設定</label>
+          <div class="permGrid">
+            <label class="checkItem">
+              <input id="permCheckin" type="checkbox" />
+              <span>可進入核銷頁</span>
+            </label>
+
+            <label class="checkItem">
+              <input id="permService" type="checkbox" />
+              <span>可進入服務中心</span>
+            </label>
+
+            <label class="checkItem">
+              <input id="permViewOrders" type="checkbox" />
+              <span>可查看訂單資料</span>
+            </label>
+
+            <label class="checkItem">
+              <input id="permViewMembers" type="checkbox" />
+              <span>可查看會員 / 名單資料</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="mutedBox" style="margin-top:12px;">
+          建議：
+          <br>・核銷人員：可進入核銷頁
+          <br>・服務中心：可進入服務中心，通常也可看訂單
+          <br>・活動管理員：可看訂單 / 會員，視情況給權限
+          <br>・一般工作人員：不一定要有系統操作權限
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:14px;">
+          <button class="btn" id="resetBtn">清空表單</button>
+          <button class="btn btn-primary" id="saveBtn">儲存指派</button>
+        </div>
+
+        <div id="formMsg" class="msg"></div>
+      </div>
+
+      <div class="section">
+        <div class="header">
+          <div>
+            <h2>本活動目前指派</h2>
+            <div class="sub">以下僅顯示目前選擇活動的工作人員指派。</div>
+          </div>
+        </div>
+
+        <div id="assignList" class="assignList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const schoolText = document.getElementById("schoolText");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const eventSelect = document.getElementById("eventSelect");
+    const eventHint = document.getElementById("eventHint");
+    const eventTitleText = document.getElementById("eventTitleText");
+    const eventDateText = document.getElementById("eventDateText");
+    const eventLocationText = document.getElementById("eventLocationText");
+
+    const staffCount = document.getElementById("staffCount");
+    const checkinCount = document.getElementById("checkinCount");
+    const serviceCount = document.getElementById("serviceCount");
+    const managerCount = document.getElementById("managerCount");
+
+    const userSelect = document.getElementById("userSelect");
+    const roleInEventSelect = document.getElementById("roleInEventSelect");
+    const gateSelect = document.getElementById("gateSelect");
+    const groupNameInput = document.getElementById("groupNameInput");
+    const noteInput = document.getElementById("noteInput");
+
+    const permCheckin = document.getElementById("permCheckin");
+    const permService = document.getElementById("permService");
+    const permViewOrders = document.getElementById("permViewOrders");
+    const permViewMembers = document.getElementById("permViewMembers");
+
+    const resetBtn = document.getElementById("resetBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const formMsg = document.getElementById("formMsg");
+    const assignList = document.getElementById("assignList");
+
+    let currentUser = null;
+    let currentRole = "";
+    let mySchoolId = "";
+    let myOrgId = "";
+
+    let eventsCache = [];
+    let usersCache = [];
+    let currentAssignments = [];
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function toDate(value){
+      if (!value) return null;
+      if (typeof value.toDate === "function") return value.toDate();
+      if (value instanceof Date) return value;
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      });
+    }
+
+    function formatDateOnly(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleDateString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit"
+      });
+    }
+
+    function setMsg(type, text){
+      formMsg.className = `msg ${type || ""}`;
+      formMsg.textContent = text || "";
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="font-size:22px; margin:0 0 6px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+
+      if (showLogin) {
+        document.getElementById("loginBtn").onclick = async () => {
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = async () => {
+          await firebase.auth().signOut();
+        };
+      }
+
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    logoutBtn.onclick = async () => {
+      await firebase.auth().signOut();
+    };
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+
+      return {
+        ok:true,
+        role:norm(u.role),
+        schoolId:norm(u.schoolId || u.orgSchoolId || ""),
+        orgId:norm(u.orgId || "")
+      };
+    }
+
+    function isPlatformRole(){
+      return ["platform_super","platform_admin"].includes(currentRole);
+    }
+
+    function isOrgRole(){
+      return ["org_super","org_admin","org_staff"].includes(currentRole);
+    }
+
+    function getSelectedEvent(){
+      return eventsCache.find(e => e.id === norm(eventSelect.value)) || null;
+    }
+
+    function getSelectedUser(){
+      return usersCache.find(u => u.id === norm(userSelect.value)) || null;
+    }
+
+    function applyRoleTemplate(){
+      const role = norm(roleInEventSelect.value);
+
+      permCheckin.checked = false;
+      permService.checked = false;
+      permViewOrders.checked = false;
+      permViewMembers.checked = false;
+
+      if (role === "checkin") {
+        permCheckin.checked = true;
+      } else if (role === "service_center") {
+        permService.checked = true;
+        permViewOrders.checked = true;
+      } else if (role === "manager") {
+        permCheckin.checked = true;
+        permService.checked = true;
+        permViewOrders.checked = true;
+        permViewMembers.checked = true;
+      }
+    }
+
+    roleInEventSelect.onchange = applyRoleTemplate;
+
+    async function loadEvents(){
+      const snap = await db.collection("events").get();
+      let rows = snap.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
+
+      if (isOrgRole()) {
+        rows = rows.filter(e => norm(e.ownerSchoolId) === mySchoolId);
+      }
+
+      rows.sort((a, b) => {
+        const ta = toDate(a.eventStartAt)?.getTime() ?? 0;
+        const tb = toDate(b.eventStartAt)?.getTime() ?? 0;
+        return ta - tb;
+      });
+
+      eventsCache = rows;
+
+      eventSelect.innerHTML = "";
+      if (!rows.length) {
+        eventSelect.innerHTML = `<option value="">目前沒有可管理活動</option>`;
+        return;
+      }
+
+      eventSelect.innerHTML = rows.map(e => `
+        <option value="${esc(e.id)}">${esc(e.title || e.id)}</option>
+      `).join("");
+
+      eventSelect.onchange = async () => {
+        renderSelectedEvent();
+        await loadAssignmentsForEvent();
+      };
+
+      renderSelectedEvent();
+    }
+
+    async function loadUsers(){
+      const snap = await db.collection("users").get();
+      let rows = snap.docs.map(doc => ({ id:doc.id, ...(doc.data() || {}) }));
+
+      rows = rows.filter(u => {
+        const role = norm(u.role);
+        const enabled = u.enabled === true;
+
+        if (!enabled) return false;
+        if (!["org_staff","org_admin","org_super","platform_admin","platform_super"].includes(role)) return false;
+
+        if (isPlatformRole()) return true;
+        return norm(u.schoolId || u.orgSchoolId || "") === mySchoolId;
+      });
+
+      rows.sort((a, b) => {
+        const ea = norm(a.email || a.id).toLowerCase();
+        const eb = norm(b.email || b.id).toLowerCase();
+        return ea.localeCompare(eb, "zh-Hant");
+      });
+
+      usersCache = rows;
+
+      if (!rows.length) {
+        userSelect.innerHTML = `<option value="">目前沒有可指派帳號</option>`;
+        return;
+      }
+
+      userSelect.innerHTML = rows.map(u => `
+        <option value="${esc(u.id)}">${esc(u.email || u.id)}｜${esc(u.role || "-")}</option>
+      `).join("");
+    }
+
+    function renderSelectedEvent(){
+      const event = getSelectedEvent();
+
+      if (!event) {
+        eventHint.textContent = "請先建立活動。";
+        eventTitleText.textContent = "-";
+        eventDateText.textContent = "-";
+        eventLocationText.textContent = "-";
+        gateSelect.innerHTML = `<option value="">未指定入口</option>`;
+        return;
+      }
+
+      eventHint.innerHTML = `
+        活動ID：<span class="mono">${esc(event.id)}</span>｜
+        開始：<span class="mono">${esc(formatDateTime(event.eventStartAt))}</span>｜
+        結束：<span class="mono">${esc(formatDateTime(event.eventEndAt))}</span>
+      `;
+
+      eventTitleText.textContent = event.title || event.id;
+      eventDateText.textContent = formatDateOnly(event.eventStartAt);
+      eventLocationText.textContent = event.location || "-";
+
+      const gates = Array.isArray(event.gates) ? event.gates : [];
+      gateSelect.innerHTML = `<option value="">未指定入口</option>` + gates.map(g => `
+        <option value="${esc(norm(g.name || ""))}">${esc(norm(g.name || "未命名入口"))}</option>
+      `).join("");
+    }
+
+    async function loadAssignmentsForEvent(){
+      const event = getSelectedEvent();
+      if (!event) {
+        currentAssignments = [];
+        renderAssignments();
+        return;
+      }
+
+      const snap = await db.collection("events").doc(event.id).collection("staffAssignments").get();
+      currentAssignments = snap.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() || {})
+      }));
+
+      renderAssignments();
+      renderCounts();
+    }
+
+    function renderCounts(){
+      const total = currentAssignments.length;
+      const checkin = currentAssignments.filter(a => norm(a.roleInEvent) === "checkin").length;
+      const service = currentAssignments.filter(a => norm(a.roleInEvent) === "service_center").length;
+      const manager = currentAssignments.filter(a => norm(a.roleInEvent) === "manager").length;
+
+      staffCount.textContent = total;
+      checkinCount.textContent = checkin;
+      serviceCount.textContent = service;
+      managerCount.textContent = manager;
+    }
+
+    function renderAssignments(){
+      if (!currentAssignments.length) {
+        assignList.innerHTML = `<div class="empty">目前這場活動尚未指派任何工作人員。</div>`;
+        renderCounts();
+        return;
+      }
+
+      assignList.innerHTML = currentAssignments.map(item => `
+        <div class="assignItem">
+          <div class="assignTop">
+            <div style="min-width:0; flex:1;">
+              <div class="assignTitle">${esc(item.email || item.uid || "-")}</div>
+              <div class="assignMeta">
+                uid：<span class="mono">${esc(item.uid || item.id || "-")}</span><br>
+                身份：<span class="mono">${esc(item.roleInEvent || "-")}</span>｜
+                入口：<span class="mono">${esc(item.gateName || "未指定")}</span>｜
+                分組：<span class="mono">${esc(item.groupName || "未分組")}</span><br>
+                備註：<span class="mono">${esc(item.note || "-")}</span><br>
+                指派時間：<span class="mono">${esc(formatDateTime(item.assignedAt))}</span>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                ${item.permissions?.canCheckin ? `<span class="pill ok">可核銷</span>` : ``}
+                ${item.permissions?.canService ? `<span class="pill blue">可服務中心</span>` : ``}
+                ${item.permissions?.canViewOrders ? `<span class="pill">可查看訂單</span>` : ``}
+                ${item.permissions?.canViewMembers ? `<span class="pill">可查看會員</span>` : ``}
+              </div>
+            </div>
+
+            <div class="row" style="justify-content:flex-end;">
+              <button class="btn btn-sm" onclick="editAssignment('${esc(item.uid || item.id)}')">載入編輯</button>
+              <button class="btn btn-sm btn-danger" onclick="removeAssignment('${esc(item.uid || item.id)}')">移除</button>
+            </div>
+          </div>
+        </div>
+      `).join("");
+
+      renderCounts();
+    }
+
+    window.editAssignment = function(uid){
+      const item = currentAssignments.find(a => norm(a.uid || a.id) === norm(uid));
+      if (!item) return;
+
+      userSelect.value = norm(item.uid || item.id || "");
+      roleInEventSelect.value = norm(item.roleInEvent || "staff");
+      gateSelect.value = norm(item.gateName || "");
+      groupNameInput.value = norm(item.groupName || "");
+      noteInput.value = norm(item.note || "");
+
+      permCheckin.checked = item.permissions?.canCheckin === true;
+      permService.checked = item.permissions?.canService === true;
+      permViewOrders.checked = item.permissions?.canViewOrders === true;
+      permViewMembers.checked = item.permissions?.canViewMembers === true;
+
+      setMsg("ok", "已載入該筆指派到表單，可直接修改後再次儲存。");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.removeAssignment = async function(uid){
+      const event = getSelectedEvent();
+      if (!event) return;
+
+      const ok = confirm("確定要移除此活動的這位工作人員指派嗎？");
+      if (!ok) return;
+
+      try {
+        await db.collection("events").doc(event.id).collection("staffAssignments").doc(uid).delete();
+
+        // 相容舊核銷頁：若有對應 checkinAssignments 也一併移除
+        try {
+          await db.collection("events").doc(event.id).collection("checkinAssignments").doc(uid).delete();
+        } catch (_) {}
+
+        await loadAssignmentsForEvent();
+        setMsg("ok", "已移除該筆活動工作人員指派。");
+      } catch (e) {
+        console.error(e);
+        setMsg("warn", "移除失敗：" + (e.message || e));
+      }
+    };
+
+    function resetForm(){
+      if (usersCache.length) userSelect.value = usersCache[0]?.id || "";
+      roleInEventSelect.value = "checkin";
+      gateSelect.value = "";
+      groupNameInput.value = "";
+      noteInput.value = "";
+      applyRoleTemplate();
+      setMsg("", "");
+    }
+
+    resetBtn.onclick = resetForm;
+
+    async function hasConflict(uid, targetEvent){
+      const staffGroupSnap = await db.collectionGroup("staffAssignments")
+        .where("uid", "==", uid)
+        .get();
+
+      const targetStart = toDate(targetEvent.eventStartAt)?.getTime() ?? null;
+      const targetEnd = toDate(targetEvent.eventEndAt)?.getTime() ?? null;
+
+      if (!targetStart || !targetEnd) {
+        return {
+          conflict: false,
+          reason: ""
+        };
+      }
+
+      for (const doc of staffGroupSnap.docs) {
+        const eventRef = doc.ref.parent.parent;
+        if (!eventRef) continue;
+
+        const otherEventId = eventRef.id;
+        if (otherEventId === targetEvent.id) continue;
+
+        const otherEventDoc = await db.collection("events").doc(otherEventId).get();
+        if (!otherEventDoc.exists) continue;
+
+        const otherEvent = { id: otherEventDoc.id, ...(otherEventDoc.data() || {}) };
+        const otherStart = toDate(otherEvent.eventStartAt)?.getTime() ?? null;
+        const otherEnd = toDate(otherEvent.eventEndAt)?.getTime() ?? null;
+
+        if (!otherStart || !otherEnd) continue;
+
+        const overlap = targetStart < otherEnd && targetEnd > otherStart;
+        if (overlap) {
+          return {
+            conflict: true,
+            reason: `該人員已被指派到同時段活動：${otherEvent.title || otherEvent.id}`
+          };
+        }
+      }
+
+      return {
+        conflict: false,
+        reason: ""
+      };
+    }
+
+    async function saveAssignment(){
+      const event = getSelectedEvent();
+      const user = getSelectedUser();
+      const roleInEvent = norm(roleInEventSelect.value);
+      const gateName = norm(gateSelect.value);
+      const groupName = norm(groupNameInput.value);
+      const note = norm(noteInput.value);
+
+      if (!event) {
+        setMsg("warn", "請先選擇活動。");
+        return;
+      }
+
+      if (!user) {
+        setMsg("warn", "請先選擇帳號。");
+        return;
+      }
+
+      if (isOrgRole()) {
+        const userSchool = norm(user.schoolId || user.orgSchoolId || "");
+        if (userSchool !== mySchoolId) {
+          setMsg("warn", "你只能指派自己學校的人員。");
+          return;
+        }
+      }
+
+      saveBtn.disabled = true;
+      const oldText = saveBtn.textContent;
+      saveBtn.textContent = "儲存中…";
+      setMsg("", "");
+
+      try {
+        const conflict = await hasConflict(user.id, event);
+        if (conflict.conflict) {
+          setMsg("warn", conflict.reason);
+          return;
+        }
+
+        const permissions = {
+          canCheckin: permCheckin.checked === true,
+          canService: permService.checked === true,
+          canViewOrders: permViewOrders.checked === true,
+          canViewMembers: permViewMembers.checked === true
+        };
+
+        const payload = {
+          uid: user.id,
+          email: norm(user.email || ""),
+          schoolId: norm(user.schoolId || user.orgSchoolId || ""),
+          orgId: norm(user.orgId || ""),
+          baseRole: norm(user.role || ""),
+          roleInEvent,
+          gateName,
+          groupName,
+          note,
+          permissions,
+          assignedAt: new Date(),
+          assignedBy: currentUser ? currentUser.uid : ""
+        };
+
+        await db.collection("events").doc(event.id).collection("staffAssignments").doc(user.id).set(payload);
+
+        // 相容既有核銷頁：若是核銷人員，額外同步到 checkinAssignments
+        if (roleInEvent === "checkin" || permissions.canCheckin === true) {
+          await db.collection("events").doc(event.id).collection("checkinAssignments").doc(user.id).set({
+            uid: user.id,
+            email: norm(user.email || ""),
+            gateName,
+            groupName,
+            role: roleInEvent,
+            permissions,
+            assignedAt: new Date(),
+            assignedBy: currentUser ? currentUser.uid : ""
+          });
+        } else {
+          // 若本次不是核銷身份，清掉舊的 checkinAssignments 避免混淆
+          try {
+            await db.collection("events").doc(event.id).collection("checkinAssignments").doc(user.id).delete();
+          } catch (_) {}
+        }
+
+        await loadAssignmentsForEvent();
+        setMsg("ok", "已成功儲存活動工作人員指派。");
+      } catch (e) {
+        console.error(e);
+        setMsg("warn", "儲存失敗：" + (e.message || e));
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = oldText;
+      }
+    }
+
+    saveBtn.onclick = saveAssignment;
+
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        showGate("活動工作人員指派", "請先使用 Email / 密碼登入後台。", true);
+        return;
+      }
+
+      try {
+        currentUser = user;
+
+        const r = await loadMyRole(user.uid);
+        if (!r.ok) {
+          showGate(r.reason, "你的帳號尚未被授權。", false);
+          return;
+        }
+
+        currentRole = r.role;
+        mySchoolId = r.schoolId;
+        myOrgId = r.orgId;
+
+        if (!["platform_super","platform_admin","org_super","org_admin"].includes(currentRole)) {
+          showGate("權限不足", "此頁僅限平台 / 組織管理角色使用。", false);
+          return;
+        }
+
+        whoEl.textContent = user.email || "-";
+        roleText.textContent = currentRole || "-";
+        schoolText.textContent = mySchoolId || "-";
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadEvents();
+        await loadUsers();
+        resetForm();
+        await loadAssignmentsForEvent();
+      } catch (e) {
+        console.error(e);
+        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>
