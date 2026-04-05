@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜活動總覽</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:rgba(17,24,39,.08);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --r:20px;
+      --ok:#166534;
+      --warn:#b91c1c;
+      --blue:#1d4ed8;
+      --black:#111827;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:28px 16px 40px;
+    }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:18px;
+      font-weight:900;
+    }
+
+    h3{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:0 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
+    .btn-sm{
+      height:38px;
+      padding:0 14px;
+      font-size:14px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      font-weight:800;
+      background:#fff;
+    }
+
+    .pill.ok{
+      color:var(--ok);
+      border-color:rgba(22,101,52,.18);
+      background:rgba(22,101,52,.05);
+    }
+
+    .pill.warn{
+      color:var(--warn);
+      border-color:rgba(185,28,28,.18);
+      background:rgba(185,28,28,.05);
+    }
+
+    .pill.blue{
+      color:var(--blue);
+      border-color:rgba(29,78,216,.18);
+      background:rgba(29,78,216,.05);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    .grid4{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+    }
+
+    @media (max-width:980px){
+      .grid4{ grid-template-columns:repeat(2,1fr); }
+    }
+
+    @media (max-width:860px){
+      .grid,.grid3{ grid-template-columns:1fr; }
+    }
+
+    @media (max-width:640px){
+      .grid4{ grid-template-columns:1fr; }
+    }
+
+    input[type="text"], select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:15px;
+      background:#fff;
+      outline:none;
+    }
+
+    .statCard{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      padding:14px;
+    }
+
+    .statLabel{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .statValue{
+      margin-top:6px;
+      font-size:28px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .list{
+      display:grid;
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .activityCard{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:#fff;
+      padding:16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.04);
+    }
+
+    .activityTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .activityTitle{
+      font-size:20px;
+      font-weight:900;
+      line-height:1.5;
+    }
+
+    .activityMeta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      word-break:break-word;
+    }
+
+    .detailWrap{
+      margin-top:16px;
+      border-top:1px solid var(--line);
+      padding-top:16px;
+      display:none;
+    }
+
+    .detailWrap.show{
+      display:block;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .panelTitle{
+      font-size:15px;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .kv{
+      display:grid;
+      gap:8px;
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .kvRow{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px dashed rgba(17,24,39,.08);
+      padding-bottom:8px;
+    }
+
+    .kvRow:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .kvKey{
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .kvValue{
+      text-align:right;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .memberList{
+      display:grid;
+      gap:10px;
+    }
+
+    .memberItem{
+      border:1px dashed var(--line);
+      border-radius:14px;
+      padding:10px 12px;
+      background:#fff;
+    }
+
+    .memberHead{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .memberMeta{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      word-break:break-word;
+    }
+
+    .empty{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      padding:6px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="gate" class="section"></div>
+
+    <div id="app" style="display:none;">
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>活動總覽</h1>
+            <div class="sub">查看本校 / 本組織所有活動，並查看每場活動的工作人員、訂單、票券與核銷狀況。</div>
+            <div class="small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>｜
+              學校：<span id="schoolText" class="mono">-</span>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end;">
+            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid">
+          <div>
+            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">搜尋活動</div>
+            <input id="searchInput" type="text" placeholder="搜尋活動名稱、地點、活動ID" />
+          </div>
+
+          <div>
+            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">狀態篩選</div>
+            <select id="statusFilter">
+              <option value="all">全部活動</option>
+              <option value="selling">開賣中</option>
+              <option value="upcoming">尚未開賣</option>
+              <option value="ended">已截止 / 已結束</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end; margin-top:12px;">
+          <button class="btn" id="reloadBtn">重新載入</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="grid4">
+          <div class="statCard">
+            <div class="statLabel">活動總數</div>
+            <div class="statValue" id="sumEvents">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">訂單總數</div>
+            <div class="statValue" id="sumOrders">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">票券總數</div>
+            <div class="statValue" id="sumTickets">-</div>
+          </div>
+          <div class="statCard">
+            <div class="statLabel">已核銷票券</div>
+            <div class="statValue" id="sumCheckedIn">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>活動列表</h2>
+        <div class="sub">點擊「展開詳情」可查看該活動的工作人員、入口、訂單統計、票券統計與核銷狀況。</div>
+        <div class="list" id="activityList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const schoolText = document.getElementById("schoolText");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const activityList = document.getElementById("activityList");
+
+    const sumEvents = document.getElementById("sumEvents");
+    const sumOrders = document.getElementById("sumOrders");
+    const sumTickets = document.getElementById("sumTickets");
+    const sumCheckedIn = document.getElementById("sumCheckedIn");
+
+    let currentRole = "";
+    let mySchoolId = "";
+    let myOrgId = "";
+    let allActivities = [];
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function toDate(value){
+      if (!value) return null;
+      if (typeof value.toDate === "function") return value.toDate();
+      if (value instanceof Date) return value;
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      });
+    }
+
+    function formatDateOnly(value){
+      const d = toDate(value);
+      if (!d) return "-";
+      return d.toLocaleDateString("zh-Hant", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit"
+      });
+    }
+
+    function getEventStatus(event){
+      const now = Date.now();
+      const saleStart = toDate(event.saleStartAt)?.getTime() ?? null;
+      const saleEnd = toDate(event.saleEndAt)?.getTime() ?? null;
+      const eventEnd = toDate(event.eventEndAt)?.getTime() ?? null;
+
+      if (saleStart && now < saleStart) {
+        return { text:"尚未開賣", key:"upcoming", className:"blue" };
+      }
+
+      if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
+        return { text:"開賣中", key:"selling", className:"ok" };
+      }
+
+      if ((saleEnd && now > saleEnd) || (eventEnd && now > eventEnd)) {
+        return { text:"已截止 / 已結束", key:"ended", className:"warn" };
+      }
+
+      return { text:"活動資訊", key:"all", className:"blue" };
+    }
+
+    function showGate(title, msg, showLogin){
+      gate.innerHTML = `
+        <h1 style="font-size:22px; margin:0 0 6px;">${esc(title)}</h1>
+        <div class="sub">${esc(msg)}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+        </div>
+      `;
+
+      if (showLogin) {
+        document.getElementById("loginBtn").onclick = async () => {
+          const email = window.prompt("請輸入 Email");
+          if (!email) return;
+          const password = window.prompt("請輸入密碼");
+          if (!password) return;
+          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+        };
+      } else {
+        document.getElementById("outBtn").onclick = async () => {
+          await firebase.auth().signOut();
+        };
+      }
+
+      gate.style.display = "block";
+      app.style.display = "none";
+    }
+
+    logoutBtn.onclick = async () => {
+      await firebase.auth().signOut();
+    };
+
+    async function loadMyRole(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return { ok:false, reason:"等待授權" };
+
+      const u = snap.data() || {};
+      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
+
+      return {
+        ok:true,
+        role:norm(u.role),
+        schoolId:norm(u.schoolId || u.orgSchoolId || ""),
+        orgId:norm(u.orgId || "")
+      };
+    }
+
+    async function loadEventSummary(eventDoc){
+      const eventId = eventDoc.id;
+      const event = eventDoc.data() || {};
+
+      const [ordersSnap, ticketsSnap, assignmentsSnap] = await Promise.all([
+        db.collection("events").doc(eventId).collection("orders").get().catch(() => null),
+        db.collection("events").doc(eventId).collection("tickets").get().catch(() => null),
+        db.collection("events").doc(eventId).collection("checkinAssignments").get().catch(() => null)
+      ]);
+
+      const orders = [];
+      const tickets = [];
+      const assignments = [];
+
+      if (ordersSnap) ordersSnap.forEach(doc => orders.push({ id:doc.id, ...(doc.data() || {}) }));
+      if (ticketsSnap) ticketsSnap.forEach(doc => tickets.push({ id:doc.id, ...(doc.data() || {}) }));
+      if (assignmentsSnap) assignmentsSnap.forEach(doc => assignments.push({ id:doc.id, ...(doc.data() || {}) }));
+
+      const checkedInCount = tickets.filter(t => t.checkedIn === true).length;
+      const insideCount = tickets.filter(t => t.status === "inside").length;
+      const exitedCount = tickets.filter(t => t.status === "exited").length;
+      const notEnteredCount = tickets.filter(t => !t.status || t.status === "not_entered").length;
+
+      const paymentPaidCount = orders.filter(o => norm(o.paymentStatus) === "paid").length;
+      const paymentUnpaidCount = orders.filter(o => norm(o.paymentStatus) !== "paid").length;
+
+      return {
+        id: eventId,
+        ...event,
+        orders,
+        tickets,
+        assignments,
+        counts: {
+          orders: orders.length,
+          tickets: tickets.length,
+          checkedIn: checkedInCount,
+          inside: insideCount,
+          exited: exitedCount,
+          notEntered: notEnteredCount,
+          paid: paymentPaidCount,
+          unpaid: paymentUnpaidCount
+        }
+      };
+    }
+
+    async function loadActivities(){
+      activityList.innerHTML = `<div class="empty">載入中...</div>`;
+
+      let queryRef = db.collection("events");
+
+      const snap = await queryRef.get();
+      let docs = snap.docs;
+
+      if (["org_super","org_admin","org_staff"].includes(currentRole)) {
+        docs = docs.filter(doc => norm(doc.data()?.ownerSchoolId) === mySchoolId);
+      }
+
+      const rows = [];
+      for (const doc of docs) {
+        const summary = await loadEventSummary(doc);
+        rows.push(summary);
+      }
+
+      rows.sort((a, b) => {
+        const ta = toDate(a.eventStartAt)?.getTime() ?? 0;
+        const tb = toDate(b.eventStartAt)?.getTime() ?? 0;
+        return ta - tb;
+      });
+
+      allActivities = rows;
+      renderActivities();
+      renderTopSummary();
+    }
+
+    function renderTopSummary(){
+      const rows = filteredActivities();
+
+      sumEvents.textContent = rows.length;
+      sumOrders.textContent = rows.reduce((n, r) => n + (r.counts?.orders || 0), 0);
+      sumTickets.textContent = rows.reduce((n, r) => n + (r.counts?.tickets || 0), 0);
+      sumCheckedIn.textContent = rows.reduce((n, r) => n + (r.counts?.checkedIn || 0), 0);
+    }
+
+    function filteredActivities(){
+      const q = norm(searchInput.value).toLowerCase();
+      const sf = statusFilter.value;
+
+      return allActivities.filter(item => {
+        const status = getEventStatus(item);
+        if (sf !== "all" && status.key !== sf) return false;
+
+        if (!q) return true;
+
+        const fields = [
+          item.id,
+          item.title,
+          item.location,
+          item.description
+        ].map(v => norm(v).toLowerCase());
+
+        return fields.some(v => v.includes(q));
+      });
+    }
+
+    function renderActivities(){
+      const rows = filteredActivities();
+
+      if (!rows.length) {
+        activityList.innerHTML = `<div class="empty">目前沒有符合條件的活動。</div>`;
+        renderTopSummary();
+        return;
+      }
+
+      activityList.innerHTML = rows.map(item => {
+        const status = getEventStatus(item);
+
+        return `
+          <div class="activityCard">
+            <div class="activityTop">
+              <div style="min-width:0; flex:1;">
+                <div class="activityTitle">${esc(item.title || "未命名活動")}</div>
+                <div class="activityMeta">
+                  活動ID：<span class="mono">${esc(item.id)}</span><br>
+                  活動日期：${esc(formatDateOnly(item.eventStartAt))}<br>
+                  地點：${esc(item.location || "-")}
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <span class="pill ${status.className}">${esc(status.text)}</span>
+                  <span class="pill">${item.publishScope === "platform" ? "平台活動" : "校園活動"}</span>
+                  <span class="pill">${item.published === true ? "公開" : "不公開"}</span>
+                  <span class="pill">${esc(item.approvalStatus || "pending")}</span>
+                </div>
+              </div>
+
+              <div class="row" style="justify-content:flex-end;">
+                <button class="btn btn-sm" onclick="toggleDetail('${esc(item.id)}')">展開詳情</button>
+              </div>
+            </div>
+
+            <div id="detail-${esc(item.id)}" class="detailWrap">
+              <div class="grid3">
+                <div class="panel">
+                  <div class="panelTitle">活動基本資訊</div>
+                  <div class="kv">
+                    <div class="kvRow">
+                      <div class="kvKey">活動名稱</div>
+                      <div class="kvValue">${esc(item.title || "-")}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">開賣開始</div>
+                      <div class="kvValue">${esc(formatDateTime(item.saleStartAt))}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">開賣截止</div>
+                      <div class="kvValue">${esc(formatDateTime(item.saleEndAt))}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">活動開始</div>
+                      <div class="kvValue">${esc(formatDateTime(item.eventStartAt))}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">活動結束</div>
+                      <div class="kvValue">${esc(formatDateTime(item.eventEndAt))}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">地點</div>
+                      <div class="kvValue">${esc(item.location || "-")}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panelTitle">訂單 / 票券統計</div>
+                  <div class="kv">
+                    <div class="kvRow">
+                      <div class="kvKey">訂單總數</div>
+                      <div class="kvValue">${esc(item.counts.orders)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">已付款訂單</div>
+                      <div class="kvValue">${esc(item.counts.paid)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">未付款訂單</div>
+                      <div class="kvValue">${esc(item.counts.unpaid)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">票券總數</div>
+                      <div class="kvValue">${esc(item.counts.tickets)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">已核銷</div>
+                      <div class="kvValue">${esc(item.counts.checkedIn)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">未核銷</div>
+                      <div class="kvValue">${esc(item.counts.tickets - item.counts.checkedIn)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panelTitle">現場狀態</div>
+                  <div class="kv">
+                    <div class="kvRow">
+                      <div class="kvKey">在場中</div>
+                      <div class="kvValue">${esc(item.counts.inside)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">已出場</div>
+                      <div class="kvValue">${esc(item.counts.exited)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">未入場</div>
+                      <div class="kvValue">${esc(item.counts.notEntered)}</div>
+                    </div>
+                    <div class="kvRow">
+                      <div class="kvKey">核銷人員</div>
+                      <div class="kvValue">${esc(item.assignments.length)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid" style="margin-top:12px;">
+                <div class="panel">
+                  <div class="panelTitle">核銷人員 / 工作人員</div>
+                  ${
+                    item.assignments.length
+                      ? `<div class="memberList">
+                          ${item.assignments.map(a => `
+                            <div class="memberItem">
+                              <div class="memberHead">
+                                <div style="font-weight:900;">
+                                  ${esc(a.email || a.uid || "-")}
+                                </div>
+                                <div class="row">
+                                  <span class="pill">${esc(a.gateName || "未指定入口")}</span>
+                                  <span class="pill">${esc(a.groupName || "未分組")}</span>
+                                </div>
+                              </div>
+                              <div class="memberMeta">
+                                uid：<span class="mono">${esc(a.uid || a.id || "-")}</span><br>
+                                role：<span class="mono">${esc(a.role || "-")}</span>｜
+                                指派時間：<span class="mono">${esc(formatDateTime(a.assignedAt))}</span>
+                              </div>
+                            </div>
+                          `).join("")}
+                        </div>`
+                      : `<div class="empty">目前沒有核銷人員 / 工作人員資料。</div>`
+                  }
+                </div>
+
+                <div class="panel">
+                  <div class="panelTitle">活動說明</div>
+                  <div class="small" style="white-space:pre-wrap; color:#374151;">
+                    ${esc(item.description || "尚無活動介紹")}
+                  </div>
+                  <div class="panelTitle" style="margin-top:14px;">注意事項</div>
+                  <div class="small" style="white-space:pre-wrap; color:#374151;">
+                    ${esc(item.notice || "尚無注意事項")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      renderTopSummary();
+    }
+
+    window.toggleDetail = function(eventId){
+      const el = document.getElementById(`detail-${eventId}`);
+      if (!el) return;
+      el.classList.toggle("show");
+    };
+
+    reloadBtn.onclick = loadActivities;
+    searchInput.oninput = renderActivities;
+    statusFilter.onchange = renderActivities;
+
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        showGate("活動總覽", "請先使用 Email / 密碼登入後台。", true);
+        return;
+      }
+
+      try {
+        const r = await loadMyRole(user.uid);
+        if (!r.ok) {
+          showGate(r.reason, "你的帳號尚未被授權。", false);
+          return;
+        }
+
+        currentRole = r.role;
+        mySchoolId = r.schoolId;
+        myOrgId = r.orgId;
+
+        if (!["platform_super","platform_admin","org_super","org_admin","org_staff"].includes(currentRole)) {
+          showGate("權限不足", "此頁僅限平台 / 組織 / 校方後台角色使用。", false);
+          return;
+        }
+
+        whoEl.textContent = user.email || "-";
+        roleText.textContent = currentRole || "-";
+        schoolText.textContent = mySchoolId || "-";
+
+        gate.style.display = "none";
+        app.style.display = "block";
+
+        await loadActivities();
+      } catch (e) {
+        console.error(e);
+        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+      }
+    });
+  </script>
+</body>
+</html>
