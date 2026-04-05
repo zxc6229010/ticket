@@ -29,26 +29,31 @@
       padding: 24px 16px;
       background: #0a0a0a;
     }
+
     .gate-inner {
       width: 100%;
       max-width: 360px;
       text-align: center;
     }
+
     .gate-logo {
       font-size: 44px;
       margin-bottom: 12px;
     }
+
     .gate-title {
       font-size: 18px;
       font-weight: 900;
       color: #fff;
       margin-bottom: 4px;
     }
+
     .gate-sub {
       font-size: 13px;
       color: #666;
       margin-bottom: 24px;
     }
+
     .gate-card {
       background: #111;
       border: 1px solid #222;
@@ -56,6 +61,7 @@
       padding: 24px;
       text-align: left;
     }
+
     .gate-card label {
       display: block;
       font-size: 12px;
@@ -65,6 +71,7 @@
       letter-spacing: .4px;
       text-transform: uppercase;
     }
+
     .gate-card input {
       width: 100%;
       padding: 12px 14px;
@@ -77,8 +84,10 @@
       margin-bottom: 12px;
       transition: border-color .15s;
     }
+
     .gate-card input:focus { border-color: #22c55e; }
     .gate-card input::placeholder { color: #444; }
+
     #loginBtn {
       width: 100%;
       padding: 13px;
@@ -92,8 +101,10 @@
       transition: background .15s;
       margin-top: 4px;
     }
+
     #loginBtn:hover { background: #16a34a; }
     #loginBtn:disabled { opacity: .55; cursor: not-allowed; }
+
     #loginErr {
       font-size: 13px;
       color: #f87171;
@@ -107,34 +118,61 @@
     .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
       margin-bottom: 14px;
     }
+
     .event-title {
       font-size: 15px;
       font-weight: 900;
       color: #fff;
       flex: 1;
+      line-height: 1.5;
+      min-width: 0;
+    }
+
+    .event-title-main {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .top-actions { display: flex; align-items: center; gap: 10px; }
+
+    .event-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .live {
       display: inline-flex;
       align-items: center;
       gap: 5px;
       font-size: 12px;
       color: #22c55e;
+      white-space: nowrap;
     }
+
     .live-dot {
-      width: 7px; height: 7px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #22c55e;
       animation: pulse 1.5s ease-in-out infinite;
     }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    @keyframes pulse {
+      0%,100%{opacity:1}
+      50%{opacity:.3}
+    }
+
     .btn-logout {
       padding: 7px 14px;
       background: #1a1a1a;
@@ -146,6 +184,7 @@
       cursor: pointer;
       transition: color .13s, border-color .13s;
     }
+
     .btn-logout:hover { color: #f87171; border-color: #7f1d1d; }
 
     .scanner-frame {
@@ -156,6 +195,7 @@
       aspect-ratio: 1;
       max-height: 340px;
     }
+
     #reader { width: 100% !important; height: 100% !important; }
     #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
     #reader img, #reader__dashboard, #reader__filescan_input { display: none !important; }
@@ -168,20 +208,25 @@
       justify-content: center;
       pointer-events: none;
     }
+
     .scan-box {
-      width: 190px; height: 190px;
+      width: 190px;
+      height: 190px;
       border: 3px solid rgba(255,255,255,.75);
       border-radius: 14px;
       box-shadow: 0 0 0 9999px rgba(0,0,0,.5);
     }
+
     .scan-line {
       position: absolute;
       top: calc(50% - 93px);
       left: calc(50% - 93px);
-      width: 186px; height: 3px;
+      width: 186px;
+      height: 3px;
       background: linear-gradient(90deg, transparent, #22c55e, transparent);
       animation: scanLine 1.8s ease-in-out infinite;
     }
+
     @keyframes scanLine {
       0%   { transform: translateY(0); opacity: 0; }
       15%  { opacity: 1; }
@@ -201,6 +246,7 @@
       pointer-events: none;
       transition: opacity .12s ease;
     }
+
     .result-flash.ok   { background: rgba(34,197,94,.3); }
     .result-flash.warn { background: rgba(239,68,68,.3); }
     .result-flash.show { opacity: 1; }
@@ -217,6 +263,7 @@
       align-items: center;
       gap: 10px;
     }
+
     .status-bar .icon { font-size: 20px; flex-shrink: 0; }
     .status-bar .msg  { flex: 1; line-height: 1.5; }
     .status-bar.ok   { border-color: #166534; background: #052e16; }
@@ -229,6 +276,7 @@
       gap: 8px;
       margin-top: 10px;
     }
+
     .btn-scan {
       height: 50px;
       border-radius: 12px;
@@ -240,6 +288,7 @@
       cursor: pointer;
       transition: background .13s, color .13s;
     }
+
     .btn-scan:hover:not(:disabled) { background: #222; color: #fff; }
     .btn-scan.active { background: #14532d; border-color: #166534; color: #4ade80; }
     .btn-scan:disabled { opacity: .4; cursor: not-allowed; }
@@ -250,6 +299,7 @@
       gap: 8px;
       margin-top: 10px;
     }
+
     .stat-box {
       background: #111;
       border: 1px solid #1e1e1e;
@@ -257,11 +307,52 @@
       padding: 12px 8px;
       text-align: center;
     }
-    .stat-num   { font-size: 28px; font-weight: 900; color: #fff; }
+
+    .stat-num { font-size: 28px; font-weight: 900; color: #fff; }
     .stat-num.green { color: #22c55e; }
     .stat-label { font-size: 11px; color: #555; margin-top: 3px; }
 
+    .schedule-box {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #111;
+      border: 1px solid #222;
+    }
+
+    .schedule-title {
+      font-size: 12px;
+      color: #9ca3af;
+      font-weight: 800;
+      letter-spacing: .08em;
+      margin-bottom: 8px;
+    }
+
+    .schedule-item {
+      padding: 8px 0;
+      border-top: 1px dashed #232323;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .schedule-item:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .schedule-main {
+      color: #e5e7eb;
+      font-weight: 700;
+    }
+
+    .schedule-sub {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
     .log-section { margin-top: 14px; }
+
     .log-title {
       font-size: 11px;
       color: #444;
@@ -270,7 +361,9 @@
       text-transform: uppercase;
       margin-bottom: 8px;
     }
+
     .log-list { display: grid; gap: 5px; }
+
     .log-item {
       display: flex;
       align-items: flex-start;
@@ -282,10 +375,12 @@
       font-size: 13px;
       animation: fadeInDown .13s ease;
     }
+
     @keyframes fadeInDown {
       from { opacity:0; transform:translateY(-3px); }
       to   { opacity:1; transform:translateY(0); }
     }
+
     .log-item.ok   { border-color: #14532d; }
     .log-item.warn { border-color: #450a0a; }
     .log-icon  { flex-shrink: 0; font-size: 15px; }
@@ -317,9 +412,9 @@
     <div class="wrap">
 
       <div class="top-bar">
-        <div>
-          <div class="event-title" id="eventTitle">載入中…</div>
-          <div style="font-size:12px;color:#9ca3af;margin-top:4px;">入口：<span id="gateName">未設定</span></div>
+        <div class="event-title">
+          <div class="event-title-main" id="eventTitle">載入中…</div>
+          <div class="event-sub" id="eventSub">入口：<span id="gateName">未設定</span></div>
         </div>
         <div class="top-actions">
           <span class="live"><span class="live-dot"></span>即時</span>
@@ -361,6 +456,13 @@
         </div>
       </div>
 
+      <div class="schedule-box">
+        <div class="schedule-title">今日相關活動</div>
+        <div id="scheduleList">
+          <div class="empty" style="font-size:13px;color:#6b7280;">載入中…</div>
+        </div>
+      </div>
+
       <div class="log-section">
         <div class="log-title">本次記錄</div>
         <div class="log-list" id="logList">
@@ -387,6 +489,7 @@
         appId:             "1:704757384914:web:9f58e4085dd71180c5cf0b"
       });
     }
+
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
@@ -403,6 +506,7 @@
     const logoutBtn    = document.getElementById("logoutBtn");
     const eventTitleEl = document.getElementById("eventTitle");
     const gateNameEl   = document.getElementById("gateName");
+    const eventSubEl   = document.getElementById("eventSub");
     const statusBar    = document.getElementById("statusBar");
     const resultFlash  = document.getElementById("resultFlash");
     const scanLine     = document.getElementById("scanLine");
@@ -412,16 +516,17 @@
     const sTotalEl     = document.getElementById("sTotal");
     const sCheckedEl   = document.getElementById("sChecked");
     const sRemainEl    = document.getElementById("sRemain");
+    const scheduleList = document.getElementById("scheduleList");
 
     let currentUser = null;
-    let myAssignedEventId = "";
-    let myAssignedGate = "";
-    let myAssignedEventData = null;
+    let currentSelectedAssignment = null;
+    let currentEventData = null;
     let qr = null;
     let scanning = false;
     let busy = false;
     let logCount = 0;
     let unsubStats = null;
+    let myAssignments = [];
 
     function showGate() {
       gateWrap.style.display = "flex";
@@ -485,6 +590,7 @@
         setTimeout(() => ctx.close(), dur + 100);
       } catch (_) {}
     }
+
     const okBeep   = () => { beep(880, 80); setTimeout(() => beep(1200, 100), 90); };
     const warnBeep = () => { beep(300, 200, "square", 0.15); };
 
@@ -522,6 +628,101 @@
       while (logListEl.children.length > 30) logListEl.removeChild(logListEl.lastChild);
     }
 
+    function toMillis(ts) {
+      if (!ts) return null;
+      if (typeof ts.toDate === "function") return ts.toDate().getTime();
+      if (ts instanceof Date) return ts.getTime();
+      const d = new Date(ts);
+      return isNaN(d.getTime()) ? null : d.getTime();
+    }
+
+    function formatDateTime(ts) {
+      const ms = toMillis(ts);
+      if (!ms) return "-";
+      return new Date(ms).toLocaleString("zh-Hant", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+    }
+
+    function formatTime(ts) {
+      const ms = toMillis(ts);
+      if (!ms) return "-";
+      return new Date(ms).toLocaleTimeString("zh-Hant", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+    }
+
+    function isTodayTs(ts) {
+      const ms = toMillis(ts);
+      if (!ms) return false;
+      const d = new Date(ms);
+      const now = new Date();
+      return d.getFullYear() === now.getFullYear()
+        && d.getMonth() === now.getMonth()
+        && d.getDate() === now.getDate();
+    }
+
+    function getEventTimeState(eventData) {
+      const now = Date.now();
+      const startMs = toMillis(eventData?.eventStartAt);
+      const endMs = toMillis(eventData?.eventEndAt);
+
+      if (!startMs || !endMs) {
+        return {
+          state: "invalid",
+          ok: false,
+          reason: "活動時間未設定完整，暫時無法核銷"
+        };
+      }
+
+      if (now < startMs) {
+        return {
+          state: "upcoming",
+          ok: false,
+          reason: "活動尚未開始，目前不可核銷"
+        };
+      }
+
+      if (now > endMs) {
+        return {
+          state: "ended",
+          ok: false,
+          reason: "活動已結束，目前不可核銷"
+        };
+      }
+
+      return {
+        state: "active",
+        ok: true,
+        reason: ""
+      };
+    }
+
+    function parseTicketCode(raw) {
+      const code = norm(raw);
+      if (!code) return "";
+
+      if (/^https?:\/\//i.test(code)) {
+        try {
+          const url = new URL(code);
+          return norm(
+            url.searchParams.get("ticketId") ||
+            url.searchParams.get("id") ||
+            url.pathname.split("/").pop()
+          );
+        } catch (_) {}
+      }
+
+      return code.replace(/^ticket[:#-]?/i, "").trim();
+    }
+
     function startStats(eventId) {
       if (unsubStats) unsubStats();
 
@@ -546,127 +747,133 @@
         });
     }
 
-    function parseTicketCode(raw) {
-      const code = norm(raw);
-      if (!code) return "";
-
-      if (/^https?:\/\//i.test(code)) {
-        try {
-          const url = new URL(code);
-          return norm(
-            url.searchParams.get("ticketId") ||
-            url.searchParams.get("id") ||
-            url.pathname.split("/").pop()
-          );
-        } catch (_) {}
-      }
-
-      return code.replace(/^ticket[:#-]?/i, "").trim();
-    }
-
-    function toMillis(ts) {
-      if (!ts) return null;
-      if (typeof ts.toDate === "function") return ts.toDate().getTime();
-      if (ts instanceof Date) return ts.getTime();
-      const d = new Date(ts);
-      return isNaN(d.getTime()) ? null : d.getTime();
-    }
-
-    function getEventTimeState(eventData) {
-      const now = Date.now();
-      const startMs = toMillis(eventData?.eventStartAt);
-      const endMs = toMillis(eventData?.eventEndAt);
-
-      if (!startMs || !endMs) {
-        return {
-          ok: false,
-          reason: "活動時間未設定完整，暫時無法核銷"
-        };
-      }
-
-      if (now < startMs) {
-        return {
-          ok: false,
-          reason: "活動尚未開始，目前不可核銷"
-        };
-      }
-
-      if (now > endMs) {
-        return {
-          ok: false,
-          reason: "活動已結束，目前不可核銷"
-        };
-      }
-
-      return { ok: true, reason: "" };
-    }
-
-    async function resolveAssignmentFromEvents(uid) {
-      let foundEventId = "";
-      let foundGateName = "";
-
+    async function getMyCheckinAssignments(uid) {
       const eventsSnap = await db.collection("events").get();
+      const rows = [];
 
       for (const eventDoc of eventsSnap.docs) {
         const eventId = eventDoc.id;
+        const eventData = eventDoc.data() || {};
 
         try {
-          const assignDoc = await db.collection("events")
+          const staffDoc = await db.collection("events")
             .doc(eventId)
-            .collection("checkinAssignments")
+            .collection("staffAssignments")
             .doc(uid)
             .get();
 
-          if (assignDoc.exists) {
-            const assignData = assignDoc.data() || {};
-            foundEventId = eventId;
-            foundGateName = norm(assignData.gateName || "");
-            break;
-          }
+          if (!staffDoc.exists) continue;
+
+          const a = staffDoc.data() || {};
+          const canCheckin =
+            a?.permissions?.canCheckin === true ||
+            norm(a.roleInEvent) === "checkin" ||
+            norm(a.roleInEvent) === "manager";
+
+          if (!canCheckin) continue;
+
+          rows.push({
+            eventId,
+            eventData,
+            ...a
+          });
         } catch (_) {}
       }
 
-      return {
-        eventId: foundEventId,
-        gateName: foundGateName
-      };
+      return rows;
     }
 
-    async function loadAssignedEventInfo() {
-      myAssignedEventData = null;
+    function pickBestAssignment(assignments) {
+      if (!assignments.length) return null;
 
-      if (!myAssignedEventId) {
-        eventTitleEl.textContent = "（未指派活動）";
-        gateNameEl.textContent = myAssignedGate || "未設定";
-        sTotalEl.textContent = "–";
-        sCheckedEl.textContent = "–";
-        sRemainEl.textContent = "–";
+      const todayOnly = assignments.filter(a => isTodayTs(a.eventData?.eventStartAt));
+
+      const rows = todayOnly.length ? todayOnly : assignments.slice();
+
+      rows.sort((a, b) => {
+        const ta = toMillis(a.eventData?.eventStartAt) || 0;
+        const tb = toMillis(b.eventData?.eventStartAt) || 0;
+        return ta - tb;
+      });
+
+      const active = rows.find(a => getEventTimeState(a.eventData).state === "active");
+      if (active) return active;
+
+      const upcoming = rows.find(a => getEventTimeState(a.eventData).state === "upcoming");
+      if (upcoming) return upcoming;
+
+      return rows[rows.length - 1];
+    }
+
+    function renderSchedule(assignments) {
+      if (!assignments.length) {
+        scheduleList.innerHTML = `<div class="schedule-item"><div class="schedule-main">今天沒有可核銷活動</div><div class="schedule-sub">若你未被指派任何活動，也會顯示在這裡。</div></div>`;
         return;
       }
 
-      let evtName = myAssignedEventId;
+      const todayOnly = assignments.filter(a => isTodayTs(a.eventData?.eventStartAt));
+      const rows = todayOnly.length ? todayOnly : assignments.slice();
 
-      try {
-        const es = await db.collection("events").doc(myAssignedEventId).get();
-        if (es.exists) {
-          myAssignedEventData = es.data() || {};
-          evtName = norm(myAssignedEventData.title || myAssignedEventId);
-        }
-      } catch (_) {}
+      rows.sort((a, b) => {
+        const ta = toMillis(a.eventData?.eventStartAt) || 0;
+        const tb = toMillis(b.eventData?.eventStartAt) || 0;
+        return ta - tb;
+      });
 
-      eventTitleEl.textContent = evtName;
-      gateNameEl.textContent = myAssignedGate || "未設定";
-      startStats(myAssignedEventId);
+      scheduleList.innerHTML = rows.map(a => {
+        const state = getEventTimeState(a.eventData);
+        let label = "活動資訊";
+        if (state.state === "active") label = "目前可核銷";
+        if (state.state === "upcoming") label = "尚未開始";
+        if (state.state === "ended") label = "已結束";
+        if (state.state === "invalid") label = "時間未設定";
 
-      const timeState = getEventTimeState(myAssignedEventData);
+        return `
+          <div class="schedule-item">
+            <div class="schedule-main">${esc(a.eventData?.title || a.eventId)}｜${esc(label)}</div>
+            <div class="schedule-sub">
+              ${esc(formatTime(a.eventData?.eventStartAt))} - ${esc(formatTime(a.eventData?.eventEndAt))}
+              ｜入口：${esc(a.gateName || "未指定")}
+              ｜身份：${esc(a.roleInEvent || "-")}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function loadSelectedAssignmentInfo() {
+      currentEventData = currentSelectedAssignment?.eventData || null;
+
+      if (!currentSelectedAssignment) {
+        eventTitleEl.textContent = "沒有可用活動";
+        gateNameEl.textContent = "未設定";
+        eventSubEl.innerHTML = `入口：<span id="gateName">未設定</span>`;
+        sTotalEl.textContent = "–";
+        sCheckedEl.textContent = "–";
+        sRemainEl.textContent = "–";
+        setStatus("warn", "⚠️", "目前沒有可核銷的活動指派");
+        return;
+      }
+
+      const eventTitle = norm(currentEventData?.title || currentSelectedAssignment.eventId || "未命名活動");
+      const gateName = norm(currentSelectedAssignment.gateName || "");
+      const roleInEvent = norm(currentSelectedAssignment.roleInEvent || "");
+
+      eventTitleEl.textContent = eventTitle;
+      gateNameEl.textContent = gateName || "未設定";
+      eventSubEl.innerHTML = `
+        入口：<span id="gateName">${esc(gateName || "未設定")}</span>
+        ｜身份：<span class="mono">${esc(roleInEvent || "-")}</span>
+        ｜時間：<span class="mono">${esc(formatTime(currentEventData?.eventStartAt))} - ${esc(formatTime(currentEventData?.eventEndAt))}</span>
+      `;
+
+      startStats(currentSelectedAssignment.eventId);
+
+      const timeState = getEventTimeState(currentEventData);
       if (!timeState.ok) {
         setStatus("warn", "⏰", timeState.reason);
       } else {
-        setStatus(
-          "info",
-          "📷",
-          `按「開始掃描」啟動相機，只能掃描票券條碼${myAssignedGate ? `｜目前入口：${myAssignedGate}` : ""}`
-        );
+        setStatus("info", "📷", `按「開始掃描」啟動相機，只能掃描票券條碼${gateName ? `｜目前入口：${gateName}` : ""}`);
       }
     }
 
@@ -677,15 +884,15 @@
       setStatus("info", "⏳", `讀取票券：${code}`);
 
       try {
-        if (!myAssignedEventId) {
+        if (!currentSelectedAssignment) {
           flash("warn");
           warnBeep();
-          setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
-          pushLog("warn", "尚未被指派活動", code);
+          setStatus("warn", "⚠️", "目前沒有可核銷的活動指派");
+          pushLog("warn", "未被指派可核銷活動", code);
           return;
         }
 
-        const timeState = getEventTimeState(myAssignedEventData);
+        const timeState = getEventTimeState(currentEventData);
         if (!timeState.ok) {
           flash("warn");
           warnBeep();
@@ -694,9 +901,12 @@
           return;
         }
 
+        const eventId = currentSelectedAssignment.eventId;
+        const gateName = norm(currentSelectedAssignment.gateName || "");
+
         const ticketRef = db
           .collection("events")
-          .doc(myAssignedEventId)
+          .doc(eventId)
           .collection("tickets")
           .doc(code);
 
@@ -729,21 +939,21 @@
           checkedInAt: new Date(),
           checkedInBy: currentUser.uid,
           checkedInByEmail: currentUser.email || "",
-          checkedInGate: myAssignedGate || "",
-          checkedInEventId: myAssignedEventId || ""
+          checkedInGate: gateName || "",
+          checkedInEventId: eventId || ""
         });
 
         try {
           await db.collection("events")
-            .doc(myAssignedEventId)
+            .doc(eventId)
             .collection("scanLogs")
             .add({
               ticketId: code,
               checkedInAt: new Date(),
               checkedInBy: currentUser.uid,
               checkedInByEmail: currentUser.email || "",
-              checkedInGate: myAssignedGate || "",
-              checkedInEventId: myAssignedEventId || "",
+              checkedInGate: gateName || "",
+              checkedInEventId: eventId || "",
               result: "success"
             });
         } catch (logErr) {
@@ -752,8 +962,8 @@
 
         flash("ok");
         okBeep();
-        setStatus("ok", "✅", `入場成功${myAssignedGate ? `｜${myAssignedGate}` : ""}`);
-        pushLog("ok", "入場成功（票券）", `${code}${myAssignedGate ? `｜${myAssignedGate}` : ""}`);
+        setStatus("ok", "✅", `入場成功${gateName ? `｜${gateName}` : ""}`);
+        pushLog("ok", "入場成功（票券）", `${code}${gateName ? `｜${gateName}` : ""}`);
 
       } catch (e) {
         console.error(e);
@@ -774,12 +984,12 @@
     async function startScan() {
       if (scanning) return;
 
-      if (!myAssignedEventId) {
-        setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
+      if (!currentSelectedAssignment) {
+        setStatus("warn", "⚠️", "目前沒有可核銷的活動指派");
         return;
       }
 
-      const timeState = getEventTimeState(myAssignedEventData);
+      const timeState = getEventTimeState(currentEventData);
       if (!timeState.ok) {
         setStatus("warn", "⏰", timeState.reason);
         return;
@@ -843,8 +1053,9 @@
       startBtn.classList.remove("active");
       stopBtn.disabled = true;
       scanLine.style.display = "none";
-      if (myAssignedEventData) {
-        const timeState = getEventTimeState(myAssignedEventData);
+
+      if (currentEventData) {
+        const timeState = getEventTimeState(currentEventData);
         if (!timeState.ok) {
           setStatus("warn", "⏰", timeState.reason);
         } else {
@@ -867,6 +1078,9 @@
           unsubStats = null;
         }
         await stopScan();
+        myAssignments = [];
+        currentSelectedAssignment = null;
+        currentEventData = null;
         showGate();
         return;
       }
@@ -896,48 +1110,26 @@
 
         if (!VALID.includes(role)) {
           showGate();
-          loginErr.textContent = `角色「${role}」沒有核銷權限。`;
+          loginErr.textContent = `角色「${role}」沒有後台登入資格。`;
           loginErr.style.display = "block";
           await auth.signOut();
           return;
         }
 
-        myAssignedEventId = "";
-        myAssignedGate = "";
-        myAssignedEventData = null;
+        myAssignments = await getMyCheckinAssignments(user.uid);
+        currentSelectedAssignment = pickBestAssignment(myAssignments);
 
-        const legacyAssignedEventId = norm(
-          u.assignedCheckinEventId ||
-          u.assignedEventId ||
-          ""
-        );
-
-        const legacyAssignedGate = norm(
-          u.assignedCheckinGateName ||
-          u.assignedGate ||
-          u.assignedEntrance ||
-          ""
-        );
-
-        let foundEventId = "";
-        let foundGateName = "";
-
-        try {
-          const assigned = await resolveAssignmentFromEvents(user.uid);
-          foundEventId = assigned.eventId;
-          foundGateName = assigned.gateName;
-        } catch (e) {
-          console.warn("讀取 checkinAssignments 失敗，改用 users 指派欄位：", e);
-        }
-
-        myAssignedEventId = foundEventId || legacyAssignedEventId || "";
-        myAssignedGate = foundGateName || legacyAssignedGate || "";
-
-        await loadAssignedEventInfo();
+        renderSchedule(myAssignments);
+        await loadSelectedAssignmentInfo();
         showApp();
 
-        if (!myAssignedEventId) {
-          setStatus("warn", "⚠️", "你尚未被指派活動，請聯絡管理員");
+        if (!currentSelectedAssignment) {
+          setStatus("warn", "⚠️", "今天沒有可核銷活動，或你尚未被指派可核銷身份");
+        } else {
+          const ts = getEventTimeState(currentEventData);
+          if (!ts.ok) {
+            setStatus("warn", "⏰", ts.reason);
+          }
         }
 
       } catch (e) {
