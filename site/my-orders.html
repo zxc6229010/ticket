@@ -2,114 +2,639 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>我的訂單</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Orders</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --black:#111;
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --black:#111111;
+
       --green:#166534;
+      --green-bg:#dcfce7;
       --red:#b91c1c;
+      --red-bg:#fee2e2;
       --orange:#c2410c;
+      --orange-bg:#ffedd5;
       --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1280px;
     }
 
-    body{
+    *{ box-sizing:border-box; }
+
+    html,body{
       margin:0;
+      padding:0;
       background:var(--bg);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 22px;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
       color:var(--text);
     }
 
-    .wrap{
-      max-width:1100px;
-      margin:0 auto;
-      padding:28px 16px 60px;
-    }
-
-    .topbar{
+    .nav-actions{
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      margin-bottom:20px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    .title{
-      font-size:24px;
-      font-weight:1000;
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
     }
 
     .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
       padding:10px 16px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      font-weight:900;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .ghost-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      font-size:14px;
+      font-weight:700;
+      color:#111827;
       cursor:pointer;
     }
 
-    .card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:18px;
-      margin-bottom:16px;
-      box-shadow:var(--shadow);
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
     }
 
-    .event{
-      font-size:18px;
-      font-weight:1000;
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:14px;
+      max-width:860px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+    }
+
+    .hero-meta{
+      margin-top:20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .input,
+    .select{
+      min-height:46px;
+      padding:10px 14px;
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:18px;
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      outline:none;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .input{
+      min-width:280px;
+    }
+
+    .input:focus,
+    .select:focus{
+      border-color:rgba(0,0,0,.24);
+    }
+
+    .list{
+      display:grid;
+      gap:18px;
+    }
+
+    .order-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .order-head{
+      padding:20px 20px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .order-head-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .order-title{
+      margin:0;
+      font-size:22px;
+      line-height:1.35;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .order-sub{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.9;
     }
 
     .status{
-      display:inline-block;
-      padding:4px 10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
       border-radius:999px;
       font-size:12px;
-      font-weight:900;
+      font-weight:800;
+      white-space:nowrap;
+    }
+
+    .status-ok{
+      background:var(--green-bg);
+      color:var(--green);
+    }
+
+    .status-pending{
+      background:var(--orange-bg);
+      color:var(--orange);
+    }
+
+    .status-cancel{
+      background:var(--red-bg);
+      color:var(--red);
+    }
+
+    .status-gray{
+      background:var(--gray-bg);
+      color:var(--gray);
+    }
+
+    .order-body{
+      padding:20px;
+    }
+
+    .order-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    @media (max-width:760px){
+      .order-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .info-box{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:22px;
+      background:#fff;
+      padding:16px;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .box-title{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.04em;
+      margin-bottom:10px;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:90px 1fr;
+      gap:8px 10px;
+      padding:8px 0;
+      border-top:1px dashed var(--line);
+    }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .v{
+      font-size:13px;
+      color:#111827;
+      font-weight:800;
+      line-height:1.9;
+      word-break:break-word;
+    }
+
+    .seat-list{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
       margin-top:6px;
     }
 
-    .status.ok{ background:#dcfce7; color:var(--green); }
-    .status.pending{ background:#ffedd5; color:var(--orange); }
-    .status.cancel{ background:#fee2e2; color:var(--red); }
+    .seat-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#f8f8f9;
+      border:1px solid rgba(0,0,0,.06);
+      font-size:12px;
+      font-weight:800;
+      color:#111;
+    }
 
-    .kv{
-      margin-top:12px;
+    .order-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .notice{
+      margin-top:16px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.95;
+      white-space:pre-wrap;
+      word-break:break-word;
+      border-radius:18px;
+      padding:14px;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.05);
+    }
+
+    .empty,
+    .loading{
+      padding:42px 18px;
+      text-align:center;
+      color:var(--muted);
       font-size:14px;
+      line-height:1.95;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
       line-height:1.8;
     }
 
-    .label{
-      color:var(--muted);
-    }
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
 
-    .value{
-      font-weight:900;
-    }
+      .nav-links{
+        display:none;
+      }
 
-    .empty{
-      text-align:center;
-      color:var(--muted);
-      margin-top:40px;
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .input{
+        min-width:unset;
+        width:100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="title">我的訂單</div>
-      <a href="member.html" class="btn">← 返回會員中心</a>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">T</span>
+          <span>Tickets</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="member.html">會員中心</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="btn" href="member.html">Account</a>
+        </div>
+      </div>
     </div>
 
-    <div id="list"></div>
+    <main class="page">
+      <div class="back-row">
+        <a href="member.html" class="back-link">← 返回會員中心</a>
+        <div class="toolbar-right">
+          <a href="my-tickets.html" class="ghost-btn">我的票券</a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1 class="hero-title">My Orders</h1>
+        <div class="hero-sub">
+          這裡會顯示你建立過的全部訂單。你可以查看票種、張數、金額、座位與目前狀態。
+          一筆訂單可能對應多張票券。
+        </div>
+        <div class="hero-meta">
+          <span class="pill" id="heroUserText">登入狀態：讀取中…</span>
+          <span class="pill" id="heroCountText">訂單數量：–</span>
+        </div>
+      </div>
+
+      <div id="app" class="loading">載入中…</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
+          <a class="footer-link" href="campus-verify.html">校園驗證</a>
+          <a class="footer-link" href="member.html">帳號資料</a>
+        </div>
+
+        <div>
+          <div class="footer-title">About</div>
+          <a class="footer-link" href="index.html">Tickets</a>
+          <a class="footer-link" href="dashboard.html">管理後台</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        訂單內容以系統最新狀態為準。若票券已建立，請到「我的票券」頁面查看單張票券。
+      </div>
+    </main>
   </div>
 
   <script type="module">
@@ -129,100 +654,305 @@
       projectId: "concert-1ff7e"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
 
-    const list = document.getElementById("list");
+    const app = document.getElementById("app");
+    const heroUserText = document.getElementById("heroUserText");
+    const heroCountText = document.getElementById("heroCountText");
+
+    let currentUser = null;
+    let orderCache = [];
 
     function esc(s){
-      return String(s ?? "");
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function lower(v){
+      return String(v ?? "").trim().toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
     }
 
     function formatPrice(v){
       const n = Number(v || 0);
       if (!n) return "免費";
-      return "NT$ " + n.toLocaleString();
+      return "NT$ " + n.toLocaleString("zh-Hant");
     }
 
     function getStatusClass(status){
-      status = (status || "").toLowerCase();
+      status = lower(status);
 
-      if (["registered","paid","completed"].includes(status)) return "ok";
-      if (["pending"].includes(status)) return "pending";
-      return "cancel";
+      if (["registered","paid","completed"].includes(status)) return "status-ok";
+      if (["pending","processing"].includes(status)) return "status-pending";
+      if (["cancelled","void","refunded"].includes(status)) return "status-cancel";
+      return "status-gray";
     }
 
     function getStatusText(status){
-      status = (status || "").toLowerCase();
+      status = lower(status);
 
       if (status === "registered") return "已建立";
       if (status === "paid") return "已付款";
+      if (status === "completed") return "已完成";
       if (status === "pending") return "待處理";
+      if (status === "processing") return "處理中";
       if (status === "cancelled") return "已取消";
+      if (status === "void") return "已作廢";
+      if (status === "refunded") return "已退款";
       return status || "-";
     }
 
-    async function loadOrders(uid){
-      // ⚠️ 你的資料在 events/{eventId}/orders
-      // 所以要抓全部 events 再合併
-      const eventsSnap = await getDocs(collection(db, "events"));
+    function sortOrders(list){
+      return list.slice().sort((a, b) => {
+        const ta = toDate(a.createdAt)?.getTime() || 0;
+        const tb = toDate(b.createdAt)?.getTime() || 0;
+        return tb - ta;
+      });
+    }
 
+    async function loadOrders(uid){
+      const eventsSnap = await getDocs(collection(db, "events"));
       let allOrders = [];
 
       for (const ev of eventsSnap.docs){
         const q = query(
           collection(db, "events", ev.id, "orders"),
-          where("uid","==",uid)
+          where("uid", "==", uid)
         );
 
         const snap = await getDocs(q);
 
-        snap.forEach(doc => {
+        snap.forEach(docSnap => {
           allOrders.push({
-            id: doc.id,
-            ...(doc.data() || {})
+            id: docSnap.id,
+            eventId: ev.id,
+            ...(docSnap.data() || {})
           });
         });
       }
 
-      return allOrders;
+      return sortOrders(allOrders);
     }
 
-    function render(orders){
-      if (!orders.length){
-        list.innerHTML = `<div class="empty">目前沒有任何訂單</div>`;
-        return;
-      }
+    function renderOrderList(orders){
+      const listHtml = orders.map(o => {
+        const seatLabels = Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
+        const sectionIds = Array.isArray(o.sectionIds) ? o.sectionIds.filter(Boolean) : [];
 
-      list.innerHTML = orders.map(o => {
         return `
-          <div class="card">
-            <div class="event">${esc(o.eventTitle || "活動")}</div>
+          <div class="order-card">
+            <div class="order-head">
+              <div class="order-head-top">
+                <div>
+                  <h2 class="order-title">${esc(o.eventTitle || "活動")}</h2>
+                  <div class="order-sub">
+                    訂單 ID：<span class="mono">${esc(o.id)}</span><br>
+                    活動 ID：<span class="mono">${esc(o.eventId || "-")}</span>
+                  </div>
+                </div>
 
-            <div class="status ${getStatusClass(o.status)}">
-              ${getStatusText(o.status)}
+                <span class="status ${getStatusClass(o.status)}">
+                  ${esc(getStatusText(o.status))}
+                </span>
+              </div>
             </div>
 
-            <div class="kv">
-              <div><span class="label">票種：</span><span class="value">${esc(o.ticketTypeName || "-")}</span></div>
-              <div><span class="label">張數：</span><span class="value">${o.quantity || 0}</span></div>
-              <div><span class="label">金額：</span><span class="value">${formatPrice(o.totalAmount)}</span></div>
-              <div><span class="label">座位：</span><span class="value">${(o.seatLabels || []).join("、") || "-"}</span></div>
+            <div class="order-body">
+              <div class="order-grid">
+                <div class="info-box">
+                  <div class="box-title">訂單資訊</div>
+
+                  <div class="kv">
+                    <div class="k">票種</div>
+                    <div class="v">${esc(o.ticketTypeName || "-")}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">張數</div>
+                    <div class="v">${esc(o.quantity || 0)}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">金額</div>
+                    <div class="v">${esc(formatPrice(o.totalAmount))}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">付款</div>
+                    <div class="v">${esc(o.paymentStatus || "-")}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">建立時間</div>
+                    <div class="v">${esc(formatDateTime(o.createdAt))}</div>
+                  </div>
+                </div>
+
+                <div class="info-box">
+                  <div class="box-title">座位與身份</div>
+
+                  <div class="kv">
+                    <div class="k">座位</div>
+                    <div class="v">
+                      ${
+                        seatLabels.length
+                          ? `<div class="seat-list">${seatLabels.map(seat => `<span class="seat-pill">${esc(seat)}</span>`).join("")}</div>`
+                          : "-"
+                      }
+                    </div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">區域</div>
+                    <div class="v">${sectionIds.length ? esc(sectionIds.join("、")) : "-"}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">校園驗證</div>
+                    <div class="v">${esc(o.verifiedSchoolName || o.verifiedSchoolId || "-")}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">購買身份</div>
+                    <div class="v">${esc(o.matchedRole || "-")}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="order-actions">
+                <a class="btn btn-primary" href="my-tickets.html">查看票券</a>
+                <a class="btn" href="ticket.html?id=${encodeURIComponent(o.eventId || "")}">查看活動</a>
+              </div>
+
+              <div class="notice">
+                ${
+                  lower(o.status) === "registered"
+                    ? "此訂單已建立。若票券已同步建立，可前往「我的票券」查看單張票券。"
+                    : lower(o.status) === "paid"
+                    ? "此訂單已完成付款，可前往「我的票券」查看可入場票券。"
+                    : lower(o.status) === "cancelled"
+                    ? "此訂單已取消。若有疑問，請聯絡主辦單位。"
+                    : "此訂單狀態請以系統顯示為準。"
+                }
+              </div>
             </div>
           </div>
         `;
       }).join("");
+
+      return `<div class="list">${listHtml}</div>`;
     }
 
-    onAuthStateChanged(auth, async user => {
-      if (!user){
-        list.innerHTML = `<div class="empty">請先登入</div>`;
+    function render(orders){
+      if (!orders.length){
+        heroCountText.textContent = "訂單數量：0";
+        app.className = "empty";
+        app.innerHTML = `目前沒有任何訂單`;
         return;
       }
 
-      const orders = await loadOrders(user.uid);
-      render(orders);
+      heroCountText.textContent = `訂單數量：${orders.length}`;
+
+      app.className = "";
+      app.innerHTML = `
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID" />
+          </div>
+
+          <div class="toolbar-right">
+            <select id="statusFilter" class="select">
+              <option value="all">全部狀態</option>
+              <option value="registered">已建立</option>
+              <option value="paid">已付款</option>
+              <option value="pending">待處理</option>
+              <option value="cancelled">已取消</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="orderListWrap"></div>
+      `;
+
+      const searchInput = document.getElementById("searchInput");
+      const statusFilter = document.getElementById("statusFilter");
+      const orderListWrap = document.getElementById("orderListWrap");
+
+      function paint(){
+        const q = lower(searchInput.value);
+        const f = statusFilter.value;
+
+        const filtered = orders.filter(o => {
+          if (f !== "all" && lower(o.status) !== f) return false;
+
+          if (!q) return true;
+
+          const hay = [
+            o.eventTitle,
+            o.ticketTypeName,
+            o.id,
+            ...(Array.isArray(o.seatLabels) ? o.seatLabels : [])
+          ].map(lower).join(" ");
+
+          return hay.includes(q);
+        });
+
+        if (!filtered.length) {
+          orderListWrap.innerHTML = `<div class="empty">找不到符合條件的訂單。</div>`;
+          return;
+        }
+
+        orderListWrap.innerHTML = renderOrderList(filtered);
+      }
+
+      searchInput.addEventListener("input", paint);
+      statusFilter.addEventListener("change", paint);
+
+      paint();
+    }
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user || null;
+
+      if (!user){
+        heroUserText.textContent = "登入狀態：尚未登入";
+        heroCountText.textContent = "訂單數量：–";
+        app.className = "empty";
+        app.innerHTML = `請先登入`;
+        return;
+      }
+
+      heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
+      app.className = "loading";
+      app.innerHTML = "載入中…";
+
+      try{
+        orderCache = await loadOrders(user.uid);
+        render(orderCache);
+      }catch(err){
+        console.error(err);
+        app.className = "empty";
+        app.innerHTML = "訂單載入失敗，請稍後再試。";
+      }
     });
   </script>
 </body>

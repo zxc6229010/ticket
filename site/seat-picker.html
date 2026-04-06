@@ -2,20 +2,22 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>選擇座位</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Seat Selection</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --line-strong:rgba(17,24,39,.14);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111111;
+      --white:#ffffff;
+
       --green:#166534;
       --green-bg:#dcfce7;
       --red:#b91c1c;
@@ -30,158 +32,121 @@
       --purple-bg:#ede9fe;
 
       --seat-available:#ffffff;
-      --seat-available-border:#111827;
-      --seat-selected:#111827;
-      --seat-selected-border:#111827;
-      --seat-sold:#6b7280;
-      --seat-sold-border:#6b7280;
-      --seat-disabled:#d1d5db;
-      --seat-disabled-border:#9ca3af;
-      --seat-locked:#fb923c;
-      --seat-locked-border:#ea580c;
-      --seat-not-allowed:#e5e7eb;
-      --seat-not-allowed-border:#cbd5e1;
+      --seat-available-border:#1d1d1f;
+      --seat-selected:#111111;
+      --seat-selected-border:#111111;
+      --seat-sold:#8e8e93;
+      --seat-sold-border:#8e8e93;
+      --seat-disabled:#d1d1d6;
+      --seat-disabled-border:#b1b1b7;
+      --seat-locked:#ff9f0a;
+      --seat-locked-border:#ff9f0a;
+      --seat-not-allowed:#ececef;
+      --seat-not-allowed-border:#d7d7dc;
 
-      --zone-a:#3b82f6;
-      --zone-b:#10b981;
-      --zone-c:#f59e0b;
-      --zone-d:#a855f7;
-      --zone-vip:#ef4444;
+      --zone-a:#0071e3;
+      --zone-b:#34c759;
+      --zone-c:#ff9f0a;
+      --zone-d:#af52de;
+      --zone-vip:#ff375f;
+
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1480px;
     }
 
     *{ box-sizing:border-box; }
 
-    html, body{
+    html,body{
       margin:0;
       padding:0;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-    .wrap{
-      max-width:1480px;
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:28px 18px 64px;
-    }
-
-    .topbar{
+      padding:0 22px;
+      min-height:60px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .back{
-      display:inline-flex;
+    .brand{
+      display:flex;
       align-items:center;
-      gap:8px;
-      color:#374151;
-      font-size:14px;
+      gap:10px;
+      font-size:18px;
       font-weight:800;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
       box-shadow:var(--shadow-soft);
     }
 
-    .top-actions{
+    .nav-links{
       display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
     }
 
-    .ghost-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      box-shadow:var(--shadow-soft);
-      font-size:14px;
-      font-weight:900;
-      color:#111827;
-      cursor:pointer;
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns:minmax(0, 1.38fr) minmax(360px, .72fr);
-      gap:22px;
-      align-items:start;
-    }
-
-    @media (max-width:1180px){
-      .layout{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .canvas-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      padding:18px 20px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
-    }
-
-    .title{
-      margin:0;
-      font-size:24px;
-      font-weight:1000;
-      letter-spacing:-.02em;
-    }
-
-    .sub{
-      margin-top:6px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .small{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:12px;
-      font-weight:1000;
-    }
-
-    .row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
     }
 
     .btn{
@@ -193,16 +158,16 @@
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      color:#111827;
+      color:var(--text);
       font-size:14px;
-      font-weight:1000;
+      font-weight:700;
       cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
     }
 
     .btn:hover{
       transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
     }
 
     .btn:active{
@@ -223,10 +188,170 @@
       border-color:#111;
     }
 
+    .ghost-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      font-size:14px;
+      font-weight:700;
+      color:#111827;
+      cursor:pointer;
+    }
+
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:14px;
+      max-width:920px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+    }
+
+    .hero-meta{
+      margin-top:20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0, 1.42fr) minmax(360px, .74fr);
+      gap:22px;
+      align-items:start;
+    }
+
+    @media (max-width:1180px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .canvas-toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:20px 22px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .title{
+      margin:0;
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:-.03em;
+      line-height:1.2;
+    }
+
+    .sub{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.9;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
     .canvas-wrap{
       position:relative;
       overflow:auto;
-      background:#f8fafc;
+      background:#f8f8fa;
       min-height:760px;
       max-height:80vh;
       padding:20px 20px 24px;
@@ -248,13 +373,13 @@
       max-width:720px;
       text-align:center;
       padding:16px 26px;
-      border-radius:18px 18px 38px 38px;
-      background:linear-gradient(180deg, #111827 0%, #374151 100%);
+      border-radius:22px 22px 42px 42px;
+      background:linear-gradient(180deg, #111111 0%, #2c2c2e 100%);
       color:#fff;
       font-size:18px;
-      font-weight:1000;
-      letter-spacing:.12em;
-      box-shadow:0 16px 32px rgba(17,24,39,.18);
+      font-weight:800;
+      letter-spacing:.18em;
+      box-shadow:0 16px 32px rgba(17,17,17,.16);
     }
 
     .stage{
@@ -263,14 +388,14 @@
       height:900px;
       margin:0 auto;
       background:
-        linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.22)),
-        #f3f4f6;
-      border:1px solid rgba(17,24,39,.06);
-      border-radius:26px;
+        linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.22)),
+        #f1f1f4;
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:28px;
       transform-origin:top left;
       user-select:none;
       overflow:hidden;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.32);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.38);
     }
 
     .seatmap-image{
@@ -303,7 +428,7 @@
     .seat.selected{
       background:var(--seat-selected);
       border-color:var(--seat-selected-border);
-      box-shadow:0 0 0 3px rgba(17,24,39,.18);
+      box-shadow:0 0 0 3px rgba(17,17,17,.14);
       z-index:8;
     }
 
@@ -318,7 +443,7 @@
       background:var(--seat-disabled);
       border-color:var(--seat-disabled-border);
       cursor:not-allowed;
-      opacity:.85;
+      opacity:.88;
     }
 
     .seat.locked{
@@ -331,7 +456,7 @@
       background:var(--seat-not-allowed);
       border-color:var(--seat-not-allowed-border);
       cursor:not-allowed;
-      opacity:.7;
+      opacity:.75;
     }
 
     .seat-label{
@@ -344,11 +469,11 @@
       white-space:nowrap;
       color:#111827;
       pointer-events:none;
-      font-weight:900;
-      background:rgba(255,255,255,.94);
+      font-weight:800;
+      background:rgba(255,255,255,.96);
       padding:1px 4px;
       border-radius:6px;
-      border:1px solid rgba(17,24,39,.08);
+      border:1px solid rgba(0,0,0,.06);
     }
 
     .legend{
@@ -365,7 +490,7 @@
       align-items:center;
       gap:8px;
       font-size:12px;
-      font-weight:900;
+      font-weight:800;
       color:#374151;
     }
 
@@ -380,15 +505,15 @@
 
     .zone-legend{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
       gap:10px;
       padding:0 20px 20px;
     }
 
     .zone-card{
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px 12px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:18px;
+      padding:12px;
       background:#fff;
       box-shadow:var(--shadow-soft);
     }
@@ -398,7 +523,7 @@
       align-items:center;
       gap:8px;
       font-size:13px;
-      font-weight:1000;
+      font-weight:800;
       color:#111827;
     }
 
@@ -431,8 +556,8 @@
 
     .side-card{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:30px;
       box-shadow:var(--shadow);
       overflow:hidden;
     }
@@ -445,13 +570,13 @@
 
     .side-title{
       margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
     }
 
     .side-sub{
-      margin-top:6px;
+      margin-top:8px;
       font-size:13px;
       color:var(--muted);
       line-height:1.8;
@@ -477,20 +602,20 @@
     .k{
       color:var(--muted);
       font-size:13px;
-      line-height:1.6;
+      line-height:1.7;
     }
 
     .v{
       color:#111827;
       font-size:13px;
-      font-weight:900;
-      line-height:1.7;
+      font-weight:800;
+      line-height:1.9;
       word-break:break-word;
     }
 
     .status-box{
-      border-radius:18px;
-      padding:14px;
+      border-radius:22px;
+      padding:14px 15px;
       margin-top:14px;
       border:1px solid var(--line);
       background:#fafafa;
@@ -528,27 +653,28 @@
 
     .status-title{
       font-size:14px;
-      font-weight:1000;
-      line-height:1.6;
+      font-weight:800;
+      line-height:1.7;
     }
 
     .status-desc{
       margin-top:6px;
       font-size:13px;
-      line-height:1.8;
+      line-height:1.85;
     }
 
     .detail-box{
       margin-top:14px;
-      border:1px solid var(--line);
-      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:22px;
       background:#fff;
       padding:14px;
+      box-shadow:var(--shadow-soft);
     }
 
     .detail-title{
       font-size:13px;
-      font-weight:1000;
+      font-weight:800;
       color:#111827;
     }
 
@@ -561,18 +687,19 @@
 
     .selected-list{
       margin-top:14px;
-      border:1px solid var(--line);
-      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:22px;
       background:#fff;
       padding:12px 14px;
+      box-shadow:var(--shadow-soft);
     }
 
     .selected-seat{
       padding:8px 0;
       border-top:1px dashed var(--line);
       font-size:14px;
-      line-height:1.8;
-      font-weight:900;
+      line-height:1.85;
+      font-weight:800;
     }
 
     .selected-seat:first-child{
@@ -586,13 +713,13 @@
       border:none;
       background:var(--black);
       color:#fff;
-      border-radius:18px;
+      border-radius:20px;
       padding:16px 18px;
       font-size:16px;
-      font-weight:1000;
+      font-weight:800;
       cursor:pointer;
       transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease;
-      box-shadow:0 14px 28px rgba(17,17,17,.16);
+      box-shadow:0 14px 28px rgba(17,17,17,.14);
     }
 
     .main-cta:hover{
@@ -610,18 +737,24 @@
       margin-top:14px;
       font-size:13px;
       color:var(--muted);
-      line-height:1.9;
+      line-height:1.95;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
-    .loading, .empty{
-      max-width:900px;
+    .loading,
+    .empty{
+      max-width:960px;
       margin:32px auto;
+      padding:34px 20px;
       text-align:center;
       color:var(--muted);
       font-size:14px;
-      line-height:1.8;
+      line-height:1.95;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:30px;
+      box-shadow:var(--shadow);
     }
 
     .modal-back{
@@ -644,7 +777,7 @@
       width:min(560px, 100%);
       background:#fff;
       border:1px solid var(--line);
-      border-radius:26px;
+      border-radius:30px;
       box-shadow:0 28px 80px rgba(15,23,42,.22);
       overflow:hidden;
     }
@@ -657,9 +790,9 @@
 
     .modal-title{
       margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
     }
 
     .modal-sub{
@@ -680,18 +813,160 @@
       justify-content:flex-end;
       margin-top:16px;
     }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .stage-sign{
+        min-width:260px;
+        font-size:16px;
+        padding:14px 18px;
+      }
+
+      .canvas-wrap{
+        min-height:620px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="back" id="backLink" href="index.html">← 返回購票頁</a>
-      <div class="top-actions">
-        <a class="ghost-btn" href="member.html">會員中心</a>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">T</span>
+          <span>Tickets</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="member.html">會員中心</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="btn" href="member.html">Account</a>
+        </div>
       </div>
     </div>
 
-    <div id="app" class="loading">載入中...</div>
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" id="backLink" href="index.html">← 返回購票頁</a>
+        <div class="row">
+          <a class="ghost-btn" href="member.html">會員中心</a>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1 class="hero-title">Seat Selection</h1>
+        <div class="hero-sub">
+          選擇你的座位，確認張數與資格條件後建立訂單。
+          系統會依活動限制、票種與你的資格，自動判斷哪些座位可選。
+        </div>
+        <div class="hero-meta" id="heroMeta">
+          <span class="pill">載入活動中…</span>
+        </div>
+      </div>
+
+      <div id="app" class="loading">載入中...</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
+          <a class="footer-link" href="campus-verify.html">校園驗證</a>
+          <a class="footer-link" href="member.html">帳號資料</a>
+        </div>
+
+        <div>
+          <div class="footer-title">About</div>
+          <a class="footer-link" href="index.html">Tickets</a>
+          <a class="footer-link" href="dashboard.html">管理後台</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        選到的座位會先暫時保留。若逾時未完成建立訂單，系統會自動釋放座位。
+      </div>
+    </main>
   </div>
 
   <div class="modal-back" id="modalBack">
@@ -740,6 +1015,7 @@
 
     const app = document.getElementById("app");
     const params = new URLSearchParams(location.search);
+    const heroMeta = document.getElementById("heroMeta");
 
     const eventId = norm(params.get("id"));
     const inviteCodeFromUrl = norm(params.get("inviteCode"));
@@ -811,6 +1087,10 @@
       const num = Number(value || 0);
       if (!num) return "免費";
       return `NT$ ${num.toLocaleString("zh-Hant")}`;
+    }
+
+    function setHeroMeta(items){
+      heroMeta.innerHTML = items.map(item => `<span class="pill">${item}</span>`).join("");
     }
 
     function getEventStatus(event){
@@ -1718,6 +1998,13 @@
       const holdRemainingMs = getMyHoldRemainingMs();
       const holdCountdown = holdRemainingMs > 0 ? formatCountdown(holdRemainingMs) : "";
 
+      setHeroMeta([
+        `活動：${esc(currentEvent.title || "-")}`,
+        `狀態：${esc(status.text)}`,
+        `票種：${esc(selectedTicketType?.name || "-")}`,
+        `本次需選：${requestedQuantity} 張`
+      ]);
+
       app.className = "";
       app.innerHTML = `
         <div class="layout">
@@ -1726,17 +2013,15 @@
               <div>
                 <h1 class="title">${esc(currentEvent.title || "選擇座位")}</h1>
                 <div class="sub">
-                  狀態：${esc(status.text)}｜活動時間：${esc(formatDateTime(currentEvent.eventStartAt))} ～ ${esc(formatDateTime(currentEvent.eventEndAt))}
+                  活動時間：${esc(formatDateTime(currentEvent.eventStartAt))} ～ ${esc(formatDateTime(currentEvent.eventEndAt))}
                 </div>
               </div>
 
               <div class="row">
-                <span class="pill">票種：${esc(selectedTicketType?.name || "-")}</span>
-                <span class="pill">本次需選：${requestedQuantity} 張</span>
                 <span class="pill">已選：${selectedSeatIds.length} 張</span>
-                <button class="btn btn-sm" id="zoomOutBtn">－</button>
-                <button class="btn btn-sm" id="zoomResetBtn">100%</button>
-                <button class="btn btn-sm" id="zoomInBtn">＋</button>
+                <button class="btn" id="zoomOutBtn">－</button>
+                <button class="btn" id="zoomResetBtn">100%</button>
+                <button class="btn" id="zoomInBtn">＋</button>
               </div>
             </div>
 
@@ -1766,7 +2051,7 @@
             <div class="canvas-wrap">
               <div class="stage-shell">
                 <div class="stage-top">
-                  <div class="stage-sign">STAGE 舞台</div>
+                  <div class="stage-sign">STAGE</div>
                 </div>
                 <div class="stage" id="stage">
                   ${currentEvent.seatMapImage ? `<img class="seatmap-image" src="${esc(currentEvent.seatMapImage)}" alt="seat map" />` : ""}
@@ -1778,10 +2063,10 @@
             <div class="legend">
               <div class="legend-item"><span class="legend-dot" style="background:#fff;border-color:#111827;"></span>可選</div>
               <div class="legend-item"><span class="legend-dot" style="background:#111827;border-color:#111827;"></span>已選 / 我的保留</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#6b7280;border-color:#6b7280;"></span>已售</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#fb923c;border-color:#ea580c;"></span>他人鎖定中</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#d1d5db;border-color:#9ca3af;"></span>停用</div>
-              <div class="legend-item"><span class="legend-dot" style="background:#e5e7eb;border-color:#cbd5e1;"></span>資格不符</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#8e8e93;border-color:#8e8e93;"></span>已售</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#ff9f0a;border-color:#ff9f0a;"></span>他人鎖定</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#d1d1d6;border-color:#b1b1b7;"></span>停用</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#ececef;border-color:#d7d7dc;"></span>資格不符</div>
             </div>
           </div>
 
@@ -1840,7 +2125,7 @@
                 ${renderFocusedSeatCard()}
 
                 <div class="selected-list">
-                  <div class="small" style="font-weight:1000;">已選座位</div>
+                  <div class="small" style="font-weight:800;">已選座位</div>
                   ${
                     selectedSeats.length
                       ? selectedSeats.map(seat => `
@@ -1853,14 +2138,14 @@
                 </div>
 
                 <div class="selected-list">
-                  <div class="small" style="font-weight:1000;">總計</div>
-                  <div style="margin-top:8px;font-size:24px;font-weight:1000;">
+                  <div class="small" style="font-weight:800;">總計</div>
+                  <div style="margin-top:8px;font-size:28px;font-weight:800;letter-spacing:-.03em;">
                     ${esc(formatPrice(totalAmount))}
                   </div>
                 </div>
 
                 <button class="btn" id="autoSeatBtn" style="width:100%;margin-top:16px;">
-                  🎯 電腦幫我選位
+                  電腦幫我選位
                 </button>
 
                 <button class="main-cta" id="submitBtn" ${selectedSeatIds.length === requestedQuantity ? "" : "disabled"}>
