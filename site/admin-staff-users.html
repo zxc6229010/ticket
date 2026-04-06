@@ -1241,28 +1241,65 @@
     parseImportBtn.onclick = parseImportFile;
 
     function buildSampleRows(){
-      const firstSchool = schoolOptions[0]?.id || "";
-      const firstOrg = orgOptions[0]?.id || "";
+    const firstSchool = schoolOptions[0]?.id || "";
+    const firstOrg = orgOptions[0]?.id || "";
 
-      return [
-        {
-          email:"user1@example.com",
-          password:"abc12345",
-          role:"org_staff",
-          enabled:"true",
-          schoolId:firstSchool,
-          orgId:firstOrg
-        },
-        {
-          email:"user2@example.com",
-          password:"abc12345",
-          role:"org_admin",
-          enabled:"true",
-          schoolId:firstSchool,
-          orgId:firstOrg
-        }
-      ];
+    return [
+      {
+        email: "user1@example.com",
+        password: "abc12345",
+        role: "org_staff",
+        enabled: "true",
+        schoolId: firstSchool,
+        orgId: firstOrg
+      },
+      {
+        email: "user2@example.com",
+        password: "abc12345",
+        role: "org_admin",
+        enabled: "true",
+        schoolId: firstSchool,
+        orgId: firstOrg
+      }
+    ];
+  }
+
+  function csvEscape(value){
+    const text = String(value ?? "");
+    if (text.includes('"') || text.includes(",") || text.includes("\n")) {
+      return `"${text.replace(/"/g, '""')}"`;
     }
+    return text;
+  }
+
+  function downloadCsvSample(){
+    const headers = ["email","password","role","enabled","schoolId","orgId"];
+    const rows = buildSampleRows();
+
+    const lines = [];
+    lines.push(headers.map(csvEscape).join(","));
+
+    rows.forEach(row => {
+      lines.push(headers.map(h => csvEscape(row[h] ?? "")).join(","));
+    });
+
+    const csvContent = "\uFEFF" + lines.join("\r\n");
+
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "staff_account_import_template.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  downloadCsvSampleBtn.onclick = downloadCsvSample;
 
     function buildReferenceSheetData(){
       const rows = [];
