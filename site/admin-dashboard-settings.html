@@ -22,7 +22,7 @@
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:960px; margin:0 auto; padding:48px 24px; }
+    .wrap{ max-width:1080px; margin:0 auto; padding:48px 24px; }
     @media (max-width:640px){ .wrap{ padding:28px 16px; } }
 
     .card{
@@ -80,7 +80,7 @@
       grid-template-columns:1fr 1fr;
       gap:14px;
     }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
 
     .roleBox{
       border:1px solid var(--line);
@@ -146,10 +146,6 @@
     }
     .check input{ width:18px; height:18px; margin:0; }
 
-    .mutedLine{
-      height:1px; background:rgba(17,17,17,.08); margin:14px 0;
-    }
-
     .pinnedHint{
       margin-top:10px;
       background:#f1f2f6;
@@ -169,14 +165,13 @@
     <div id="gate" class="card" style="display:none;"></div>
 
     <div id="app" style="display:none;">
-      <!-- Header -->
       <div class="card">
         <div class="row">
           <div>
             <h1>初選單選單管理</h1>
             <div class="sub">
-              在這裡決定「各身分」在 初選單會看到哪些功能，以及哪些要置頂。<br/>
-              （組織端只能在平台允許的範圍內做子集合，不能超過你設定的上限）
+              在這裡決定「各身分」在初選單會看到哪些功能，以及哪些要置頂。<br/>
+              組織端只能在平台允許的範圍內做子集合，不能超過你設定的上限。
             </div>
             <div class="sub" style="margin-top:10px;">
               登入：<span id="email" class="mono">-</span>｜
@@ -190,12 +185,12 @@
         </div>
 
         <div class="pinnedHint">
-          📌 <b>置頂</b>：會顯示在 初選單最上方灰底區塊。<br/>
-          置頂必須先勾選「顯示」才可設定。
+          📌 <b>置頂</b>：會顯示在初選單最上方灰底區塊。<br/>
+          置頂必須先勾選「顯示」才可設定。<br/>
+          這份設定的功能 id 已經對齊新版 <span class="mono">dashboard.html</span>。
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="card">
         <div class="row">
           <div>
@@ -215,8 +210,8 @@
 
       <div class="card">
         <div class="sub">
-          儲存後會立刻生效；如果初選單有「勾選但看不到」，通常是該功能 id 沒被登錄到功能清單。
-          這頁會把未登錄的也列出來，方便你查。
+          儲存後會立刻生效；如果初選單有「勾選但看不到」，通常是功能 id 沒和 dashboard 對齊。<br/>
+          這頁會把未登錄的功能 id 一起列出來，方便你檢查。
         </div>
       </div>
     </div>
@@ -236,7 +231,9 @@
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
@@ -279,21 +276,25 @@
       catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
     };
 
-    // ✅ 功能清單（要跟 dashboard.html 的 FEATURES 對齊）
-    // 這裡只顯示大標題（你要的），不顯示小英文說明。
+    // 一定要和 dashboard.html 的 FEATURES id 對齊
     const FEATURES = [
-      { id:"admin-events",          title:"🎟️ 活動管理" },
-      { id:"partner-schools",       title:"🏫 特約校園管理" },
-      { id:"import-verify",         title:"📥 名單匯入 / 驗證設定" },
-      { id:"member-lookup",         title:"🔎 會員查詢" },
-      { id:"admin-orders",          title:"🧾 訂單 / 報名資料" },
-      { id:"admin-user-assign",     title:"🧑‍💼 人事派發 / 審核" },
-      { id:"admin-org-overview",    title:"🏢 全組織管理狀況" },
-      { id:"org-team",              title:"👥 組織團隊 / 工作組別" },
-      { id:"staff-scan",            title:"✅ 核銷人員掃碼" },
-      { id:"service-checkin",       title:"🛠️ 服務中心查詢 / 核銷" },
-      { id:"dash-settings",         title:"⚙️ 初選單顯示設定" },
-      { id:"admin-impersonate",     title:"🧪 身分/學校測試切換" },
+      { id:"admin-dashboard-home",     title:"📊 後台總覽" },
+      { id:"admin-events",             title:"🎟️ 活動管理" },
+      { id:"admin-event-orders",       title:"🧾 活動訂單管理" },
+      { id:"partner-schools",          title:"🏫 特約校園管理" },
+      { id:"import-verify",            title:"📥 名單匯入 / 驗證設定" },
+      { id:"member-lookup",            title:"🔎 會員查詢" },
+      { id:"seat-editor",              title:"🪑 座位編輯器" },
+      { id:"staff-checkin",            title:"✅ 核銷人員掃碼" },
+      { id:"service-center",           title:"🛠️ 服務中心" },
+      { id:"admin-staff-users",        title:"🧑‍💼 後台人員 / 審核" },
+      { id:"admin-user-assignment",    title:"🪪 使用者權限配置" },
+      { id:"admin-org-overview",       title:"🏢 全組織管理狀況" },
+      { id:"org-team",                 title:"👥 組織團隊 / 工作組別" },
+      { id:"admin-dashboard-settings", title:"⚙️ 初選單顯示設定" },
+      { id:"admin-impersonate",        title:"🧪 身分 / 學校模擬" },
+      { id:"admin-platform-users",     title:"🌐 平台使用者管理" },
+      { id:"admin-school-overview",    title:"🏫 校園總覽" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -308,20 +309,26 @@
 
     const CFG_REF = db.collection("system").doc("dashboard");
 
-    // state
-    let cfg = null; // { roles: { roleId: { featureId: {visible,pinned} } } }
+    let cfg = null;
 
     function ensureCfgSkeleton(){
       if (!cfg) cfg = {};
       if (!cfg.roles) cfg.roles = {};
-      ROLES.forEach(r => { if (!cfg.roles[r.id]) cfg.roles[r.id] = {}; });
+      ROLES.forEach(r => {
+        if (!cfg.roles[r.id]) cfg.roles[r.id] = {};
+      });
     }
 
     function setRoleFeature(roleId, featureId, patch){
       ensureCfgSkeleton();
       if (!cfg.roles[roleId]) cfg.roles[roleId] = {};
-      if (!cfg.roles[roleId][featureId]) cfg.roles[roleId][featureId] = { visible:false, pinned:false };
-      cfg.roles[roleId][featureId] = { ...cfg.roles[roleId][featureId], ...patch };
+      if (!cfg.roles[roleId][featureId]) {
+        cfg.roles[roleId][featureId] = { visible:false, pinned:false };
+      }
+      cfg.roles[roleId][featureId] = {
+        ...cfg.roles[roleId][featureId],
+        ...patch
+      };
     }
 
     function getRoleCfg(roleId){
@@ -331,9 +338,9 @@
     }
 
     function collectAllFeatureIds(){
-      // ✅ 讓「未登錄功能」也出現在 UI（避免設定有但找不到）
       const ids = new Set(FEATURES.map(f => f.id));
       ensureCfgSkeleton();
+
       for (const [roleId, roleCfg] of Object.entries(cfg.roles || {})){
         if (!roleCfg || typeof roleCfg !== "object") continue;
         for (const fid of Object.keys(roleCfg)){
@@ -344,17 +351,16 @@
     }
 
     function normalizeRoleCfg(){
-      // ✅ 確保每個 role/feature 都有 visible/pinned
       ensureCfgSkeleton();
       const allIds = collectAllFeatureIds();
+
       ROLES.forEach(r => {
         allIds.forEach(fid => {
           const now = cfg.roles[r.id][fid] || {};
           cfg.roles[r.id][fid] = {
             visible: now.visible === true,
-            pinned:  now.pinned === true
+            pinned: now.pinned === true
           };
-          // pinned 必須 visible
           if (cfg.roles[r.id][fid].pinned === true && cfg.roles[r.id][fid].visible !== true) {
             cfg.roles[r.id][fid].pinned = false;
           }
@@ -366,7 +372,6 @@
       rolesGrid.innerHTML = "";
 
       const allIds = collectAllFeatureIds();
-      // 先用已登錄順序，最後再接未登錄
       const ordered = [
         ...FEATURES.map(f => f.id),
         ...allIds.filter(id => !FEATURE_MAP.has(id))
@@ -383,7 +388,7 @@
               <span class="pill">可置頂</span>
             </div>
             <div class="roleHint">
-              勾選「顯示」＝該身分看的到；勾選「置頂」＝出現在 初選單最上方灰底區。
+              勾選「顯示」＝該身分看的到；勾選「置頂」＝出現在初選單最上方灰底區。
             </div>
 
             <div style="margin-top:10px;">
@@ -430,7 +435,6 @@
         rolesGrid.insertAdjacentHTML("beforeend", html);
       });
 
-      // bind
       rolesGrid.querySelectorAll("input[type=checkbox]").forEach(el => {
         el.addEventListener("change", () => {
           const kind = el.dataset.kind;
@@ -440,14 +444,12 @@
 
           if (kind === "visible") {
             setRoleFeature(roleId, fid, { visible: checked });
-            // visible 關掉 → pinned 一起關
             if (!checked) setRoleFeature(roleId, fid, { pinned: false });
             render();
             return;
           }
 
           if (kind === "pinned") {
-            // pinned 只能在 visible=true 時成立
             const now = getRoleCfg(roleId)[fid] || {};
             if (now.visible !== true) {
               setRoleFeature(roleId, fid, { pinned: false });
@@ -517,7 +519,6 @@
         document.getElementById("email").textContent = (u.email || user.email || "-");
         document.getElementById("role").textContent = currentRole || "-";
 
-        // ✅ 只有 platform_super 可用
         if (currentRole !== "platform_super"){
           showGate("權限不足", "此頁面僅限平台超級管理員使用。", false);
           return;

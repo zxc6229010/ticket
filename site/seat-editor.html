@@ -18,16 +18,19 @@
       --ok:#166534;
       --warn:#b91c1c;
       --blue:#1d4ed8;
+      --blue-soft:#eff6ff;
       --seat:#ffffff;
       --seat-border:#111827;
       --seat-selected:#111827;
       --seat-selected-border:#111827;
+      --seat-multi:#1d4ed8;
+      --seat-multi-border:#1d4ed8;
       --seat-disabled:#d1d5db;
       --seat-disabled-border:#9ca3af;
       --seat-sold:#6b7280;
       --seat-sold-border:#6b7280;
-      --seat-multi:#1d4ed8;
-      --seat-multi-border:#1d4ed8;
+      --detect:#f59e0b;
+      --detect-border:#d97706;
       --select-box:rgba(29,78,216,.10);
       --select-box-border:rgba(29,78,216,.45);
       --vip:#d4af37;
@@ -47,7 +50,7 @@
     }
 
     .wrap{
-      max-width:1600px;
+      max-width:1580px;
       margin:0 auto;
       padding:22px 16px 30px;
     }
@@ -116,14 +119,14 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:44px;
-      padding:10px 18px;
+      min-height:42px;
+      padding:10px 16px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
       color:#111;
       font-weight:1000;
-      font-size:15px;
+      font-size:14px;
       cursor:pointer;
       text-decoration:none;
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
@@ -153,22 +156,22 @@
       border-color:#111;
     }
 
-    .btn-danger{
-      color:#b91c1c;
-      background:#fff;
-      border-color:rgba(185,28,28,.20);
-    }
-
     .btn-blue{
       color:#1d4ed8;
       background:#fff;
       border-color:rgba(29,78,216,.22);
     }
 
+    .btn-danger{
+      color:#b91c1c;
+      background:#fff;
+      border-color:rgba(185,28,28,.20);
+    }
+
     .btn-sm{
       min-height:38px;
       padding:8px 14px;
-      font-size:14px;
+      font-size:13px;
     }
 
     label{
@@ -181,8 +184,8 @@
 
     input[type="text"],
     input[type="number"],
-    select,
-    textarea{
+    input[type="range"],
+    select{
       width:100%;
       padding:12px 13px;
       border:1px solid var(--line-strong);
@@ -193,19 +196,20 @@
       outline:none;
     }
 
-    textarea{
-      min-height:84px;
-      resize:vertical;
+    input[type="file"]{
+      width:100%;
+      font-size:13px;
+      color:#374151;
     }
 
     .layout{
       display:grid;
-      grid-template-columns:320px minmax(0,1fr) 420px;
+      grid-template-columns:300px minmax(0,1fr) 360px;
       gap:16px;
       align-items:start;
     }
 
-    @media (max-width:1360px){
+    @media (max-width:1320px){
       .layout{
         grid-template-columns:1fr;
       }
@@ -254,6 +258,7 @@
       padding:14px 16px;
       border-bottom:1px solid var(--line);
       flex-wrap:wrap;
+      background:#fff;
     }
 
     .canvas-wrap{
@@ -269,7 +274,11 @@
       width:1200px;
       height:900px;
       margin:0 auto;
-      background:#f3f4f6;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.65)),
+        linear-gradient(90deg, rgba(17,24,39,.03) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(17,24,39,.03) 1px, transparent 1px);
+      background-size:auto, 24px 24px, 24px 24px;
       transform-origin:top left;
       user-select:none;
       overflow:hidden;
@@ -312,6 +321,12 @@
       background:var(--seat-multi) !important;
       border-color:var(--seat-multi-border) !important;
       box-shadow:0 0 0 3px rgba(29,78,216,.18);
+    }
+
+    .seat.detected{
+      background:var(--detect);
+      border-color:var(--detect-border);
+      box-shadow:0 0 0 3px rgba(245,158,11,.16);
     }
 
     .seat.disabled{
@@ -402,7 +417,7 @@
       margin:14px 0;
     }
 
-    .batch-box{
+    .box{
       margin-top:14px;
       padding:14px;
       border:1px solid var(--line);
@@ -432,6 +447,56 @@
       border-top:none;
       padding-top:0;
     }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .tab-btn{
+      min-height:36px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:13px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .tab-btn.active{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .tab-pane{
+      display:none;
+    }
+
+    .tab-pane.active{
+      display:block;
+    }
+
+    .range-row{
+      display:grid;
+      grid-template-columns:1fr 84px;
+      gap:10px;
+      align-items:center;
+    }
+
+    .hint-soft{
+      margin-top:8px;
+      background:var(--blue-soft);
+      border:1px solid rgba(29,78,216,.12);
+      color:#1e40af;
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:12px;
+      line-height:1.7;
+    }
   </style>
 </head>
 <body>
@@ -444,7 +509,7 @@
           <div>
             <h1>座位編輯器</h1>
             <div class="sub">
-              支援單顆座位編輯、拖曳移動、多選、框選、批次生成與批次套用設定。
+              匯入座位圖、半自動偵測座位、手動修正、多選批次設定、整批儲存。
             </div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
@@ -460,9 +525,9 @@
       </div>
 
       <div class="layout">
-        <!-- 左側工具 -->
+        <!-- 左 -->
         <div class="side-card">
-          <h2>工具</h2>
+          <h2>流程工具</h2>
 
           <label>活動</label>
           <select id="eventSel"></select>
@@ -470,108 +535,112 @@
 
           <div class="divider"></div>
 
-          <div class="tool-list">
-            <button class="btn btn-primary" id="addSeatModeBtn">點擊新增座位：開</button>
-            <button class="btn" id="reloadSeatsBtn">重新載入座位</button>
-            <button class="btn" id="clearSelectionBtn">取消選取</button>
-            <button class="btn btn-blue" id="selectAllBtn">全選目前座位</button>
-            <button class="btn btn-primary" id="saveSeatBtn" disabled>儲存目前座位</button>
-            <button class="btn btn-primary" id="saveAllSeatsBtn">儲存全部座位</button>
-            <button class="btn btn-danger" id="deleteSeatBtn" disabled>刪除目前座位</button>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-image">圖片 / 偵測</button>
+            <button class="tab-btn" data-tab="tab-manual">手動編修</button>
           </div>
 
-          <div class="notice">
-            操作方式：<br>
-            1. 先選活動<br>
-            2. 保持「點擊新增座位：開」時，點畫布可新增座位<br>
-            3. 點一顆座位＝單選<br>
-            4. Shift + 點座位＝加入 / 移除多選<br>
-            5. 在空白處拖曳＝框選多顆座位<br>
-            6. 拖曳已選座位可一起移動
-          </div>
+          <div id="tab-image" class="tab-pane active">
+            <div class="box">
+              <h3>匯入座位圖</h3>
+              <label>上傳圖片（本機）</label>
+              <input id="imageUploadInput" type="file" accept="image/*" />
 
-          <div class="batch-box">
-            <h3>已選座位</h3>
-            <div class="small" id="multiCountText" style="margin-top:6px;">目前未選取</div>
-            <div class="selected-list" id="selectedSeatList">
-              <div class="empty">尚未選取任何座位</div>
+              <div class="row" style="margin-top:10px;">
+                <button class="btn" id="useEventImageBtn">使用活動既有底圖</button>
+                <button class="btn btn-danger" id="clearImageBtn">清除目前圖片</button>
+              </div>
+
+              <div class="hint-soft">
+                若活動本來就有 <span class="mono">seatMapImage</span>，可直接使用。<br>
+                若你另外上傳本機圖片，只會先在這頁預覽，不會自動改 Firestore 活動資料。
+              </div>
+            </div>
+
+            <div class="box">
+              <h3>自動偵測座位</h3>
+
+              <label>亮度門檻（越小越偏向抓深色座位）</label>
+              <div class="range-row">
+                <input id="detectThresholdInput" type="range" min="20" max="240" value="205" />
+                <input id="detectThresholdText" type="number" min="20" max="240" value="205" />
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>最小面積</label>
+                  <input id="detectMinAreaInput" type="number" min="1" value="8" />
+                </div>
+                <div>
+                  <label>最大面積</label>
+                  <input id="detectMaxAreaInput" type="number" min="1" value="400" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>偵測縮放倍率</label>
+                  <select id="detectScaleInput">
+                    <option value="1">1.0（精準較慢）</option>
+                    <option value="2" selected>2.0（建議）</option>
+                    <option value="3">3.0（較快）</option>
+                  </select>
+                </div>
+                <div>
+                  <label>偵測模式</label>
+                  <select id="detectModeInput">
+                    <option value="dark" selected>抓深色 / 彩色座位</option>
+                    <option value="light">抓淺色座位</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:12px;">
+                <button class="btn btn-primary" id="detectSeatsBtn">開始偵測</button>
+                <button class="btn" id="removeDetectedBtn">刪除本次偵測結果</button>
+              </div>
+
+              <div id="detectMsg" class="small" style="margin-top:10px;"></div>
             </div>
           </div>
 
-          <div class="divider"></div>
-
-          <h2>批次生成座位</h2>
-          <div class="small" style="margin-top:8px;">
-            一次快速建立整區座位，之後再微調位置與設定。
-          </div>
-
-          <div class="batch-box">
-            <div class="field-grid">
-              <div>
-                <label>起始 X</label>
-                <input id="genStartX" type="number" value="100" />
-              </div>
-              <div>
-                <label>起始 Y</label>
-                <input id="genStartY" type="number" value="100" />
-              </div>
+          <div id="tab-manual" class="tab-pane">
+            <div class="tool-list" style="margin-top:14px;">
+              <button class="btn btn-primary" id="addSeatModeBtn">點擊新增座位：開</button>
+              <button class="btn" id="reloadSeatsBtn">重新載入座位</button>
+              <button class="btn" id="clearSelectionBtn">取消選取</button>
+              <button class="btn btn-blue" id="selectAllBtn">全選目前座位</button>
+              <button class="btn btn-primary" id="saveSeatBtn" disabled>儲存目前座位</button>
+              <button class="btn btn-primary" id="saveAllSeatsBtn">儲存全部座位</button>
+              <button class="btn btn-danger" id="deleteSeatBtn" disabled>刪除目前座位</button>
             </div>
 
-            <div class="field-grid">
-              <div>
-                <label>排數</label>
-                <input id="genRows" type="number" min="1" value="10" />
-              </div>
-              <div>
-                <label>每排座位數</label>
-                <input id="genCols" type="number" min="1" value="20" />
-              </div>
+            <div class="notice">
+              操作方式：<br>
+              1. 點一顆座位＝單選<br>
+              2. Shift + 點座位＝加入 / 移除多選<br>
+              3. 空白處拖曳＝框選多顆<br>
+              4. 拖曳已選座位可一起移動<br>
+              5. 開啟「點擊新增座位」後，點畫布可手動補座位
             </div>
 
-            <div class="field-grid">
-              <div>
-                <label>X 間距</label>
-                <input id="genGapX" type="number" value="24" />
-              </div>
-              <div>
-                <label>Y 間距</label>
-                <input id="genGapY" type="number" value="28" />
+            <div class="box">
+              <h3>已選座位</h3>
+              <div class="small" id="multiCountText" style="margin-top:6px;">目前未選取</div>
+              <div class="selected-list" id="selectedSeatList">
+                <div class="empty">尚未選取任何座位</div>
               </div>
             </div>
-
-            <div class="field-grid">
-              <div>
-                <label>區域 sectionId</label>
-                <input id="genSectionId" type="text" placeholder="例如：A / VIP / B1" />
-              </div>
-              <div>
-                <label>區域名稱</label>
-                <input id="genSectionName" type="text" placeholder="例如：A區" />
-              </div>
-            </div>
-
-            <div class="field-grid">
-              <div>
-                <label>樓層</label>
-                <input id="genFloor" type="text" value="1F" />
-              </div>
-              <div>
-                <label>價格</label>
-                <input id="genPrice" type="number" min="0" value="0" />
-              </div>
-            </div>
-
-            <button class="btn btn-primary" id="generateSeatsBtn" style="margin-top:12px;">生成座位</button>
-            <div id="genMsg" class="small" style="margin-top:10px;"></div>
           </div>
         </div>
 
-        <!-- 中間畫布 -->
+        <!-- 中 -->
         <div class="canvas-card">
           <div class="canvas-toolbar">
             <div class="row">
               <span class="pill">畫布尺寸：1200 × 900</span>
               <span class="pill">已載入座位：<span id="seatCountText" style="margin-left:6px;">0</span></span>
+              <span class="pill">偵測候選：<span id="detectedCountText" style="margin-left:6px;">0</span></span>
             </div>
 
             <div class="row">
@@ -588,216 +657,291 @@
           </div>
         </div>
 
-        <!-- 右側設定 -->
+        <!-- 右 -->
         <div class="side-card">
-          <h2>單顆座位設定</h2>
-          <div id="seatEditorEmpty" class="empty" style="margin-top:10px;">
-            尚未選取單一座位。請先點中一顆座位，或在畫布上新增一顆座位。
+          <div class="tabs">
+            <button class="tab-btn active" data-right-tab="right-single">單顆座位</button>
+            <button class="tab-btn" data-right-tab="right-batch">批次設定</button>
+            <button class="tab-btn" data-right-tab="right-generate">批次生成</button>
           </div>
 
-          <div id="seatEditor" style="display:none;">
-            <div class="field-grid">
-              <div>
-                <label>seatId</label>
-                <input id="seatIdInput" type="text" placeholder="例如：A-R01-S08" />
-              </div>
-              <div>
-                <label>顯示名稱</label>
-                <input id="seatLabelInput" type="text" placeholder="例如：A排08號" />
-              </div>
+          <div id="right-single" class="tab-pane active">
+            <h2>單顆座位設定</h2>
+            <div id="seatEditorEmpty" class="empty" style="margin-top:10px;">
+              尚未選取單一座位。請先點中一顆座位，或在畫布上新增一顆座位。
             </div>
 
-            <div class="field-grid">
-              <div>
-                <label>區域 sectionId</label>
-                <input id="sectionIdInput" type="text" placeholder="例如：A / VIP" />
+            <div id="seatEditor" style="display:none;">
+              <div class="field-grid">
+                <div>
+                  <label>seatId</label>
+                  <input id="seatIdInput" type="text" placeholder="例如：A-R01-S08" />
+                </div>
+                <div>
+                  <label>顯示名稱</label>
+                  <input id="seatLabelInput" type="text" placeholder="例如：A排08號" />
+                </div>
               </div>
-              <div>
-                <label>區域名稱</label>
-                <input id="sectionNameInput" type="text" placeholder="例如：A區" />
+
+              <div class="field-grid">
+                <div>
+                  <label>區域 sectionId</label>
+                  <input id="sectionIdInput" type="text" placeholder="例如：A / VIP" />
+                </div>
+                <div>
+                  <label>區域名稱</label>
+                  <input id="sectionNameInput" type="text" placeholder="例如：A區" />
+                </div>
               </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>樓層</label>
+                  <input id="floorInput" type="text" placeholder="例如：1F" />
+                </div>
+                <div>
+                  <label>價格</label>
+                  <input id="priceInput" type="number" min="0" placeholder="例如：1200" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>排 row</label>
+                  <input id="rowInput" type="text" placeholder="例如：A / 01" />
+                </div>
+                <div>
+                  <label>座號 seatNumber</label>
+                  <input id="seatNumberInput" type="text" placeholder="例如：08" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>X</label>
+                  <input id="xInput" type="number" />
+                </div>
+                <div>
+                  <label>Y</label>
+                  <input id="yInput" type="number" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>旋轉 rotation</label>
+                  <input id="rotationInput" type="number" value="0" />
+                </div>
+                <div>
+                  <label>狀態</label>
+                  <select id="statusInput">
+                    <option value="available">available</option>
+                    <option value="disabled">disabled</option>
+                    <option value="sold">sold</option>
+                  </select>
+                </div>
+              </div>
+
+              <label>開放角色（逗號分隔）</label>
+              <input id="rolesInput" type="text" placeholder="例如：general,vip" />
+
+              <label>開放標籤（逗號分隔）</label>
+              <input id="tagsInput" type="text" placeholder="例如：student,teacher" />
+
+              <label>開放票種（逗號分隔）</label>
+              <input id="ticketTypesInput" type="text" placeholder="例如：general,vip" />
+
+              <div class="checklist">
+                <label class="check-item">
+                  <input id="enabledInput" type="checkbox" checked />
+                  <span>此座位啟用 enabled</span>
+                </label>
+
+                <label class="check-item">
+                  <input id="wheelchairInput" type="checkbox" />
+                  <span>輪椅席 isWheelchair</span>
+                </label>
+
+                <label class="check-item">
+                  <input id="companionInput" type="checkbox" />
+                  <span>陪同席 isCompanionSeat</span>
+                </label>
+              </div>
+
+              <div id="seatMsg" class="small" style="margin-top:12px;"></div>
             </div>
-
-            <div class="field-grid">
-              <div>
-                <label>樓層</label>
-                <input id="floorInput" type="text" placeholder="例如：1F" />
-              </div>
-              <div>
-                <label>價格</label>
-                <input id="priceInput" type="number" min="0" placeholder="例如：1200" />
-              </div>
-            </div>
-
-            <div class="field-grid">
-              <div>
-                <label>排 row</label>
-                <input id="rowInput" type="text" placeholder="例如：A / 01" />
-              </div>
-              <div>
-                <label>座號 seatNumber</label>
-                <input id="seatNumberInput" type="text" placeholder="例如：08" />
-              </div>
-            </div>
-
-            <div class="field-grid">
-              <div>
-                <label>X</label>
-                <input id="xInput" type="number" />
-              </div>
-              <div>
-                <label>Y</label>
-                <input id="yInput" type="number" />
-              </div>
-            </div>
-
-            <div class="field-grid">
-              <div>
-                <label>旋轉 rotation</label>
-                <input id="rotationInput" type="number" value="0" />
-              </div>
-              <div>
-                <label>狀態</label>
-                <select id="statusInput">
-                  <option value="available">available</option>
-                  <option value="disabled">disabled</option>
-                  <option value="sold">sold</option>
-                </select>
-              </div>
-            </div>
-
-            <label>開放角色（逗號分隔）</label>
-            <input id="rolesInput" type="text" placeholder="例如：general,vip" />
-
-            <label>開放標籤（逗號分隔）</label>
-            <input id="tagsInput" type="text" placeholder="例如：student,teacher" />
-
-            <label>開放票種（逗號分隔）</label>
-            <input id="ticketTypesInput" type="text" placeholder="例如：general,vip" />
-
-            <div class="checklist">
-              <label class="check-item">
-                <input id="enabledInput" type="checkbox" checked />
-                <span>此座位啟用 enabled</span>
-              </label>
-
-              <label class="check-item">
-                <input id="wheelchairInput" type="checkbox" />
-                <span>輪椅席 isWheelchair</span>
-              </label>
-
-              <label class="check-item">
-                <input id="companionInput" type="checkbox" />
-                <span>陪同席 isCompanionSeat</span>
-              </label>
-            </div>
-
-            <div id="seatMsg" class="small" style="margin-top:12px;"></div>
           </div>
 
-          <div class="divider"></div>
+          <div id="right-batch" class="tab-pane">
+            <h2>批次套用設定</h2>
+            <div class="small" style="margin-top:8px;">
+              對目前多選的座位一次套用。空白欄位不會覆蓋原值。
+            </div>
 
-          <h2>批次套用設定</h2>
-          <div class="small" style="margin-top:8px;">
-            對目前多選的座位一次套用。空白欄位不會覆蓋原值。
+            <div class="box">
+              <div class="field-grid">
+                <div>
+                  <label>區域 sectionId</label>
+                  <input id="batchSectionIdInput" type="text" placeholder="例如：A / VIP" />
+                </div>
+                <div>
+                  <label>區域名稱</label>
+                  <input id="batchSectionNameInput" type="text" placeholder="例如：A區" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>樓層</label>
+                  <input id="batchFloorInput" type="text" placeholder="例如：1F" />
+                </div>
+                <div>
+                  <label>價格</label>
+                  <input id="batchPriceInput" type="number" min="0" placeholder="例如：1200" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>狀態</label>
+                  <select id="batchStatusInput">
+                    <option value="">（不修改）</option>
+                    <option value="available">available</option>
+                    <option value="disabled">disabled</option>
+                    <option value="sold">sold</option>
+                  </select>
+                </div>
+                <div>
+                  <label>旋轉 rotation</label>
+                  <input id="batchRotationInput" type="number" placeholder="例如：0 / 15 / -15" />
+                </div>
+              </div>
+
+              <label>開放角色（逗號分隔）</label>
+              <input id="batchRolesInput" type="text" placeholder="例如：general,vip" />
+
+              <label>開放標籤（逗號分隔）</label>
+              <input id="batchTagsInput" type="text" placeholder="例如：student,teacher" />
+
+              <label>開放票種（逗號分隔）</label>
+              <input id="batchTicketTypesInput" type="text" placeholder="例如：general,vip" />
+
+              <div class="checklist">
+                <label class="check-item">
+                  <input id="batchEnabledInput" type="checkbox" />
+                  <span>套用 enabled = true</span>
+                </label>
+                <label class="check-item">
+                  <input id="batchDisabledInput" type="checkbox" />
+                  <span>套用 enabled = false</span>
+                </label>
+                <label class="check-item">
+                  <input id="batchWheelchairInput" type="checkbox" />
+                  <span>套用 isWheelchair = true</span>
+                </label>
+                <label class="check-item">
+                  <input id="batchCompanionInput" type="checkbox" />
+                  <span>套用 isCompanionSeat = true</span>
+                </label>
+              </div>
+
+              <div class="row" style="margin-top:12px;">
+                <button class="btn btn-primary" id="applyBatchBtn">套用到已選座位</button>
+                <button class="btn btn-danger" id="deleteBatchBtn">刪除已選座位</button>
+              </div>
+
+              <div id="batchMsg" class="small" style="margin-top:12px;"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>自動重新編號</h2>
+            <div class="small" style="margin-top:8px;">
+              會依照目前選取座位的排序重新編號。
+            </div>
+
+            <div class="box">
+              <div class="field-grid">
+                <div>
+                  <label>起始座號</label>
+                  <input id="autoSeatStartInput" type="number" min="1" value="1" />
+                </div>
+                <div>
+                  <label>座號補零位數</label>
+                  <input id="autoPadInput" type="number" min="1" value="2" />
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="autoNumberBtn" style="margin-top:12px;">重新編號已選座位</button>
+              <div id="autoMsg" class="small" style="margin-top:10px;"></div>
+            </div>
           </div>
 
-          <div class="batch-box">
-            <div class="field-grid">
-              <div>
-                <label>區域 sectionId</label>
-                <input id="batchSectionIdInput" type="text" placeholder="例如：A / VIP" />
-              </div>
-              <div>
-                <label>區域名稱</label>
-                <input id="batchSectionNameInput" type="text" placeholder="例如：A區" />
-              </div>
+          <div id="right-generate" class="tab-pane">
+            <h2>批次生成座位</h2>
+            <div class="small" style="margin-top:8px;">
+              若你要快速建立整區矩陣座位，可先生成再微調。
             </div>
 
-            <div class="field-grid">
-              <div>
-                <label>樓層</label>
-                <input id="batchFloorInput" type="text" placeholder="例如：1F" />
+            <div class="box">
+              <div class="field-grid">
+                <div>
+                  <label>起始 X</label>
+                  <input id="genStartX" type="number" value="100" />
+                </div>
+                <div>
+                  <label>起始 Y</label>
+                  <input id="genStartY" type="number" value="100" />
+                </div>
               </div>
-              <div>
-                <label>價格</label>
-                <input id="batchPriceInput" type="number" min="0" placeholder="例如：1200" />
+
+              <div class="field-grid">
+                <div>
+                  <label>排數</label>
+                  <input id="genRows" type="number" min="1" value="10" />
+                </div>
+                <div>
+                  <label>每排座位數</label>
+                  <input id="genCols" type="number" min="1" value="20" />
+                </div>
               </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>X 間距</label>
+                  <input id="genGapX" type="number" value="24" />
+                </div>
+                <div>
+                  <label>Y 間距</label>
+                  <input id="genGapY" type="number" value="28" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>區域 sectionId</label>
+                  <input id="genSectionId" type="text" placeholder="例如：A / VIP / B1" />
+                </div>
+                <div>
+                  <label>區域名稱</label>
+                  <input id="genSectionName" type="text" placeholder="例如：A區" />
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <div>
+                  <label>樓層</label>
+                  <input id="genFloor" type="text" value="1F" />
+                </div>
+                <div>
+                  <label>價格</label>
+                  <input id="genPrice" type="number" min="0" value="0" />
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="generateSeatsBtn" style="margin-top:12px;">生成座位</button>
+              <div id="genMsg" class="small" style="margin-top:10px;"></div>
             </div>
-
-            <div class="field-grid">
-              <div>
-                <label>狀態</label>
-                <select id="batchStatusInput">
-                  <option value="">（不修改）</option>
-                  <option value="available">available</option>
-                  <option value="disabled">disabled</option>
-                  <option value="sold">sold</option>
-                </select>
-              </div>
-              <div>
-                <label>旋轉 rotation</label>
-                <input id="batchRotationInput" type="number" placeholder="例如：0 / 15 / -15" />
-              </div>
-            </div>
-
-            <label>開放角色（逗號分隔）</label>
-            <input id="batchRolesInput" type="text" placeholder="例如：general,vip" />
-
-            <label>開放標籤（逗號分隔）</label>
-            <input id="batchTagsInput" type="text" placeholder="例如：student,teacher" />
-
-            <label>開放票種（逗號分隔）</label>
-            <input id="batchTicketTypesInput" type="text" placeholder="例如：general,vip" />
-
-            <div class="checklist">
-              <label class="check-item">
-                <input id="batchEnabledInput" type="checkbox" />
-                <span>套用 enabled = true</span>
-              </label>
-              <label class="check-item">
-                <input id="batchDisabledInput" type="checkbox" />
-                <span>套用 enabled = false</span>
-              </label>
-              <label class="check-item">
-                <input id="batchWheelchairInput" type="checkbox" />
-                <span>套用 isWheelchair = true</span>
-              </label>
-              <label class="check-item">
-                <input id="batchCompanionInput" type="checkbox" />
-                <span>套用 isCompanionSeat = true</span>
-              </label>
-            </div>
-
-            <div class="row" style="margin-top:12px;">
-              <button class="btn btn-primary" id="applyBatchBtn">套用到已選座位</button>
-              <button class="btn btn-danger" id="deleteBatchBtn">刪除已選座位</button>
-            </div>
-
-            <div id="batchMsg" class="small" style="margin-top:12px;"></div>
-          </div>
-
-          <div class="divider"></div>
-
-          <h2>自動重新編號</h2>
-          <div class="small" style="margin-top:8px;">
-            會依照目前選取座位的排序重新編號。
-          </div>
-
-          <div class="batch-box">
-            <div class="field-grid">
-              <div>
-                <label>起始座號</label>
-                <input id="autoSeatStartInput" type="number" min="1" value="1" />
-              </div>
-              <div>
-                <label>座號補零位數</label>
-                <input id="autoPadInput" type="number" min="1" value="2" />
-              </div>
-            </div>
-
-            <button class="btn btn-primary" id="autoNumberBtn" style="margin-top:12px;">重新編號已選座位</button>
-            <div id="autoMsg" class="small" style="margin-top:10px;"></div>
           </div>
         </div>
       </div>
@@ -842,6 +986,8 @@
     const stage = document.getElementById("stage");
     const seatMapImage = document.getElementById("seatMapImage");
     const seatCountText = document.getElementById("seatCountText");
+    const detectedCountText = document.getElementById("detectedCountText");
+    const canvasWrap = document.getElementById("canvasWrap");
 
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const zoomResetBtn = document.getElementById("zoomResetBtn");
@@ -908,6 +1054,19 @@
     const autoNumberBtn = document.getElementById("autoNumberBtn");
     const autoMsg = document.getElementById("autoMsg");
 
+    const imageUploadInput = document.getElementById("imageUploadInput");
+    const useEventImageBtn = document.getElementById("useEventImageBtn");
+    const clearImageBtn = document.getElementById("clearImageBtn");
+    const detectSeatsBtn = document.getElementById("detectSeatsBtn");
+    const removeDetectedBtn = document.getElementById("removeDetectedBtn");
+    const detectThresholdInput = document.getElementById("detectThresholdInput");
+    const detectThresholdText = document.getElementById("detectThresholdText");
+    const detectMinAreaInput = document.getElementById("detectMinAreaInput");
+    const detectMaxAreaInput = document.getElementById("detectMaxAreaInput");
+    const detectScaleInput = document.getElementById("detectScaleInput");
+    const detectModeInput = document.getElementById("detectModeInput");
+    const detectMsg = document.getElementById("detectMsg");
+
     let currentUser = null;
     let currentRole = "";
     let currentEventId = "";
@@ -923,6 +1082,9 @@
     let dragState = null;
     let boxSelectState = null;
     let selectionBoxEl = null;
+
+    let uploadedPreviewUrl = "";
+    let detectedSeatIds = new Set();
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -1018,6 +1180,7 @@
       applyBatchBtn.disabled = !hasAny;
       deleteBatchBtn.disabled = !hasAny;
       autoNumberBtn.disabled = !hasAny;
+      detectedCountText.textContent = detectedSeatIds.size;
     }
 
     function resetSeatEditor(){
@@ -1072,7 +1235,7 @@
       wheelchairInput.checked = seat.isWheelchair === true;
       companionInput.checked = seat.isCompanionSeat === true;
 
-      seatMsg.innerHTML = "";
+      seatMsg.innerHTML = seat._detected ? `<span class="ok">這顆是本次圖片偵測出的候選座位</span>` : "";
       refreshSelectionUi();
     }
 
@@ -1108,13 +1271,16 @@
 
       const payload = buildSeatPayloadFromEditor();
       const old = seatMap.get(selectedSeatId);
-
       const nextId = payload.seatId || selectedSeatId;
+
       if (nextId !== selectedSeatId) {
         seatMap.delete(selectedSeatId);
         selectedSeatIds.delete(selectedSeatId);
-        seatMap.set(nextId, { ...old, ...payload });
+        detectedSeatIds.delete(selectedSeatId);
+
+        seatMap.set(nextId, { ...old, ...payload, _detected: old._detected === true });
         selectedSeatIds.add(nextId);
+        if (old._detected === true) detectedSeatIds.add(nextId);
         selectedSeatId = nextId;
       } else {
         seatMap.set(selectedSeatId, { ...old, ...payload });
@@ -1136,6 +1302,7 @@
 
     function getSeatClass(seat){
       let cls = "seat";
+      if (seat._detected === true) cls += " detected";
       if (seat.status === "disabled" || seat.enabled === false) cls += " disabled";
       if (seat.status === "sold") cls += " sold";
       if (selectedSeatIds.has(seat.seatId)) {
@@ -1158,7 +1325,14 @@
         el.style.transform = `rotate(${Number(seat.rotation || 0)}deg)`;
 
         const zoneColor = getSectionColor(seat.sectionId);
-        if (zoneColor && !selectedSeatIds.has(seat.seatId) && seat.status !== "sold" && seat.status !== "disabled" && seat.enabled !== false) {
+        if (
+          zoneColor &&
+          !selectedSeatIds.has(seat.seatId) &&
+          seat._detected !== true &&
+          seat.status !== "sold" &&
+          seat.status !== "disabled" &&
+          seat.enabled !== false
+        ) {
           el.style.background = zoneColor;
           el.style.borderColor = zoneColor;
         }
@@ -1418,7 +1592,8 @@
         isCompanionSeat: false,
         heldBy: "",
         heldUntil: null,
-        orderId: ""
+        orderId: "",
+        _detected: false
       };
 
       seatMap.set(seatId, seat);
@@ -1502,10 +1677,12 @@
       seatMap.clear();
       selectedSeatId = "";
       selectedSeatIds.clear();
+      detectedSeatIds.clear();
       seatMsg.innerHTML = "";
       batchMsg.innerHTML = "";
       autoMsg.innerHTML = "";
       genMsg.innerHTML = "";
+      detectMsg.innerHTML = "";
       renderSeats();
       refreshSelectionUi();
 
@@ -1552,16 +1729,18 @@
       seatMap.clear();
       selectedSeatId = "";
       selectedSeatIds.clear();
+      detectedSeatIds.clear();
       seatMsg.innerHTML = "";
       batchMsg.innerHTML = "";
       autoMsg.innerHTML = "";
       genMsg.innerHTML = "";
+      detectMsg.innerHTML = "";
 
       const snap = await db.collection("events").doc(currentEventId).collection("seats").get();
       snap.forEach(doc => {
         const seat = doc.data() || {};
         const seatId = norm(seat.seatId || doc.id);
-        seatMap.set(seatId, { seatId, ...seat });
+        seatMap.set(seatId, { seatId, ...seat, _detected:false });
       });
 
       renderSeats();
@@ -1570,6 +1749,32 @@
 
     reloadSeatsBtn.onclick = loadSeats;
     eventSel.onchange = loadEventData;
+
+    function buildSavePayload(seat){
+      return {
+        seatId: norm(seat.seatId),
+        sectionId: norm(seat.sectionId),
+        sectionName: norm(seat.sectionName),
+        floor: norm(seat.floor),
+        row: norm(seat.row),
+        seatNumber: norm(seat.seatNumber),
+        label: norm(seat.label),
+        x: Number(seat.x || 0),
+        y: Number(seat.y || 0),
+        rotation: Number(seat.rotation || 0),
+        price: Number(seat.price || 0),
+        status: norm(seat.status || "available"),
+        enabled: seat.enabled !== false,
+        allowedRoles: Array.isArray(seat.allowedRoles) ? seat.allowedRoles : [],
+        allowedTags: Array.isArray(seat.allowedTags) ? seat.allowedTags : [],
+        allowedTicketTypes: Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes : [],
+        isWheelchair: seat.isWheelchair === true,
+        isCompanionSeat: seat.isCompanionSeat === true,
+        heldBy: "",
+        heldUntil: null,
+        orderId: norm(seat.orderId || "")
+      };
+    }
 
     async function saveCurrentSeat(){
       if (!currentEventId) {
@@ -1593,15 +1798,18 @@
       seatMsg.innerHTML = "";
 
       try{
+        const oldSeat = seatMap.get(selectedSeatId) || {};
+        const saveData = {
+          ...buildSavePayload({ ...oldSeat, ...payload }),
+          updatedAt: new Date(),
+          updatedByUid: currentUser ? currentUser.uid : ""
+        };
+
         await db.collection("events")
           .doc(currentEventId)
           .collection("seats")
           .doc(payload.seatId)
-          .set({
-            ...payload,
-            updatedAt: new Date(),
-            updatedByUid: currentUser ? currentUser.uid : ""
-          }, { merge:true });
+          .set(saveData, { merge:true });
 
         if (payload.seatId !== selectedSeatId && seatMap.has(selectedSeatId)) {
           await db.collection("events")
@@ -1610,13 +1818,18 @@
             .doc(selectedSeatId)
             .delete();
 
+          const wasDetected = detectedSeatIds.has(selectedSeatId);
           seatMap.delete(selectedSeatId);
           selectedSeatIds.delete(selectedSeatId);
-          seatMap.set(payload.seatId, payload);
+          detectedSeatIds.delete(selectedSeatId);
+
+          seatMap.set(payload.seatId, { ...saveData, _detected: wasDetected });
           selectedSeatIds.add(payload.seatId);
+          if (wasDetected) detectedSeatIds.add(payload.seatId);
           selectedSeatId = payload.seatId;
         } else {
-          seatMap.set(payload.seatId, payload);
+          const wasDetected = detectedSeatIds.has(payload.seatId);
+          seatMap.set(payload.seatId, { ...saveData, _detected: wasDetected });
           selectedSeatId = payload.seatId;
           selectedSeatIds.add(payload.seatId);
         }
@@ -1654,6 +1867,7 @@
       batchMsg.innerHTML = "";
       genMsg.innerHTML = "";
       autoMsg.innerHTML = "";
+      detectMsg.innerHTML = "";
 
       try{
         const CHUNK = 400;
@@ -1664,7 +1878,7 @@
 
           chunk.forEach(seat => {
             const payload = {
-              ...seat,
+              ...buildSavePayload(seat),
               updatedAt: new Date(),
               updatedByUid: currentUser ? currentUser.uid : ""
             };
@@ -1680,6 +1894,15 @@
           await batch.commit();
         }
 
+        // 儲存後把 detected 狀態留著沒問題，但也可以視為已確認
+        detectedSeatIds.clear();
+        [...seatMap.keys()].forEach(id => {
+          const seat = seatMap.get(id);
+          if (seat) seatMap.set(id, { ...seat, _detected:false });
+        });
+
+        renderSeats();
+        refreshSelectionUi();
         seatMsg.innerHTML = `<span class="ok">已儲存全部 ${seats.length} 顆座位</span>`;
       }catch(e){
         console.error(e);
@@ -1710,6 +1933,7 @@
 
         seatMap.delete(selectedSeatId);
         selectedSeatIds.delete(selectedSeatId);
+        detectedSeatIds.delete(selectedSeatId);
         selectedSeatId = "";
         if (selectedSeatIds.size) {
           selectedSeatId = [...selectedSeatIds][0];
@@ -1833,6 +2057,7 @@
               .doc(id);
             batch.delete(ref);
             seatMap.delete(id);
+            detectedSeatIds.delete(id);
           });
 
           await batch.commit();
@@ -1905,7 +2130,8 @@
             isCompanionSeat: false,
             heldBy: "",
             heldUntil: null,
-            orderId: ""
+            orderId: "",
+            _detected: false
           });
 
           newIds.push(seatId);
@@ -1950,6 +2176,336 @@
       refreshSelectionUi();
       autoMsg.innerHTML = `<span class="ok">已重新編號 ${seats.length} 顆座位，記得按「儲存全部座位」</span>`;
     };
+
+    function syncThresholdInputs(fromRange = true){
+      if (fromRange) {
+        detectThresholdText.value = detectThresholdInput.value;
+      } else {
+        let v = Number(detectThresholdText.value || 205);
+        v = Math.max(20, Math.min(240, v));
+        detectThresholdText.value = v;
+        detectThresholdInput.value = v;
+      }
+    }
+
+    detectThresholdInput.addEventListener("input", () => syncThresholdInputs(true));
+    detectThresholdText.addEventListener("input", () => syncThresholdInputs(false));
+
+    function setStageImage(url){
+      if (uploadedPreviewUrl && uploadedPreviewUrl.startsWith("blob:")) {
+        try { URL.revokeObjectURL(uploadedPreviewUrl); } catch(_) {}
+      }
+      uploadedPreviewUrl = url || "";
+
+      if (url) {
+        seatMapImage.src = url;
+        seatMapImage.style.display = "block";
+      } else {
+        seatMapImage.src = "";
+        seatMapImage.style.display = "none";
+      }
+    }
+
+    imageUploadInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      setStageImage(url);
+      detectMsg.innerHTML = `<span class="ok">已載入本機圖片，可開始偵測座位</span>`;
+    });
+
+    useEventImageBtn.onclick = () => {
+      const seatMapImageUrl = norm(currentEventData?.seatMapImage || "");
+      if (!seatMapImageUrl) {
+        detectMsg.innerHTML = `<span class="warn">此活動目前沒有 seatMapImage</span>`;
+        return;
+      }
+      setStageImage(seatMapImageUrl);
+      detectMsg.innerHTML = `<span class="ok">已套用活動既有底圖</span>`;
+    };
+
+    clearImageBtn.onclick = () => {
+      setStageImage("");
+      detectMsg.innerHTML = `<span class="ok">已清除目前圖片</span>`;
+    };
+
+    removeDetectedBtn.onclick = () => {
+      let removed = 0;
+      [...detectedSeatIds].forEach(id => {
+        if (seatMap.has(id)) {
+          seatMap.delete(id);
+          selectedSeatIds.delete(id);
+          if (selectedSeatId === id) selectedSeatId = "";
+          removed++;
+        }
+      });
+      detectedSeatIds.clear();
+
+      if (selectedSeatId && seatMap.has(selectedSeatId)) {
+        showSeatEditor(seatMap.get(selectedSeatId));
+      } else {
+        resetSeatEditor();
+      }
+
+      renderSeats();
+      refreshSelectionUi();
+      detectMsg.innerHTML = `<span class="ok">已移除 ${removed} 顆本次偵測結果</span>`;
+    };
+
+    function loadImageElement(src){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function detectSeatsFromCurrentImage(){
+      const src = norm(seatMapImage.src || "");
+      if (!src) {
+        detectMsg.innerHTML = `<span class="warn">請先匯入或選擇底圖</span>`;
+        return;
+      }
+
+      detectSeatsBtn.disabled = true;
+      const oldText = detectSeatsBtn.textContent;
+      detectSeatsBtn.textContent = "偵測中…";
+      detectMsg.innerHTML = "";
+
+      try{
+        const img = await loadImageElement(src);
+
+        const stageW = 1200;
+        const stageH = 900;
+        const scaleDiv = Math.max(1, Number(detectScaleInput.value || 2));
+        const cw = Math.max(80, Math.floor(stageW / scaleDiv));
+        const ch = Math.max(60, Math.floor(stageH / scaleDiv));
+
+        const off = document.createElement("canvas");
+        off.width = cw;
+        off.height = ch;
+        const octx = off.getContext("2d", { willReadFrequently:true });
+
+        octx.clearRect(0, 0, cw, ch);
+        octx.fillStyle = "#ffffff";
+        octx.fillRect(0, 0, cw, ch);
+
+        // 依畫布比例去畫圖，跟 stage 的 contain 行為接近
+        const imgRatio = img.width / img.height;
+        const canvasRatio = cw / ch;
+        let dw, dh, dx, dy;
+        if (imgRatio > canvasRatio) {
+          dw = cw;
+          dh = dw / imgRatio;
+          dx = 0;
+          dy = (ch - dh) / 2;
+        } else {
+          dh = ch;
+          dw = dh * imgRatio;
+          dy = 0;
+          dx = (cw - dw) / 2;
+        }
+        octx.drawImage(img, dx, dy, dw, dh);
+
+        const imgData = octx.getImageData(0, 0, cw, ch);
+        const data = imgData.data;
+        const visited = new Uint8Array(cw * ch);
+
+        const threshold = Number(detectThresholdInput.value || 205);
+        const minArea = Number(detectMinAreaInput.value || 8);
+        const maxArea = Number(detectMaxAreaInput.value || 400);
+        const mode = detectModeInput.value || "dark";
+
+        function isTarget(idx){
+          const r = data[idx];
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+          const a = data[idx + 3];
+          if (a < 10) return false;
+
+          const brightness = (r * 0.299) + (g * 0.587) + (b * 0.114);
+          const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+
+          if (mode === "light") {
+            return brightness >= threshold;
+          }
+
+          // dark 模式：抓深色或飽和色
+          return (brightness <= threshold) || (saturation >= 38 && brightness <= (threshold + 18));
+        }
+
+        const found = [];
+
+        for (let y = 0; y < ch; y++) {
+          for (let x = 0; x < cw; x++) {
+            const p = y * cw + x;
+            if (visited[p]) continue;
+
+            const idx = p * 4;
+            if (!isTarget(idx)) {
+              visited[p] = 1;
+              continue;
+            }
+
+            const queue = [p];
+            visited[p] = 1;
+
+            let area = 0;
+            let minX = x, maxX = x, minY = y, maxY = y;
+
+            while (queue.length) {
+              const cur = queue.pop();
+              const cx = cur % cw;
+              const cy = Math.floor(cur / cw);
+              area++;
+
+              if (cx < minX) minX = cx;
+              if (cx > maxX) maxX = cx;
+              if (cy < minY) minY = cy;
+              if (cy > maxY) maxY = cy;
+
+              const neighbors = [
+                cur - 1,
+                cur + 1,
+                cur - cw,
+                cur + cw
+              ];
+
+              for (const np of neighbors) {
+                if (np < 0 || np >= cw * ch) continue;
+                const nx = np % cw;
+                const ny = Math.floor(np / cw);
+                if (Math.abs(nx - cx) + Math.abs(ny - cy) !== 1) continue;
+                if (visited[np]) continue;
+
+                const nidx = np * 4;
+                if (!isTarget(nidx)) {
+                  visited[np] = 1;
+                  continue;
+                }
+
+                visited[np] = 1;
+                queue.push(np);
+              }
+            }
+
+            const bw = maxX - minX + 1;
+            const bh = maxY - minY + 1;
+
+            if (area < minArea || area > maxArea) continue;
+            if (bw < 2 || bh < 2) continue;
+            if (bw > 60 || bh > 60) continue;
+
+            const centerX = Math.round(((minX + maxX) / 2) * scaleDiv);
+            const centerY = Math.round(((minY + maxY) / 2) * scaleDiv);
+
+            // 避免抓到太靠邊框
+            if (centerX < 8 || centerY < 8 || centerX > 1192 || centerY > 892) continue;
+
+            found.push({ x:centerX, y:centerY, area, bw, bh });
+          }
+        }
+
+        // 去重：距離太近的只留一顆
+        const deduped = [];
+        found.sort((a, b) => a.y - b.y || a.x - b.x);
+
+        for (const item of found) {
+          const tooNear = deduped.some(d => {
+            const dx = d.x - item.x;
+            const dy = d.y - item.y;
+            return Math.sqrt(dx * dx + dy * dy) < 10;
+          });
+          if (!tooNear) deduped.push(item);
+        }
+
+        // 先刪本次舊偵測
+        [...detectedSeatIds].forEach(id => {
+          seatMap.delete(id);
+          selectedSeatIds.delete(id);
+          if (selectedSeatId === id) selectedSeatId = "";
+        });
+        detectedSeatIds.clear();
+
+        const createdIds = [];
+        deduped.forEach((item, idx) => {
+          const seatId = `det_${Date.now()}_${idx + 1}`;
+          seatMap.set(seatId, {
+            seatId,
+            sectionId: "",
+            sectionName: "",
+            floor: "1F",
+            row: "",
+            seatNumber: "",
+            label: `候選 ${idx + 1}`,
+            x: item.x,
+            y: item.y,
+            rotation: 0,
+            price: 0,
+            status: "available",
+            enabled: true,
+            allowedRoles: [],
+            allowedTags: [],
+            allowedTicketTypes: [],
+            isWheelchair: false,
+            isCompanionSeat: false,
+            heldBy: "",
+            heldUntil: null,
+            orderId: "",
+            _detected: true
+          });
+          detectedSeatIds.add(seatId);
+          createdIds.push(seatId);
+        });
+
+        selectedSeatIds = new Set(createdIds);
+        selectedSeatId = createdIds[0] || "";
+
+        if (selectedSeatId && seatMap.has(selectedSeatId)) {
+          showSeatEditor(seatMap.get(selectedSeatId));
+        } else {
+          resetSeatEditor();
+        }
+
+        renderSeats();
+        refreshSelectionUi();
+        detectMsg.innerHTML = `<span class="ok">已偵測 ${deduped.length} 顆候選座位。可刪掉抓錯的，再按「儲存全部座位」。</span>`;
+      } catch (e) {
+        console.error(e);
+        detectMsg.innerHTML = `<span class="warn">圖片偵測失敗：${esc(e.message || e)}</span>`;
+      } finally {
+        detectSeatsBtn.disabled = false;
+        detectSeatsBtn.textContent = oldText;
+      }
+    }
+
+    detectSeatsBtn.onclick = detectSeatsFromCurrentImage;
+
+    document.querySelectorAll("[data-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll("[data-tab]").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll(".tab-pane").forEach(x => {
+          if (x.id === "tab-image" || x.id === "tab-manual") x.classList.remove("active");
+        });
+        btn.classList.add("active");
+        document.getElementById(tab).classList.add("active");
+      });
+    });
+
+    document.querySelectorAll("[data-right-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.rightTab;
+        document.querySelectorAll("[data-right-tab]").forEach(x => x.classList.remove("active"));
+        ["right-single","right-batch","right-generate"].forEach(id => {
+          document.getElementById(id).classList.remove("active");
+        });
+        btn.classList.add("active");
+        document.getElementById(tab).classList.add("active");
+      });
+    });
 
     firebase.auth().onAuthStateChanged(async user => {
       currentUser = user || null;
