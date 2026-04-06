@@ -13,6 +13,9 @@
       --muted:rgba(17,17,17,.65);
       --line:rgba(17,17,17,.10);
       --shadow:0 14px 40px rgba(0,0,0,.08);
+      --ok:#166534;
+      --warn:#b91c1c;
+      --soft:#f1f2f6;
     }
 
     *{ box-sizing:border-box; }
@@ -25,7 +28,7 @@
     }
 
     .wrap{
-      max-width:1120px;
+      max-width:1180px;
       margin:0 auto;
       padding:48px 24px;
     }
@@ -51,6 +54,11 @@
     h2{
       margin:0;
       font-size:16px;
+    }
+
+    h3{
+      margin:0 0 6px;
+      font-size:15px;
     }
 
     .sub{
@@ -132,17 +140,17 @@
     }
 
     .ok{
-      color:#166534;
+      color:var(--ok);
       font-weight:900;
     }
 
     .warn{
-      color:#b91c1c;
+      color:var(--warn);
       font-weight:900;
     }
 
     .soft{
-      background:#f1f2f6;
+      background:var(--soft);
       border:1px solid rgba(17,17,17,.12);
     }
 
@@ -186,8 +194,14 @@
       gap:14px;
     }
 
+    .grid3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:14px;
+    }
+
     @media (max-width:900px){
-      .grid2{ grid-template-columns:1fr; }
+      .grid2,.grid3{ grid-template-columns:1fr; }
     }
 
     label{
@@ -199,7 +213,9 @@
     input[type="text"],
     input[type="password"],
     input[type="file"],
-    select{
+    input[type="email"],
+    select,
+    textarea{
       width:100%;
       padding:12px;
       border:1px solid var(--line);
@@ -207,6 +223,11 @@
       background:#fff;
       font-size:16px;
       outline:none;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
     }
 
     .list{
@@ -241,7 +262,7 @@
       margin-top:6px;
       color:var(--muted);
       font-size:13px;
-      line-height:1.6;
+      line-height:1.7;
       word-break:break-word;
     }
 
@@ -275,7 +296,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:780px;
+      min-width:980px;
     }
 
     th, td{
@@ -380,20 +401,8 @@
       border-radius:14px;
       background:#fafafa;
       font-size:13px;
+      color:var(--muted);
       line-height:1.8;
-      color:#4b5563;
-    }
-
-    .success-box{
-      margin-top:12px;
-      padding:12px 14px;
-      border:1px solid rgba(22,101,52,.16);
-      border-radius:14px;
-      background:#f0fdf4;
-      font-size:13px;
-      line-height:1.8;
-      color:#166534;
-      display:none;
     }
   </style>
 </head>
@@ -408,8 +417,8 @@
           <div>
             <h1>後台帳號管理</h1>
             <div class="sub">
-              這裡只管理 <span class="mono">帳號層級設定</span>。<br>
-              僅管理：<span class="mono">email / role / enabled / schoolId / orgId</span>
+              可進行 <span class="mono">單筆新增</span>、<span class="mono">批次匯入</span>、<span class="mono">現有人員管理</span>。<br>
+              帳號設定只保留：<span class="mono">email / role / enabled / schoolId / orgId</span>。
             </div>
             <div class="sub" style="margin-top:8px;">
               登入：<span id="who" class="mono">-</span>｜
@@ -434,103 +443,99 @@
         </div>
       </div>
 
+      <!-- 單筆新增 -->
       <div id="tabSingle" style="display:none;">
         <div class="card">
           <div class="row">
             <div>
               <h2>單筆新增帳號</h2>
               <div class="sub">
-                單筆建立後台帳號，只建立帳號層級資料。
+                直接建立 1 筆後台帳號，並同步寫入 <span class="mono">Auth</span> 與 <span class="mono">users/{uid}</span>。
               </div>
             </div>
           </div>
 
           <div class="grid2" style="margin-top:12px;">
             <div>
-              <label style="margin-top:0;">email</label>
-              <input type="text" id="singleEmail" placeholder="例如：staff@example.com" />
+              <label style="margin-top:0;">Email</label>
+              <input type="email" id="singleEmail" placeholder="例如：staff@example.com" />
             </div>
 
             <div>
-              <label style="margin-top:0;">password</label>
-              <input type="password" id="singlePassword" placeholder="至少 6 碼" />
+              <label style="margin-top:0;">密碼</label>
+              <input type="password" id="singlePassword" placeholder="請輸入密碼" />
             </div>
 
             <div>
               <label>角色（role）</label>
-              <select id="singleRole">
-                <option value="platform_super">platform_super</option>
-                <option value="platform_admin">platform_admin</option>
-                <option value="org_super">org_super</option>
-                <option value="org_admin">org_admin</option>
-                <option value="org_staff" selected>org_staff</option>
-              </select>
+              <select id="singleRole"></select>
             </div>
 
             <div>
               <label>啟用（enabled）</label>
               <select id="singleEnabled">
-                <option value="true" selected>true</option>
+                <option value="true">true</option>
                 <option value="false">false</option>
               </select>
             </div>
 
             <div>
-              <label>校園（schoolId，可空）</label>
+              <label>校園（schoolId）</label>
               <select id="singleSchoolId"></select>
             </div>
 
             <div>
-              <label>組織（orgId，可空）</label>
+              <label>組織（orgId）</label>
               <select id="singleOrgId"></select>
             </div>
-          </div>
-
-          <div class="hint-box">
-            這裡不設定工作組別、活動指派、入口指派。<br>
-            那些請在活動管理內另外設定。
           </div>
 
           <div class="actions" style="margin-top:14px;">
             <button class="btn btn-primary" id="singleCreateBtn">建立帳號</button>
           </div>
 
-          <div class="success-box" id="singleMsg"></div>
+          <div class="hint-box">
+            說明：這裡只建立帳號基本設定。<br>
+            活動內的工作組別、服務台、核銷入口、活動指派等，都請到各活動頁面另外設定。
+          </div>
+
+          <div class="small" id="singleMsg" style="margin-top:12px;"></div>
         </div>
       </div>
 
+      <!-- 批次匯入 -->
       <div id="tabImport" style="display:none;">
         <div class="card">
           <div class="row">
             <div>
               <h2>批次匯入帳號</h2>
               <div class="sub">
-                匯入欄位固定為：<span class="mono">email,password,role,enabled,schoolId,orgId</span>
+                支援上傳 <span class="mono">CSV / Excel（.csv / .xlsx / .xls）</span>。<br>
+                必填欄位：<span class="mono">email,password,role,enabled,schoolId,orgId</span>
               </div>
             </div>
           </div>
 
-          <label style="margin-top:12px;">上傳 CSV 檔案</label>
-          <input type="file" id="csvFile" accept=".csv,text/csv" />
+          <label style="margin-top:12px;">上傳檔案</label>
+          <input type="file" id="importFile" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
 
           <div class="actions" style="margin-top:14px;">
-            <button class="btn" id="downloadSampleBtn">下載範本</button>
-            <button class="btn btn-primary" id="parseCsvBtn">解析 CSV</button>
+            <button class="btn" id="downloadExcelSampleBtn">下載 Excel 範本</button>
+            <button class="btn" id="downloadCsvSampleBtn">下載 CSV 範本</button>
+            <button class="btn btn-primary" id="parseImportBtn">解析檔案</button>
           </div>
 
           <div class="hint-box">
-            CSV 裡的 <span class="mono">schoolId</span>、<span class="mono">orgId</span> 要填真正的文件 ID。<br>
-            下方會列出目前可用的校園與組織代碼。
+            範本中的欄位會依目前這個帳號管理頁實際使用的資料欄位建立。<br>
+            角色、啟用狀態、校園、組織的可用值，會一起放在範本的「參考資料」工作表中。
           </div>
-
-          <div class="small" id="importReferenceText" style="margin-top:12px;"></div>
         </div>
 
         <div class="card" id="importPreviewCard" style="display:none;">
           <div class="row">
             <div>
               <h2>匯入預覽</h2>
-              <div class="sub">確認內容後再批次建立帳號。</div>
+              <div class="sub">確認資料無誤後，再批次建立帳號。</div>
             </div>
             <div class="small" id="importInfo">-</div>
           </div>
@@ -548,14 +553,14 @@
         </div>
       </div>
 
+      <!-- 後台人員 -->
       <div id="tabStaff" style="display:none;">
         <div class="card">
           <div class="row">
             <div>
               <h2>後台人員</h2>
               <div class="sub">
-                可查看與管理現有後台人員資料。<br>
-                僅管理：email、角色、啟用與否、校園、組織。
+                可查看與管理現有後台人員資料。只保留：email、角色、啟用與否、校園、組織。
               </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -565,19 +570,12 @@
 
           <div class="grid2" style="margin-top:12px;">
             <div>
-              <label style="margin-top:0;">搜尋（email / uid / orgId / schoolId / role）</label>
+              <label style="margin-top:0;">搜尋（email / uid / schoolId / orgId / role）</label>
               <input type="text" id="userSearch" placeholder="輸入關鍵字…" />
             </div>
             <div>
               <label style="margin-top:0;">角色篩選</label>
-              <select id="userRoleSel">
-                <option value="all">全部</option>
-                <option value="platform_super">platform_super</option>
-                <option value="platform_admin">platform_admin</option>
-                <option value="org_super">org_super</option>
-                <option value="org_admin">org_admin</option>
-                <option value="org_staff">org_staff</option>
-              </select>
+              <select id="userRoleSel"></select>
             </div>
           </div>
         </div>
@@ -587,6 +585,7 @@
     </div>
   </div>
 
+  <!-- 編輯 modal -->
   <div class="modalBack" id="staffModalBack">
     <div class="modal">
       <div class="modalTop">
@@ -610,25 +609,19 @@
         <div class="row">
           <div>
             <h2>帳號設定</h2>
-            <div class="sub">只管理帳號層級欄位。</div>
+            <div class="sub">可修改 email、角色、啟用狀態、校園、組織。</div>
           </div>
         </div>
 
         <div class="grid2" style="margin-top:12px;">
           <div>
             <label style="margin-top:0;">email</label>
-            <input type="text" id="sEditEmail" placeholder="輸入 email" />
+            <input type="email" id="sEditEmail" placeholder="輸入 email" />
           </div>
 
           <div>
             <label style="margin-top:0;">角色（role）</label>
-            <select id="sEditRole">
-              <option value="platform_super">platform_super</option>
-              <option value="platform_admin">platform_admin</option>
-              <option value="org_super">org_super</option>
-              <option value="org_admin">org_admin</option>
-              <option value="org_staff">org_staff</option>
-            </select>
+            <select id="sEditRole"></select>
           </div>
 
           <div>
@@ -640,12 +633,12 @@
           </div>
 
           <div>
-            <label>校園（schoolId，可空）</label>
+            <label>校園（schoolId）</label>
             <select id="sEditSchoolId"></select>
           </div>
 
           <div>
-            <label>組織（orgId，可空）</label>
+            <label>組織（orgId）</label>
             <select id="sEditOrgId"></select>
           </div>
         </div>
@@ -658,6 +651,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -709,10 +703,10 @@
           enabled: payload.enabled,
           schoolId: payload.schoolId || "",
           orgId: payload.orgId || "",
-          updatedAt: new Date(),
-          updatedByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : "",
           createdAt: new Date(),
-          createdByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : ""
+          createdByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : "",
+          updatedAt: new Date(),
+          updatedByUid: firebase.auth().currentUser ? firebase.auth().currentUser.uid : ""
         };
 
         await db.collection("users").doc(uid).set(docPayload, { merge:true });
@@ -722,6 +716,16 @@
         try { await secondary.delete(); } catch (_) {}
       }
     }
+
+    const STAFF_ROLES = [
+      "platform_super",
+      "platform_admin",
+      "org_super",
+      "org_admin",
+      "org_staff"
+    ];
+
+    const STAFF_ROLE_SET = new Set(STAFF_ROLES);
 
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
@@ -746,14 +750,14 @@
     const singleCreateBtn = document.getElementById("singleCreateBtn");
     const singleMsg = document.getElementById("singleMsg");
 
-    const csvFile = document.getElementById("csvFile");
-    const parseCsvBtn = document.getElementById("parseCsvBtn");
-    const downloadSampleBtn = document.getElementById("downloadSampleBtn");
+    const importFile = document.getElementById("importFile");
+    const parseImportBtn = document.getElementById("parseImportBtn");
+    const downloadExcelSampleBtn = document.getElementById("downloadExcelSampleBtn");
+    const downloadCsvSampleBtn = document.getElementById("downloadCsvSampleBtn");
     const importPreviewCard = document.getElementById("importPreviewCard");
     const importTable = document.getElementById("importTable");
     const bulkCreateBtn = document.getElementById("bulkCreateBtn");
     const importInfo = document.getElementById("importInfo");
-    const importReferenceText = document.getElementById("importReferenceText");
 
     const reloadUsersBtn = document.getElementById("reloadUsersBtn");
     const userSearch = document.getElementById("userSearch");
@@ -770,8 +774,8 @@
     const sEditEmail = document.getElementById("sEditEmail");
     const sEditRole = document.getElementById("sEditRole");
     const sEditEnabled = document.getElementById("sEditEnabled");
-    const sEditOrgId = document.getElementById("sEditOrgId");
     const sEditSchoolId = document.getElementById("sEditSchoolId");
+    const sEditOrgId = document.getElementById("sEditOrgId");
     const sSaveBtn = document.getElementById("sSaveBtn");
     const sDeleteBtn = document.getElementById("sDeleteBtn");
 
@@ -780,28 +784,10 @@
     let myUserDoc = null;
     let userCache = [];
     let currentStaffUser = null;
-    let parsedCsvRows = [];
-    let parsedCsvHeaders = [];
-
-    let schoolsCache = [];
-    let orgsCache = [];
-
-    const STAFF_ROLES = new Set([
-      "platform_super",
-      "platform_admin",
-      "org_super",
-      "org_admin",
-      "org_staff"
-    ]);
-
-    const IMPORT_HEADERS = [
-      "email",
-      "password",
-      "role",
-      "enabled",
-      "schoolId",
-      "orgId"
-    ];
+    let parsedImportRows = [];
+    let parsedImportHeaders = [];
+    let schoolOptions = [];
+    let orgOptions = [];
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -817,6 +803,10 @@
       return String(s ?? "").trim();
     }
 
+    function lower(s){
+      return norm(s).toLowerCase();
+    }
+
     function tsToText(ts){
       try{
         if (!ts) return "-";
@@ -828,11 +818,37 @@
     }
 
     function parseBoolLike(v, fallback = true){
-      const s = norm(v).toLowerCase();
+      const s = lower(v);
       if (!s) return fallback;
       if (["true","1","yes","y"].includes(s)) return true;
       if (["false","0","no","n"].includes(s)) return false;
       return fallback;
+    }
+
+    function boolText(v){
+      return v === true ? "true" : "false";
+    }
+
+    function isPlatform(role){
+      return role === "platform_super" || role === "platform_admin";
+    }
+
+    function isPlatformSuper(role){
+      return role === "platform_super";
+    }
+
+    function isProtectedSuperUser(user){
+      return norm(user?.role) === "platform_super";
+    }
+
+    function getSchoolLabelById(id){
+      const item = schoolOptions.find(x => x.id === norm(id));
+      return item ? `${item.name}（${item.id}）` : (norm(id) || "（未設定）");
+    }
+
+    function getOrgLabelById(id){
+      const item = orgOptions.find(x => x.id === norm(id));
+      return item ? `${item.name}（${item.id}）` : (norm(id) || "（未設定）");
     }
 
     function showGate(title, msg, showLogin){
@@ -880,83 +896,81 @@
       return snap.data() || null;
     }
 
-    function isPlatform(role){
-      return role === "platform_super" || role === "platform_admin";
-    }
-
-    function isPlatformSuper(role){
-      return role === "platform_super";
-    }
-
-    function isProtectedSuperUser(user){
-      return norm(user?.role) === "platform_super";
-    }
-
-    function formatUnitBlock(user){
-      const school = norm(user.schoolId || "");
-      const org = norm(user.orgId || "");
-
-      let html = `帳號設定：<br>`;
-      html += `校園：<span class="mono">${esc(school || "（未設定）")}</span><br>`;
-      html += `組織：<span class="mono">${esc(org || "（未設定）")}</span>`;
-      return html;
-    }
-
-    async function loadSchoolOptions(){
-      const snap = await db.collection("partnerSchools").get();
-      const items = [];
-      snap.forEach(doc => {
-        const data = doc.data() || {};
-        if (data.enabled === false) return;
-        items.push({
-          id: doc.id,
-          name: norm(data.name || doc.id)
+    async function loadSchools(){
+      try{
+        const snap = await db.collection("partnerSchools").get();
+        const rows = [];
+        snap.forEach(doc => {
+          const data = doc.data() || {};
+          if (data.enabled === false) return;
+          rows.push({
+            id: doc.id,
+            name: norm(data.name || doc.id)
+          });
         });
-      });
-      items.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
-      schoolsCache = items;
+        rows.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
+        schoolOptions = rows;
+      }catch(e){
+        console.error("loadSchools error", e);
+        schoolOptions = [];
+      }
     }
 
-    async function loadOrgOptions(){
-      const snap = await db.collection("organizations").get();
-      const items = [];
-      snap.forEach(doc => {
-        const data = doc.data() || {};
-        items.push({
-          id: doc.id,
-          name: norm(data.name || doc.id)
+    async function loadOrganizations(){
+      try{
+        const snap = await db.collection("organizations").get();
+        const rows = [];
+        snap.forEach(doc => {
+          const data = doc.data() || {};
+          rows.push({
+            id: doc.id,
+            name: norm(data.name || data.title || doc.id)
+          });
         });
-      });
-      items.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
-      orgsCache = items;
+        rows.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
+        orgOptions = rows;
+      }catch(e){
+        console.error("loadOrganizations error", e);
+        orgOptions = [];
+      }
     }
 
-    function fillSelectOptions(selectEl, list, placeholderText){
-      const options = [`<option value="">${esc(placeholderText)}</option>`]
-        .concat(
-          list.map(item => `<option value="${esc(item.id)}">${esc(item.name)}（${esc(item.id)}）</option>`)
-        );
-      selectEl.innerHTML = options.join("");
+    function buildRoleOptionsHtml(selectedValue = "org_staff"){
+      return STAFF_ROLES.map(role => `
+        <option value="${esc(role)}" ${norm(selectedValue) === role ? "selected" : ""}>${esc(role)}</option>
+      `).join("");
     }
 
-    function renderAllDropdowns(){
-      fillSelectOptions(singleSchoolId, schoolsCache, "不設定校園");
-      fillSelectOptions(singleOrgId, orgsCache, "不設定組織");
-      fillSelectOptions(sEditSchoolId, schoolsCache, "不設定校園");
-      fillSelectOptions(sEditOrgId, orgsCache, "不設定組織");
-
-      const schoolText = schoolsCache.length
-        ? schoolsCache.map(x => `${x.name}=${x.id}`).join("｜")
-        : "（目前沒有可用校園）";
-
-      const orgText = orgsCache.length
-        ? orgsCache.map(x => `${x.name}=${x.id}`).join("｜")
-        : "（目前沒有可用組織）";
-
-      importReferenceText.innerHTML = `
-        <b>校園代碼：</b> ${esc(schoolText)}<br>
-        <b>組織代碼：</b> ${esc(orgText)}
+    function buildSchoolOptionsHtml(selectedValue = ""){
+      return `
+        <option value="">（不設定）</option>
+        ${schoolOptions.map(item => `
+          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}（${esc(item.id)}）</option>
+        `).join("")}
       `;
+    }
+
+    function buildOrgOptionsHtml(selectedValue = ""){
+      return `
+        <option value="">（不設定）</option>
+        ${orgOptions.map(item => `
+          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}（${esc(item.id)}）</option>
+        `).join("")}
+      `;
+    }
+
+    function initStaticSelects(){
+      singleRole.innerHTML = buildRoleOptionsHtml("org_staff");
+      userRoleSel.innerHTML = `
+        <option value="all">全部</option>
+        ${STAFF_ROLES.map(role => `<option value="${esc(role)}">${esc(role)}</option>`).join("")}
+      `;
+      sEditRole.innerHTML = buildRoleOptionsHtml("org_staff");
+
+      singleSchoolId.innerHTML = buildSchoolOptionsHtml("");
+      singleOrgId.innerHTML = buildOrgOptionsHtml("");
+      sEditSchoolId.innerHTML = buildSchoolOptionsHtml("");
+      sEditOrgId.innerHTML = buildOrgOptionsHtml("");
     }
 
     function renderTabs(){
@@ -983,14 +997,62 @@
       tabStaff.style.display = tab === "staff" ? "block" : "none";
 
       if (tab === "single") {
-        tabHint.textContent = "單筆新增後台帳號。";
+        tabHint.textContent = "新增單一後台帳號。";
       } else if (tab === "import") {
-        tabHint.textContent = "上傳 CSV 並預覽批次匯入資料。";
+        tabHint.textContent = "上傳 CSV / Excel 並預覽批次匯入資料。";
       } else {
         tabHint.textContent = "查看與管理現有後台人員。";
         loadStaffUsers();
       }
     }
+
+    async function createSingleAccount(){
+      const email = norm(singleEmail.value);
+      const password = norm(singlePassword.value);
+      const role = norm(singleRole.value);
+      const enabled = singleEnabled.value === "true";
+      const schoolId = norm(singleSchoolId.value);
+      const orgId = norm(singleOrgId.value);
+
+      singleMsg.innerHTML = "";
+
+      if (!email) return alert("請輸入 Email");
+      if (!password) return alert("請輸入密碼");
+      if (!STAFF_ROLE_SET.has(role)) return alert("角色不正確");
+
+      singleCreateBtn.disabled = true;
+      const oldText = singleCreateBtn.textContent;
+      singleCreateBtn.textContent = "建立中…";
+
+      try{
+        await createAuthUserAndProfile({
+          email,
+          password,
+          role,
+          enabled,
+          schoolId,
+          orgId
+        });
+
+        singleMsg.innerHTML = `<span class="ok">帳號已建立成功。</span>`;
+        singleEmail.value = "";
+        singlePassword.value = "";
+        singleRole.value = "org_staff";
+        singleEnabled.value = "true";
+        singleSchoolId.value = "";
+        singleOrgId.value = "";
+
+        await loadStaffUsers();
+      }catch(e){
+        console.error(e);
+        singleMsg.innerHTML = `<span class="warn">${esc(e.message || "建立失敗")}</span>`;
+      }finally{
+        singleCreateBtn.disabled = false;
+        singleCreateBtn.textContent = oldText;
+      }
+    }
+
+    singleCreateBtn.onclick = createSingleAccount;
 
     function parseCsvLine(line){
       const result = [];
@@ -1039,98 +1101,244 @@
       return { headers, rows };
     }
 
+    function normalizeImportHeaders(headers){
+      return headers.map(h => norm(h));
+    }
+
+    function validateImportRow(row){
+      const email = norm(row.email);
+      const password = norm(row.password);
+      const role = norm(row.role);
+      const enabledRaw = norm(row.enabled);
+      const schoolId = norm(row.schoolId);
+      const orgId = norm(row.orgId);
+
+      const errors = [];
+
+      if (!email) errors.push("缺少 email");
+      if (!password) errors.push("缺少 password");
+      if (!role) errors.push("缺少 role");
+      if (role && !STAFF_ROLE_SET.has(role)) errors.push("role 不在允許清單");
+      if (enabledRaw && !["true","false","1","0","yes","no","y","n"].includes(lower(enabledRaw))) {
+        errors.push("enabled 格式錯誤");
+      }
+      if (schoolId && !schoolOptions.some(x => x.id === schoolId)) {
+        errors.push("schoolId 不存在");
+      }
+      if (orgId && !orgOptions.some(x => x.id === orgId)) {
+        errors.push("orgId 不存在");
+      }
+
+      return {
+        ok: errors.length === 0,
+        errors
+      };
+    }
+
     function renderImportPreview(headers, rows){
+      const normalizedHeaders = normalizeImportHeaders(headers);
       const thead = importTable.querySelector("thead");
       const tbody = importTable.querySelector("tbody");
 
-      thead.innerHTML = `<tr>${headers.map(h => `<th>${esc(h)}</th>`).join("")}</tr>`;
-      tbody.innerHTML = rows.map(row => `
+      thead.innerHTML = `
         <tr>
-          ${headers.map(h => `<td>${esc(row[h] ?? "")}</td>`).join("")}
+          <th>檢查結果</th>
+          ${normalizedHeaders.map(h => `<th>${esc(h)}</th>`).join("")}
         </tr>
-      `).join("");
+      `;
+
+      tbody.innerHTML = rows.map(row => {
+        const check = validateImportRow(row);
+        return `
+          <tr>
+            <td>${check.ok ? `<span class="ok">可匯入</span>` : `<span class="warn">${esc(check.errors.join("、"))}</span>`}</td>
+            ${normalizedHeaders.map(h => `<td>${esc(row[h] ?? "")}</td>`).join("")}
+          </tr>
+        `;
+      }).join("");
 
       importPreviewCard.style.display = "block";
-      importInfo.textContent = `欄位數：${headers.length}｜資料列：${rows.length}`;
+      importInfo.textContent = `欄位數：${normalizedHeaders.length}｜資料列：${rows.length}`;
+
+      const validCount = rows.filter(r => validateImportRow(r).ok).length;
+      bulkCreateBtn.disabled = validCount === 0;
     }
 
-    async function parseCsvFile(){
-      const file = csvFile.files && csvFile.files[0];
+    async function parseImportFile(){
+      const file = importFile.files && importFile.files[0];
       if (!file) {
-        alert("請先選擇 CSV 檔案");
+        alert("請先選擇檔案");
         return;
       }
 
-      parseCsvBtn.disabled = true;
-      const oldText = parseCsvBtn.textContent;
-      parseCsvBtn.textContent = "解析中…";
+      parseImportBtn.disabled = true;
+      const oldText = parseImportBtn.textContent;
+      parseImportBtn.textContent = "解析中…";
 
       try{
-        const text = await file.text();
-        const { headers, rows } = parseCsvText(text);
+        const fileName = lower(file.name);
+        let headers = [];
+        let rows = [];
+
+        if (fileName.endsWith(".csv")) {
+          const text = await file.text();
+          const parsed = parseCsvText(text);
+          headers = normalizeImportHeaders(parsed.headers);
+          rows = parsed.rows.map(r => {
+            const obj = {};
+            headers.forEach(h => obj[h] = norm(r[h]));
+            return obj;
+          });
+        } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+          const buffer = await file.arrayBuffer();
+          const wb = XLSX.read(buffer, { type:"array" });
+          const firstSheetName = wb.SheetNames[0];
+          const ws = wb.Sheets[firstSheetName];
+          const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
+
+          if (!json.length) {
+            headers = [];
+            rows = [];
+          } else {
+            headers = Object.keys(json[0]).map(h => norm(h));
+            rows = json.map(item => {
+              const obj = {};
+              headers.forEach(h => obj[h] = norm(item[h]));
+              return obj;
+            });
+          }
+        } else {
+          alert("目前只支援 CSV / XLSX / XLS");
+          return;
+        }
 
         if (!headers.length) {
-          alert("CSV 內容是空的");
+          alert("檔案內容是空的");
           return;
         }
 
-        const missing = IMPORT_HEADERS.filter(h => !headers.includes(h));
+        const requiredHeaders = ["email","password","role","enabled","schoolId","orgId"];
+        const missing = requiredHeaders.filter(h => !headers.includes(h));
         if (missing.length) {
-          alert("CSV 缺少欄位：" + missing.join(", "));
+          alert("缺少必要欄位：" + missing.join(", "));
           return;
         }
 
-        parsedCsvHeaders = headers;
-        parsedCsvRows = rows;
+        parsedImportHeaders = headers;
+        parsedImportRows = rows;
 
         renderImportPreview(headers, rows);
-        bulkCreateBtn.disabled = rows.length === 0;
 
       }catch(e){
         console.error(e);
-        alert("CSV 解析失敗");
+        alert("檔案解析失敗");
       }finally{
-        parseCsvBtn.disabled = false;
-        parseCsvBtn.textContent = oldText;
+        parseImportBtn.disabled = false;
+        parseImportBtn.textContent = oldText;
       }
     }
 
-    function downloadSampleCsv(){
-      const sampleRows = [
-        ["user1@example.com","abc12345","org_staff","true",schoolsCache[0]?.id || "",orgsCache[0]?.id || ""],
-        ["user2@example.com","abc12345","org_admin","true",schoolsCache[0]?.id || "",orgsCache[0]?.id || ""]
+    parseImportBtn.onclick = parseImportFile;
+
+    function buildSampleRows(){
+      const firstSchool = schoolOptions[0]?.id || "";
+      const firstOrg = orgOptions[0]?.id || "";
+
+      return [
+        {
+          email:"user1@example.com",
+          password:"abc12345",
+          role:"org_staff",
+          enabled:"true",
+          schoolId:firstSchool,
+          orgId:firstOrg
+        },
+        {
+          email:"user2@example.com",
+          password:"abc12345",
+          role:"org_admin",
+          enabled:"true",
+          schoolId:firstSchool,
+          orgId:firstOrg
+        }
+      ];
+    }
+
+    function buildReferenceSheetData(){
+      const rows = [];
+      rows.push(["欄位","可填值 / 說明"]);
+      rows.push(["role", STAFF_ROLES.join(" / ")]);
+      rows.push(["enabled", "true / false"]);
+      rows.push(["schoolId", schoolOptions.length ? schoolOptions.map(x => `${x.name}（${x.id}）`).join("、") : "目前沒有校園資料"]);
+      rows.push(["orgId", orgOptions.length ? orgOptions.map(x => `${x.name}（${x.id}）`).join("、") : "目前沒有組織資料"]);
+      return rows;
+    }
+
+    function downloadExcelSample(){
+      const headers = ["email","password","role","enabled","schoolId","orgId"];
+      const rows = buildSampleRows();
+
+      const mainSheetData = [
+        headers,
+        ...rows.map(r => headers.map(h => r[h] || ""))
       ];
 
+      const refSheetData = buildReferenceSheetData();
+
+      const wb = XLSX.utils.book_new();
+      const wsMain = XLSX.utils.aoa_to_sheet(mainSheetData);
+      const wsRef = XLSX.utils.aoa_to_sheet(refSheetData);
+
+      XLSX.utils.book_append_sheet(wb, wsMain, "匯入範本");
+      XLSX.utils.book_append_sheet(wb, wsRef, "參考資料");
+
+      XLSX.writeFile(wb, "staff_account_import_template.xlsx");
+    }
+
+    function downloadCsvSample(){
+      const headers = ["email","password","role","enabled","schoolId","orgId"];
+      const rows = buildSampleRows();
+
       const csv = [
-        IMPORT_HEADERS.join(","),
-        ...sampleRows.map(row => row.join(","))
+        headers.join(","),
+        ...rows.map(r => headers.map(h => {
+          const value = String(r[h] ?? "");
+          return value.includes(",") ? `"${value.replace(/"/g, '""')}"` : value;
+        }).join(","))
       ].join("\n");
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "staff_account_import_sample.csv";
+      a.download = "staff_account_import_template.csv";
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
     }
 
-    function buildFirestorePayloadFromRow(row){
+    downloadExcelSampleBtn.onclick = downloadExcelSample;
+    downloadCsvSampleBtn.onclick = downloadCsvSample;
+
+    function buildImportPayloadFromRow(row){
       return {
-        email: norm(row.email || ""),
-        password: norm(row.password || ""),
-        role: norm(row.role || "org_staff"),
+        email: norm(row.email),
+        password: norm(row.password),
+        role: norm(row.role),
         enabled: parseBoolLike(row.enabled, true),
-        schoolId: norm(row.schoolId || ""),
-        orgId: norm(row.orgId || "")
+        schoolId: norm(row.schoolId),
+        orgId: norm(row.orgId)
       };
     }
 
     async function bulkCreateAccounts(){
-      if (!parsedCsvRows.length) return alert("沒有可匯入的資料");
-      if (!confirm(`確定要批次建立 ${parsedCsvRows.length} 個帳號嗎？`)) return;
+      if (!parsedImportRows.length) return alert("沒有可匯入的資料");
+
+      const validRows = parsedImportRows.filter(r => validateImportRow(r).ok);
+      if (!validRows.length) return alert("沒有可匯入的有效資料");
+
+      if (!confirm(`確定要批次建立 ${validRows.length} 個帳號嗎？`)) return;
 
       bulkCreateBtn.disabled = true;
       const oldText = bulkCreateBtn.textContent;
@@ -1138,20 +1346,11 @@
       const failed = [];
 
       try {
-        for (let i = 0; i < parsedCsvRows.length; i++) {
-          const row = parsedCsvRows[i];
-          bulkCreateBtn.textContent = `建立中… (${i+1}/${parsedCsvRows.length})`;
+        for (let i = 0; i < validRows.length; i++) {
+          const row = validRows[i];
+          bulkCreateBtn.textContent = `建立中… (${i+1}/${validRows.length})`;
 
-          const payload = buildFirestorePayloadFromRow(row);
-
-          if (!payload.email) {
-            failed.push(`第 ${i+1} 列缺少 email`);
-            continue;
-          }
-          if (!payload.password) {
-            failed.push(`第 ${i+1} 列缺少 password`);
-            continue;
-          }
+          const payload = buildImportPayloadFromRow(row);
 
           try {
             await createAuthUserAndProfile(payload);
@@ -1173,65 +1372,10 @@
       }
     }
 
-    async function createSingleAccount(){
-      const payload = {
-        email: norm(singleEmail.value),
-        password: norm(singlePassword.value),
-        role: norm(singleRole.value),
-        enabled: singleEnabled.value === "true",
-        schoolId: norm(singleSchoolId.value),
-        orgId: norm(singleOrgId.value)
-      };
-
-      if (!payload.email) {
-        alert("請輸入 email");
-        return;
-      }
-      if (!payload.password) {
-        alert("請輸入 password");
-        return;
-      }
-
-      singleCreateBtn.disabled = true;
-      const oldText = singleCreateBtn.textContent;
-      singleCreateBtn.textContent = "建立中…";
-      singleMsg.style.display = "none";
-      singleMsg.textContent = "";
-
-      try{
-        const result = await createAuthUserAndProfile(payload);
-
-        singleMsg.style.display = "block";
-        singleMsg.innerHTML = `
-          已成功建立帳號<br>
-          email：<span class="mono">${esc(result.email)}</span><br>
-          uid：<span class="mono">${esc(result.uid)}</span>
-        `;
-
-        singleEmail.value = "";
-        singlePassword.value = "";
-        singleRole.value = "org_staff";
-        singleEnabled.value = "true";
-        singleSchoolId.value = "";
-        singleOrgId.value = "";
-
-        await loadStaffUsers();
-      }catch(e){
-        console.error(e);
-        alert("建立失敗：" + (e.message || e));
-      }finally{
-        singleCreateBtn.disabled = false;
-        singleCreateBtn.textContent = oldText;
-      }
-    }
-
-    parseCsvBtn.onclick = parseCsvFile;
-    downloadSampleBtn.onclick = downloadSampleCsv;
     bulkCreateBtn.onclick = bulkCreateAccounts;
-    singleCreateBtn.onclick = createSingleAccount;
 
     function userMatches(u){
-      const q = norm(userSearch.value).toLowerCase();
+      const q = lower(userSearch.value);
       const roleFilter = userRoleSel.value;
 
       if (roleFilter !== "all" && norm(u.role) !== roleFilter) return false;
@@ -1244,7 +1388,7 @@
         u.orgId,
         u.schoolId,
         u.role
-      ].map(v => norm(v).toLowerCase());
+      ].map(v => lower(v));
 
       return fields.some(v => v.includes(q));
     }
@@ -1292,8 +1436,9 @@
                 </div>
                 <div class="meta">
                   uid：<span class="mono">${esc(u.id)}</span><br>
-                  ${formatUnitBlock(u)}<br>
-                  createdAt：<span class="mono">${esc(tsToText(u.createdAt))}</span>
+                  校園：<span class="mono">${esc(getSchoolLabelById(u.schoolId))}</span><br>
+                  組織：<span class="mono">${esc(getOrgLabelById(u.orgId))}</span><br>
+                  approvedAt / createdAt：<span class="mono">${esc(tsToText(u.approvedAt || u.createdAt))}</span>
                 </div>
               </div>
 
@@ -1325,7 +1470,7 @@
         userCache = [];
         snap.forEach(doc => {
           const data = doc.data() || {};
-          if (!STAFF_ROLES.has(norm(data.role))) return;
+          if (!STAFF_ROLE_SET.has(norm(data.role))) return;
           userCache.push({ id: doc.id, ...data });
         });
 
@@ -1337,7 +1482,7 @@
 
         renderUserList();
       }catch(e){
-        console.error("loadStaffUsers 最外層失敗", e);
+        console.error("loadStaffUsers 失敗", e);
         userList.innerHTML = `
           <div class="item">
             <div class="itemTitle warn">讀取後台人員失敗</div>
@@ -1391,14 +1536,14 @@
 
       sUid.textContent = u.id || "-";
       sEmail.textContent = u.email || "-";
-      sApprovedAt.textContent = tsToText(u.createdAt);
+      sApprovedAt.textContent = tsToText(u.approvedAt || u.createdAt);
       sCurrentRole.textContent = u.role || "-";
 
       sEditEmail.value = norm(u.email || "");
-      sEditRole.value = [...sEditRole.options].some(opt => opt.value === norm(u.role)) ? norm(u.role) : "org_staff";
+      sEditRole.innerHTML = buildRoleOptionsHtml(norm(u.role) || "org_staff");
       sEditEnabled.value = u.enabled === true ? "true" : "false";
-      sEditSchoolId.value = norm(u.schoolId || "");
-      sEditOrgId.value = norm(u.orgId || "");
+      sEditSchoolId.innerHTML = buildSchoolOptionsHtml(norm(u.schoolId));
+      sEditOrgId.innerHTML = buildOrgOptionsHtml(norm(u.orgId));
 
       const isMe = currentUser && u.id === currentUser.uid;
       const isSuperProtected = isProtectedSuperUser(u);
@@ -1411,7 +1556,7 @@
       } else if (isSuperProtected) {
         sSub.textContent = "這是 platform_super 帳號，不可修改角色、不可停用、不可刪除。";
       } else {
-        sSub.textContent = "可直接修改此後台人員的帳號層級設定。";
+        sSub.textContent = "可直接修改此後台人員的 email、角色、啟用狀態、校園、組織。";
       }
 
       sDeleteBtn.style.display = (isPlatformSuper(myRole) && !isMe && !isSuperProtected) ? "inline-flex" : "none";
@@ -1425,11 +1570,12 @@
       const email = norm(sEditEmail.value);
       const role = norm(sEditRole.value);
       const enabled = sEditEnabled.value === "true";
-      const orgId = norm(sEditOrgId.value);
       const schoolId = norm(sEditSchoolId.value);
+      const orgId = norm(sEditOrgId.value);
 
       if (!uid) return alert("缺少 uid");
       if (!email) return alert("請輸入 email");
+      if (!STAFF_ROLE_SET.has(role)) return alert("角色不正確");
 
       const isMe = currentUser && uid === currentUser.uid;
       const isSuperProtected = isProtectedSuperUser(currentStaffUser);
@@ -1449,8 +1595,8 @@
           email,
           role,
           enabled,
-          orgId: orgId || "",
           schoolId: schoolId || "",
+          orgId: orgId || "",
           updatedAt: new Date(),
           updatedByUid: currentUser.uid
         });
@@ -1543,11 +1689,11 @@
         myRoleEl.textContent = myRole || "-";
 
         await Promise.all([
-          loadSchoolOptions(),
-          loadOrgOptions()
+          loadSchools(),
+          loadOrganizations()
         ]);
 
-        renderAllDropdowns();
+        initStaticSelects();
 
         gate.style.display = "none";
         app.style.display = "block";
