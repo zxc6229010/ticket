@@ -31,19 +31,14 @@
 
       --seat-available:#ffffff;
       --seat-available-border:#111827;
-
       --seat-selected:#111827;
       --seat-selected-border:#111827;
-
       --seat-sold:#6b7280;
       --seat-sold-border:#6b7280;
-
       --seat-disabled:#d1d5db;
       --seat-disabled-border:#9ca3af;
-
       --seat-locked:#fb923c;
       --seat-locked-border:#ea580c;
-
       --seat-not-allowed:#e5e7eb;
       --seat-not-allowed-border:#cbd5e1;
 
@@ -957,7 +952,6 @@
 
     function resolvePurchaseLimit(event, ticket, matchedRecord){
       const limits = [];
-
       const recordLimit = Number(matchedRecord?.maxTickets || 0);
       const ticketLimit = Number(ticket?.maxPerUser || 0);
       const eventLimit = Number(event?.maxTicketsPerUserDefault || 0);
@@ -1003,9 +997,10 @@
       const heldBy = norm(seat.heldBy || "");
       const status = norm(seat.status || "available");
       const enabled = seat.enabled !== false;
+      const hasOrder = !!norm(seat.orderId || "");
 
       if (!enabled || status === "disabled") return "disabled";
-      if (status === "sold") return "sold";
+      if (status === "sold" || hasOrder) return "sold";
 
       if (heldBy) {
         if (isSeatExpired(seat)) return "available";
@@ -1019,7 +1014,6 @@
     function canSeatBeChosen(seat){
       const visualState = getSeatVisualState(seat);
       if (!["available", "mine"].includes(visualState)) return { ok:false, reason:visualState };
-
       if (!selectedTicketType) return { ok:false, reason:"no_ticket_type" };
 
       const seatRoles = Array.isArray(seat.allowedRoles) ? seat.allowedRoles.map(norm).filter(Boolean) : [];
@@ -1167,10 +1161,7 @@
       const selectedSeats = seats.filter(seat => selectedSeatIds.includes(seat.seatId));
       if (!selectedSeats.length) return 0;
 
-      const expiries = selectedSeats
-        .map(getHoldExpireMs)
-        .filter(ms => ms > 0);
-
+      const expiries = selectedSeats.map(getHoldExpireMs).filter(ms => ms > 0);
       if (!expiries.length) return 0;
 
       return Math.max(0, Math.min(...expiries) - Date.now());
@@ -1233,7 +1224,16 @@
     }
 
     function formatSelectedSeatLabel(seat){
-      return norm(seat.label || `${seat.sectionId || ""} ${seat.row || ""}-${seat.seatNumber || ""}` || seat.seatId);
+      const label = norm(seat.label);
+      if (label) return label;
+
+      const row = norm(seat.row);
+      const seatNumber = norm(seat.seatNumber);
+      const sectionName = norm(seat.sectionName || seat.sectionId);
+
+      if (sectionName && row && seatNumber) return `${sectionName} ${row}-${seatNumber}`;
+      if (row && seatNumber) return `${row}-${seatNumber}`;
+      return norm(seat.seatId);
     }
 
     async function loadSeats(){
@@ -1288,9 +1288,7 @@
       await releaseSelectedSeats();
       await loadSeats();
 
-      const candidateSeats = seats
-        .filter(seat => canSeatBeChosen(seat).ok)
-        .slice();
+      const candidateSeats = seats.filter(seat => canSeatBeChosen(seat).ok).slice();
 
       if (!candidateSeats.length) {
         alert("目前沒有可選座位");
@@ -1556,26 +1554,23 @@
             orderId: orderRef.id,
             uid: currentUser.uid,
             email: currentUser.email || "",
-
             eventId: currentEvent.id,
             eventTitle: currentEvent.title || "",
-
             ticketTypeId: selectedTicketType.id,
             ticketTypeName: selectedTicketType.name,
-
             seatId: seat.seatId,
             seatLabel: norm(seat.label || seat.seatId),
-
+            sectionId: norm(seat.sectionId || ""),
+            sectionName: norm(seat.sectionName || ""),
+            row: norm(seat.row || ""),
+            seatNumber: norm(seat.seatNumber || ""),
             qrCodeValue: `${currentEvent.id}::${ticketRef.id}`,
             qrVersion: 1,
-
             status: "valid",
             checkinStatus: "unused",
-
             checkedInAt: null,
             checkedInByUid: "",
             checkedInGate: "",
-
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
