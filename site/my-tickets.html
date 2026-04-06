@@ -1096,16 +1096,16 @@
       renderTickets(ticketCache);
     }
 
+    function goLogin(){
+      const redirect = encodeURIComponent(location.href);
+      location.href = `login.html?redirect=${redirect}`;
+    }
+
     onAuthStateChanged(auth, async (user) => {
       currentUser = user || null;
 
       if (!user){
-        heroUserText.textContent = "登入狀態：尚未登入";
-        heroCountText.textContent = "票券數量：–";
-        app.className = "empty";
-        app.innerHTML = `
-          請先登入會員帳號後再查看票券。
-        `;
+        goLogin();
         return;
       }
 

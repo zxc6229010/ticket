@@ -930,14 +930,16 @@
       paint();
     }
 
+    function goLogin(){
+      const redirect = encodeURIComponent(location.href);
+      location.href = `login.html?redirect=${redirect}`;
+    }
+
     onAuthStateChanged(auth, async user => {
       currentUser = user || null;
 
       if (!user){
-        heroUserText.textContent = "登入狀態：尚未登入";
-        heroCountText.textContent = "訂單數量：–";
-        app.className = "empty";
-        app.innerHTML = `請先登入`;
+        goLogin();
         return;
       }
 
