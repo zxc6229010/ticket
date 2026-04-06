@@ -491,25 +491,37 @@
 
     .footer{
       margin-top:78px;
-      padding-top:22px;
+      padding-top:26px;
       border-top:1px solid rgba(0,0,0,.07);
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:18px;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
     }
 
-    .footer-links{
-      display:flex;
-      gap:20px;
-      flex-wrap:wrap;
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
     }
 
     .footer-link{
+      display:block;
       font-size:13px;
       color:var(--muted);
-      line-height:1.8;
+      line-height:2;
     }
 
     .footer-link:hover{
@@ -517,8 +529,9 @@
     }
 
     .copyright{
-      font-size:12px;
+      margin-top:30px;
       color:var(--muted);
+      font-size:12px;
       line-height:1.8;
     }
   </style>
@@ -540,7 +553,7 @@
         </div>
 
         <div class="nav-actions">
-          <a class="account-icon-btn" id="accountBtn" href="member.html" aria-label="會員中心" title="會員中心">
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
             </svg>
@@ -553,14 +566,14 @@
       <section class="hero">
         <div class="hero-main">
           <div class="eyebrow">Good Events</div>
-          <h1 class="hero-title"快速、清楚、直接找到你要的活動。</h1>
+          <h1 class="hero-title">快速、清楚、直接找到你要的活動。</h1>
           <div class="hero-sub" id="heroSubText">
 在這裡查看活動資訊、選擇票種、進入選位，
 並在會員中心管理你的訂單與票券。
           </div>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#featured">立即查看活動</a>
-            <a class="btn" href="member.html">前往會員中心</a>
+            <a class="btn" id="heroAccountBtn" href="login.html">登入 / 會員中心</a>
           </div>
         </div>
 
@@ -608,17 +621,33 @@
       </section>
 
       <footer class="footer">
-        <div class="footer-links">
+        <div>
+          <div class="footer-title">Tickets</div>
+          <a class="footer-link" href="index.html">活動首頁</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
           <a class="footer-link" href="member.html">會員中心</a>
           <a class="footer-link" href="my-tickets.html">我的票券</a>
           <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
           <a class="footer-link" href="campus-verify.html">校園驗證</a>
         </div>
 
-        <div class="copyright">
-          © 2026 Tickets. All rights reserved.
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="#featured">精選活動</a>
+          <a class="footer-link" href="#upcoming">即將開始</a>
         </div>
       </footer>
+
+      <div class="copyright">
+        © 2026 Tickets. All rights reserved.
+      </div>
     </main>
   </div>
 
@@ -641,6 +670,7 @@
     const db = getFirestore(appFirebase);
 
     const accountBtn = document.getElementById("accountBtn");
+    const heroAccountBtn = document.getElementById("heroAccountBtn");
     const featuredGrid = document.getElementById("featuredGrid");
     const upcomingGrid = document.getElementById("upcomingGrid");
 
@@ -836,21 +866,31 @@
       } catch (e) {
         console.error(e);
         featuredGrid.innerHTML = `<div class="empty" style="grid-column:1/-1;">活動載入失敗，請稍後再試。</div>`;
-        upcomingGrid.innerHTML = "";
+        upcomingGrid.innerHTML = `<div class="empty" style="grid-column:1/-1;">目前無法讀取即將開始活動。</div>`;
+      }
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+
+        heroAccountBtn.href = "member.html";
+        heroAccountBtn.textContent = "前往會員中心";
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+
+        heroAccountBtn.href = "login.html";
+        heroAccountBtn.textContent = "登入 / 會員中心";
       }
     }
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user || null;
-
-      if (currentUser) {
-        accountBtn.title = currentUser.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-
+      updateAccountLinks(currentUser);
       await loadEvents();
     });
   </script>
