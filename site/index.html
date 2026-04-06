@@ -3,31 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tickets</title>
+  <title>Passium</title>
 
   <style>
     :root{
       --bg:#f5f5f7;
-      --card:#ffffff;
       --text:#1d1d1f;
       --muted:#6e6e73;
       --line:rgba(0,0,0,.08);
       --shadow:0 16px 40px rgba(0,0,0,.06);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111111;
-      --white:#ffffff;
       --green:#166534;
       --green-bg:#dcfce7;
       --orange:#c2410c;
       --orange-bg:#ffedd5;
       --red:#b91c1c;
       --red-bg:#fee2e2;
-      --blue:#1d4ed8;
-      --blue-bg:#dbeafe;
       --max:1280px;
-      --radius-xl:34px;
-      --radius-lg:28px;
-      --radius-md:22px;
     }
 
     *{ box-sizing:border-box; }
@@ -149,177 +142,15 @@
     .page{
       max-width:var(--max);
       margin:0 auto;
-      padding:28px 22px 80px;
-    }
-
-    .hero{
-      display:grid;
-      grid-template-columns:1.1fr .9fr;
-      gap:22px;
-      align-items:stretch;
-    }
-
-    @media (max-width:980px){
-      .hero{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .hero-main{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:40px;
-      box-shadow:var(--shadow);
-      padding:38px 36px;
-      min-height:560px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-    }
-
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:max-content;
-      min-height:32px;
-      padding:6px 12px;
-      border-radius:999px;
-      background:#fff;
-      border:1px solid rgba(0,0,0,.06);
-      box-shadow:var(--shadow-soft);
-      font-size:12px;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .hero-title{
-      margin:18px 0 0;
-      font-size:clamp(42px, 7vw, 86px);
-      line-height:.96;
-      letter-spacing:-.06em;
-      font-weight:800;
-    }
-
-    .hero-sub{
-      margin-top:18px;
-      max-width:720px;
-      font-size:17px;
-      line-height:1.9;
-      color:var(--muted);
-      white-space:pre-wrap;
-    }
-
-    .hero-actions{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-top:26px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:46px;
-      padding:11px 18px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      font-size:14px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 24px rgba(0,0,0,.06);
-    }
-
-    .btn-primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    .hero-side{
-      display:grid;
-      gap:18px;
-    }
-
-    .glass-card{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:34px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .hero-image{
-      min-height:270px;
-      background:linear-gradient(180deg,#f2f2f4 0%, #ececef 100%);
-      overflow:hidden;
-    }
-
-    .hero-image img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-
-    .hero-image-placeholder{
-      min-height:270px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:28px;
-      font-weight:800;
-      color:#b0b0b6;
-    }
-
-    .mini-info{
-      padding:22px;
-    }
-
-    .mini-title{
-      font-size:22px;
-      font-weight:800;
-      letter-spacing:-.03em;
-      line-height:1.15;
-    }
-
-    .mini-sub{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.85;
-    }
-
-    .mini-pills{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:32px;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111;
-      font-size:12px;
-      font-weight:700;
+      padding:38px 22px 80px;
     }
 
     .section{
-      margin-top:64px;
+      margin-top:20px;
+    }
+
+    .section + .section{
+      margin-top:72px;
     }
 
     .section-head{
@@ -480,6 +311,33 @@
       margin-top:18px;
     }
 
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:11px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
     .loading,
     .empty{
       padding:42px 0;
@@ -494,14 +352,8 @@
       padding-top:26px;
       border-top:1px solid rgba(0,0,0,.07);
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(2, minmax(0,1fr));
       gap:20px;
-    }
-
-    @media (max-width:900px){
-      .footer{
-        grid-template-columns:repeat(2, minmax(0,1fr));
-      }
     }
 
     @media (max-width:560px){
@@ -541,8 +393,8 @@
     <div class="nav-wrap">
       <div class="nav">
         <a class="brand" href="index.html">
-          <span class="brand-mark">T</span>
-          <span>Tickets</span>
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
         </a>
 
         <div class="nav-links">
@@ -563,35 +415,6 @@
     </div>
 
     <main class="page">
-      <section class="hero">
-        <div class="hero-main">
-          <div class="eyebrow">Good Events</div>
-          <h1 class="hero-title">快速、清楚、直接找到你要的活動。</h1>
-          <div class="hero-sub" id="heroSubText">
-在這裡查看活動資訊、選擇票種、進入選位，
-並在會員中心管理你的訂單與票券。
-          </div>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="#featured">立即查看活動</a>
-            <a class="btn" id="heroAccountBtn" href="login.html">登入 / 會員中心</a>
-          </div>
-        </div>
-
-        <div class="hero-side">
-          <div class="glass-card hero-image" id="heroImageCard">
-            <div class="hero-image-placeholder">Featured Event</div>
-          </div>
-
-          <div class="glass-card mini-info">
-            <div class="mini-title" id="heroMiniTitle">載入中…</div>
-            <div class="mini-sub" id="heroMiniSub">正在讀取最新活動資訊。</div>
-            <div class="mini-pills" id="heroMiniPills">
-              <span class="pill">Events</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="section" id="featured">
         <div class="section-head">
           <div>
@@ -622,8 +445,9 @@
 
       <footer class="footer">
         <div>
-          <div class="footer-title">Tickets</div>
-          <a class="footer-link" href="index.html">活動首頁</a>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="#featured">精選活動</a>
+          <a class="footer-link" href="#upcoming">即將開始</a>
         </div>
 
         <div>
@@ -632,21 +456,10 @@
           <a class="footer-link" href="my-tickets.html">我的票券</a>
           <a class="footer-link" href="my-orders.html">我的訂單</a>
         </div>
-
-        <div>
-          <div class="footer-title">Support</div>
-          <a class="footer-link" href="campus-verify.html">校園驗證</a>
-        </div>
-
-        <div>
-          <div class="footer-title">Events</div>
-          <a class="footer-link" href="#featured">精選活動</a>
-          <a class="footer-link" href="#upcoming">即將開始</a>
-        </div>
       </footer>
 
       <div class="copyright">
-        © 2026 Tickets. All rights reserved.
+        © 2026 Passium. All rights reserved.
       </div>
     </main>
   </div>
@@ -670,14 +483,8 @@
     const db = getFirestore(appFirebase);
 
     const accountBtn = document.getElementById("accountBtn");
-    const heroAccountBtn = document.getElementById("heroAccountBtn");
     const featuredGrid = document.getElementById("featuredGrid");
     const upcomingGrid = document.getElementById("upcomingGrid");
-
-    const heroImageCard = document.getElementById("heroImageCard");
-    const heroMiniTitle = document.getElementById("heroMiniTitle");
-    const heroMiniSub = document.getElementById("heroMiniSub");
-    const heroMiniPills = document.getElementById("heroMiniPills");
 
     let currentUser = null;
     let eventsCache = [];
@@ -806,37 +613,10 @@
       `;
     }
 
-    function renderHero(event){
-      if (!event) {
-        heroImageCard.innerHTML = `<div class="hero-image-placeholder">Featured Event</div>`;
-        heroMiniTitle.textContent = "目前沒有公開活動";
-        heroMiniSub.textContent = "新的活動上架後，會顯示在這裡。";
-        heroMiniPills.innerHTML = `<span class="pill">No Events</span>`;
-        return;
-      }
-
-      const status = getEventStatus(event);
-      const image = getEventImage(event);
-      const desc = getEventDescription(event) || "查看完整活動資訊與票種設定。";
-
-      heroImageCard.innerHTML = image
-        ? `<img src="${esc(image)}" alt="${esc(event.title || "活動圖片")}" />`
-        : `<div class="hero-image-placeholder">Featured Event</div>`;
-
-      heroMiniTitle.textContent = event.title || "未命名活動";
-      heroMiniSub.textContent = desc;
-      heroMiniPills.innerHTML = `
-        <span class="pill">${status.text}</span>
-        <span class="pill">${formatDateTime(event.eventStartAt)}</span>
-      `;
-    }
-
     function renderSections(){
       const published = eventsCache.filter(item => item.published === true);
       const featured = sortEvents(published.filter(item => getEventStatus(item).key === "selling"));
       const upcoming = sortEvents(published.filter(item => getEventStatus(item).key === "upcoming"));
-
-      renderHero(featured[0] || upcoming[0] || published[0] || null);
 
       if (!featured.length) {
         featuredGrid.innerHTML = `<div class="empty" style="grid-column:1/-1;">目前沒有公開中的活動。</div>`;
@@ -875,16 +655,10 @@
         accountBtn.href = "member.html";
         accountBtn.title = user.email || "會員中心";
         accountBtn.setAttribute("aria-label", "會員中心");
-
-        heroAccountBtn.href = "member.html";
-        heroAccountBtn.textContent = "前往會員中心";
       } else {
         accountBtn.href = "login.html";
         accountBtn.title = "登入 / 會員中心";
         accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-
-        heroAccountBtn.href = "login.html";
-        heroAccountBtn.textContent = "登入 / 會員中心";
       }
     }
 
