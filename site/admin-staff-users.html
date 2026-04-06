@@ -191,8 +191,14 @@
       gap:14px;
     }
 
+    .grid3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:14px;
+    }
+
     @media (max-width:900px){
-      .grid2{ grid-template-columns:1fr; }
+      .grid2,.grid3{ grid-template-columns:1fr; }
     }
 
     label{
@@ -202,6 +208,8 @@
     }
 
     input[type="text"],
+    input[type="password"],
+    input[type="number"],
     input[type="file"],
     select,
     textarea{
@@ -382,6 +390,47 @@
       opacity:0;
       transform:translateY(6px);
     }
+
+    .schemaBox{
+      margin-top:12px;
+      padding:12px;
+      border:1px dashed rgba(17,17,17,.18);
+      border-radius:14px;
+      background:#fff;
+    }
+
+    .schemaTags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .schemaTag{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .fieldCard{
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+    }
+
+    .checkRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
   </style>
 </head>
 
@@ -395,8 +444,8 @@
           <div>
             <h1>後台帳號管理</h1>
             <div class="sub">
-              這裡改為以 <span class="mono">批次匯入</span> 為主。<br>
-              CSV 有什麼欄位，就會把那些欄位一起寫進 <span class="mono">users</span> 文件。
+              這裡支援 <span class="mono">單筆新增</span>、<span class="mono">批次匯入</span>、<span class="mono">後台人員管理</span>。<br>
+              CSV 範本與單筆新增欄位，會依照目前 <span class="mono">users</span> 集合已有欄位自動產生。
             </div>
             <div class="sub" style="margin-top:8px;">
               登入：<span id="who" class="mono">-</span>｜
@@ -421,6 +470,58 @@
         </div>
       </div>
 
+      <div id="tabSingle" style="display:none;">
+        <div class="card">
+          <div class="row">
+            <div>
+              <h2>單筆新增帳號</h2>
+              <div class="sub">
+                必填欄位為 <span class="mono">email</span>、<span class="mono">password</span>。<br>
+                其他欄位會依照目前資料庫中的 <span class="mono">users</span> 文件欄位自動產生。
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-sm" id="reloadSchemaBtn">重新抓欄位</button>
+            </div>
+          </div>
+
+          <div class="schemaBox">
+            <div class="small">
+              目前偵測到的欄位（不含系統欄位 createdAt / updatedAt / createdByUid / updatedByUid）：
+            </div>
+            <div class="schemaTags" id="schemaTags"></div>
+          </div>
+
+          <div class="grid2" style="margin-top:14px;">
+            <div>
+              <label style="margin-top:0;">email</label>
+              <input type="text" id="singleEmail" placeholder="例如：user@example.com" />
+            </div>
+            <div>
+              <label style="margin-top:0;">password</label>
+              <input type="password" id="singlePassword" placeholder="請輸入密碼" />
+            </div>
+          </div>
+
+          <div class="checkRow">
+            <label style="margin:0; font-weight:900;">enabled</label>
+            <select id="singleEnabled" style="max-width:180px;">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+
+          <div class="grid2" id="singleDynamicFields" style="margin-top:14px;"></div>
+
+          <div class="actions" style="margin-top:16px;">
+            <button class="btn btn-primary" id="singleCreateBtn">建立帳號</button>
+          </div>
+
+          <div class="small" id="singleMsg" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
       <div id="tabImport" style="display:none;">
         <div class="card">
           <div class="row">
@@ -428,7 +529,7 @@
               <h2>批次匯入帳號</h2>
               <div class="sub">
                 必填欄位只有：<span class="mono">email,password</span><br>
-                其他欄位會原樣寫入 Firestore 的 <span class="mono">users/{uid}</span> 文件。
+                CSV 範本會自動依照目前 <span class="mono">users</span> 集合欄位產生，其餘欄位也會原樣寫入 Firestore 的 <span class="mono">users/{uid}</span> 文件。
               </div>
             </div>
           </div>
@@ -437,14 +538,14 @@
           <input type="file" id="csvFile" accept=".csv,text/csv" />
 
           <div class="actions" style="margin-top:14px;">
-            <button class="btn" id="downloadSampleBtn">下載範本</button>
+            <button class="btn" id="downloadSampleBtn">下載動態範本</button>
             <button class="btn btn-primary" id="parseCsvBtn">解析 CSV</button>
           </div>
 
           <div class="small" style="margin-top:10px;">
             說明：除了 <span class="mono">email,password</span> 外，像是
-            <span class="mono">role,schoolId,orgId,team,enabled,name,studentId,...</span>
-            都可以自行放進 CSV。
+            <span class="mono">role,schoolId,orgId,team,enabled,name,studentId,assignedEventId,assignedGate</span>
+            等欄位都可以一起匯入。
           </div>
         </div>
 
@@ -667,8 +768,18 @@
     const tabsEl = document.getElementById("tabs");
     const tabHint = document.getElementById("tabHint");
 
+    const tabSingle = document.getElementById("tabSingle");
     const tabImport = document.getElementById("tabImport");
     const tabStaff = document.getElementById("tabStaff");
+
+    const reloadSchemaBtn = document.getElementById("reloadSchemaBtn");
+    const schemaTags = document.getElementById("schemaTags");
+    const singleEmail = document.getElementById("singleEmail");
+    const singlePassword = document.getElementById("singlePassword");
+    const singleEnabled = document.getElementById("singleEnabled");
+    const singleDynamicFields = document.getElementById("singleDynamicFields");
+    const singleCreateBtn = document.getElementById("singleCreateBtn");
+    const singleMsg = document.getElementById("singleMsg");
 
     const csvFile = document.getElementById("csvFile");
     const parseCsvBtn = document.getElementById("parseCsvBtn");
@@ -708,6 +819,7 @@
     let currentStaffUser = null;
     let parsedCsvRows = [];
     let parsedCsvHeaders = [];
+    let inferredSchema = [];
 
     const STAFF_ROLES = new Set([
       "platform_super",
@@ -716,6 +828,35 @@
       "org_admin",
       "org_staff"
     ]);
+
+    const SYSTEM_EXCLUDED_FIELDS = new Set([
+      "createdAt",
+      "createdByUid",
+      "updatedAt",
+      "updatedByUid"
+    ]);
+
+    const TEMPLATE_PREFERRED_FIELDS = [
+      "role",
+      "schoolId",
+      "orgId",
+      "team",
+      "name",
+      "studentId",
+      "assignedEventId",
+      "assignedGate"
+    ];
+
+    const FALLBACK_FIELDS = [
+      { key:"role", type:"string" },
+      { key:"schoolId", type:"string" },
+      { key:"orgId", type:"string" },
+      { key:"team", type:"string" },
+      { key:"name", type:"string" },
+      { key:"studentId", type:"string" },
+      { key:"assignedEventId", type:"string" },
+      { key:"assignedGate", type:"string" }
+    ];
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -747,6 +888,134 @@
       if (["true","1","yes","y"].includes(s)) return true;
       if (["false","0","no","n"].includes(s)) return false;
       return fallback;
+    }
+
+    function detectValueType(value){
+      if (typeof value === "boolean") return "boolean";
+      if (typeof value === "number") return "number";
+      if (value && typeof value === "object" && typeof value.toDate === "function") return "timestamp";
+      return "string";
+    }
+
+    function sortSchemaFields(fields){
+      const orderMap = new Map(TEMPLATE_PREFERRED_FIELDS.map((k, i) => [k, i]));
+      return fields.slice().sort((a, b) => {
+        const ai = orderMap.has(a.key) ? orderMap.get(a.key) : 999;
+        const bi = orderMap.has(b.key) ? orderMap.get(b.key) : 999;
+        if (ai !== bi) return ai - bi;
+        return a.key.localeCompare(b.key, "zh-Hant");
+      });
+    }
+
+    async function inferUserSchema(){
+      const map = new Map();
+
+      try{
+        const snap = await db.collection("users").limit(500).get();
+
+        snap.forEach(doc => {
+          const data = doc.data() || {};
+          Object.keys(data).forEach(key => {
+            if (key === "email") return;
+            if (key === "enabled") return;
+            if (SYSTEM_EXCLUDED_FIELDS.has(key)) return;
+
+            const type = detectValueType(data[key]);
+            if (type === "timestamp") return;
+
+            if (!map.has(key)) {
+              map.set(key, { key, type });
+            }
+          });
+        });
+      }catch(e){
+        console.error("inferUserSchema failed:", e);
+      }
+
+      const arr = [...map.values()];
+      inferredSchema = sortSchemaFields(arr.length ? arr : FALLBACK_FIELDS.slice());
+      renderSchemaTags();
+      renderSingleDynamicFields();
+      return inferredSchema;
+    }
+
+    function renderSchemaTags(){
+      if (!inferredSchema.length) {
+        schemaTags.innerHTML = `<span class="schemaTag">（目前沒有欄位）</span>`;
+        return;
+      }
+
+      schemaTags.innerHTML = inferredSchema.map(field => `
+        <span class="schemaTag">${esc(field.key)} <span class="mono" style="margin-left:6px;">${esc(field.type)}</span></span>
+      `).join("");
+    }
+
+    function renderSingleDynamicFields(){
+      if (!inferredSchema.length) {
+        singleDynamicFields.innerHTML = "";
+        return;
+      }
+
+      singleDynamicFields.innerHTML = inferredSchema.map(field => {
+        const id = `single_field_${field.key}`;
+        if (field.type === "boolean") {
+          return `
+            <div class="fieldCard">
+              <label style="margin-top:0;" for="${esc(id)}">${esc(field.key)}</label>
+              <select id="${esc(id)}" data-dynamic-field="${esc(field.key)}" data-field-type="boolean">
+                <option value="">（留空）</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </div>
+          `;
+        }
+
+        if (field.type === "number") {
+          return `
+            <div class="fieldCard">
+              <label style="margin-top:0;" for="${esc(id)}">${esc(field.key)}</label>
+              <input type="number" id="${esc(id)}" data-dynamic-field="${esc(field.key)}" data-field-type="number" placeholder="輸入數值" />
+            </div>
+          `;
+        }
+
+        return `
+          <div class="fieldCard">
+            <label style="margin-top:0;" for="${esc(id)}">${esc(field.key)}</label>
+            <input type="text" id="${esc(id)}" data-dynamic-field="${esc(field.key)}" data-field-type="string" placeholder="輸入 ${esc(field.key)}" />
+          </div>
+        `;
+      }).join("");
+    }
+
+    function collectSingleDynamicFields(){
+      const result = {};
+      document.querySelectorAll("[data-dynamic-field]").forEach(el => {
+        const key = el.dataset.dynamicField;
+        const type = el.dataset.fieldType || "string";
+        const raw = norm(el.value);
+
+        if (raw === "") return;
+
+        if (type === "boolean") {
+          result[key] = parseBoolLike(raw, true);
+        } else if (type === "number") {
+          result[key] = Number(raw);
+        } else {
+          result[key] = raw;
+        }
+      });
+      return result;
+    }
+
+    function clearSingleForm(){
+      singleEmail.value = "";
+      singlePassword.value = "";
+      singleEnabled.value = "true";
+      document.querySelectorAll("[data-dynamic-field]").forEach(el => {
+        el.value = "";
+      });
     }
 
     function showGate(title, msg, showLogin){
@@ -822,7 +1091,8 @@
 
     function renderTabs(){
       tabsEl.innerHTML = `
-        <button class="tab active" data-tab="import">批次匯入</button>
+        <button class="tab active" data-tab="single">單筆新增</button>
+        <button class="tab" data-tab="import">批次匯入</button>
         <button class="tab" data-tab="staff">後台人員</button>
       `;
 
@@ -830,7 +1100,7 @@
         btn.onclick = () => activateTab(btn.dataset.tab);
       });
 
-      activateTab("import");
+      activateTab("single");
     }
 
     function activateTab(tab){
@@ -838,10 +1108,13 @@
         btn.classList.toggle("active", btn.dataset.tab === tab);
       });
 
+      tabSingle.style.display = tab === "single" ? "block" : "none";
       tabImport.style.display = tab === "import" ? "block" : "none";
       tabStaff.style.display = tab === "staff" ? "block" : "none";
 
-      if (tab === "import") {
+      if (tab === "single") {
+        tabHint.textContent = "依照資料庫欄位動態產生單筆新增表單。";
+      } else if (tab === "import") {
         tabHint.textContent = "上傳 CSV 並預覽批次匯入資料。";
       } else {
         tabHint.textContent = "查看與管理現有後台人員。";
@@ -951,25 +1224,39 @@
       }
     }
 
+    function buildDynamicTemplateHeaders(){
+      const dynamicFields = inferredSchema.map(f => f.key).filter(key => key !== "enabled");
+      return ["email", "password", "enabled", ...dynamicFields];
+    }
+
     function downloadSampleCsv(){
-      const headers = [
-        "email","password","role","schoolId","orgId","team","enabled","name","studentId","assignedEventId","assignedGate"
-      ];
-      const sampleRows = [
-        ["user1@example.com","abc12345","org_staff","kmsh","student_union","公關組","true","王小明","112233","event_demo_01","A入口"],
-        ["user2@example.com","abc12345","org_admin","kmsh","student_union","活動組","true","李小華","223344","event_demo_01","服務台"]
-      ];
+      const headers = buildDynamicTemplateHeaders();
+
+      const sample = {};
+      headers.forEach(h => sample[h] = "");
+
+      sample.email = "user1@example.com";
+      sample.password = "abc12345";
+      if (headers.includes("enabled")) sample.enabled = "true";
+      if (headers.includes("role")) sample.role = "org_staff";
+      if (headers.includes("schoolId")) sample.schoolId = "kmsh";
+      if (headers.includes("orgId")) sample.orgId = "student_union";
+      if (headers.includes("team")) sample.team = "公關組";
+      if (headers.includes("name")) sample.name = "王小明";
+      if (headers.includes("studentId")) sample.studentId = "112233";
+      if (headers.includes("assignedEventId")) sample.assignedEventId = "event_demo_01";
+      if (headers.includes("assignedGate")) sample.assignedGate = "A入口";
 
       const csv = [
         headers.join(","),
-        ...sampleRows.map(row => row.join(","))
+        headers.map(h => sample[h] ?? "").join(",")
       ].join("\n");
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "staff_account_import_sample.csv";
+      a.download = "staff_account_import_dynamic_sample.csv";
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -987,10 +1274,15 @@
       const extraFields = {};
       Object.keys(cloned).forEach(key => {
         const raw = cloned[key];
-        const lowerKey = norm(key).toLowerCase();
+        if (norm(raw) === "") return;
 
-        if (lowerKey === "enabled") {
+        const schemaField = inferredSchema.find(f => f.key === key);
+        const fieldType = schemaField?.type || (key === "enabled" ? "boolean" : "string");
+
+        if (fieldType === "boolean" || key === "enabled") {
           extraFields[key] = parseBoolLike(raw, true);
+        } else if (fieldType === "number") {
+          extraFields[key] = Number(raw);
         } else {
           extraFields[key] = raw;
         }
@@ -1006,6 +1298,45 @@
         enabled: extraFields.enabled === true,
         extraFields
       };
+    }
+
+    async function createSingleAccount(){
+      const email = norm(singleEmail.value);
+      const password = norm(singlePassword.value);
+      const enabled = singleEnabled.value === "true";
+
+      if (!email) return alert("請輸入 email");
+      if (!password) return alert("請輸入 password");
+
+      singleCreateBtn.disabled = true;
+      const oldText = singleCreateBtn.textContent;
+      singleCreateBtn.textContent = "建立中…";
+      singleMsg.innerHTML = "";
+
+      try{
+        const extraFields = collectSingleDynamicFields();
+        extraFields.enabled = enabled;
+
+        const payload = {
+          email,
+          password,
+          enabled,
+          extraFields
+        };
+
+        const result = await createAuthUserAndProfile(payload);
+
+        singleMsg.innerHTML = `<span class="ok">建立成功：${esc(result.email)}｜uid：<span class="mono">${esc(result.uid)}</span></span>`;
+        clearSingleForm();
+        await inferUserSchema();
+        await loadStaffUsers();
+      }catch(e){
+        console.error(e);
+        singleMsg.innerHTML = `<span class="warn">建立失敗：${esc(e.message || e)}</span>`;
+      }finally{
+        singleCreateBtn.disabled = false;
+        singleCreateBtn.textContent = oldText;
+      }
     }
 
     async function bulkCreateAccounts(){
@@ -1046,6 +1377,7 @@
           (failed.length ? `\n\n${failed.join("\n")}` : "")
         );
 
+        await inferUserSchema();
         await loadStaffUsers();
       } finally {
         bulkCreateBtn.disabled = false;
@@ -1056,6 +1388,8 @@
     parseCsvBtn.onclick = parseCsvFile;
     downloadSampleBtn.onclick = downloadSampleCsv;
     bulkCreateBtn.onclick = bulkCreateAccounts;
+    reloadSchemaBtn.onclick = inferUserSchema;
+    singleCreateBtn.onclick = createSingleAccount;
 
     function userMatches(u){
       const q = norm(userSearch.value).toLowerCase();
@@ -1389,6 +1723,7 @@
         app.style.display = "block";
 
         renderTabs();
+        await inferUserSchema();
       }catch(e){
         console.error(e);
         showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
