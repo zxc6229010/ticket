@@ -220,11 +220,6 @@
       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
 
-    .disabled-wrap{
-      opacity:.65;
-      pointer-events:none;
-    }
-
     .notice{
       margin-top:10px;
       padding:10px 12px;
@@ -298,6 +293,36 @@
       word-break:break-word;
       margin-top:6px;
     }
+
+    .record-grid{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:8px 12px;
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px dashed var(--line);
+    }
+
+    @media (max-width:640px){
+      .record-grid{
+        grid-template-columns:1fr;
+        gap:4px;
+      }
+    }
+
+    .record-key{
+      font-size:13px;
+      color:var(--muted);
+      word-break:break-word;
+    }
+
+    .record-value{
+      font-size:13px;
+      color:#111;
+      font-weight:900;
+      word-break:break-word;
+      white-space:pre-wrap;
+    }
   </style>
 </head>
 
@@ -348,12 +373,14 @@
 
       <div class="section">
         <h2>步驟 1｜上傳名單檔案</h2>
-        <div class="sub">支援 CSV / XLSX。第一列必須是欄位名稱。</div>
+        <div class="sub">
+          支援 CSV / XLSX。第一列必須是欄位名稱。<br>
+          若該活動或該校需要使用 <span class="mono">email 驗證</span>，你的名單中就應該包含 <span class="mono">email</span> 欄位。
+        </div>
 
         <div class="row" style="margin-top:12px;">
           <input id="file" type="file" accept=".csv,.xlsx" />
           <button class="btn" id="parseBtn">讀取檔案</button>
-          <button class="btn" id="downloadSampleBtn">下載範本</button>
         </div>
 
         <div id="fileInfo" class="small" style="margin-top:10px;"></div>
@@ -363,7 +390,7 @@
         <h2>步驟 2｜設定比對欄位</h2>
         <div class="sub">
           系統會用你勾選的欄位組成 <span class="mono">matchKey</span>。<br>
-          建議至少勾選 <span class="mono">email</span> 或 <span class="mono">studentId</span>。
+          建議至少勾選 <span class="mono">email</span> 或 <span class="mono">studentId</span>。如果活動要靠信箱驗證，請務必有 <span class="mono">email</span>。
         </div>
 
         <div class="grid" style="margin-top:12px;">
@@ -421,7 +448,7 @@
         <div class="header">
           <div>
             <h2>目前活動名單</h2>
-            <div class="sub">可搜尋、查看、刪除單筆，或清空整個活動名單。</div>
+            <div class="sub">可搜尋、查看、刪除單筆，或清空整個活動名單。下方會顯示你實際匯入的所有欄位資料。</div>
           </div>
           <div class="row">
             <button class="btn btn-sm" id="reloadAllowedBtn">重新載入</button>
@@ -432,7 +459,7 @@
         <div class="grid3" style="margin-top:12px;">
           <div>
             <label style="margin-top:0;">搜尋</label>
-            <input type="text" id="allowedSearch" placeholder="搜尋 email / studentId / name / 其他欄位" />
+            <input type="text" id="allowedSearch" placeholder="搜尋任一欄位內容" />
           </div>
           <div>
             <label style="margin-top:0;">篩選 canRegister</label>
@@ -484,10 +511,8 @@
 
     const fileEl = document.getElementById("file");
     const parseBtn = document.getElementById("parseBtn");
-    const downloadSampleBtn = document.getElementById("downloadSampleBtn");
     const fileInfo = document.getElementById("fileInfo");
 
-    const configSection = document.getElementById("configSection");
     const matchFieldsBox = document.getElementById("matchFieldsBox");
     const configHint = document.getElementById("configHint");
 
@@ -515,6 +540,14 @@
     let eventId = "";
     let parsed = null;
     let allowedCache = [];
+
+    const SYSTEM_FIELDS = new Set([
+      "id",
+      "matchKey",
+      "matchFields",
+      "createdAt",
+      "updatedAt"
+    ]);
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -709,7 +742,8 @@
 
       configHint.innerHTML = `
         <span class="ok">此活動的名單與其他活動分開管理。</span><br>
-        匯入後會把資料寫進 <span class="mono">events/${esc(eventId)}/allowedUsers</span>。
+        匯入後會把資料寫進 <span class="mono">events/${esc(eventId)}/allowedUsers</span>。<br>
+        若你的活動資格需要靠信箱判斷，請在名單中提供 <span class="mono">email</span> 欄位。
       `;
 
       if (existingMatchFields.length) {
@@ -879,31 +913,6 @@
       }
     };
 
-    function downloadSampleFile(){
-      const headers = ["email","studentId","name","class","group","canRegister"];
-      const sampleRows = [
-        ["a@example.com","112233","王小明","306","A","true"],
-        ["b@example.com","223344","李小華","307","B","true"]
-      ];
-
-      const csv = [
-        headers.join(","),
-        ...sampleRows.map(row => row.join(","))
-      ].join("\n");
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "event_allowed_users_sample.csv";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    downloadSampleBtn.onclick = downloadSampleFile;
-
     function makeMatchKey(row, fields){
       return fields.map(field => norm(row[field])).join("｜");
     }
@@ -1002,9 +1011,9 @@
 
           headers.forEach(header => {
             const rawValue = norm(row[header]);
-            if (norm(header).toLowerCase() === "canregister") {
-              payload[header] = rawValue.toLowerCase() === "true";
-            } else if (norm(header).toLowerCase() === "cancheckin") {
+            const lowerHeader = norm(header).toLowerCase();
+
+            if (lowerHeader === "canregister" || lowerHeader === "cancheckin") {
               payload[header] = rawValue.toLowerCase() === "true";
             } else {
               payload[header] = rawValue;
@@ -1066,6 +1075,14 @@
 
     importBtn.onclick = importRecords;
 
+    function getDisplayFields(item){
+      const keys = Object.keys(item || {}).filter(key => !SYSTEM_FIELDS.has(key));
+      const preferred = ["email","studentId","name","class","group","canRegister","canCheckin"];
+      const preferredExisting = preferred.filter(key => keys.includes(key));
+      const remaining = keys.filter(key => !preferred.includes(key)).sort();
+      return [...preferredExisting, ...remaining];
+    }
+
     function recordMatches(item){
       const q = norm(allowedSearch.value).toLowerCase();
       const rf = registerFilter.value;
@@ -1076,8 +1093,24 @@
 
       if (!q) return true;
 
-      const fields = Object.values(item).map(v => norm(v).toLowerCase());
+      const fields = Object.entries(item)
+        .filter(([key]) => !["createdAt", "updatedAt", "matchFields"].includes(key))
+        .map(([, value]) => norm(value).toLowerCase());
+
       return fields.some(v => v.includes(q));
+    }
+
+    function formatFieldValue(value){
+      if (value === true) return "true";
+      if (value === false) return "false";
+      if (value && typeof value.toDate === "function") {
+        try{
+          return value.toDate().toLocaleString("zh-Hant", { hour12:false });
+        }catch(_){
+          return "-";
+        }
+      }
+      return norm(value) || "-";
     }
 
     function renderAllowedList(){
@@ -1089,36 +1122,51 @@
         return;
       }
 
-      allowedList.innerHTML = rows.map(item => `
-        <div class="item">
-          <div class="itemTop">
-            <div style="min-width:0; flex:1;">
-              <div class="itemTitle">
-                ${esc(item.name || item.email || item.studentId || item.matchKey || "(未命名)")} 
-                <span class="pill mono">${esc(item.matchKey || "-")}</span>
-                ${
-                  item.canRegister === true
-                    ? `<span class="pill ok">canRegister = true</span>`
-                    : item.canRegister === false
-                      ? `<span class="pill warn">canRegister = false</span>`
-                      : ``
-                }
-              </div>
-              <div class="itemMeta">
-                email：<span class="mono">${esc(item.email || "-")}</span><br>
-                studentId：<span class="mono">${esc(item.studentId || "-")}</span><br>
-                group：<span class="mono">${esc(item.group || "-")}</span><br>
-                class：<span class="mono">${esc(item.class || "-")}</span><br>
-                updatedAt：<span class="mono">${esc(item.updatedAt?.toDate ? item.updatedAt.toDate().toLocaleString("zh-Hant", { hour12:false }) : "-")}</span>
-              </div>
-            </div>
+      allowedList.innerHTML = rows.map(item => {
+        const titleText = item.name || item.email || item.studentId || item.matchKey || "(未命名)";
+        const displayFields = getDisplayFields(item);
 
-            <div class="row">
-              <button class="btn btn-sm btn-danger" data-del-record="${esc(item.id)}">刪除</button>
+        return `
+          <div class="item">
+            <div class="itemTop">
+              <div style="min-width:0; flex:1;">
+                <div class="itemTitle">
+                  ${esc(titleText)}
+                  <span class="pill mono">${esc(item.matchKey || "-")}</span>
+                  ${
+                    item.canRegister === true
+                      ? `<span class="pill ok">canRegister = true</span>`
+                      : item.canRegister === false
+                        ? `<span class="pill warn">canRegister = false</span>`
+                        : ``
+                  }
+                </div>
+
+                <div class="itemMeta">
+                  顯示此筆匯入的所有欄位資料
+                </div>
+
+                <div class="record-grid">
+                  ${displayFields.map(key => `
+                    <div class="record-key">${esc(key)}</div>
+                    <div class="record-value">${esc(formatFieldValue(item[key]))}</div>
+                  `).join("")}
+
+                  <div class="record-key">matchKey</div>
+                  <div class="record-value mono">${esc(item.matchKey || "-")}</div>
+
+                  <div class="record-key">updatedAt</div>
+                  <div class="record-value mono">${esc(formatFieldValue(item.updatedAt))}</div>
+                </div>
+              </div>
+
+              <div class="row">
+                <button class="btn btn-sm btn-danger" data-del-record="${esc(item.id)}">刪除</button>
+              </div>
             </div>
           </div>
-        </div>
-      `).join("");
+        `;
+      }).join("");
 
       allowedList.querySelectorAll("[data-del-record]").forEach(btn => {
         btn.onclick = () => deleteAllowedRecord(btn.dataset.delRecord);
