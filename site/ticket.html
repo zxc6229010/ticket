@@ -2,81 +2,134 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>活動購票 / 報名</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>活動詳情</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --line-strong:rgba(17,24,39,.14);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111111;
+      --white:#ffffff;
       --green:#166534;
       --green-bg:#dcfce7;
-      --blue:#1d4ed8;
-      --blue-bg:#dbeafe;
-      --red:#b91c1c;
-      --red-bg:#fee2e2;
       --orange:#c2410c;
       --orange-bg:#ffedd5;
-      --gray:#6b7280;
-      --gray-bg:#f3f4f6;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --radius-xl:34px;
+      --radius-lg:26px;
+      --radius-md:20px;
+      --max:1280px;
     }
 
     *{ box-sizing:border-box; }
 
-    body{
+    html,body{
       margin:0;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      padding:0;
+      background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-    .wrap{
-      max-width:1240px;
+    img{
+      display:block;
+      max-width:100%;
+    }
+
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:28px 18px 64px;
-    }
-
-    .topbar{
+      padding:0 22px;
+      min-height:60px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .back{
-      display:inline-flex;
+    .brand{
+      display:flex;
       align-items:center;
-      gap:8px;
-      color:#374151;
-      font-size:14px;
+      gap:10px;
+      font-size:18px;
       font-weight:800;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
       box-shadow:var(--shadow-soft);
     }
 
-    .top-actions{
+    .nav-links{
       display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
     }
 
-    .ghost-btn{
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:26px 22px 88px;
+    }
+
+    .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -85,178 +138,301 @@
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      box-shadow:var(--shadow-soft);
+      color:var(--text);
       font-size:14px;
-      font-weight:900;
-      color:#111827;
+      font-weight:700;
       cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
     }
 
-    .layout{
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
       display:grid;
-      grid-template-columns:minmax(0, 1.18fr) minmax(340px, .82fr);
+      grid-template-columns:minmax(0, 1.05fr) minmax(360px, .95fr);
       gap:22px;
-      align-items:start;
+      align-items:stretch;
     }
 
     @media (max-width:980px){
-      .layout{ grid-template-columns:1fr; }
+      .hero{
+        grid-template-columns:1fr;
+      }
     }
 
     .card{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:var(--radius-xl);
       box-shadow:var(--shadow);
       overflow:hidden;
     }
 
-    .hero{
+    .poster{
       position:relative;
-      min-height:320px;
-      background:
-        linear-gradient(180deg, rgba(15,23,42,.06), rgba(15,23,42,.44)),
-        linear-gradient(135deg, #dbeafe 0%, #f5f3ff 42%, #fde68a 100%);
-      overflow:hidden;
+      min-height:540px;
+      background:linear-gradient(180deg,#f2f2f4 0%, #ececef 100%);
     }
 
-    .hero img{
-      position:absolute;
-      inset:0;
+    @media (max-width:980px){
+      .poster{
+        min-height:360px;
+      }
+    }
+
+    .poster img{
       width:100%;
       height:100%;
       object-fit:cover;
-      display:block;
     }
 
-    .hero::after{
-      content:"";
+    .poster-badge{
       position:absolute;
-      inset:0;
-      background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(17,24,39,.74) 100%);
-    }
-
-    .hero-inner{
-      position:absolute;
-      inset:auto 0 0 0;
-      z-index:2;
-      padding:24px;
-      color:#fff;
-    }
-
-    .status{
+      left:20px;
+      top:20px;
       display:inline-flex;
       align-items:center;
+      gap:8px;
+      min-height:34px;
+      padding:6px 12px;
       border-radius:999px;
-      padding:7px 12px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.06);
+      color:#111;
       font-size:12px;
-      font-weight:1000;
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(255,255,255,.18);
-    }
-
-    .status-selling{ background:rgba(22,101,52,.16); color:#d1fae5; }
-    .status-upcoming{ background:rgba(29,78,216,.16); color:#dbeafe; }
-    .status-ended{ background:rgba(107,114,128,.18); color:#f3f4f6; }
-    .status-muted{ background:rgba(107,114,128,.18); color:#f3f4f6; }
-
-    .hero-title{
-      margin:14px 0 0;
-      font-size:clamp(28px, 4vw, 40px);
-      line-height:1.18;
-      font-weight:1000;
-      letter-spacing:-.03em;
-    }
-
-    .hero-sub{
-      margin-top:10px;
-      font-size:14px;
-      line-height:1.85;
-      opacity:.96;
-    }
-
-    .main-body{
-      padding:24px;
-    }
-
-    .section{
-      margin-top:24px;
-    }
-
-    .section:first-child{ margin-top:0; }
-
-    .section-title{
-      margin:0 0 10px;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
-    }
-
-    .section-text{
-      color:#374151;
-      line-height:1.95;
-      white-space:pre-wrap;
-      word-break:break-word;
-      font-size:15px;
-    }
-
-    .info-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    @media (max-width:720px){
-      .info-grid{ grid-template-columns:1fr; }
-    }
-
-    .info-card{
-      border:1px solid var(--line);
-      background:#fff;
-      border-radius:20px;
-      padding:16px;
+      font-weight:800;
+      backdrop-filter:blur(12px);
       box-shadow:var(--shadow-soft);
     }
 
-    .info-label{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:1000;
-      letter-spacing:.02em;
+    .hero-info{
+      padding:28px 28px 30px;
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
     }
 
-    .info-value{
-      margin-top:6px;
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:32px;
+      padding:6px 12px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      box-shadow:var(--shadow-soft);
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      width:max-content;
+    }
+
+    .title{
+      margin:18px 0 0;
+      font-size:clamp(34px, 5vw, 58px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .subtitle{
+      margin-top:16px;
+      font-size:17px;
+      line-height:1.85;
+      color:var(--muted);
+      max-width:720px;
+    }
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      margin-top:22px;
+    }
+
+    @media (max-width:640px){
+      .meta-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .meta-card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:#fbfbfc;
+      padding:16px 16px;
+    }
+
+    .meta-label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:6px;
+    }
+
+    .meta-value{
       font-size:15px;
-      color:#111827;
-      line-height:1.8;
-      font-weight:1000;
-      word-break:break-word;
+      line-height:1.75;
+      font-weight:700;
+      color:#111;
+    }
+
+    .status-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      width:max-content;
+      margin-top:18px;
+      border:1px solid transparent;
+    }
+
+    .status-chip.selling{
+      background:var(--green-bg);
+      color:var(--green);
+      border-color:rgba(22,101,52,.08);
+    }
+
+    .status-chip.upcoming{
+      background:var(--orange-bg);
+      color:var(--orange);
+      border-color:rgba(194,65,12,.08);
+    }
+
+    .status-chip.ended{
+      background:var(--red-bg);
+      color:var(--red);
+      border-color:rgba(185,28,28,.08);
+    }
+
+    .status-chip.hidden{
+      background:#f3f4f6;
+      color:#4b5563;
+      border-color:rgba(0,0,0,.05);
+    }
+
+    .info-note{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:24px;
+    }
+
+    .section{
+      margin-top:56px;
+    }
+
+    .section-title{
+      margin:0;
+      font-size:clamp(28px, 4vw, 42px);
+      line-height:1.08;
+      letter-spacing:-.04em;
+      font-weight:800;
+    }
+
+    .section-sub{
+      margin-top:10px;
+      font-size:15px;
+      line-height:1.85;
+      color:var(--muted);
+      max-width:760px;
+    }
+
+    .ticket-layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 360px;
+      gap:22px;
+      align-items:start;
+      margin-top:22px;
+    }
+
+    @media (max-width:980px){
+      .ticket-layout{
+        grid-template-columns:1fr;
+      }
     }
 
     .ticket-list{
       display:grid;
-      gap:12px;
+      gap:16px;
     }
 
     .ticket-card{
-      border:1.5px solid var(--line);
-      border-radius:22px;
-      padding:16px;
       background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
       box-shadow:var(--shadow-soft);
+      padding:20px 20px;
+      transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
       cursor:pointer;
-      transition:border-color .12s ease, transform .12s ease, box-shadow .12s ease;
     }
 
     .ticket-card:hover{
-      transform:translateY(-1px);
-      box-shadow:0 14px 28px rgba(15,23,42,.08);
+      transform:translateY(-2px);
+      box-shadow:0 16px 36px rgba(0,0,0,.06);
+      border-color:rgba(0,0,0,.10);
     }
 
     .ticket-card.active{
-      border-color:#111827;
-      box-shadow:0 16px 32px rgba(17,24,39,.12);
+      border-color:#111;
+      box-shadow:0 18px 40px rgba(0,0,0,.08);
     }
 
     .ticket-top{
@@ -268,367 +444,278 @@
     }
 
     .ticket-name{
-      font-size:17px;
-      font-weight:1000;
-      line-height:1.5;
+      margin:0;
+      font-size:24px;
+      line-height:1.15;
+      letter-spacing:-.03em;
+      font-weight:800;
     }
 
     .ticket-price{
-      font-size:18px;
-      font-weight:1000;
-      color:#111827;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
       white-space:nowrap;
     }
 
+    .ticket-price.free{
+      color:#111;
+    }
+
     .ticket-desc{
-      margin-top:8px;
-      font-size:13px;
-      color:#6b7280;
-      line-height:1.85;
-      white-space:pre-wrap;
-      word-break:break-word;
+      margin-top:10px;
+      font-size:14px;
+      line-height:1.9;
+      color:var(--muted);
     }
 
     .ticket-meta{
-      margin-top:10px;
+      margin-top:12px;
       display:flex;
-      gap:8px;
+      gap:10px;
       flex-wrap:wrap;
     }
 
-    .pill{
+    .meta-pill{
       display:inline-flex;
       align-items:center;
+      justify-content:center;
+      min-height:32px;
       padding:6px 10px;
-      border:1px solid var(--line);
       border-radius:999px;
+      border:1px solid var(--line);
       background:#fff;
+      color:#111;
       font-size:12px;
-      font-weight:1000;
+      font-weight:700;
     }
 
-    .side{
+    .buy-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:30px;
+      box-shadow:var(--shadow);
+      padding:22px 20px;
       position:sticky;
-      top:18px;
-      display:grid;
-      gap:16px;
+      top:82px;
     }
 
     @media (max-width:980px){
-      .side{ position:static; }
+      .buy-card{
+        position:static;
+      }
     }
 
-    .side-card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .side-head{
-      padding:20px 20px 16px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
-    }
-
-    .side-title{
+    .buy-title{
       margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
     }
 
-    .side-sub{
-      margin-top:6px;
-      font-size:13px;
+    .buy-sub{
+      margin-top:8px;
       color:var(--muted);
-      line-height:1.8;
-    }
-
-    .side-body{
-      padding:18px 20px 20px;
-    }
-
-    .kv{
-      display:grid;
-      grid-template-columns:98px 1fr;
-      gap:8px 10px;
-      padding:10px 0;
-      border-top:1px dashed var(--line);
-    }
-
-    .kv:first-child{
-      border-top:none;
-      padding-top:0;
-    }
-
-    .k{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-    }
-
-    .v{
-      color:#111827;
-      font-size:13px;
-      font-weight:1000;
-      line-height:1.8;
-      word-break:break-word;
-    }
-
-    .status-box{
-      border-radius:18px;
-      padding:14px;
-      margin-top:14px;
-      border:1px solid var(--line);
-      background:#fafafa;
-    }
-
-    .status-box.ok{
-      background:var(--green-bg);
-      border-color:rgba(22,101,52,.12);
-      color:var(--green);
-    }
-
-    .status-box.warn{
-      background:var(--red-bg);
-      border-color:rgba(185,28,28,.12);
-      color:var(--red);
-    }
-
-    .status-box.info{
-      background:var(--blue-bg);
-      border-color:rgba(29,78,216,.12);
-      color:var(--blue);
-    }
-
-    .status-box.orange{
-      background:var(--orange-bg);
-      border-color:rgba(194,65,12,.12);
-      color:var(--orange);
-    }
-
-    .status-title{
       font-size:14px;
-      font-weight:1000;
-      line-height:1.6;
-    }
-
-    .status-desc{
-      margin-top:6px;
-      font-size:13px;
       line-height:1.85;
     }
 
-    .selected-box{
+    .field{
       margin-top:16px;
-      padding:14px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
     }
 
-    .input{
+    .field label{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+    }
+
+    .input,
+    .select{
       width:100%;
-      min-height:46px;
+      min-height:48px;
       padding:12px 14px;
-      border:1px solid var(--line-strong);
-      border-radius:16px;
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.10);
       background:#fff;
-      color:#111827;
+      color:#111;
       font-size:15px;
       outline:none;
     }
 
-    .qty-wrap{
-      margin-top:16px;
-      padding:14px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
+    .input:focus,
+    .select:focus{
+      border-color:rgba(0,0,0,.24);
     }
 
-    .qty-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-top:10px;
-    }
-
-    .qty-controls{
-      display:flex;
-      align-items:center;
+    .summary{
+      margin-top:18px;
+      border-top:1px solid rgba(0,0,0,.08);
+      padding-top:16px;
+      display:grid;
       gap:10px;
     }
 
-    .qty-btn{
-      width:42px;
-      height:42px;
-      border:1px solid var(--line);
-      background:#fff;
-      border-radius:14px;
-      font-size:20px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .qty-btn[disabled]{
-      opacity:.45;
-      cursor:not-allowed;
-    }
-
-    .qty-value{
-      min-width:38px;
-      text-align:center;
-      font-size:18px;
-      font-weight:1000;
-    }
-
-    .main-cta{
-      width:100%;
-      margin-top:16px;
-      border:none;
-      background:var(--black);
-      color:#fff;
-      border-radius:18px;
-      padding:16px 18px;
-      font-size:16px;
-      font-weight:1000;
-      cursor:pointer;
-      transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease;
-      box-shadow:0 14px 28px rgba(17,17,17,.16);
-    }
-
-    .main-cta:hover{
-      transform:translateY(-1px);
-    }
-
-    .main-cta[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
-      transform:none;
-      box-shadow:none;
-    }
-
-    .secondary-btn{
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111827;
-      border-radius:14px;
-      padding:12px 14px;
+    .summary-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
       font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-      width:100%;
+      color:var(--muted);
+      line-height:1.8;
     }
 
-    .secondary-btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
+    .summary-row strong{
+      color:#111;
     }
 
     .notice{
-      margin-top:14px;
-      font-size:13px;
+      margin-top:16px;
+      border-radius:18px;
+      padding:14px;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.06);
       color:var(--muted);
+      font-size:13px;
       line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .content-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:30px;
+      box-shadow:var(--shadow-soft);
+      padding:26px 24px;
+      margin-top:20px;
+    }
+
+    .content-text{
+      font-size:15px;
+      line-height:2;
+      color:#4b5563;
       white-space:pre-wrap;
       word-break:break-word;
     }
 
-    .loading, .empty{
-      max-width:900px;
-      margin:32px auto;
+    .loading,
+    .empty{
+      padding:42px 0;
       text-align:center;
+      font-size:15px;
       color:var(--muted);
-      font-size:14px;
-      line-height:1.8;
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      padding:30px 20px;
+      line-height:1.9;
     }
 
-    .modal-back{
-      position:fixed;
-      inset:0;
-      background:rgba(15,23,42,.38);
-      backdrop-filter:blur(8px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:9999;
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
     }
 
-    .modal-back.show{ display:flex; }
-
-    .modal{
-      width:min(560px, 100%);
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:26px;
-      box-shadow:0 28px 80px rgba(15,23,42,.22);
-      overflow:hidden;
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
     }
 
-    .modal-head{
-      padding:18px 20px 14px;
-      border-bottom:1px solid var(--line);
-      background:#fff;
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
     }
 
-    .modal-title{
-      margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
     }
 
-    .modal-sub{
-      margin-top:6px;
+    .footer-link{
+      display:block;
       font-size:13px;
       color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
       line-height:1.8;
-    }
-
-    .modal-body{
-      padding:18px 20px 20px;
-    }
-
-    .modal-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      margin-top:16px;
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="back" id="backLink" href="index.html">← 返回活動列表</a>
-      <div class="top-actions">
-        <a class="ghost-btn" href="member.html">會員中心</a>
-        <a class="ghost-btn" href="my-tickets.html">我的票券</a>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">T</span>
+          <span>Tickets</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+          <a class="nav-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="btn" href="member.html">Account</a>
+        </div>
       </div>
     </div>
 
-    <div id="app" class="loading">載入中…</div>
-  </div>
-
-  <div class="modal-back" id="modalBack">
-    <div class="modal">
-      <div class="modal-head">
-        <h3 class="modal-title" id="modalTitle">提示</h3>
-        <div class="modal-sub" id="modalSub">-</div>
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" href="index.html">← 返回首頁</a>
       </div>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
+
+      <div id="app" class="loading">載入中…</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
+          <a class="footer-link" href="member.html">基本資料</a>
+          <a class="footer-link" href="member.html">校園驗證</a>
+        </div>
+
+        <div>
+          <div class="footer-title">About</div>
+          <a class="footer-link" href="index.html">Tickets</a>
+          <a class="footer-link" href="dashboard.html">管理後台</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        票種、資格限制、入場方式與座位圖是否啟用，皆依各活動設定為準。
+      </div>
+    </main>
   </div>
 
   <script type="module">
@@ -637,13 +724,7 @@
     import {
       getFirestore,
       doc,
-      getDoc,
-      collection,
-      getDocs,
-      addDoc,
-      query,
-      where,
-      serverTimestamp
+      getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -661,26 +742,13 @@
 
     const app = document.getElementById("app");
     const params = new URLSearchParams(location.search);
-    const eventId = norm(params.get("id"));
-    const inviteCodeFromUrl = norm(params.get("inviteCode"));
-    const backLink = document.getElementById("backLink");
 
-    const modalBack = document.getElementById("modalBack");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalSub = document.getElementById("modalSub");
-    const modalBody = document.getElementById("modalBody");
+    const eventId = String(params.get("id") || "").trim();
 
     let currentUser = null;
-    let currentUserProfile = null;
     let currentEvent = null;
-    let latestEligibility = null;
-    let selectedTicketId = "";
-    let selectedTicket = null;
-    let validatedInviteCode = inviteCodeFromUrl || "";
-    let selectedQuantity = 1;
-    let currentPurchaseLimit = 1;
-    let currentPurchasedCount = 0;
-    let currentMatchedRecord = null;
+    let selectedTicketTypeId = "";
+    let quantity = 1;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -696,10 +764,6 @@
       return String(value ?? "").trim();
     }
 
-    function lower(value){
-      return norm(value).toLowerCase();
-    }
-
     function toDate(input){
       if (!input) return null;
       if (typeof input.toDate === "function") return input.toDate();
@@ -709,24 +773,14 @@
 
     function formatDateTime(input){
       const d = toDate(input);
-      if (!d) return "-";
+      if (!d) return "日期未定";
       return d.toLocaleString("zh-Hant", {
-        hour12:false,
         year:"numeric",
-        month:"2-digit",
-        day:"2-digit",
+        month:"long",
+        day:"numeric",
         hour:"2-digit",
-        minute:"2-digit"
-      });
-    }
-
-    function formatDateOnly(input){
-      const d = toDate(input);
-      if (!d) return "-";
-      return d.toLocaleDateString("zh-Hant", {
-        year:"numeric",
-        month:"2-digit",
-        day:"2-digit"
+        minute:"2-digit",
+        hour12:false
       });
     }
 
@@ -742,137 +796,66 @@
       const saleEnd = toDate(event.saleEndAt);
       const published = event.published === true;
 
-      if (!published) return { text:"未公開", className:"status-muted", key:"muted" };
-      if (saleStart && now < saleStart) return { text:"即將開賣", className:"status-upcoming", key:"upcoming" };
-      if (saleEnd && now > saleEnd) return { text:"已截止", className:"status-ended", key:"ended" };
-      return { text:"受理中", className:"status-selling", key:"selling" };
+      if (!published) return { text:"未公開", key:"hidden" };
+      if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming" };
+      if (saleEnd && now > saleEnd) return { text:"已截止", key:"ended" };
+      return { text:"受理中", key:"selling" };
     }
 
-    async function getEventById(id){
-      const snap = await getDoc(doc(db, "events", id));
-      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+    function getEventDescription(event){
+      return norm(
+        event.summary ||
+        event.subtitle ||
+        event.description ||
+        event.shortDescription ||
+        ""
+      );
     }
 
-    async function loadCurrentUserProfile(){
-      if (!currentUser) {
-        currentUserProfile = null;
-        return;
-      }
-      const snap = await getDoc(doc(db, "users", currentUser.uid));
-      currentUserProfile = snap.exists() ? (snap.data() || {}) : {};
+    function getEventDetailText(event){
+      return norm(
+        event.longDescription ||
+        event.content ||
+        event.details ||
+        event.description ||
+        ""
+      );
     }
 
-    function isSaleOpen(event){
-      const now = new Date();
-      const saleStart = toDate(event.saleStartAt);
-      const saleEnd = toDate(event.saleEndAt);
-      if (saleStart && now < saleStart) return false;
-      if (saleEnd && now > saleEnd) return false;
-      return true;
+    function getEventVenue(event){
+      return norm(
+        event.venueName ||
+        event.location ||
+        event.place ||
+        event.eventLocation ||
+        ""
+      );
     }
 
-    function getUserFieldValue(field, user, profile){
-      const key = lower(field);
-
-      if (key === "email") return norm(profile?.schoolEmail || profile?.email || user?.email || "");
-      if (key === "schoolemail") return norm(profile?.schoolEmail || user?.email || "");
-      if (key === "studentid") return norm(profile?.studentId || profile?.studentCode || "");
-      if (key === "studentcode") return norm(profile?.studentCode || profile?.studentId || "");
-      if (key === "verifykey") return norm(profile?.verifyKey || "");
-      if (key === "verifiedschoolid") return norm(profile?.verifiedSchoolId || "");
-      if (key === "name") return norm(profile?.name || "");
-      if (key === "class") return norm(profile?.class || "");
-      if (key === "seat") return norm(profile?.seat || "");
-      if (key === "group") return norm(profile?.group || "");
-      return norm(profile?.[field] || profile?.[key] || "");
-    }
-
-    async function checkAllowedUser(event, user, profile){
-      const fields = Array.isArray(event.allowedUserMatchFields)
-        ? event.allowedUserMatchFields.map(norm).filter(Boolean)
-        : [];
-
-      if (!fields.length) {
-        return { matched:false, reason:"missing_match_fields", matchKey:"", record:null };
-      }
-
-      const values = fields.map(field => getUserFieldValue(field, user, profile));
-      if (values.some(v => !norm(v))) {
-        return {
-          matched:false,
-          reason:"missing_user_fields",
-          matchKey:values.join("｜"),
-          fields,
-          record:null
-        };
-      }
-
-      const matchKey = values.join("｜");
-      const snap = await getDoc(doc(db, "events", event.id, "allowedUsers", matchKey));
-
-      if (!snap.exists()) {
-        return {
-          matched:false,
-          reason:"not_in_allowed_list",
-          matchKey,
-          fields,
-          record:null
-        };
-      }
-
-      const data = snap.data() || {};
-      if (data.canRegister === false) {
-        return {
-          matched:false,
-          reason:"blocked_by_record",
-          matchKey,
-          fields,
-          record:data
-        };
-      }
-
-      return {
-        matched:true,
-        reason:"matched",
-        matchKey,
-        fields,
-        record:data
-      };
-    }
-
-    function validateInviteCodeOnClient(event, code){
-      const input = lower(code);
-      if (!input) return { ok:false, message:"請先輸入邀請碼" };
-
-      const invites = Array.isArray(event.inviteCodes) ? event.inviteCodes : [];
-      const found = invites.find(item => {
-        const itemCode = lower(item?.code || "");
-        return itemCode && itemCode === input && item?.enabled === true;
-      });
-
-      if (!found) return { ok:false, message:"邀請碼無效或未啟用" };
-
-      const maxUses = Number(found.maxUses || 0);
-      const usedCount = Number(found.usedCount || 0);
-      if (maxUses > 0 && usedCount >= maxUses) {
-        return { ok:false, message:"此邀請碼已達使用上限" };
-      }
-
-      return { ok:true, item:found };
+    function getEventImage(event){
+      return norm(
+        event.coverImage ||
+        event.image ||
+        event.bannerImage ||
+        event.posterImage ||
+        event.thumbnail ||
+        ""
+      );
     }
 
     function getTicketTypes(event){
       const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
       if (raw.length) {
-        return raw.map((item, index) => ({
-          id: norm(item.id || `ticket_${index+1}`),
-          name: norm(item.name || `票種 ${index+1}`),
-          price: Number(item.price || 0),
-          description: norm(item.description || ""),
-          enabled: item.enabled !== false,
-          maxPerUser: Number(item.maxPerUser || 0),
-          seatMapEnabled: item.seatMapEnabled === true
-        })).filter(item => item.enabled !== false);
+        return raw
+          .map((item, index) => ({
+            id: norm(item.id || `ticket_${index + 1}`),
+            name: norm(item.name || `票種 ${index + 1}`),
+            price: Number(item.price || 0),
+            description: norm(item.description || ""),
+            enabled: item.enabled !== false,
+            maxPerUser: Number(item.maxPerUser || 0)
+          }))
+          .filter(item => item.enabled !== false);
       }
 
       return [{
@@ -881,702 +864,305 @@
         price:0,
         description:"此活動目前未細分票種，將以一般報名方式建立資料。",
         enabled:true,
-        maxPerUser:0,
-        seatMapEnabled:false
+        maxPerUser:0
       }];
     }
 
-    async function getCurrentPurchasedCount(eventId, uid){
-      if (!uid) return 0;
-
-      const q = query(
-        collection(db, "events", eventId, "orders"),
-        where("uid", "==", uid)
-      );
-      const snap = await getDocs(q);
-
-      let total = 0;
-      snap.forEach(docSnap => {
-        const data = docSnap.data() || {};
-        const status = norm(data.status || "").toLowerCase();
-        if (["cancelled", "void", "refunded"].includes(status)) return;
-        total += Number(data.quantity || 1);
-      });
-
-      return total;
+    async function getEventById(id){
+      const snap = await getDoc(doc(db, "events", id));
+      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
     }
 
-    function resolvePurchaseLimit(event, ticket, matchedRecord){
-      const limits = [];
-      const recordLimit = Number(matchedRecord?.maxTickets || 0);
-      const ticketLimit = Number(ticket?.maxPerUser || 0);
-      const eventLimit = Number(event?.maxTicketsPerUserDefault || 0);
-
-      if (recordLimit > 0) limits.push(recordLimit);
-      if (ticketLimit > 0) limits.push(ticketLimit);
-      if (eventLimit > 0) limits.push(eventLimit);
-
-      if (!limits.length) return 999;
-      return Math.min(...limits);
+    function getSelectedTicketType(){
+      const types = getTicketTypes(currentEvent);
+      return types.find(item => item.id === selectedTicketTypeId) || types[0] || null;
     }
 
-    async function evaluateEligibility(event){
-      const inviteEnabled = event.inviteCodeEnabled === true;
-      currentMatchedRecord = null;
-
-      if (event.published !== true) {
-        return { type:"event_unpublished", canSubmit:false, canUseInviteCode:false, actionText:"目前不可報名" };
-      }
-
-      if (!currentUser) {
-        return {
-          type:"login_required",
-          canSubmit:false,
-          canUseInviteCode:inviteEnabled,
-          actionText: inviteEnabled ? "登入後繼續 / 邀請碼" : "請先登入"
-        };
-      }
-
-      if (!isSaleOpen(event)) {
-        return { type:"sale_not_open", canSubmit:false, canUseInviteCode:false, actionText:"不在報名期間" };
-      }
-
-      if (event.allowedUsersEnabled !== true) {
-        return {
-          type:"open_registration",
-          canSubmit:true,
-          canUseInviteCode:inviteEnabled,
-          actionText:"確認報名 / 購票"
-        };
-      }
-
-      const hasCampusVerify = !!norm(currentUserProfile?.verifiedSchoolId || "");
-      if (!hasCampusVerify) {
-        if (validatedInviteCode) {
-          const inviteResult = validateInviteCodeOnClient(event, validatedInviteCode);
-          if (inviteResult.ok) {
-            return {
-              type:"invite_override",
-              canSubmit:true,
-              canUseInviteCode:true,
-              actionText:"使用邀請碼報名"
-            };
-          }
-        }
-
-        return {
-          type:"verify_needed_but_invite_possible",
-          canSubmit:false,
-          canUseInviteCode:inviteEnabled,
-          actionText: inviteEnabled ? "校園驗證 / 邀請碼" : "先完成校園驗證"
-        };
-      }
-
-      const allowedResult = await checkAllowedUser(event, currentUser, currentUserProfile);
-      if (allowedResult.matched) {
-        currentMatchedRecord = allowedResult.record || null;
-        return {
-          type:"eligible",
-          canSubmit:true,
-          canUseInviteCode:inviteEnabled,
-          actionText:"確認報名 / 購票"
-        };
-      }
-
-      if (inviteEnabled) {
-        if (validatedInviteCode) {
-          const inviteResult = validateInviteCodeOnClient(event, validatedInviteCode);
-          if (inviteResult.ok) {
-            return {
-              type:"invite_override",
-              canSubmit:true,
-              canUseInviteCode:true,
-              actionText:"使用邀請碼報名"
-            };
-          }
-        }
-
-        return {
-          type:"not_eligible_but_invite_possible",
-          canSubmit:false,
-          canUseInviteCode:true,
-          actionText:"輸入邀請碼"
-        };
-      }
-
-      return {
-        type:"not_eligible",
-        canSubmit:false,
-        canUseInviteCode:false,
-        actionText:"目前不符合資格"
-      };
+    function canProceedToPurchase(event){
+      const status = getEventStatus(event);
+      return status.key === "selling";
     }
 
-    function getEligibilityBlock(eligibility){
-      switch (eligibility.type) {
-        case "event_unpublished":
-          return { className:"warn", title:"此活動目前尚未公開", desc:"主辦單位尚未正式開放此活動。" };
-        case "login_required":
-          return { className:"info", title:"請先登入會員帳號", desc:"登入後才能建立報名或購票資料。" };
-        case "sale_not_open":
-          return { className:"orange", title:"目前不在報名期間", desc:"請依活動開放時間再回來操作。" };
-        case "open_registration":
-          return { className:"ok", title:"此活動可直接報名", desc:"這場活動目前沒有額外資格名單限制。" };
-        case "eligible":
-          return { className:"ok", title:"你目前符合此活動資格", desc:"系統已比對到你的活動資格，可以直接進行報名或購票。" };
-        case "invite_override":
-          return { className:"ok", title:"已套用有效邀請碼", desc:"你目前可使用邀請碼參加這場活動。" };
-        case "verify_needed_but_invite_possible":
-          return { className:"warn", title:"你尚未完成校園驗證", desc:"你可以先完成校園驗證，或改用邀請碼報名。" };
-        case "not_eligible_but_invite_possible":
-          return { className:"warn", title:"你目前不在活動名單中", desc:"你可以改用邀請碼參加這場活動。" };
-        case "not_eligible":
-          return { className:"warn", title:"你目前不符合此活動資格", desc:"系統找不到你的活動資格資料，且此活動未開放邀請碼備援。" };
-        default:
-          return { className:"info", title:"目前無法判斷狀態", desc:"請稍後再試。" };
-      }
-    }
-
-    function closeModal(){
-      modalBack.classList.remove("show");
-      modalTitle.textContent = "提示";
-      modalSub.textContent = "-";
-      modalBody.innerHTML = "";
-    }
-
-    modalBack.addEventListener("click", (e) => {
-      if (e.target === modalBack) closeModal();
-    });
-
-    function showModal({ title, sub = "", body = "" }){
-      modalTitle.textContent = title || "提示";
-      modalSub.innerHTML = sub || "";
-      modalBody.innerHTML = body || "";
-      modalBack.classList.add("show");
-    }
-
-    function showInviteModal(){
-      showModal({
-        title:"輸入邀請碼",
-        sub:"若你不在活動資格名單中，仍可透過邀請碼參加。",
-        body:`
-          <input class="input" id="inviteInput" placeholder="請輸入邀請碼" value="${esc(validatedInviteCode)}" />
-          <div class="notice" id="inviteCheckMsg">系統會先在前端檢查邀請碼是否有效。</div>
-          <div class="modal-actions">
-            <button class="secondary-btn" id="inviteCancelBtn">取消</button>
-            <button class="ghost-btn" id="inviteApplyBtn" style="border-color:#111;">套用邀請碼</button>
-          </div>
-        `
-      });
-
-      document.getElementById("inviteCancelBtn").onclick = closeModal;
-      document.getElementById("inviteApplyBtn").onclick = async () => {
-        const code = norm(document.getElementById("inviteInput").value);
-        const inviteCheckMsg = document.getElementById("inviteCheckMsg");
-        const result = validateInviteCodeOnClient(currentEvent, code);
-
-        if (!result.ok) {
-          inviteCheckMsg.innerHTML = `<span style="color:#b91c1c;font-weight:1000;">${esc(result.message)}</span>`;
-          return;
-        }
-
-        validatedInviteCode = code;
-        inviteCheckMsg.innerHTML = `<span style="color:#166534;font-weight:1000;">邀請碼有效，已套用。</span>`;
-        await refreshPageState();
-        setTimeout(closeModal, 250);
-      };
-    }
-
-    function selectTicket(ticketId){
-      selectedTicketId = ticketId;
-      const ticketTypes = getTicketTypes(currentEvent);
-      selectedTicket = ticketTypes.find(item => item.id === ticketId) || null;
-      updateQuantityBounds();
-      renderPage(currentEvent, latestEligibility);
-    }
-
-    function updateQuantityBounds(){
-      if (!currentEvent || !selectedTicket) {
-        currentPurchaseLimit = 1;
-        selectedQuantity = 1;
-        return;
-      }
-
-      const totalLimit = resolvePurchaseLimit(currentEvent, selectedTicket, currentMatchedRecord);
-      currentPurchaseLimit = Math.max(0, totalLimit - currentPurchasedCount);
-
-      if (currentPurchaseLimit <= 0) {
-        selectedQuantity = 0;
-      } else {
-        selectedQuantity = Math.max(1, Math.min(selectedQuantity || 1, currentPurchaseLimit));
-      }
-    }
-
-    function changeQuantity(delta){
-      if (currentPurchaseLimit <= 0) return;
-      selectedQuantity = Math.min(currentPurchaseLimit, Math.max(1, selectedQuantity + delta));
-      renderPage(currentEvent, latestEligibility);
-    }
-
-    async function createOrderDirectly(){
-      if (!currentEvent || !latestEligibility) return;
-
-      if (!currentUser) {
-        showModal({
-          title:"請先登入",
-          sub:"登入後才能建立報名或購票資料。",
-          body:`
-            <div class="notice">請先前往登入頁完成登入。</div>
-            <div class="modal-actions">
-              <button class="secondary-btn" id="closeNeedLoginBtn">取消</button>
-              <button class="ghost-btn" id="goLoginBtn" style="border-color:#111;">前往登入</button>
-            </div>
-          `
-        });
-        document.getElementById("closeNeedLoginBtn").onclick = closeModal;
-        document.getElementById("goLoginBtn").onclick = () => {
-          location.href = "login.html";
-        };
-        return;
-      }
-
-      if (!selectedTicket) {
-        alert("請先選擇票種");
-        return;
-      }
-
-      if (!latestEligibility.canSubmit) {
-        if (latestEligibility.type === "verify_needed_but_invite_possible") {
-          showModal({
-            title:"尚未完成校園驗證",
-            sub:"你目前尚未綁定校園身份。",
-            body:`
-              <div class="notice">
-                你可以先前往校園驗證，若主辦方開放，也可以直接使用邀請碼報名。
-              </div>
-              <div class="modal-actions">
-                <button class="secondary-btn" id="closeNeedVerifyBtn">取消</button>
-                <button class="secondary-btn" id="goVerifyBtn">前往校園驗證</button>
-                ${currentEvent.inviteCodeEnabled === true ? `<button class="ghost-btn" id="goInviteBtn" style="border-color:#111;">輸入邀請碼</button>` : ``}
-              </div>
-            `
-          });
-          document.getElementById("closeNeedVerifyBtn").onclick = closeModal;
-          document.getElementById("goVerifyBtn").onclick = () => location.href = "campus-verify.html";
-          const goInviteBtn = document.getElementById("goInviteBtn");
-          if (goInviteBtn) goInviteBtn.onclick = showInviteModal;
-          return;
-        }
-
-        if (latestEligibility.type === "not_eligible_but_invite_possible") {
-          showInviteModal();
-          return;
-        }
-
-        alert("你目前無法完成此活動報名");
-        return;
-      }
-
-      if (currentPurchaseLimit <= 0) {
-        alert("你此活動已達可購買上限");
-        return;
-      }
-
-      if (selectedQuantity <= 0 || selectedQuantity > currentPurchaseLimit) {
-        alert("目前張數超出可購買上限");
-        return;
-      }
-
-      const submitBtn = document.getElementById("submitBtn");
-      submitBtn.disabled = true;
-      const oldText = submitBtn.textContent;
-      submitBtn.textContent = "送出中…";
-
-      try {
-        const freshPurchasedCount = await getCurrentPurchasedCount(currentEvent.id, currentUser.uid);
-        currentPurchasedCount = freshPurchasedCount;
-        updateQuantityBounds();
-
-        if (selectedQuantity <= 0 || selectedQuantity > currentPurchaseLimit) {
-          throw new Error("目前剩餘可購買張數不足，請重新確認");
-        }
-
-        const orderPayload = {
-          uid: currentUser.uid,
-          email: currentUser.email || "",
-          eventId: currentEvent.id,
-          eventTitle: currentEvent.title || "",
-          ticketTypeId: selectedTicket.id,
-          ticketTypeName: selectedTicket.name,
-          ticketPrice: Number(selectedTicket.price || 0),
-          quantity: selectedQuantity,
-          totalAmount: Number(selectedTicket.price || 0) * selectedQuantity,
-          inviteCode: validatedInviteCode || "",
-          eligibilityType: latestEligibility.type,
-          verifiedSchoolId: norm(currentUserProfile?.verifiedSchoolId || ""),
-          verifiedSchoolName: norm(currentUserProfile?.verifiedSchoolName || ""),
-          verifyMethod: norm(currentUserProfile?.verifyMethod || ""),
-          schoolEmail: norm(currentUserProfile?.schoolEmail || ""),
-          matchedRole: norm(currentMatchedRecord?.purchaseRole || ""),
-          matchedTags: Array.isArray(currentMatchedRecord?.purchaseTags) ? currentMatchedRecord.purchaseTags : [],
-          status: "registered",
-          paymentStatus: Number(selectedTicket.price || 0) > 0 ? "pending" : "free",
-          seatMapEnabled: currentEvent.seatMapEnabled === true || selectedTicket.seatMapEnabled === true,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
-
-        await addDoc(collection(db, "events", currentEvent.id, "orders"), orderPayload);
-
-        currentPurchasedCount += selectedQuantity;
-        updateQuantityBounds();
-
-        showModal({
-          title:"報名成功",
-          sub:"你的訂單已建立完成。",
-          body:`
-            <div class="notice">
-              活動：${esc(currentEvent.title || "-")}<br>
-              票種：${esc(selectedTicket.name || "-")}<br>
-              張數：${esc(selectedQuantity)}<br>
-              金額：${esc(formatPrice((selectedTicket.price || 0) * selectedQuantity))}<br>
-              狀態：已建立報名 / 訂單資料
-            </div>
-            <div class="modal-actions">
-              <button class="secondary-btn" id="goMemberBtn">前往會員中心</button>
-              <button class="ghost-btn" id="stayHereBtn" style="border-color:#111;">留在此頁</button>
-            </div>
-          `
-        });
-
-        document.getElementById("goMemberBtn").onclick = () => {
-          location.href = "member.html";
-        };
-        document.getElementById("stayHereBtn").onclick = closeModal;
-
-        await refreshPageState();
-
-      } catch (e) {
-        console.error(e);
-        alert(e.message || "建立訂單失敗，請稍後再試");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = oldText;
-      }
-    }
-
-    function goSeatPicker(){
-      if (!currentEvent || !selectedTicket) {
-        alert("請先選擇票種");
-        return;
-      }
+    function buildSeatPickerUrl(){
+      const selected = getSelectedTicketType();
+      const q = Number(quantity || 1);
 
       const url = new URL("seat-picker.html", location.href);
       url.searchParams.set("id", currentEvent.id);
-      url.searchParams.set("ticketTypeId", selectedTicket.id);
-      url.searchParams.set("quantity", String(selectedQuantity || 1));
-      if (validatedInviteCode) {
-        url.searchParams.set("inviteCode", validatedInviteCode);
-      }
-      location.href = url.toString();
+      url.searchParams.set("ticketTypeId", selected?.id || "general");
+      url.searchParams.set("quantity", String(q));
+      return url.pathname + url.search;
     }
 
-    async function handleSubmit(){
-      const seatMapEnabled = currentEvent?.seatMapEnabled === true || selectedTicket?.seatMapEnabled === true;
-      if (seatMapEnabled) {
-        goSeatPicker();
-      } else {
-        await createOrderDirectly();
-      }
-    }
-
-    function renderPage(event, eligibility){
-      const status = getEventStatus(event);
-      const coverHtml = event.coverImage
-        ? `<img src="${esc(event.coverImage)}" alt="${esc(event.title || "活動圖片")}">`
-        : ``;
-
-      const statusBlock = getEligibilityBlock(eligibility);
-      const ticketTypes = getTicketTypes(event);
-
-      if (!selectedTicketId && ticketTypes.length) {
-        selectedTicketId = ticketTypes[0].id;
-        selectedTicket = ticketTypes[0];
-      } else {
-        selectedTicket = ticketTypes.find(item => item.id === selectedTicketId) || ticketTypes[0] || null;
-        selectedTicketId = selectedTicket?.id || "";
-      }
-
-      updateQuantityBounds();
-
-      const userEmailText = currentUser?.email ? esc(currentUser.email) : "尚未登入";
-      const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "");
-      const verifiedSchoolHtml = verifiedSchoolName ? esc(verifiedSchoolName) : "未驗證";
-
-      const submitDisabled =
-        !eligibility.canSubmit ||
-        !selectedTicket ||
-        currentPurchaseLimit <= 0 ||
-        selectedQuantity <= 0;
-
-      const inviteText = validatedInviteCode
-        ? `<span class="pill">已套用邀請碼：${esc(validatedInviteCode)}</span>`
-        : (event.inviteCodeEnabled === true ? `<span class="pill">可使用邀請碼</span>` : `<span class="pill">未使用邀請碼</span>`);
-
-      const totalPrice = (selectedTicket?.price || 0) * Math.max(selectedQuantity, 0);
-      const useSeatMap = event.seatMapEnabled === true || selectedTicket?.seatMapEnabled === true;
-
-      app.className = "";
-      app.innerHTML = `
-        <div class="layout">
-          <div class="card">
-            <div class="hero">
-              ${coverHtml}
-              <div class="hero-inner">
-                <div class="status ${status.className}">${esc(status.text)}</div>
-                <h1 class="hero-title">${esc(event.title || "未命名活動")}</h1>
-                <div class="hero-sub">
-                  活動時間：${esc(formatDateTime(event.eventStartAt))} ～ ${esc(formatDateTime(event.eventEndAt))}<br>
-                  活動地點：${esc(event.location || "-")}
-                </div>
-              </div>
+    function renderTicketCard(ticket, active){
+      return `
+        <div class="ticket-card ${active ? "active" : ""}" data-ticket-id="${esc(ticket.id)}">
+          <div class="ticket-top">
+            <div>
+              <h3 class="ticket-name">${esc(ticket.name)}</h3>
             </div>
-
-            <div class="main-body">
-              <div class="section">
-                <h2 class="section-title">活動資訊</h2>
-                <div class="info-grid">
-                  <div class="info-card">
-                    <div class="info-label">開賣開始</div>
-                    <div class="info-value">${esc(formatDateTime(event.saleStartAt))}</div>
-                  </div>
-                  <div class="info-card">
-                    <div class="info-label">開賣截止</div>
-                    <div class="info-value">${esc(formatDateTime(event.saleEndAt))}</div>
-                  </div>
-                  <div class="info-card">
-                    <div class="info-label">活動日期</div>
-                    <div class="info-value">${esc(formatDateOnly(event.eventStartAt))}</div>
-                  </div>
-                  <div class="info-card">
-                    <div class="info-label">活動地點</div>
-                    <div class="info-value">${esc(event.location || "-")}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="section">
-                <h2 class="section-title">票種 / 報名方案</h2>
-                <div class="ticket-list">
-                  ${ticketTypes.map(ticket => `
-                    <div class="ticket-card ${selectedTicketId === ticket.id ? "active" : ""}" data-ticket-id="${esc(ticket.id)}">
-                      <div class="ticket-top">
-                        <div class="ticket-name">${esc(ticket.name)}</div>
-                        <div class="ticket-price">${esc(formatPrice(ticket.price))}</div>
-                      </div>
-                      <div class="ticket-desc">${esc(ticket.description || "此票種尚無額外說明")}</div>
-                      <div class="ticket-meta">
-                        ${ticket.maxPerUser > 0 ? `<span class="pill">每帳號上限 ${ticket.maxPerUser} 張</span>` : `<span class="pill">張數不限額外票種上限</span>`}
-                        ${(event.seatMapEnabled === true || ticket.seatMapEnabled === true) ? `<span class="pill">需選座位</span>` : `<span class="pill">免選位</span>`}
-                      </div>
-                    </div>
-                  `).join("")}
-                </div>
-              </div>
-
-              <div class="section">
-                <h2 class="section-title">活動介紹</h2>
-                <div class="section-text">${esc(event.description || "尚無活動介紹")}</div>
-              </div>
-
-              <div class="section">
-                <h2 class="section-title">注意事項</h2>
-                <div class="section-text">${esc(event.notice || "尚無注意事項")}</div>
-              </div>
-
-              <div class="section">
-                <h2 class="section-title">資格與報名說明</h2>
-                <div class="section-text">${esc(event.purchaseNotice || event.eligibilityNotice || "主辦單位未提供額外資格說明。")}</div>
-              </div>
+            <div class="ticket-price ${Number(ticket.price || 0) <= 0 ? "free" : ""}">
+              ${esc(formatPrice(ticket.price))}
             </div>
           </div>
 
-          <div class="side">
-            <div class="side-card">
-              <div class="side-head">
-                <h2 class="side-title">確認報名資訊</h2>
-                <div class="side-sub">
-                  請確認資格、票種與張數後，再進行下一步。
-                </div>
-              </div>
+          <div class="ticket-desc">
+            ${esc(ticket.description || "查看此票種的資格限制與購買方式。")}
+          </div>
 
-              <div class="side-body">
-                <div class="kv">
-                  <div class="k">登入帳號</div>
-                  <div class="v">${userEmailText}</div>
-
-                  <div class="k">校園驗證</div>
-                  <div class="v">${verifiedSchoolHtml}</div>
-
-                  <div class="k">票種</div>
-                  <div class="v">${esc(selectedTicket?.name || "尚未選擇")}</div>
-
-                  <div class="k">單價</div>
-                  <div class="v">${esc(formatPrice(selectedTicket?.price || 0))}</div>
-
-                  <div class="k">已購買</div>
-                  <div class="v">${esc(currentPurchasedCount)} 張</div>
-
-                  <div class="k">可再買</div>
-                  <div class="v">${currentPurchaseLimit >= 999 ? "不限" : `${esc(currentPurchaseLimit)} 張`}</div>
-
-                  <div class="k">購買方式</div>
-                  <div class="v">${useSeatMap ? "先選票，再進入選位" : "直接建立訂單"}</div>
-                </div>
-
-                <div class="status-box ${statusBlock.className}">
-                  <div class="status-title">${esc(statusBlock.title)}</div>
-                  <div class="status-desc">${esc(statusBlock.desc)}</div>
-                </div>
-
-                <div class="selected-box">
-                  <div style="font-size:12px;color:#6b7280;font-weight:1000;">目前套用</div>
-                  <div style="margin-top:8px;font-size:14px;font-weight:1000;line-height:1.8;">
-                    ${inviteText}
-                  </div>
-                </div>
-
-                ${event.inviteCodeEnabled === true ? `
-                  <div class="selected-box">
-                    <div style="font-size:12px;color:#6b7280;font-weight:1000;">邀請碼</div>
-                    <div style="margin-top:10px;">
-                      <input class="input" id="inviteCodeInput" placeholder="可直接在此輸入邀請碼" value="${esc(validatedInviteCode)}" />
-                    </div>
-                    <div class="row" style="margin-top:10px;">
-                      <button class="secondary-btn" id="applyInviteInlineBtn">套用邀請碼</button>
-                    </div>
-                  </div>
-                ` : ""}
-
-                <div class="qty-wrap">
-                  <div style="font-size:12px;color:#6b7280;font-weight:1000;">購買張數</div>
-                  <div class="qty-row">
-                    <div style="font-size:13px;color:#6b7280;line-height:1.8;">
-                      ${currentPurchaseLimit <= 0
-                        ? `<span style="color:#b91c1c;font-weight:1000;">你已達可購買上限</span>`
-                        : `本次可購買上限：${currentPurchaseLimit >= 999 ? "不限" : `${currentPurchaseLimit} 張`}`}
-                    </div>
-                    <div class="qty-controls">
-                      <button class="qty-btn" id="qtyMinusBtn" ${currentPurchaseLimit <= 0 || selectedQuantity <= 1 ? "disabled" : ""}>−</button>
-                      <div class="qty-value">${selectedQuantity > 0 ? selectedQuantity : 0}</div>
-                      <button class="qty-btn" id="qtyPlusBtn" ${currentPurchaseLimit <= 0 || selectedQuantity >= currentPurchaseLimit ? "disabled" : ""}>＋</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="selected-box">
-                  <div style="font-size:12px;color:#6b7280;font-weight:1000;">總計</div>
-                  <div style="margin-top:8px;font-size:22px;font-weight:1000;line-height:1.2;">
-                    ${esc(formatPrice(totalPrice))}
-                  </div>
-                </div>
-
-                <button class="main-cta" id="submitBtn" ${submitDisabled ? "disabled" : ""}>
-                  ${esc(useSeatMap ? "下一步：選擇座位" : (eligibility.actionText || "確認報名 / 購票"))}
-                </button>
-
-                <div class="row" style="margin-top:10px;">
-                  <button class="secondary-btn" id="inviteBtn" ${event.inviteCodeEnabled === true ? "" : "disabled"}>輸入邀請碼</button>
-                  <button class="secondary-btn" id="verifyBtn">校園驗證</button>
-                </div>
-
-                <div class="notice">
-                  ${event.allowedUsersEnabled === true
-                    ? `這場活動有資格名單限制，系統已重新檢查你的資格狀態。`
-                    : `這場活動目前沒有額外資格名單限制。`}
-                  ${validatedInviteCode ? `\n目前已套用邀請碼。` : ``}
-                  ${useSeatMap ? `\n此票種需進入座位選擇頁面完成最終訂單。` : `\n此票種可直接建立訂單。`}
-                  ${currentPurchaseLimit <= 0 ? `\n你目前已達此活動可購買張數上限。` : ``}
-                </div>
-              </div>
-            </div>
+          <div class="ticket-meta">
+            <span class="meta-pill">票種代碼：${esc(ticket.id)}</span>
+            <span class="meta-pill">
+              ${ticket.maxPerUser > 0 ? `每人最多 ${ticket.maxPerUser} 張` : "張數不限"}
+            </span>
           </div>
         </div>
       `;
+    }
 
-      [...document.querySelectorAll("[data-ticket-id]")].forEach(el => {
-        el.onclick = () => selectTicket(el.dataset.ticketId);
+    function renderPage(){
+      const status = getEventStatus(currentEvent);
+      const types = getTicketTypes(currentEvent);
+
+      if (!selectedTicketTypeId && types.length) {
+        selectedTicketTypeId = types[0].id;
+      }
+
+      const selected = getSelectedTicketType();
+      const image = getEventImage(currentEvent);
+      const desc = getEventDescription(currentEvent) || "探索活動資訊、票種與入場方式。";
+      const detailText = getEventDetailText(currentEvent);
+      const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
+      const canBuy = canProceedToPurchase(currentEvent);
+      const seatMapEnabled = currentEvent.seatMapEnabled === true;
+      const eventStartText = formatDateTime(currentEvent.eventStartAt);
+      const eventEndText = formatDateTime(currentEvent.eventEndAt);
+      const saleStartText = formatDateTime(currentEvent.saleStartAt);
+      const saleEndText = formatDateTime(currentEvent.saleEndAt);
+
+      app.className = "";
+      app.innerHTML = `
+        <section class="hero">
+          <div class="card poster">
+            ${
+              image
+                ? `<img src="${esc(image)}" alt="${esc(currentEvent.title || "活動圖片")}" />`
+                : ``
+            }
+            <div class="poster-badge">Event</div>
+          </div>
+
+          <div class="card hero-info">
+            <div class="eyebrow">Live Event</div>
+
+            <h1 class="title">${esc(currentEvent.title || "未命名活動")}</h1>
+
+            <div class="subtitle">
+              ${esc(desc)}
+            </div>
+
+            <div class="status-chip ${esc(status.key)}">${esc(status.text)}</div>
+
+            <div class="meta-grid">
+              <div class="meta-card">
+                <div class="meta-label">活動時間</div>
+                <div class="meta-value">
+                  ${esc(eventStartText)}<br>
+                  ${esc(eventEndText)}
+                </div>
+              </div>
+
+              <div class="meta-card">
+                <div class="meta-label">活動地點</div>
+                <div class="meta-value">${esc(venue)}</div>
+              </div>
+
+              <div class="meta-card">
+                <div class="meta-label">開賣時間</div>
+                <div class="meta-value">
+                  ${esc(saleStartText)}<br>
+                  ${esc(saleEndText)}
+                </div>
+              </div>
+
+              <div class="meta-card">
+                <div class="meta-label">購票方式</div>
+                <div class="meta-value">
+                  ${seatMapEnabled ? "可選位購票" : "一般票種購買"}
+                </div>
+              </div>
+            </div>
+
+            <div class="info-note">
+              ${
+                currentUser
+                  ? `目前登入：${esc(currentUser.email || currentUser.uid)}`
+                  : `你尚未登入，部分活動在購票前可能需要先登入或完成資格驗證。`
+              }
+            </div>
+
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#tickets">選擇票種</a>
+              <a class="btn" href="member.html">查看帳號</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="tickets">
+          <h2 class="section-title">Choose your ticket.</h2>
+          <div class="section-sub">
+            選擇最適合你的票種與張數，再繼續下一步。若活動啟用座位圖，系統會帶你前往選位頁面。
+          </div>
+
+          <div class="ticket-layout">
+            <div class="ticket-list" id="ticketList">
+              ${types.map(item => renderTicketCard(item, item.id === selectedTicketTypeId)).join("")}
+            </div>
+
+            <aside class="buy-card">
+              <h3 class="buy-title">購票摘要</h3>
+              <div class="buy-sub">
+                選擇票種後，可設定張數並繼續下一步。
+              </div>
+
+              <div class="field">
+                <label>目前票種</label>
+                <div class="input" style="display:flex;align-items:center;">
+                  ${esc(selected?.name || "-")}
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="quantitySel">張數</label>
+                <select class="select" id="quantitySel">
+                  ${[1,2,3,4,5,6,7,8].map(num => `
+                    <option value="${num}" ${Number(quantity) === num ? "selected" : ""}>${num} 張</option>
+                  `).join("")}
+                </select>
+              </div>
+
+              <div class="summary">
+                <div class="summary-row">
+                  <span>活動</span>
+                  <strong>${esc(currentEvent.title || "-")}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>票種</span>
+                  <strong>${esc(selected?.name || "-")}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>單張價格</span>
+                  <strong>${esc(formatPrice(selected?.price || 0))}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>張數</span>
+                  <strong>${esc(String(quantity))}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>總計</span>
+                  <strong>${esc(formatPrice((Number(selected?.price || 0) * Number(quantity || 1))))}</strong>
+                </div>
+              </div>
+
+              <div class="notice">
+                ${
+                  seatMapEnabled
+                    ? "此活動已啟用座位圖。下一步將進入選位頁面。"
+                    : "此活動目前未啟用座位圖。後續可依活動設定建立一般訂單。"
+                }
+                \n${
+                  canBuy
+                    ? "目前活動正在受理中，可繼續購票。"
+                    : "目前尚未開放購票或活動已截止。"
+                }
+              </div>
+
+              <div style="margin-top:18px;display:grid;gap:10px;">
+                <button class="btn btn-primary" id="nextBtn" ${canBuy ? "" : "disabled"}>
+                  ${seatMapEnabled ? "繼續選位" : "繼續購買"}
+                </button>
+                ${
+                  !currentUser
+                    ? `<a class="btn" href="login.html">先登入帳號</a>`
+                    : `<a class="btn" href="member.html">查看會員中心</a>`
+                }
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        ${
+          detailText
+            ? `
+              <section class="section">
+                <h2 class="section-title">About this event.</h2>
+                <div class="section-sub">
+                  更完整的活動內容與說明。
+                </div>
+
+                <div class="content-card">
+                  <div class="content-text">${esc(detailText)}</div>
+                </div>
+              </section>
+            `
+            : ``
+        }
+      `;
+
+      document.querySelectorAll("[data-ticket-id]").forEach(el => {
+        el.addEventListener("click", () => {
+          selectedTicketTypeId = el.dataset.ticketId || "";
+          renderPage();
+        });
       });
 
-      const qtyMinusBtn = document.getElementById("qtyMinusBtn");
-      const qtyPlusBtn = document.getElementById("qtyPlusBtn");
-      if (qtyMinusBtn) qtyMinusBtn.onclick = () => changeQuantity(-1);
-      if (qtyPlusBtn) qtyPlusBtn.onclick = () => changeQuantity(1);
+      document.getElementById("quantitySel").addEventListener("change", (e) => {
+        quantity = Number(e.target.value || 1);
+        renderPage();
+      });
 
-      document.getElementById("submitBtn").onclick = handleSubmit;
-      document.getElementById("inviteBtn").onclick = showInviteModal;
-      document.getElementById("verifyBtn").onclick = () => {
-        location.href = "campus-verify.html";
-      };
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.onclick = () => {
+          if (!canBuy) return;
 
-      const applyInviteInlineBtn = document.getElementById("applyInviteInlineBtn");
-      if (applyInviteInlineBtn) {
-        applyInviteInlineBtn.onclick = async () => {
-          const code = norm(document.getElementById("inviteCodeInput").value);
-          const result = validateInviteCodeOnClient(currentEvent, code);
-          if (!result.ok) {
-            alert(result.message);
+          if (!currentUser) {
+            alert("請先登入帳號");
+            location.href = "login.html";
             return;
           }
-          validatedInviteCode = code;
-          await refreshPageState();
+
+          if (seatMapEnabled) {
+            location.href = buildSeatPickerUrl();
+            return;
+          }
+
+          alert("此活動目前未啟用座位圖。若你要，我下一步可以直接幫你把『無座位圖直接建立訂單』流程也補完整。");
         };
       }
     }
 
-    async function refreshPageState(){
-      if (!eventId){
+    async function initPage(){
+      if (!eventId) {
         app.className = "empty";
         app.innerHTML = "缺少活動 ID。";
         return;
       }
 
-      try {
-        currentEvent = await getEventById(eventId);
+      currentEvent = await getEventById(eventId);
 
-        if (!currentEvent){
-          app.className = "empty";
-          app.innerHTML = "找不到活動。";
-          return;
-        }
-
-        latestEligibility = await evaluateEligibility(currentEvent);
-        backLink.href = `index.html`;
-
-        const ticketTypes = getTicketTypes(currentEvent);
-        if (!selectedTicketId && ticketTypes.length) {
-          selectedTicketId = ticketTypes[0].id;
-          selectedTicket = ticketTypes[0];
-        } else {
-          selectedTicket = ticketTypes.find(item => item.id === selectedTicketId) || ticketTypes[0] || null;
-          selectedTicketId = selectedTicket?.id || "";
-        }
-
-        currentPurchasedCount = currentUser ? await getCurrentPurchasedCount(currentEvent.id, currentUser.uid) : 0;
-        updateQuantityBounds();
-        renderPage(currentEvent, latestEligibility);
-
-      } catch (e){
-        console.error(e);
+      if (!currentEvent) {
         app.className = "empty";
-        app.innerHTML = "頁面載入失敗，請稍後再試。";
+        app.innerHTML = "找不到活動。";
+        return;
       }
+
+      renderPage();
     }
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user || null;
-      await loadCurrentUserProfile();
-      await refreshPageState();
+      await initPage();
     });
   </script>
 </body>

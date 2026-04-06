@@ -2,75 +2,166 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>我的票券</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Tickets</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
-      --ok:#166534;
-      --ok-bg:#dcfce7;
-      --warn:#b91c1c;
-      --warn-bg:#fee2e2;
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --black:#111111;
+
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
       --gray:#6b7280;
       --gray-bg:#f3f4f6;
-      --black:#111111;
+
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1280px;
     }
 
     *{ box-sizing:border-box; }
 
-    body{
+    html,body{
       margin:0;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      padding:0;
+      background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-    .wrap{
-      max-width:1120px;
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:28px 18px 64px;
-    }
-
-    .topbar{
+      padding:0 22px;
+      min-height:60px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-      flex-wrap:wrap;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .back{
-      display:inline-flex;
+    .brand{
+      display:flex;
       align-items:center;
-      gap:8px;
-      color:#374151;
-      font-size:14px;
+      gap:10px;
+      font-size:18px;
       font-weight:800;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
       box-shadow:var(--shadow-soft);
     }
 
-    .top-actions{
+    .nav-links{
       display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
     }
 
     .ghost-btn{
@@ -84,36 +175,78 @@
       background:#fff;
       box-shadow:var(--shadow-soft);
       font-size:14px;
-      font-weight:900;
+      font-weight:700;
       color:#111827;
       cursor:pointer;
     }
 
-    .hero{
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
       background:#fff;
       border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      padding:22px;
-      margin-bottom:18px;
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
     }
 
     .hero-title{
       margin:0;
-      font-size:28px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
     }
 
     .hero-sub{
-      margin-top:8px;
+      margin-top:14px;
+      max-width:860px;
       color:var(--muted);
-      font-size:14px;
+      font-size:16px;
       line-height:1.9;
     }
 
     .hero-meta{
-      margin-top:14px;
+      margin-top:20px;
       display:flex;
       gap:10px;
       flex-wrap:wrap;
@@ -127,7 +260,8 @@
       border-radius:999px;
       background:#fff;
       font-size:12px;
-      font-weight:1000;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
     }
 
     .toolbar{
@@ -135,17 +269,11 @@
       justify-content:space-between;
       align-items:center;
       gap:12px;
-      margin-bottom:16px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
-    .toolbar-left{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
+    .toolbar-left,
     .toolbar-right{
       display:flex;
       gap:10px;
@@ -153,11 +281,12 @@
       align-items:center;
     }
 
-    .input, .select{
-      min-height:44px;
+    .input,
+    .select{
+      min-height:46px;
       padding:10px 14px;
-      border:1px solid rgba(17,24,39,.12);
-      border-radius:14px;
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:18px;
       background:#fff;
       color:#111827;
       font-size:14px;
@@ -166,16 +295,21 @@
     }
 
     .input{
-      min-width:250px;
+      min-width:280px;
+    }
+
+    .input:focus,
+    .select:focus{
+      border-color:rgba(0,0,0,.24);
     }
 
     .grid{
       display:grid;
       grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:16px;
+      gap:18px;
     }
 
-    @media (max-width:880px){
+    @media (max-width:980px){
       .grid{
         grid-template-columns:1fr;
       }
@@ -183,14 +317,14 @@
 
     .ticket-card{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
       box-shadow:var(--shadow);
       overflow:hidden;
     }
 
     .ticket-head{
-      padding:18px 18px 14px;
+      padding:20px 20px 16px;
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
@@ -200,21 +334,22 @@
       justify-content:space-between;
       align-items:flex-start;
       gap:12px;
+      flex-wrap:wrap;
     }
 
     .ticket-title{
-      font-size:18px;
-      font-weight:1000;
-      line-height:1.5;
       margin:0;
-      letter-spacing:-.01em;
+      font-size:22px;
+      line-height:1.35;
+      font-weight:800;
+      letter-spacing:-.02em;
     }
 
     .ticket-sub{
-      margin-top:6px;
+      margin-top:8px;
       font-size:13px;
       color:var(--muted);
-      line-height:1.8;
+      line-height:1.9;
     }
 
     .status{
@@ -224,7 +359,7 @@
       padding:7px 10px;
       border-radius:999px;
       font-size:12px;
-      font-weight:1000;
+      font-weight:800;
       white-space:nowrap;
     }
 
@@ -239,32 +374,33 @@
     }
 
     .status-invalid{
-      background:var(--warn-bg);
-      color:var(--warn);
+      background:var(--red-bg);
+      color:var(--red);
     }
 
     .ticket-body{
-      padding:18px;
+      padding:20px;
     }
 
     .ticket-layout{
       display:grid;
-      grid-template-columns:1fr 220px;
+      grid-template-columns:minmax(0,1fr) 240px;
       gap:16px;
       align-items:start;
     }
 
-    @media (max-width:640px){
+    @media (max-width:680px){
       .ticket-layout{
         grid-template-columns:1fr;
       }
     }
 
     .info-box{
-      border:1px solid var(--line);
-      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:22px;
       background:#fff;
-      padding:14px;
+      padding:16px;
+      box-shadow:var(--shadow-soft);
     }
 
     .kv{
@@ -283,22 +419,22 @@
     .k{
       font-size:12px;
       color:var(--muted);
-      line-height:1.6;
+      line-height:1.7;
     }
 
     .v{
       font-size:13px;
       color:#111827;
-      font-weight:900;
-      line-height:1.8;
+      font-weight:800;
+      line-height:1.9;
       word-break:break-word;
     }
 
     .qr-box{
-      border:1px solid var(--line);
-      border-radius:20px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:24px;
       background:#fff;
-      padding:14px;
+      padding:16px;
       text-align:center;
       box-shadow:var(--shadow-soft);
     }
@@ -306,8 +442,8 @@
     .qr-title{
       font-size:12px;
       color:var(--muted);
-      font-weight:1000;
-      margin-bottom:10px;
+      font-weight:800;
+      margin-bottom:12px;
       letter-spacing:.04em;
     }
 
@@ -315,12 +451,12 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      min-height:214px;
+      min-height:220px;
     }
 
     canvas.qr{
       background:#fff;
-      border-radius:12px;
+      border-radius:14px;
       padding:10px;
       max-width:100%;
       height:auto;
@@ -330,55 +466,32 @@
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      margin-top:14px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111827;
-      font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
-    }
-
-    .btn-primary{
-      background:var(--black);
-      color:#fff;
-      border-color:var(--black);
+      margin-top:16px;
     }
 
     .notice{
-      margin-top:14px;
+      margin-top:16px;
       font-size:12px;
       color:var(--muted);
-      line-height:1.9;
+      line-height:1.95;
       white-space:pre-wrap;
       word-break:break-word;
+      border-radius:18px;
+      padding:14px;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.05);
     }
 
-    .empty, .loading{
-      padding:40px 18px;
+    .empty,
+    .loading{
+      padding:42px 18px;
       text-align:center;
       color:var(--muted);
       font-size:14px;
-      line-height:1.9;
+      line-height:1.95;
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
       box-shadow:var(--shadow);
     }
 
@@ -402,7 +515,7 @@
       width:min(560px, 100%);
       background:#fff;
       border:1px solid var(--line);
-      border-radius:26px;
+      border-radius:30px;
       box-shadow:0 28px 80px rgba(15,23,42,.22);
       overflow:hidden;
     }
@@ -415,9 +528,9 @@
 
     .modal-title{
       margin:0;
-      font-size:20px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
     }
 
     .modal-sub{
@@ -450,37 +563,164 @@
       margin-top:12px;
       font-size:13px;
       color:var(--muted);
-      line-height:1.8;
+      line-height:1.85;
       text-align:center;
+      word-break:break-word;
     }
 
     .mono{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
     }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .input{
+        min-width:unset;
+        width:100%;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="back" href="member.html">← 返回會員中心</a>
-      <div class="top-actions">
-        <a class="ghost-btn" href="index.html">活動首頁</a>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">T</span>
+          <span>Tickets</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="member.html">會員中心</a>
+          <a class="nav-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="btn" href="member.html">Account</a>
+        </div>
       </div>
     </div>
 
-    <div class="hero">
-      <h1 class="hero-title">我的票券</h1>
-      <div class="hero-sub">
-        這裡會顯示你名下所有可入場的票券。<br>
-        每一張票都有獨立 QR Code，入場時請直接出示單張票券頁面。
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" href="member.html">← 返回會員中心</a>
+        <div class="row">
+          <a class="ghost-btn" href="index.html">活動首頁</a>
+        </div>
       </div>
-      <div class="hero-meta">
-        <span class="pill" id="heroUserText">登入狀態：讀取中…</span>
-        <span class="pill" id="heroCountText">票券數量：–</span>
-      </div>
-    </div>
 
-    <div id="app" class="loading">載入中…</div>
+      <div class="hero">
+        <h1 class="hero-title">My Tickets</h1>
+        <div class="hero-sub">
+          這裡會顯示你名下所有票券。每一張票都有獨立 QR Code，
+          入場時請直接出示單張票券頁面。
+        </div>
+        <div class="hero-meta">
+          <span class="pill" id="heroUserText">登入狀態：讀取中…</span>
+          <span class="pill" id="heroCountText">票券數量：–</span>
+        </div>
+      </div>
+
+      <div id="app" class="loading">載入中…</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
+          <a class="footer-link" href="member.html">帳號資料</a>
+          <a class="footer-link" href="campus-verify.html">校園驗證</a>
+        </div>
+
+        <div>
+          <div class="footer-title">About</div>
+          <a class="footer-link" href="index.html">Tickets</a>
+          <a class="footer-link" href="dashboard.html">管理後台</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        每張票券皆對應獨立狀態與 QR Code，請以單張票券頁面為準。
+      </div>
+    </main>
   </div>
 
   <div class="modal-back" id="modalBack">
@@ -618,9 +858,7 @@
       if (!ticket) return;
 
       modalTitle.textContent = ticket.eventTitle || "票券";
-      modalSub.innerHTML = `
-        ${esc(ticket.ticketTypeName || "-")}｜${esc(ticket.seatLabel || "-")}
-      `;
+      modalSub.innerHTML = `${esc(ticket.ticketTypeName || "-")}｜${esc(ticket.seatLabel || "-")}`;
 
       modalBody.innerHTML = `
         <div class="big-qr-wrap">
@@ -642,10 +880,7 @@
       await QRCode.toCanvas(
         canvas,
         ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`,
-        {
-          width: 280,
-          margin: 2
-        }
+        { width: 280, margin: 2 }
       );
       canvas.classList.add("qr");
     }
@@ -666,6 +901,107 @@
         const ta = toDate(a.createdAt)?.getTime() || 0;
         const tb = toDate(b.createdAt)?.getTime() || 0;
         return tb - ta;
+      });
+    }
+
+    function renderTicketGrid(tickets){
+      const ticketGrid = document.getElementById("ticketGrid");
+
+      if (!tickets.length) {
+        ticketGrid.innerHTML = `
+          <div class="empty" style="grid-column:1/-1;">
+            找不到符合條件的票券。
+          </div>
+        `;
+        return;
+      }
+
+      ticketGrid.innerHTML = tickets.map((ticket, index) => {
+        const meta = getTicketStatusMeta(ticket);
+        const qrCanvasId = `qr_${index}_${ticket.id}`;
+
+        return `
+          <div class="ticket-card">
+            <div class="ticket-head">
+              <div class="ticket-head-top">
+                <div>
+                  <h2 class="ticket-title">${esc(ticket.eventTitle || "未命名活動")}</h2>
+                  <div class="ticket-sub">
+                    票種：${esc(ticket.ticketTypeName || "-")}<br>
+                    座位：${esc(ticket.seatLabel || "-")}
+                  </div>
+                </div>
+                <span class="status ${meta.className}">${esc(meta.text)}</span>
+              </div>
+            </div>
+
+            <div class="ticket-body">
+              <div class="ticket-layout">
+                <div class="info-box">
+                  <div class="kv">
+                    <div class="k">票券 ID</div>
+                    <div class="v mono">${esc(ticket.id)}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">訂單 ID</div>
+                    <div class="v mono">${esc(ticket.orderId || "-")}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">持票者</div>
+                    <div class="v">${esc(ticket.email || "-")}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">票價</div>
+                    <div class="v">${esc(formatPrice(ticket.ticketPrice || 0))}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">建立時間</div>
+                    <div class="v">${esc(formatDateTime(ticket.createdAt))}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">核銷時間</div>
+                    <div class="v">${esc(formatDateTime(ticket.checkedInAt))}</div>
+                  </div>
+                  <div class="kv">
+                    <div class="k">核銷入口</div>
+                    <div class="v">${esc(ticket.checkedInGate || "-")}</div>
+                  </div>
+                </div>
+
+                <div class="qr-box">
+                  <div class="qr-title">入場 QR Code</div>
+                  <div class="qr-canvas-wrap">
+                    <canvas id="${qrCanvasId}"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ticket-actions">
+                <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
+              </div>
+
+              <div class="notice">
+                ${meta.className === "status-valid"
+                  ? "此票券目前可正常入場。請在現場出示此 QR Code 給工作人員掃描。"
+                  : meta.className === "status-used"
+                  ? `此票券已完成入場核銷${ticket.checkedInGate ? `（入口：${ticket.checkedInGate}）` : ""}。`
+                  : "此票券目前不可入場，若有問題請洽主辦單位或服務台。"}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      tickets.forEach(async (ticket, index) => {
+        const qrCanvasId = `qr_${index}_${ticket.id}`;
+        await drawQrToCanvas(
+          qrCanvasId,
+          ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`
+        );
+      });
+
+      document.querySelectorAll("[data-view-ticket]").forEach(btn => {
+        btn.onclick = () => showTicketModal(btn.dataset.viewTicket);
       });
     }
 
@@ -702,9 +1038,8 @@
 
       const searchInput = document.getElementById("searchInput");
       const statusFilter = document.getElementById("statusFilter");
-      const ticketGrid = document.getElementById("ticketGrid");
 
-      const paint = async () => {
+      async function paint(){
         const q = lower(searchInput.value);
         const f = statusFilter.value;
 
@@ -731,104 +1066,8 @@
           return hay.includes(q);
         });
 
-        if (!filtered.length) {
-          ticketGrid.innerHTML = `
-            <div class="empty" style="grid-column:1/-1;">
-              找不到符合條件的票券。
-            </div>
-          `;
-          return;
-        }
-
-        ticketGrid.innerHTML = filtered.map((ticket, index) => {
-          const meta = getTicketStatusMeta(ticket);
-          const qrCanvasId = `qr_${index}_${ticket.id}`;
-
-          return `
-            <div class="ticket-card">
-              <div class="ticket-head">
-                <div class="ticket-head-top">
-                  <div>
-                    <h2 class="ticket-title">${esc(ticket.eventTitle || "未命名活動")}</h2>
-                    <div class="ticket-sub">
-                      票種：${esc(ticket.ticketTypeName || "-")}<br>
-                      座位：${esc(ticket.seatLabel || "-")}
-                    </div>
-                  </div>
-                  <span class="status ${meta.className}">${esc(meta.text)}</span>
-                </div>
-              </div>
-
-              <div class="ticket-body">
-                <div class="ticket-layout">
-                  <div class="info-box">
-                    <div class="kv">
-                      <div class="k">票券 ID</div>
-                      <div class="v mono">${esc(ticket.id)}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">訂單 ID</div>
-                      <div class="v mono">${esc(ticket.orderId || "-")}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">持票者</div>
-                      <div class="v">${esc(ticket.email || "-")}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">票價</div>
-                      <div class="v">${esc(formatPrice(ticket.ticketPrice || 0))}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">建立時間</div>
-                      <div class="v">${esc(formatDateTime(ticket.createdAt))}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">核銷時間</div>
-                      <div class="v">${esc(formatDateTime(ticket.checkedInAt))}</div>
-                    </div>
-                    <div class="kv">
-                      <div class="k">核銷入口</div>
-                      <div class="v">${esc(ticket.checkedInGate || "-")}</div>
-                    </div>
-                  </div>
-
-                  <div class="qr-box">
-                    <div class="qr-title">入場 QR Code</div>
-                    <div class="qr-canvas-wrap">
-                      <canvas id="${qrCanvasId}"></canvas>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="ticket-actions">
-                  <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
-                </div>
-
-                <div class="notice">
-                  ${meta.className === "status-valid"
-                    ? "此票券目前可正常入場。請在現場出示此 QR Code 給工作人員掃描。"
-                    : meta.className === "status-used"
-                    ? `此票券已完成入場核銷${ticket.checkedInGate ? `（入口：${ticket.checkedInGate}）` : ""}。`
-                    : "此票券目前不可入場，若有問題請洽主辦單位或服務台。"}
-                </div>
-              </div>
-            </div>
-          `;
-        }).join("");
-
-        for (let i = 0; i < filtered.length; i++) {
-          const ticket = filtered[i];
-          const qrCanvasId = `qr_${i}_${ticket.id}`;
-          await drawQrToCanvas(
-            qrCanvasId,
-            ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`
-          );
-        }
-
-        document.querySelectorAll("[data-view-ticket]").forEach(btn => {
-          btn.onclick = () => showTicketModal(btn.dataset.viewTicket);
-        });
-      };
+        renderTicketGrid(filtered);
+      }
 
       searchInput.addEventListener("input", paint);
       statusFilter.addEventListener("change", paint);

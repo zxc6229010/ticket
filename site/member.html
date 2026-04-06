@@ -1,967 +1,1219 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>會員中心</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Account</title>
 
-<style>
-:root{
-  --bg:#f5f7fb;
-  --card:#fff;
-  --text:#111827;
-  --muted:#6b7280;
-  --line:rgba(17,24,39,.08);
-  --shadow:0 18px 50px rgba(15,23,42,.08);
-  --shadow-soft:0 10px 30px rgba(15,23,42,.05);
-  --black:#111;
-  --ok:#166534;
-  --ok-bg:#dcfce7;
-  --warn:#b91c1c;
-  --warn-bg:#fee2e2;
-  --blue:#1d4ed8;
-  --blue-bg:#dbeafe;
-  --gray:#6b7280;
-  --gray-bg:#f3f4f6;
-}
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --black:#111111;
+      --white:#ffffff;
 
-*{ box-sizing:border-box; }
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
 
-body{
-  margin:0;
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-    linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
-}
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1280px;
+    }
 
-a{ color:inherit; text-decoration:none; }
+    *{ box-sizing:border-box; }
 
-.wrap{
-  max-width:1120px;
-  margin:0 auto;
-  padding:28px 18px 64px;
-}
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
 
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:18px;
-  flex-wrap:wrap;
-}
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-.back{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  color:#374151;
-  font-size:14px;
-  font-weight:800;
-  padding:10px 14px;
-  border-radius:999px;
-  background:rgba(255,255,255,.8);
-  border:1px solid var(--line);
-  box-shadow:var(--shadow-soft);
-}
+    .shell{
+      min-height:100vh;
+    }
 
-.top-actions{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
 
-.ghost-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:42px;
-  padding:10px 16px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:#fff;
-  box-shadow:var(--shadow-soft);
-  font-size:14px;
-  font-weight:900;
-  color:#111827;
-  cursor:pointer;
-}
+    .nav{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 22px;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
 
-.hero{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:28px;
-  box-shadow:var(--shadow);
-  padding:22px;
-  margin-bottom:18px;
-}
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
 
-.hero-title{
-  margin:0;
-  font-size:28px;
-  font-weight:1000;
-  letter-spacing:-.02em;
-}
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
 
-.hero-sub{
-  margin-top:8px;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.9;
-}
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
 
-.hero-meta{
-  margin-top:14px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
 
-.pill{
-  display:inline-flex;
-  align-items:center;
-  padding:7px 11px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:#fff;
-  font-size:12px;
-  font-weight:1000;
-}
+    .nav-link:hover{
+      color:var(--text);
+    }
 
-.layout{
-  display:grid;
-  grid-template-columns:280px minmax(0,1fr);
-  gap:18px;
-  align-items:start;
-}
+    .nav-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
-@media (max-width:960px){
-  .layout{
-    grid-template-columns:1fr;
-  }
-}
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
+    }
 
-.sidebar{
-  position:sticky;
-  top:18px;
-  display:grid;
-  gap:14px;
-}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+    }
 
-@media (max-width:960px){
-  .sidebar{
-    position:static;
-  }
-}
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
 
-.side-card, .content-card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:24px;
-  box-shadow:var(--shadow);
-  overflow:hidden;
-}
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
 
-.side-card-body{
-  padding:14px;
-}
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
 
-.menu{
-  display:grid;
-  gap:8px;
-}
+    .btn-danger{
+      color:var(--red);
+      border-color:rgba(185,28,28,.16);
+      background:#fff;
+    }
 
-.menu-btn{
-  width:100%;
-  text-align:left;
-  min-height:46px;
-  padding:12px 14px;
-  border:none;
-  border-radius:14px;
-  background:#fff;
-  color:#111827;
-  font-size:14px;
-  font-weight:1000;
-  cursor:pointer;
-  border:1px solid transparent;
-}
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
 
-.menu-btn.active{
-  background:#111827;
-  color:#fff;
-}
+    .ghost-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      font-size:14px;
+      font-weight:700;
+      color:#111827;
+      cursor:pointer;
+    }
 
-.menu-btn:hover{
-  border-color:var(--line);
-}
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
 
-.content-card{
-  padding:20px;
-}
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
 
-.section{
-  display:none;
-}
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
 
-.section.active{
-  display:block;
-}
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
 
-.section-title{
-  margin:0;
-  font-size:22px;
-  font-weight:1000;
-  letter-spacing:-.02em;
-}
+    .hero-title{
+      margin:0;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
 
-.section-sub{
-  margin-top:8px;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.9;
-}
+    .hero-sub{
+      margin-top:14px;
+      max-width:860px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  margin-top:18px;
-}
+    .hero-meta{
+      margin-top:20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
-@media (max-width:760px){
-  .grid{
-    grid-template-columns:1fr;
-  }
-}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
 
-.info-box{
-  border:1px solid var(--line);
-  border-radius:18px;
-  background:#fff;
-  padding:16px;
-  box-shadow:var(--shadow-soft);
-}
+    .layout{
+      display:grid;
+      grid-template-columns:280px minmax(0,1fr);
+      gap:20px;
+      align-items:start;
+    }
 
-.info-label{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:1000;
-  letter-spacing:.04em;
-}
+    @media (max-width:980px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
 
-.info-value{
-  margin-top:8px;
-  font-size:15px;
-  font-weight:1000;
-  color:#111827;
-  line-height:1.8;
-  word-break:break-word;
-}
+    .sidebar{
+      position:sticky;
+      top:82px;
+    }
 
-.info-note{
-  margin-top:6px;
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.8;
-}
+    @media (max-width:980px){
+      .sidebar{
+        position:static;
+      }
+    }
 
-.notice{
-  margin-top:18px;
-  padding:14px 16px;
-  border-radius:18px;
-  background:#fff;
-  border:1px solid var(--line);
-  font-size:13px;
-  line-height:1.9;
-  color:#4b5563;
-}
+    .side-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:30px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      padding:14px;
+    }
 
-.notice.ok{
-  background:var(--ok-bg);
-  border-color:rgba(22,101,52,.12);
-  color:var(--ok);
-}
+    .menu{
+      display:grid;
+      gap:8px;
+    }
 
-.notice.warn{
-  background:var(--warn-bg);
-  border-color:rgba(185,28,28,.12);
-  color:var(--warn);
-}
+    .menu-btn{
+      width:100%;
+      text-align:left;
+      min-height:48px;
+      padding:12px 16px;
+      border:none;
+      border-radius:16px;
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      border:1px solid transparent;
+      transition:background .12s ease, color .12s ease, border-color .12s ease;
+    }
 
-.notice.info{
-  background:var(--blue-bg);
-  border-color:rgba(29,78,216,.12);
-  color:var(--blue);
-}
+    .menu-btn:hover{
+      border-color:var(--line);
+    }
 
-.row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-}
+    .menu-btn.active{
+      background:#111827;
+      color:#fff;
+    }
 
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:44px;
-  padding:10px 16px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:#fff;
-  color:#111827;
-  font-size:14px;
-  font-weight:1000;
-  cursor:pointer;
-  box-shadow:var(--shadow-soft);
-}
+    .content-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:34px;
+      box-shadow:var(--shadow);
+      padding:26px 24px;
+      min-height:520px;
+    }
 
-.btn-primary{
-  background:var(--black);
-  color:#fff;
-  border-color:var(--black);
-}
+    .section{
+      display:none;
+    }
 
-.btn-danger{
-  color:#b91c1c;
-  border-color:rgba(185,28,28,.18);
-}
+    .section.active{
+      display:block;
+    }
 
-.list{
-  display:grid;
-  gap:12px;
-  margin-top:18px;
-}
+    .section-title{
+      margin:0;
+      font-size:clamp(28px, 4vw, 42px);
+      line-height:1.08;
+      letter-spacing:-.04em;
+      font-weight:800;
+    }
 
-.item{
-  border:1px solid var(--line);
-  border-radius:20px;
-  background:#fff;
-  padding:16px;
-  box-shadow:var(--shadow-soft);
-}
+    .section-sub{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.9;
+      max-width:860px;
+    }
 
-.item-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-  flex-wrap:wrap;
-}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:20px;
+    }
 
-.item-title{
-  font-size:16px;
-  font-weight:1000;
-  line-height:1.6;
-}
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
 
-.item-sub{
-  margin-top:6px;
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.9;
-}
+    .info-box{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:24px;
+      background:#fff;
+      padding:18px;
+      box-shadow:var(--shadow-soft);
+    }
 
-.status{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:7px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:1000;
-  white-space:nowrap;
-}
+    .info-label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.04em;
+    }
 
-.status-ok{
-  background:var(--ok-bg);
-  color:var(--ok);
-}
+    .info-value{
+      margin-top:10px;
+      font-size:16px;
+      font-weight:800;
+      color:#111827;
+      line-height:1.8;
+      word-break:break-word;
+    }
 
-.status-warn{
-  background:var(--warn-bg);
-  color:var(--warn);
-}
+    .info-note{
+      margin-top:8px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
 
-.status-gray{
-  background:var(--gray-bg);
-  color:var(--gray);
-}
+    .notice{
+      margin-top:18px;
+      padding:16px 18px;
+      border-radius:22px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-size:13px;
+      line-height:1.95;
+      color:#4b5563;
+      box-shadow:var(--shadow-soft);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
 
-.loading, .empty{
-  margin-top:18px;
-  padding:18px;
-  text-align:center;
-  border:1px solid var(--line);
-  border-radius:18px;
-  background:#fff;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.9;
-}
+    .notice.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.12);
+      color:var(--green);
+      box-shadow:none;
+    }
 
-.mono{
-  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-}
+    .notice.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.12);
+      color:var(--red);
+      box-shadow:none;
+    }
 
-.hidden{
-  display:none !important;
-}
-</style>
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
+      color:var(--blue);
+      box-shadow:none;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .list{
+      display:grid;
+      gap:14px;
+      margin-top:20px;
+    }
+
+    .item{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:24px;
+      background:#fff;
+      padding:18px;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .item-title{
+      font-size:18px;
+      font-weight:800;
+      line-height:1.5;
+      letter-spacing:-.02em;
+    }
+
+    .item-sub{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.95;
+    }
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+      border:1px solid transparent;
+    }
+
+    .status-ok{
+      background:var(--green-bg);
+      color:var(--green);
+    }
+
+    .status-warn{
+      background:var(--red-bg);
+      color:var(--red);
+    }
+
+    .status-gray{
+      background:var(--gray-bg);
+      color:var(--gray);
+    }
+
+    .loading,
+    .empty{
+      margin-top:18px;
+      padding:24px 18px;
+      text-align:center;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:24px;
+      background:#fff;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.95;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:900px){
+      .footer{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .content-card{
+        padding:22px 18px;
+        border-radius:28px;
+      }
+
+      .side-card{
+        border-radius:24px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-<div class="wrap">
-  <div class="topbar">
-    <a class="back" href="index.html">← 返回首頁</a>
-    <div class="top-actions">
-      <a class="ghost-btn" href="my-tickets.html">我的票券</a>
-      <button class="ghost-btn" id="logoutTopBtn">登出</button>
-    </div>
-  </div>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">T</span>
+          <span>Tickets</span>
+        </a>
 
-  <div id="gate" class="empty">載入中…</div>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+          <a class="nav-link" href="my-orders.html">我的訂單</a>
+        </div>
 
-  <div id="app" class="hidden">
-    <div class="hero">
-      <h1 class="hero-title">會員中心</h1>
-      <div class="hero-sub">
-        在這裡可以查看你的基本資料、校園驗證、訂單與票券狀態。<br>
-        基本資料中的姓名、性別、生日比照拓元模式，會員不可自行修改。
-      </div>
-      <div class="hero-meta">
-        <span class="pill" id="heroUserText">登入帳號：-</span>
-        <span class="pill" id="heroVerifyText">校園驗證：-</span>
+        <div class="nav-actions">
+          <a class="btn" href="my-tickets.html">My Tickets</a>
+        </div>
       </div>
     </div>
 
-    <div class="layout">
-      <div class="sidebar">
-        <div class="side-card">
-          <div class="side-card-body">
-            <div class="menu">
-              <button class="menu-btn active" data-tab="profile">基本資料</button>
-              <button class="menu-btn" data-tab="orders">我的訂單</button>
-              <button class="menu-btn" data-tab="tickets">我的票券</button>
-              <button class="menu-btn" data-tab="security">帳號安全</button>
-            </div>
-          </div>
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" href="index.html">← 返回首頁</a>
+        <div class="row">
+          <a class="ghost-btn" href="my-tickets.html">我的票券</a>
+          <button class="ghost-btn" id="logoutTopBtn">登出</button>
         </div>
       </div>
 
-      <div class="content-card">
-        <!-- 基本資料 -->
-        <section class="section active" id="tab-profile">
-          <h2 class="section-title">基本資料</h2>
-          <div class="section-sub">
-            姓名、性別、生日為註冊後固定資料，會員不可自行修改。<br>
-            如資料有誤，請聯絡主辦單位或服務窗口協助處理。
-          </div>
+      <div id="gate" class="empty">載入中…</div>
 
-          <div class="grid">
-            <div class="info-box">
-              <div class="info-label">姓名</div>
-              <div class="info-value" id="profileName">-</div>
-              <div class="info-note">此欄位不可自行修改</div>
+      <div id="app" class="hidden">
+        <div class="hero">
+          <h1 class="hero-title">Account</h1>
+          <div class="hero-sub">
+            在這裡查看你的基本資料、校園驗證、訂單與票券狀態。
+            姓名、性別、生日比照正式票務平台模式，會員不可自行修改。
+          </div>
+          <div class="hero-meta">
+            <span class="pill" id="heroUserText">登入帳號：-</span>
+            <span class="pill" id="heroVerifyText">校園驗證：-</span>
+          </div>
+        </div>
+
+        <div class="layout">
+          <aside class="sidebar">
+            <div class="side-card">
+              <div class="menu">
+                <button class="menu-btn active" data-tab="profile">基本資料</button>
+                <button class="menu-btn" data-tab="orders">我的訂單</button>
+                <button class="menu-btn" data-tab="tickets">我的票券</button>
+                <button class="menu-btn" data-tab="security">帳號安全</button>
+              </div>
             </div>
+          </aside>
 
-            <div class="info-box">
-              <div class="info-label">性別</div>
-              <div class="info-value" id="profileGender">-</div>
-              <div class="info-note">此欄位不可自行修改</div>
-            </div>
+          <section class="content-card">
+            <section class="section active" id="tab-profile">
+              <h2 class="section-title">基本資料</h2>
+              <div class="section-sub">
+                姓名、性別、生日為註冊後固定資料，會員不可自行修改。
+                如資料有誤，請聯絡主辦單位或服務窗口協助處理。
+              </div>
 
-            <div class="info-box">
-              <div class="info-label">生日</div>
-              <div class="info-value" id="profileBirthday">-</div>
-              <div class="info-note">此欄位不可自行修改</div>
-            </div>
+              <div class="grid">
+                <div class="info-box">
+                  <div class="info-label">姓名</div>
+                  <div class="info-value" id="profileName">-</div>
+                  <div class="info-note">此欄位不可自行修改</div>
+                </div>
 
-            <div class="info-box">
-              <div class="info-label">手機號碼</div>
-              <div class="info-value" id="profilePhone">-</div>
-              <div class="info-note">目前顯示註冊資料</div>
-            </div>
+                <div class="info-box">
+                  <div class="info-label">性別</div>
+                  <div class="info-value" id="profileGender">-</div>
+                  <div class="info-note">此欄位不可自行修改</div>
+                </div>
 
-            <div class="info-box">
-              <div class="info-label">電子郵件</div>
-              <div class="info-value" id="profileEmail">-</div>
-              <div class="info-note">登入帳號 / 聯絡用信箱</div>
-            </div>
+                <div class="info-box">
+                  <div class="info-label">生日</div>
+                  <div class="info-value" id="profileBirthday">-</div>
+                  <div class="info-note">此欄位不可自行修改</div>
+                </div>
 
-            <div class="info-box">
-              <div class="info-label">會員編號</div>
-              <div class="info-value mono" id="profileUid">-</div>
-              <div class="info-note">系統自動產生</div>
-            </div>
-          </div>
+                <div class="info-box">
+                  <div class="info-label">手機號碼</div>
+                  <div class="info-value" id="profilePhone">-</div>
+                  <div class="info-note">目前顯示註冊資料</div>
+                </div>
 
-          <div class="notice info" id="profileCustomNotice">
-            系統尚未設定會員說明欄位。
-          </div>
+                <div class="info-box">
+                  <div class="info-label">電子郵件</div>
+                  <div class="info-value" id="profileEmail">-</div>
+                  <div class="info-note">登入帳號 / 聯絡用信箱</div>
+                </div>
 
-          <div class="notice" id="verifyNoticeBox">
-            載入校園驗證狀態中…
-          </div>
+                <div class="info-box">
+                  <div class="info-label">會員編號</div>
+                  <div class="info-value mono" id="profileUid">-</div>
+                  <div class="info-note">系統自動產生</div>
+                </div>
+              </div>
 
-          <div class="row" style="margin-top:18px;">
-            <a class="btn btn-primary" href="campus-verify.html">前往校園驗證</a>
-          </div>
-        </section>
+              <div class="notice info" id="profileCustomNotice">
+                系統尚未設定會員說明欄位。
+              </div>
 
-        <!-- 訂單 -->
-        <section class="section" id="tab-orders">
-          <h2 class="section-title">我的訂單</h2>
-          <div class="section-sub">
-            這裡會顯示你建立過的報名 / 購票訂單。<br>
-            一筆訂單可能對應多張票券。
-          </div>
+              <div class="notice" id="verifyNoticeBox">
+                載入校園驗證狀態中…
+              </div>
 
-          <div id="ordersWrap" class="loading">載入訂單中…</div>
-        </section>
+              <div class="row" style="margin-top:18px;">
+                <a class="btn btn-primary" href="campus-verify.html">前往校園驗證</a>
+              </div>
+            </section>
 
-        <!-- 票券 -->
-        <section class="section" id="tab-tickets">
-          <h2 class="section-title">我的票券</h2>
-          <div class="section-sub">
-            每張票券都有獨立 QR Code，入場時請出示單張票券。<br>
-            票券頁會顯示更完整的入場資訊。
-          </div>
+            <section class="section" id="tab-orders">
+              <h2 class="section-title">我的訂單</h2>
+              <div class="section-sub">
+                這裡會顯示你建立過的報名 / 購票訂單。
+                一筆訂單可能對應多張票券。
+              </div>
 
-          <div class="notice info">
-            建議你在活動當天直接打開「我的票券」頁面，方便現場快速出示 QR Code。
-          </div>
+              <div id="ordersWrap" class="loading">載入訂單中…</div>
+            </section>
 
-          <div class="row" style="margin-top:18px;">
-            <a class="btn btn-primary" href="my-tickets.html">前往我的票券</a>
-          </div>
+            <section class="section" id="tab-tickets">
+              <h2 class="section-title">我的票券</h2>
+              <div class="section-sub">
+                每張票券都有獨立 QR Code，入場時請出示單張票券。
+                票券頁會顯示更完整的入場資訊。
+              </div>
 
-          <div id="ticketSummaryWrap" class="list"></div>
-        </section>
+              <div class="notice info">
+                建議你在活動當天直接打開「我的票券」頁面，方便現場快速出示 QR Code。
+              </div>
 
-        <!-- 安全 -->
-        <section class="section" id="tab-security">
-          <h2 class="section-title">帳號安全</h2>
-          <div class="section-sub">
-            你可以從這裡進行密碼重設或登出帳號。
-          </div>
+              <div class="row" style="margin-top:18px;">
+                <a class="btn btn-primary" href="my-tickets.html">前往我的票券</a>
+              </div>
 
-          <div class="notice warn">
-            為了保護帳號安全，建議定期更新密碼，並避免與其他網站使用相同密碼。
-          </div>
+              <div id="ticketSummaryWrap" class="list"></div>
+            </section>
 
-          <div class="row" style="margin-top:18px;">
-            <button class="btn btn-primary" id="resetPasswordBtn">寄送重設密碼信</button>
-            <button class="btn btn-danger" id="logoutBtn">登出帳號</button>
-          </div>
+            <section class="section" id="tab-security">
+              <h2 class="section-title">帳號安全</h2>
+              <div class="section-sub">
+                你可以從這裡進行密碼重設或登出帳號。
+              </div>
 
-          <div class="notice hidden" id="securityMsg"></div>
-        </section>
+              <div class="notice warn">
+                為了保護帳號安全，建議定期更新密碼，並避免與其他網站使用相同密碼。
+              </div>
+
+              <div class="row" style="margin-top:18px;">
+                <button class="btn btn-primary" id="resetPasswordBtn">寄送重設密碼信</button>
+                <button class="btn btn-danger" id="logoutBtn">登出帳號</button>
+              </div>
+
+              <div class="notice hidden" id="securityMsg"></div>
+            </section>
+          </section>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
-<script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-    authDomain: "concert-1ff7e.firebaseapp.com",
-    projectId: "concert-1ff7e",
-    storageBucket: "concert-1ff7e.firebasestorage.app",
-    messagingSenderId: "704757384914",
-    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-  });
-}
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-const gate = document.getElementById("gate");
-const app = document.getElementById("app");
-
-const heroUserText = document.getElementById("heroUserText");
-const heroVerifyText = document.getElementById("heroVerifyText");
-
-const profileName = document.getElementById("profileName");
-const profileGender = document.getElementById("profileGender");
-const profileBirthday = document.getElementById("profileBirthday");
-const profilePhone = document.getElementById("profilePhone");
-const profileEmail = document.getElementById("profileEmail");
-const profileUid = document.getElementById("profileUid");
-const profileCustomNotice = document.getElementById("profileCustomNotice");
-const verifyNoticeBox = document.getElementById("verifyNoticeBox");
-
-const ordersWrap = document.getElementById("ordersWrap");
-const ticketSummaryWrap = document.getElementById("ticketSummaryWrap");
-
-const logoutBtn = document.getElementById("logoutBtn");
-const logoutTopBtn = document.getElementById("logoutTopBtn");
-const resetPasswordBtn = document.getElementById("resetPasswordBtn");
-const securityMsg = document.getElementById("securityMsg");
-
-let currentUser = null;
-let currentUserData = null;
-let orderCache = [];
-let ticketCache = [];
-
-function esc(value){
-  return String(value ?? "").replace(/[&<>"']/g, m => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[m]));
-}
-
-function norm(value){
-  return String(value ?? "").trim();
-}
-
-function lower(value){
-  return norm(value).toLowerCase();
-}
-
-function toDate(input){
-  if (!input) return null;
-  if (typeof input.toDate === "function") return input.toDate();
-  const d = new Date(input);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function formatDateTime(input){
-  const d = toDate(input);
-  if (!d) return "-";
-  return d.toLocaleString("zh-Hant", {
-    hour12:false,
-    year:"numeric",
-    month:"2-digit",
-    day:"2-digit",
-    hour:"2-digit",
-    minute:"2-digit"
-  });
-}
-
-function formatPrice(value){
-  const num = Number(value || 0);
-  if (!num) return "免費";
-  return `NT$ ${num.toLocaleString("zh-Hant")}`;
-}
-
-function getTicketStatusMeta(ticket){
-  const status = lower(ticket.status || "valid");
-  const checked = ticket.checkedIn === true || lower(ticket.checkinStatus || "") === "checked_in";
-
-  if (checked) {
-    return {
-      text: "已入場",
-      className: "status-gray"
-    };
-  }
-
-  if (status === "valid") {
-    return {
-      text: "可入場",
-      className: "status-ok"
-    };
-  }
-
-  return {
-    text:
-      status === "cancelled" ? "已取消" :
-      status === "void" ? "已作廢" :
-      status === "refunded" ? "已退款" :
-      (status || "不可用"),
-    className: "status-warn"
-  };
-}
-
-function showGate(text){
-  gate.className = "empty";
-  gate.innerHTML = text;
-  gate.style.display = "block";
-  app.classList.add("hidden");
-}
-
-function showApp(){
-  gate.style.display = "none";
-  app.classList.remove("hidden");
-}
-
-function switchTab(tab){
-  document.querySelectorAll(".menu-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.tab === tab);
-  });
-
-  document.querySelectorAll(".section").forEach(section => {
-    section.classList.remove("active");
-  });
-
-  const target = document.getElementById(`tab-${tab}`);
-  if (target) target.classList.add("active");
-}
-
-document.querySelectorAll(".menu-btn").forEach(btn => {
-  btn.onclick = () => switchTab(btn.dataset.tab);
-});
-
-async function loadUserData(uid){
-  const snap = await db.collection("users").doc(uid).get();
-  return snap.exists ? (snap.data() || {}) : {};
-}
-
-async function loadOrders(uid){
-  try {
-    const snap = await db.collectionGroup("orders")
-      .where("uid", "==", uid)
-      .get();
-
-    const rows = [];
-    snap.forEach(docSnap => {
-      rows.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-    });
-
-    orderCache = rows.sort((a, b) => {
-      const ta = toDate(a.createdAt)?.getTime() || 0;
-      const tb = toDate(b.createdAt)?.getTime() || 0;
-      return tb - ta;
-    });
-
-    renderOrders();
-  } catch (e) {
-    console.error(e);
-    ordersWrap.className = "empty";
-    ordersWrap.innerHTML = "訂單載入失敗，請稍後再試。";
-  }
-}
-
-async function loadTickets(uid){
-  try {
-    const snap = await db.collectionGroup("tickets")
-      .where("uid", "==", uid)
-      .get();
-
-    const rows = [];
-    snap.forEach(docSnap => {
-      rows.push({
-        id: docSnap.id,
-        ...docSnap.data()
-      });
-    });
-
-    ticketCache = rows.sort((a, b) => {
-      const ta = toDate(a.createdAt)?.getTime() || 0;
-      const tb = toDate(b.createdAt)?.getTime() || 0;
-      return tb - ta;
-    });
-
-    renderTicketSummary();
-  } catch (e) {
-    console.error(e);
-    ticketSummaryWrap.innerHTML = `
-      <div class="empty">票券摘要載入失敗，請稍後再試。</div>
-    `;
-  }
-}
-
-function renderOrders(){
-  if (!orderCache.length) {
-    ordersWrap.className = "empty";
-    ordersWrap.innerHTML = "目前沒有任何訂單。";
-    return;
-  }
-
-  ordersWrap.className = "list";
-  ordersWrap.innerHTML = orderCache.map(order => `
-    <div class="item">
-      <div class="item-top">
+      <footer class="footer">
         <div>
-          <div class="item-title">${esc(order.eventTitle || "未命名活動")}</div>
-          <div class="item-sub">
-            訂單 ID：<span class="mono">${esc(order.id)}</span><br>
-            票種：${esc(order.ticketTypeName || "-")}<br>
-            張數：${esc(order.quantity || 1)}<br>
-            金額：${esc(formatPrice(order.totalAmount || 0))}<br>
-            建立時間：${esc(formatDateTime(order.createdAt))}
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Support</div>
+          <a class="footer-link" href="campus-verify.html">校園驗證</a>
+          <a class="footer-link" href="member.html">帳號安全</a>
+        </div>
+
+        <div>
+          <div class="footer-title">About</div>
+          <a class="footer-link" href="index.html">Tickets</a>
+          <a class="footer-link" href="dashboard.html">管理後台</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        會員中心僅顯示目前登入帳號的個人資料、訂單與票券內容。
+      </div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const gate = document.getElementById("gate");
+    const app = document.getElementById("app");
+
+    const heroUserText = document.getElementById("heroUserText");
+    const heroVerifyText = document.getElementById("heroVerifyText");
+
+    const profileName = document.getElementById("profileName");
+    const profileGender = document.getElementById("profileGender");
+    const profileBirthday = document.getElementById("profileBirthday");
+    const profilePhone = document.getElementById("profilePhone");
+    const profileEmail = document.getElementById("profileEmail");
+    const profileUid = document.getElementById("profileUid");
+    const profileCustomNotice = document.getElementById("profileCustomNotice");
+    const verifyNoticeBox = document.getElementById("verifyNoticeBox");
+
+    const ordersWrap = document.getElementById("ordersWrap");
+    const ticketSummaryWrap = document.getElementById("ticketSummaryWrap");
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const logoutTopBtn = document.getElementById("logoutTopBtn");
+    const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+    const securityMsg = document.getElementById("securityMsg");
+
+    let currentUser = null;
+    let currentUserData = null;
+    let orderCache = [];
+    let ticketCache = [];
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
+
+    function formatPrice(value){
+      const num = Number(value || 0);
+      if (!num) return "免費";
+      return `NT$ ${num.toLocaleString("zh-Hant")}`;
+    }
+
+    function getTicketStatusMeta(ticket){
+      const status = lower(ticket.status || "valid");
+      const checked = ticket.checkedIn === true || lower(ticket.checkinStatus || "") === "checked_in";
+
+      if (checked) {
+        return {
+          text: "已入場",
+          className: "status-gray"
+        };
+      }
+
+      if (status === "valid") {
+        return {
+          text: "可入場",
+          className: "status-ok"
+        };
+      }
+
+      return {
+        text:
+          status === "cancelled" ? "已取消" :
+          status === "void" ? "已作廢" :
+          status === "refunded" ? "已退款" :
+          (status || "不可用"),
+        className: "status-warn"
+      };
+    }
+
+    function showGate(text){
+      gate.className = "empty";
+      gate.innerHTML = text;
+      gate.style.display = "block";
+      app.classList.add("hidden");
+    }
+
+    function showApp(){
+      gate.style.display = "none";
+      app.classList.remove("hidden");
+    }
+
+    function switchTab(tab){
+      document.querySelectorAll(".menu-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+
+      document.querySelectorAll(".section").forEach(section => {
+        section.classList.remove("active");
+      });
+
+      const target = document.getElementById(`tab-${tab}`);
+      if (target) target.classList.add("active");
+    }
+
+    document.querySelectorAll(".menu-btn").forEach(btn => {
+      btn.onclick = () => switchTab(btn.dataset.tab);
+    });
+
+    async function loadUserData(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      return snap.exists ? (snap.data() || {}) : {};
+    }
+
+    async function loadOrders(uid){
+      try {
+        const snap = await db.collectionGroup("orders")
+          .where("uid", "==", uid)
+          .get();
+
+        const rows = [];
+        snap.forEach(docSnap => {
+          rows.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
+        orderCache = rows.sort((a, b) => {
+          const ta = toDate(a.createdAt)?.getTime() || 0;
+          const tb = toDate(b.createdAt)?.getTime() || 0;
+          return tb - ta;
+        });
+
+        renderOrders();
+      } catch (e) {
+        console.error(e);
+        ordersWrap.className = "empty";
+        ordersWrap.innerHTML = "訂單載入失敗，請稍後再試。";
+      }
+    }
+
+    async function loadTickets(uid){
+      try {
+        const snap = await db.collectionGroup("tickets")
+          .where("uid", "==", uid)
+          .get();
+
+        const rows = [];
+        snap.forEach(docSnap => {
+          rows.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
+        ticketCache = rows.sort((a, b) => {
+          const ta = toDate(a.createdAt)?.getTime() || 0;
+          const tb = toDate(b.createdAt)?.getTime() || 0;
+          return tb - ta;
+        });
+
+        renderTicketSummary();
+      } catch (e) {
+        console.error(e);
+        ticketSummaryWrap.innerHTML = `
+          <div class="empty">票券摘要載入失敗，請稍後再試。</div>
+        `;
+      }
+    }
+
+    function renderOrders(){
+      if (!orderCache.length) {
+        ordersWrap.className = "empty";
+        ordersWrap.innerHTML = "目前沒有任何訂單。";
+        return;
+      }
+
+      ordersWrap.className = "list";
+      ordersWrap.innerHTML = orderCache.map(order => `
+        <div class="item">
+          <div class="item-top">
+            <div>
+              <div class="item-title">${esc(order.eventTitle || "未命名活動")}</div>
+              <div class="item-sub">
+                訂單 ID：<span class="mono">${esc(order.id)}</span><br>
+                票種：${esc(order.ticketTypeName || "-")}<br>
+                張數：${esc(order.quantity || 1)}<br>
+                金額：${esc(formatPrice(order.totalAmount || 0))}<br>
+                建立時間：${esc(formatDateTime(order.createdAt))}
+              </div>
+            </div>
+            <span class="status ${lower(order.status || "") === "registered" ? "status-ok" : "status-gray"}">
+              ${esc(order.status || "registered")}
+            </span>
           </div>
         </div>
-        <span class="status ${lower(order.status || "") === "registered" ? "status-ok" : "status-gray"}">
-          ${esc(order.status || "registered")}
-        </span>
-      </div>
-    </div>
-  `).join("");
-}
+      `).join("");
+    }
 
-function renderTicketSummary(){
-  if (!ticketCache.length) {
-    ticketSummaryWrap.innerHTML = `
-      <div class="empty">目前沒有任何票券。</div>
-    `;
-    return;
-  }
+    function renderTicketSummary(){
+      if (!ticketCache.length) {
+        ticketSummaryWrap.innerHTML = `
+          <div class="empty">目前沒有任何票券。</div>
+        `;
+        return;
+      }
 
-  const preview = ticketCache.slice(0, 4);
+      const preview = ticketCache.slice(0, 4);
 
-  ticketSummaryWrap.innerHTML = preview.map(ticket => {
-    const meta = getTicketStatusMeta(ticket);
-    return `
-      <div class="item">
-        <div class="item-top">
-          <div>
-            <div class="item-title">${esc(ticket.eventTitle || "未命名活動")}</div>
-            <div class="item-sub">
-              票券 ID：<span class="mono">${esc(ticket.id)}</span><br>
-              票種：${esc(ticket.ticketTypeName || "-")}<br>
-              座位：${esc(ticket.seatLabel || "-")}
+      ticketSummaryWrap.innerHTML = preview.map(ticket => {
+        const meta = getTicketStatusMeta(ticket);
+        return `
+          <div class="item">
+            <div class="item-top">
+              <div>
+                <div class="item-title">${esc(ticket.eventTitle || "未命名活動")}</div>
+                <div class="item-sub">
+                  票券 ID：<span class="mono">${esc(ticket.id)}</span><br>
+                  票種：${esc(ticket.ticketTypeName || "-")}<br>
+                  座位：${esc(ticket.seatLabel || "-")}
+                </div>
+              </div>
+              <span class="status ${meta.className}">${esc(meta.text)}</span>
             </div>
           </div>
-          <span class="status ${meta.className}">${esc(meta.text)}</span>
-        </div>
-      </div>
-    `;
-  }).join("");
+        `;
+      }).join("");
 
-  if (ticketCache.length > 4) {
-    ticketSummaryWrap.insertAdjacentHTML("beforeend", `
-      <div class="notice info">
-        目前共有 ${ticketCache.length} 張票券，更多內容請點擊上方「前往我的票券」查看。
-      </div>
-    `);
-  }
-}
+      if (ticketCache.length > 4) {
+        ticketSummaryWrap.insertAdjacentHTML("beforeend", `
+          <div class="notice info">
+            目前共有 ${ticketCache.length} 張票券，更多內容請點擊上方「前往我的票券」查看。
+          </div>
+        `);
+      }
+    }
 
-function renderProfile(user, data){
-  const name = norm(data.name || data.fullName || data.memberName || "");
-  const gender = norm(data.gender || "");
-  const birthday = norm(data.birthday || data.birthdate || "");
-  const phone = norm(data.phone || data.mobile || "");
-  const email = norm(data.email || user.email || "");
-  const uid = norm(user.uid || "");
+    function renderProfile(user, data){
+      const name = norm(data.name || data.fullName || data.memberName || "");
+      const gender = norm(data.gender || "");
+      const birthday = norm(data.birthday || data.birthdate || "");
+      const phone = norm(data.phone || data.mobile || "");
+      const email = norm(data.email || user.email || "");
+      const uid = norm(user.uid || "");
 
-  profileName.textContent = name || "未提供";
-  profileGender.textContent = gender || "未提供";
-  profileBirthday.textContent = birthday || "未提供";
-  profilePhone.textContent = phone || "未提供";
-  profileEmail.textContent = email || "未提供";
-  profileUid.textContent = uid || "-";
+      profileName.textContent = name || "未提供";
+      profileGender.textContent = gender || "未提供";
+      profileBirthday.textContent = birthday || "未提供";
+      profilePhone.textContent = phone || "未提供";
+      profileEmail.textContent = email || "未提供";
+      profileUid.textContent = uid || "-";
 
-  const customNotice =
-    norm(data.profileNotice || "") ||
-    norm(data.memberNotice || "") ||
-    norm(data.profileDescription || "");
+      const customNotice =
+        norm(data.profileNotice || "") ||
+        norm(data.memberNotice || "") ||
+        norm(data.profileDescription || "");
 
-  if (customNotice) {
-    profileCustomNotice.className = "notice info";
-    profileCustomNotice.innerHTML = customNotice.replace(/\n/g, "<br>");
-  } else {
-    profileCustomNotice.className = "notice info";
-    profileCustomNotice.innerHTML = "系統尚未設定會員說明欄位。";
-  }
+      if (customNotice) {
+        profileCustomNotice.className = "notice info";
+        profileCustomNotice.innerHTML = customNotice.replace(/\n/g, "<br>");
+      } else {
+        profileCustomNotice.className = "notice info";
+        profileCustomNotice.innerHTML = "系統尚未設定會員說明欄位。";
+      }
 
-  const verifiedSchoolId = norm(data.verifiedSchoolId || "");
-  const verifiedSchoolName = norm(data.verifiedSchoolName || verifiedSchoolId);
-  const verifyMethod = norm(data.verifyMethod || "");
-  const schoolEmail = norm(data.schoolEmail || data.email || user.email || "");
+      const verifiedSchoolId = norm(data.verifiedSchoolId || "");
+      const verifiedSchoolName = norm(data.verifiedSchoolName || verifiedSchoolId);
+      const verifyMethod = norm(data.verifyMethod || "");
+      const schoolEmail = norm(data.schoolEmail || data.email || user.email || "");
 
-  if (!verifiedSchoolId) {
-    heroVerifyText.textContent = "校園驗證：尚未完成";
-    verifyNoticeBox.className = "notice warn";
-    verifyNoticeBox.innerHTML = `
-      <b>尚未完成校園驗證</b><br>
-      你目前尚未綁定校園身份。若活動需要校園資格驗證，可能無法報名。<br>
-      請點下方按鈕前往校園驗證頁面。
-    `;
-  } else {
-    heroVerifyText.textContent = `校園驗證：已完成（${verifiedSchoolName}）`;
-    verifyNoticeBox.className = "notice ok";
-    verifyNoticeBox.innerHTML = `
-      <b>已完成校園驗證</b><br>
-      學校：${esc(verifiedSchoolName)}<br>
-      信箱：${esc(schoolEmail || "-")}<br>
-      驗證方式：${esc(verifyMethod || "-")}
-    `;
-  }
-}
+      if (!verifiedSchoolId) {
+        heroVerifyText.textContent = "校園驗證：尚未完成";
+        verifyNoticeBox.className = "notice warn";
+        verifyNoticeBox.innerHTML = `
+<b>尚未完成校園驗證</b>
+你目前尚未綁定校園身份。若活動需要校園資格驗證，可能無法報名。
+請點下方按鈕前往校園驗證頁面。
+        `.trim();
+      } else {
+        heroVerifyText.textContent = `校園驗證：已完成（${verifiedSchoolName}）`;
+        verifyNoticeBox.className = "notice ok";
+        verifyNoticeBox.innerHTML = `
+<b>已完成校園驗證</b>
+學校：${esc(verifiedSchoolName)}
+信箱：${esc(schoolEmail || "-")}
+驗證方式：${esc(verifyMethod || "-")}
+        `.trim();
+      }
+    }
 
-async function doLogout(){
-  try {
-    await auth.signOut();
-  } catch (e) {
-    console.error(e);
-    alert("登出失敗");
-  }
-}
+    async function doLogout(){
+      try {
+        await auth.signOut();
+      } catch (e) {
+        console.error(e);
+        alert("登出失敗");
+      }
+    }
 
-logoutBtn.onclick = doLogout;
-logoutTopBtn.onclick = doLogout;
+    logoutBtn.onclick = doLogout;
+    logoutTopBtn.onclick = doLogout;
 
-resetPasswordBtn.onclick = async () => {
-  securityMsg.classList.add("hidden");
-  securityMsg.innerHTML = "";
+    resetPasswordBtn.onclick = async () => {
+      securityMsg.classList.add("hidden");
+      securityMsg.innerHTML = "";
 
-  const email = norm(currentUser?.email || currentUserData?.email || "");
-  if (!email) {
-    securityMsg.className = "notice warn";
-    securityMsg.innerHTML = "目前找不到可寄送的電子郵件地址。";
-    securityMsg.classList.remove("hidden");
-    return;
-  }
+      const email = norm(currentUser?.email || currentUserData?.email || "");
+      if (!email) {
+        securityMsg.className = "notice warn";
+        securityMsg.innerHTML = "目前找不到可寄送的電子郵件地址。";
+        securityMsg.classList.remove("hidden");
+        return;
+      }
 
-  try {
-    await auth.sendPasswordResetEmail(email);
-    securityMsg.className = "notice ok";
-    securityMsg.innerHTML = `已寄送重設密碼信到：${esc(email)}，請到信箱收信。`;
-    securityMsg.classList.remove("hidden");
-  } catch (e) {
-    console.error(e);
-    securityMsg.className = "notice warn";
-    securityMsg.innerHTML = `寄送失敗：${esc(e.message || "請稍後再試")}`;
-    securityMsg.classList.remove("hidden");
-  }
-};
+      try {
+        await auth.sendPasswordResetEmail(email);
+        securityMsg.className = "notice ok";
+        securityMsg.innerHTML = `已寄送重設密碼信到：${esc(email)}，請到信箱收信。`;
+        securityMsg.classList.remove("hidden");
+      } catch (e) {
+        console.error(e);
+        securityMsg.className = "notice warn";
+        securityMsg.innerHTML = `寄送失敗：${esc(e.message || "請稍後再試")}`;
+        securityMsg.classList.remove("hidden");
+      }
+    };
 
-auth.onAuthStateChanged(async user => {
-  currentUser = user || null;
+    auth.onAuthStateChanged(async user => {
+      currentUser = user || null;
 
-  if (!user) {
-    showGate("請先登入會員帳號。");
-    return;
-  }
+      if (!user) {
+        showGate("請先登入會員帳號。");
+        return;
+      }
 
-  try {
-    heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
-    currentUserData = await loadUserData(user.uid);
+      try {
+        heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
+        currentUserData = await loadUserData(user.uid);
 
-    renderProfile(user, currentUserData);
-    showApp();
+        renderProfile(user, currentUserData);
+        showApp();
 
-    ordersWrap.className = "loading";
-    ordersWrap.innerHTML = "訂單載入中…";
+        ordersWrap.className = "loading";
+        ordersWrap.innerHTML = "訂單載入中…";
 
-    ticketSummaryWrap.innerHTML = `<div class="loading">票券摘要載入中…</div>`;
+        ticketSummaryWrap.innerHTML = `<div class="loading">票券摘要載入中…</div>`;
 
-    await Promise.all([
-      loadOrders(user.uid),
-      loadTickets(user.uid)
-    ]);
+        await Promise.all([
+          loadOrders(user.uid),
+          loadTickets(user.uid)
+        ]);
 
-  } catch (e) {
-    console.error(e);
-    showGate("會員中心載入失敗，請稍後再試。");
-  }
-});
-</script>
+      } catch (e) {
+        console.error(e);
+        showGate("會員中心載入失敗，請稍後再試。");
+      }
+    });
+  </script>
 </body>
 </html>
