@@ -3,136 +3,198 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>會員登入</title>
+  <title>Passium｜登入</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --line-strong:rgba(17,24,39,.14);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --bg:#f5f5f7;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111111;
-      --ok:#166534;
-      --ok-bg:#dcfce7;
-      --warn:#b91c1c;
-      --warn-bg:#fee2e2;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --max:1280px;
     }
 
     *{ box-sizing:border-box; }
 
-    body{
+    html,body{
       margin:0;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      padding:0;
+      background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
-    .wrap{
-      max-width:920px;
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:28px 18px 64px;
+      padding:0 22px;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .topbar{
+    .brand{
       display:flex;
-      justify-content:space-between;
       align-items:center;
-      gap:12px;
-      margin-bottom:18px;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
       flex-wrap:wrap;
     }
 
-    .back{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      color:#374151;
-      font-size:14px;
-      font-weight:800;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
-      box-shadow:var(--shadow-soft);
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
     }
 
-    .ghost-btn{
-      display:inline-flex;
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
       align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
+      gap:10px;
+    }
+
+    .account-icon-btn{
+      width:38px;
+      height:38px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       box-shadow:var(--shadow-soft);
-      font-size:14px;
-      font-weight:900;
-      color:#111827;
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
       cursor:pointer;
     }
 
+    .account-icon-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:40px 22px 88px;
+    }
+
+    .login-wrap{
+      max-width:520px;
+      margin:0 auto;
+    }
+
     .hero{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      padding:22px;
-      margin-bottom:18px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:32px 28px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
     }
 
     .hero-title{
       margin:0;
-      font-size:30px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:clamp(34px, 5vw, 52px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
     }
 
     .hero-sub{
-      margin-top:8px;
+      margin-top:12px;
       color:var(--muted);
-      font-size:14px;
+      font-size:15px;
       line-height:1.9;
-    }
-
-    .hero-pills{
-      margin-top:14px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:7px 11px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:12px;
-      font-weight:1000;
     }
 
     .card{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
       box-shadow:var(--shadow);
       overflow:hidden;
     }
 
     .card-head{
-      padding:20px 22px 16px;
+      padding:20px 22px 14px;
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
@@ -140,48 +202,31 @@
     .card-title{
       margin:0;
       font-size:22px;
-      font-weight:1000;
+      font-weight:800;
       letter-spacing:-.02em;
-    }
-
-    .card-sub{
-      margin-top:8px;
-      font-size:14px;
-      color:var(--muted);
-      line-height:1.9;
     }
 
     .card-body{
       padding:22px;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:14px;
-    }
-
     .field{
       display:grid;
       gap:6px;
+      margin-bottom:14px;
     }
 
     .label{
       font-size:13px;
-      font-weight:1000;
+      font-weight:800;
       color:#111827;
-    }
-
-    .required{
-      color:#dc2626;
-      margin-left:4px;
     }
 
     .input{
       width:100%;
       min-height:48px;
       padding:12px 14px;
-      border:1px solid var(--line-strong);
+      border:1px solid rgba(0,0,0,.12);
       border-radius:16px;
       background:#fff;
       color:#111827;
@@ -195,56 +240,20 @@
       box-shadow:0 0 0 4px rgba(17,24,39,.06);
     }
 
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .notice{
-      margin-top:18px;
-      padding:14px 16px;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size:13px;
-      line-height:1.9;
-      color:#4b5563;
-      white-space:pre-wrap;
-    }
-
-    .notice.info{
-      background:var(--blue-bg);
-      border-color:rgba(29,78,216,.12);
-      color:var(--blue);
-    }
-
-    .notice.ok{
-      background:var(--ok-bg);
-      border-color:rgba(22,101,52,.12);
-      color:var(--ok);
-    }
-
-    .notice.warn{
-      background:var(--warn-bg);
-      border-color:rgba(185,28,28,.12);
-      color:var(--warn);
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
     .row-between{
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      margin-top:6px;
+      margin-top:4px;
+      margin-bottom:18px;
+    }
+
+    .text-link{
+      font-size:13px;
+      font-weight:800;
+      color:#111827;
     }
 
     .btn{
@@ -258,7 +267,7 @@
       background:#fff;
       color:#111827;
       font-size:14px;
-      font-weight:1000;
+      font-weight:800;
       cursor:pointer;
       box-shadow:var(--shadow-soft);
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
@@ -277,105 +286,197 @@
     }
 
     .btn-primary{
-      background:var(--black);
+      background:#111;
       color:#fff;
-      border-color:var(--black);
+      border-color:#111;
     }
 
     .btn-block{
       width:100%;
     }
 
-    .text-link{
+    .notice{
+      margin-top:16px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:#fff;
       font-size:13px;
-      font-weight:1000;
-      color:#111827;
+      line-height:1.9;
+      color:#4b5563;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
 
-    .footer-links{
-      margin-top:18px;
-      display:flex;
-      justify-content:center;
-      gap:14px;
-      flex-wrap:wrap;
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
+      color:var(--blue);
+    }
+
+    .notice.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.12);
+      color:var(--green);
+    }
+
+    .notice.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.12);
+      color:var(--red);
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
       font-size:13px;
       color:var(--muted);
+      line-height:2;
     }
 
-    .footer-links a{
-      font-weight:900;
-      color:#111827;
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .copyright{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
     }
 
     .mono{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
     }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:24px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .card{
+        border-radius:28px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="back" href="index.html">← 返回首頁</a>
-      <a class="ghost-btn" href="register.html">前往註冊</a>
-    </div>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
+        </a>
 
-    <div class="hero">
-      <h1 class="hero-title">會員登入</h1>
-      <div class="hero-sub">
-        登入後即可進入會員中心、查看訂單、顯示票券，以及完成校園驗證。<br>
-        若你尚未註冊會員，請先建立帳號。
-      </div>
-      <div class="hero-pills">
-        <span class="pill">可查看我的票券</span>
-        <span class="pill">可進入會員中心</span>
-        <span class="pill">可接續校園驗證流程</span>
-      </div>
-    </div>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+          <a class="nav-link" href="my-orders.html">我的訂單</a>
+        </div>
 
-    <div class="card">
-      <div class="card-head">
-        <h2 class="card-title">登入帳號</h2>
-        <div class="card-sub">
-          請輸入你的會員 Email 與密碼。
+        <div class="nav-actions">
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
         </div>
       </div>
+    </div>
 
-      <div class="card-body">
-        <div class="grid">
-          <div class="field">
-            <label class="label" for="email">電子郵件<span class="required">*</span></label>
-            <input id="email" class="input" type="email" placeholder="請輸入 Email" autocomplete="email" />
-            <div class="hint">此信箱為你的會員登入帳號</div>
+    <main class="page">
+      <div class="login-wrap">
+        <div class="hero">
+          <h1 class="hero-title">登入</h1>
+          <div class="hero-sub">使用你的會員帳號登入。</div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">會員帳號</h2>
           </div>
 
-          <div class="field">
-            <label class="label" for="password">密碼<span class="required">*</span></label>
-            <input id="password" class="input" type="password" placeholder="請輸入密碼" autocomplete="current-password" />
-            <div class="hint">請輸入你註冊時設定的密碼</div>
+          <div class="card-body">
+            <div class="field">
+              <label class="label" for="email">電子郵件</label>
+              <input id="email" class="input" type="email" placeholder="Email" autocomplete="email" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="password">密碼</label>
+              <input id="password" class="input" type="password" placeholder="Password" autocomplete="current-password" />
+            </div>
+
+            <div class="row-between">
+              <a class="text-link" href="register.html">註冊帳號</a>
+              <a class="text-link" href="forgot-password.html">忘記密碼</a>
+            </div>
+
+            <div id="msg" class="notice info">請輸入登入資料。</div>
+
+            <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
           </div>
         </div>
-
-        <div class="row-between">
-          <a class="text-link" href="register.html">還沒有帳號？前往註冊</a>
-          <a class="text-link" href="forgot-password.html">忘記密碼？</a>
-        </div>
-
-        <div id="msg" class="notice info">
-          登入成功後，系統會自動帶你前往會員中心。
-        </div>
-
-        <div class="row" style="margin-top:18px;">
-          <button class="btn btn-primary btn-block" id="loginBtn">登入會員帳號</button>
-        </div>
-
-        <div class="footer-links">
-          <span>註冊後即可使用</span>
-          <a href="member.html">會員中心</a>
-          <span>、</span>
-          <a href="my-tickets.html">我的票券</a>
-        </div>
       </div>
-    </div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+      </footer>
+
+      <div class="copyright">
+        © 2026 Passium. All rights reserved.
+      </div>
+    </main>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -395,10 +496,14 @@
 
     const auth = firebase.auth();
 
+    const accountBtn = document.getElementById("accountBtn");
     const emailEl = document.getElementById("email");
     const passwordEl = document.getElementById("password");
     const loginBtn = document.getElementById("loginBtn");
     const msg = document.getElementById("msg");
+
+    const params = new URLSearchParams(location.search);
+    const redirectTarget = params.get("redirect");
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -423,6 +528,24 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
+    function getSafeRedirect(){
+      if (!redirectTarget) return "member.html";
+      if (redirectTarget.startsWith("http://") || redirectTarget.startsWith("https://")) return "member.html";
+      return redirectTarget;
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
     async function login(){
       const email = norm(emailEl.value).toLowerCase();
       const password = passwordEl.value;
@@ -445,34 +568,32 @@
       loginBtn.disabled = true;
       const oldText = loginBtn.textContent;
       loginBtn.textContent = "登入中…";
-      setMsg("info", "正在登入，請稍候…");
+      setMsg("info", "登入中…");
 
       try {
         await auth.signInWithEmailAndPassword(email, password);
-        setMsg("ok", `登入成功，正在前往會員中心…<br>帳號：<span class="mono">${esc(email)}</span>`);
+        setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
         setTimeout(() => {
-          location.href = "member.html";
-        }, 700);
+          location.href = getSafeRedirect();
+        }, 500);
       } catch (e) {
         console.error(e);
 
-        let text = "登入失敗，請稍後再試";
+        let text = "登入失敗";
         const code = String(e.code || "");
 
         if (code.includes("auth/user-not-found")) {
-          text = "查無此帳號，請確認電子郵件是否正確";
+          text = "查無此帳號";
         } else if (code.includes("auth/wrong-password")) {
-          text = "密碼錯誤，請重新輸入";
+          text = "密碼錯誤";
         } else if (code.includes("auth/invalid-credential")) {
           text = "帳號或密碼錯誤";
         } else if (code.includes("auth/invalid-email")) {
           text = "電子郵件格式不正確";
         } else if (code.includes("auth/too-many-requests")) {
-          text = "登入嘗試次數過多，請稍後再試";
+          text = "嘗試次數過多，請稍後再試";
         } else if (code.includes("auth/network-request-failed")) {
-          text = "網路連線失敗，請確認網路後再試";
-        } else if (e.message) {
-          text = e.message;
+          text = "網路連線失敗";
         }
 
         setMsg("warn", esc(text));
@@ -491,8 +612,10 @@
     });
 
     auth.onAuthStateChanged(user => {
+      updateAccountLinks(user || null);
+
       if (user) {
-        location.href = "member.html";
+        location.href = getSafeRedirect();
       }
     });
   </script>

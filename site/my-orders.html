@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>My Orders</title>
+  <title>Passium｜我的訂單</title>
 
   <style>
     :root{
@@ -118,7 +118,31 @@
       display:flex;
       align-items:center;
       gap:10px;
-      flex-wrap:wrap;
+    }
+
+    .account-icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      cursor:pointer;
+    }
+
+    .account-icon-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
     }
 
     .page{
@@ -491,14 +515,8 @@
       padding-top:26px;
       border-top:1px solid rgba(0,0,0,.07);
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(2, minmax(0,1fr));
       gap:20px;
-    }
-
-    @media (max-width:900px){
-      .footer{
-        grid-template-columns:repeat(2, minmax(0,1fr));
-      }
     }
 
     @media (max-width:560px){
@@ -565,19 +583,23 @@
     <div class="nav-wrap">
       <div class="nav">
         <a class="brand" href="index.html">
-          <span class="brand-mark">T</span>
-          <span>Tickets</span>
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
         </a>
 
         <div class="nav-links">
           <a class="nav-link" href="index.html#featured">精選活動</a>
           <a class="nav-link" href="index.html#upcoming">即將開始</a>
-          <a class="nav-link" href="member.html">會員中心</a>
           <a class="nav-link" href="my-tickets.html">我的票券</a>
+          <a class="nav-link" href="my-orders.html">我的訂單</a>
         </div>
 
         <div class="nav-actions">
-          <a class="btn" href="member.html">Account</a>
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
         </div>
       </div>
     </div>
@@ -591,7 +613,7 @@
       </div>
 
       <div class="hero">
-        <h1 class="hero-title">My Orders</h1>
+        <h1 class="hero-title">我的訂單</h1>
         <div class="hero-sub">
           這裡會顯示你建立過的全部訂單。你可以查看票種、張數、金額、座位與目前狀態。
           一筆訂單可能對應多張票券。
@@ -617,18 +639,6 @@
           <a class="footer-link" href="my-tickets.html">我的票券</a>
           <a class="footer-link" href="my-orders.html">我的訂單</a>
         </div>
-
-        <div>
-          <div class="footer-title">Support</div>
-          <a class="footer-link" href="campus-verify.html">校園驗證</a>
-          <a class="footer-link" href="member.html">帳號資料</a>
-        </div>
-
-        <div>
-          <div class="footer-title">About</div>
-          <a class="footer-link" href="index.html">Tickets</a>
-          <a class="footer-link" href="dashboard.html">管理後台</a>
-        </div>
       </footer>
 
       <div class="bottom-note">
@@ -651,13 +661,17 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
 
     const appFirebase = initializeApp(firebaseConfig);
     const auth = getAuth(appFirebase);
     const db = getFirestore(appFirebase);
 
+    const accountBtn = document.getElementById("accountBtn");
     const app = document.getElementById("app");
     const heroUserText = document.getElementById("heroUserText");
     const heroCountText = document.getElementById("heroCountText");
@@ -935,8 +949,21 @@
       location.href = `login.html?redirect=${redirect}`;
     }
 
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
     onAuthStateChanged(auth, async user => {
       currentUser = user || null;
+      updateAccountLinks(currentUser);
 
       if (!user){
         goLogin();

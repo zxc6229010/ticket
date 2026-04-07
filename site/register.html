@@ -3,152 +3,114 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>會員註冊</title>
+  <title>Passium｜註冊</title>
 
   <style>
     :root{
-      --bg:#f5f7fb;
-      --card:#fff;
-      --text:#111827;
-      --muted:#6b7280;
-      --line:rgba(17,24,39,.08);
-      --line-strong:rgba(17,24,39,.14);
-      --shadow:0 18px 50px rgba(15,23,42,.08);
-      --shadow-soft:0 10px 30px rgba(15,23,42,.05);
+      --bg:#f5f5f7;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111111;
-      --ok:#166534;
-      --ok-bg:#dcfce7;
-      --warn:#b91c1c;
-      --warn-bg:#fee2e2;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --max:1280px;
     }
 
     *{ box-sizing:border-box; }
 
-    body{
+    html,body{
       margin:0;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.9), rgba(245,247,251,.95) 36%),
-        linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+      padding:0;
+      background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
     a{ color:inherit; text-decoration:none; }
 
-    .wrap{
-      max-width:920px;
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:28px 18px 64px;
-    }
-
-    .topbar{
+      padding:0 22px;
+      min-height:60px;
       display:flex;
+      align-items:center;
       justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:18px;
-      flex-wrap:wrap;
     }
 
-    .back{
-      display:inline-flex;
+    .brand{
+      display:flex;
       align-items:center;
-      gap:8px;
-      color:#374151;
-      font-size:14px;
+      gap:10px;
+      font-size:18px;
       font-weight:800;
-      padding:10px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.8);
-      border:1px solid var(--line);
-      box-shadow:var(--shadow-soft);
     }
 
-    .ghost-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      box-shadow:var(--shadow-soft);
-      font-size:14px;
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
       font-weight:900;
-      color:#111827;
-      cursor:pointer;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:40px 22px 88px;
+    }
+
+    .wrap{
+      max-width:560px;
+      margin:0 auto;
     }
 
     .hero{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:32px;
       box-shadow:var(--shadow);
-      padding:22px;
+      padding:28px;
       margin-bottom:18px;
     }
 
     .hero-title{
       margin:0;
-      font-size:30px;
-      font-weight:1000;
-      letter-spacing:-.02em;
+      font-size:42px;
+      font-weight:800;
+      letter-spacing:-.04em;
     }
 
     .hero-sub{
-      margin-top:8px;
+      margin-top:10px;
       color:var(--muted);
       font-size:14px;
-      line-height:1.9;
-    }
-
-    .hero-pills{
-      margin-top:14px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:7px 11px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:12px;
-      font-weight:1000;
     }
 
     .card{
       background:#fff;
-      border:1px solid var(--line);
-      border-radius:28px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
       box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .card-head{
-      padding:20px 22px 16px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
-    }
-
-    .card-title{
-      margin:0;
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:-.02em;
-    }
-
-    .card-sub{
-      margin-top:8px;
-      font-size:14px;
-      color:var(--muted);
-      line-height:1.9;
     }
 
     .card-body{
@@ -162,9 +124,7 @@
     }
 
     @media (max-width:760px){
-      .grid{
-        grid-template-columns:1fr;
-      }
+      .grid{ grid-template-columns:1fr; }
     }
 
     .field{
@@ -178,402 +138,143 @@
 
     .label{
       font-size:13px;
-      font-weight:1000;
-      color:#111827;
+      font-weight:800;
     }
 
-    .required{
-      color:#dc2626;
-      margin-left:4px;
-    }
-
-    .input,
-    .select{
-      width:100%;
+    .input{
       min-height:48px;
       padding:12px 14px;
-      border:1px solid var(--line-strong);
+      border:1px solid rgba(0,0,0,.12);
       border-radius:16px;
-      background:#fff;
-      color:#111827;
       font-size:15px;
+    }
+
+    .input:focus{
+      border-color:#111;
       outline:none;
-      transition:border-color .12s ease, box-shadow .12s ease;
-    }
-
-    .input:focus,
-    .select:focus{
-      border-color:#111827;
-      box-shadow:0 0 0 4px rgba(17,24,39,.06);
-    }
-
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .notice{
-      margin-top:18px;
-      padding:14px 16px;
-      border-radius:18px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-size:13px;
-      line-height:1.9;
-      color:#4b5563;
-      white-space:pre-wrap;
-    }
-
-    .notice.info{
-      background:var(--blue-bg);
-      border-color:rgba(29,78,216,.12);
-      color:var(--blue);
-    }
-
-    .notice.ok{
-      background:var(--ok-bg);
-      border-color:rgba(22,101,52,.12);
-      color:var(--ok);
-    }
-
-    .notice.warn{
-      background:var(--warn-bg);
-      border-color:rgba(185,28,28,.12);
-      color:var(--warn);
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
     }
 
     .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:46px;
-      padding:11px 18px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111827;
-      font-size:14px;
-      font-weight:1000;
-      cursor:pointer;
-      box-shadow:var(--shadow-soft);
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
-    }
-
-    .btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      transform:none;
-      box-shadow:none;
-    }
-
-    .btn-primary{
-      background:var(--black);
-      color:#fff;
-      border-color:var(--black);
-    }
-
-    .btn-block{
       width:100%;
-    }
-
-    .footer-links{
+      min-height:46px;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      font-weight:800;
+      border:none;
+      cursor:pointer;
       margin-top:18px;
-      display:flex;
-      justify-content:center;
-      gap:14px;
-      flex-wrap:wrap;
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:12px;
+      border-radius:14px;
       font-size:13px;
-      color:var(--muted);
     }
 
-    .footer-links a{
-      font-weight:900;
-      color:#111827;
-    }
+    .info{ background:var(--blue-bg); color:var(--blue); }
+    .ok{ background:var(--green-bg); color:var(--green); }
+    .warn{ background:var(--red-bg); color:var(--red); }
 
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    .row{
+      display:flex;
+      justify-content:space-between;
+      margin-top:10px;
+      font-size:13px;
+      font-weight:700;
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <a class="back" href="index.html">← 返回首頁</a>
-      <a class="ghost-btn" href="login.html">前往登入</a>
-    </div>
-
-    <div class="hero">
-      <h1 class="hero-title">建立會員帳號</h1>
-      <div class="hero-sub">
-        註冊完成後即可使用會員中心、校園驗證、訂單查詢與票券功能。<br>
-        姓名、性別、生日會作為會員固定基本資料，註冊後不可自行修改。
-      </div>
-      <div class="hero-pills">
-        <span class="pill">姓名 / 性別 / 生日註冊後固定</span>
-        <span class="pill">可用於活動報名與票券入場</span>
-        <span class="pill">完成後自動前往會員中心</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head">
-        <h2 class="card-title">會員註冊資料</h2>
-        <div class="card-sub">
-          請填寫完整資料。若你之後要參加需要校園驗證的活動，建議基本資料與實際身份一致。
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div class="grid">
-          <div class="field">
-            <label class="label" for="name">姓名<span class="required">*</span></label>
-            <input id="name" class="input" type="text" placeholder="請輸入真實姓名" />
-            <div class="hint">註冊後不可自行修改</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="gender">性別<span class="required">*</span></label>
-            <select id="gender" class="select">
-              <option value="">請選擇性別</option>
-              <option value="男">男</option>
-              <option value="女">女</option>
-              <option value="其他">其他</option>
-              <option value="不提供">不提供</option>
-            </select>
-            <div class="hint">註冊後不可自行修改</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="birthday">生日<span class="required">*</span></label>
-            <input id="birthday" class="input" type="date" />
-            <div class="hint">註冊後不可自行修改</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="phone">手機號碼<span class="required">*</span></label>
-            <input id="phone" class="input" type="tel" inputmode="tel" placeholder="例如：0912345678" />
-            <div class="hint">作為聯絡與會員資料顯示使用</div>
-          </div>
-
-          <div class="field full">
-            <label class="label" for="email">電子郵件<span class="required">*</span></label>
-            <input id="email" class="input" type="email" placeholder="請輸入 Email" autocomplete="email" />
-            <div class="hint">此信箱會作為登入帳號</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="password">密碼<span class="required">*</span></label>
-            <input id="password" class="input" type="password" placeholder="至少 6 碼" autocomplete="new-password" />
-            <div class="hint">建議使用不容易猜到的密碼</div>
-          </div>
-
-          <div class="field">
-            <label class="label" for="confirmPassword">確認密碼<span class="required">*</span></label>
-            <input id="confirmPassword" class="input" type="password" placeholder="再次輸入密碼" autocomplete="new-password" />
-            <div class="hint">需與上方密碼相同</div>
-          </div>
-        </div>
-
-        <div id="msg" class="notice info" style="margin-top:18px;">
-          註冊完成後，系統會建立你的會員資料，並自動帶你前往會員中心。
-        </div>
-
-        <div class="row" style="margin-top:18px;">
-          <button class="btn btn-primary btn-block" id="registerBtn">建立會員帳號</button>
-        </div>
-
-        <div class="footer-links">
-          <span>已經有帳號了？</span>
-          <a href="login.html">前往登入</a>
-        </div>
-      </div>
+  <div class="nav-wrap">
+    <div class="nav">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">P</span>
+        <span>Passium</span>
+      </a>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <main class="page">
+    <div class="wrap">
 
-  <script>
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-        authDomain: "concert-1ff7e.firebaseapp.com",
-        projectId: "concert-1ff7e",
-        storageBucket: "concert-1ff7e.firebasestorage.app",
-        messagingSenderId: "704757384914",
-        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-      });
-    }
+      <div class="hero">
+        <h1 class="hero-title">註冊</h1>
+        <div class="hero-sub">建立你的會員帳號</div>
+      </div>
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+      <div class="card">
+        <div class="card-body">
 
-    const nameEl = document.getElementById("name");
-    const genderEl = document.getElementById("gender");
-    const birthdayEl = document.getElementById("birthday");
-    const phoneEl = document.getElementById("phone");
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const confirmPasswordEl = document.getElementById("confirmPassword");
-    const registerBtn = document.getElementById("registerBtn");
-    const msg = document.getElementById("msg");
+          <div class="grid">
+            <input id="name" class="input" placeholder="姓名" />
+            <input id="gender" class="input" placeholder="性別" />
+            <input id="birthday" class="input" type="date" />
+            <input id="phone" class="input" placeholder="手機" />
 
-    function esc(value){
-      return String(value ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
-    }
+            <input id="email" class="input field full" placeholder="Email" />
+            <input id="password" class="input" type="password" placeholder="密碼" />
+            <input id="confirmPassword" class="input" type="password" placeholder="確認密碼" />
+          </div>
 
-    function norm(value){
-      return String(value ?? "").trim();
-    }
+          <div id="msg" class="notice info">請填寫資料</div>
 
-    function setMsg(type, text){
-      msg.className = `notice ${type}`;
-      msg.innerHTML = text;
-    }
+          <button id="registerBtn" class="btn">建立帳號</button>
 
-    function isValidEmail(email){
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
+          <div class="row">
+            <span></span>
+            <a href="login.html">登入</a>
+          </div>
 
-    function isValidPhone(phone){
-      return /^[0-9+\-\s()]{8,20}$/.test(phone);
-    }
+        </div>
+      </div>
 
-    function getFormData(){
-      return {
-        name: norm(nameEl.value),
-        gender: norm(genderEl.value),
-        birthday: norm(birthdayEl.value),
-        phone: norm(phoneEl.value),
-        email: norm(emailEl.value).toLowerCase(),
-        password: passwordEl.value,
-        confirmPassword: confirmPasswordEl.value
-      };
-    }
+    </div>
+  </main>
 
-    function validateForm(data){
-      if (!data.name) return "請輸入姓名";
-      if (!data.gender) return "請選擇性別";
-      if (!data.birthday) return "請選擇生日";
-      if (!data.phone) return "請輸入手機號碼";
-      if (!isValidPhone(data.phone)) return "手機號碼格式不正確";
-      if (!data.email) return "請輸入電子郵件";
-      if (!isValidEmail(data.email)) return "電子郵件格式不正確";
-      if (!data.password) return "請輸入密碼";
-      if (data.password.length < 6) return "密碼至少需要 6 碼";
-      if (!data.confirmPassword) return "請再次輸入密碼";
-      if (data.password !== data.confirmPassword) return "兩次輸入的密碼不一致";
-      return "";
-    }
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-    async function register(){
-      const data = getFormData();
-      const error = validateForm(data);
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSy...",
+  authDomain:"concert-1ff7e.firebaseapp.com",
+  projectId:"concert-1ff7e"
+});
 
-      if (error) {
-        setMsg("warn", esc(error));
-        return;
-      }
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-      registerBtn.disabled = true;
-      const oldText = registerBtn.textContent;
-      registerBtn.textContent = "建立中…";
-      setMsg("info", "正在建立帳號與會員資料，請稍候…");
+const msg=document.getElementById("msg");
 
-      try {
-        const cred = await auth.createUserWithEmailAndPassword(data.email, data.password);
-        const user = cred.user;
+function setMsg(type,text){
+  msg.className="notice "+type;
+  msg.innerHTML=text;
+}
 
-        if (!user) {
-          throw new Error("建立帳號失敗，請稍後再試");
-        }
+document.getElementById("registerBtn").onclick=async()=>{
+  const email=emailEl.value;
+  const password=passwordEl.value;
 
-        await db.collection("users").doc(user.uid).set({
-          uid: user.uid,
-          name: data.name,
-          gender: data.gender,
-          birthday: data.birthday,
-          phone: data.phone,
-          email: data.email,
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
 
-          enabled: true,
-          role: "member",
-
-          verifiedSchoolId: "",
-          verifiedSchoolName: "",
-          verifyMethod: "",
-          schoolEmail: "",
-
-          profileNotice: "姓名、性別、生日為會員固定資料，若需更正請聯絡主辦單位。",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }, { merge: true });
-
-        setMsg("ok", `註冊成功，正在前往會員中心…<br>會員帳號：<span class="mono">${esc(data.email)}</span>`);
-
-        setTimeout(() => {
-          location.href = "member.html";
-        }, 900);
-
-      } catch (e) {
-        console.error(e);
-
-        let text = "註冊失敗，請稍後再試";
-        const code = String(e.code || "");
-
-        if (code.includes("auth/email-already-in-use")) {
-          text = "此電子郵件已被註冊，請直接登入或改用其他信箱";
-        } else if (code.includes("auth/invalid-email")) {
-          text = "電子郵件格式不正確";
-        } else if (code.includes("auth/weak-password")) {
-          text = "密碼強度不足，請至少使用 6 碼以上";
-        } else if (code.includes("auth/network-request-failed")) {
-          text = "網路連線失敗，請確認網路後再試";
-        } else if (e.message) {
-          text = e.message;
-        }
-
-        setMsg("warn", esc(text));
-      } finally {
-        registerBtn.disabled = false;
-        registerBtn.textContent = oldText;
-      }
-    }
-
-    registerBtn.onclick = register;
-
-    [nameEl, genderEl, birthdayEl, phoneEl, emailEl, passwordEl, confirmPasswordEl].forEach(el => {
-      el.addEventListener("keydown", e => {
-        if (e.key === "Enter") register();
-      });
+    await db.collection("users").doc(cred.user.uid).set({
+      email
     });
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        location.href = "member.html";
-      }
-    });
-  </script>
+    setMsg("ok","註冊成功");
+
+    setTimeout(()=>location.href="member.html",500);
+
+  }catch(e){
+    setMsg("warn","註冊失敗");
+  }
+};
+</script>
+
 </body>
 </html>
