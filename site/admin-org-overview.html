@@ -2,83 +2,231 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜全組織管理狀況</title>
+  <title>後台｜校園管理狀況</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root{
-      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
-      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
-      --btn-h:46px; --btn-fs:16px;
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
     }
+
     *{ box-sizing:border-box; }
+
     body{
-      margin:0; background:var(--bg); color:var(--text);
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:1080px; margin:0 auto; padding:48px 16px; }
-    .section{
-      background:var(--card); border:1px solid var(--line); border-radius:18px;
-      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+
+    .wrap{
+      max-width:1080px;
+      margin:0 auto;
+      padding:48px 16px;
     }
-    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
-    h2{ margin:0; font-size:16px; font-weight:900; }
-    h3{ margin:0; font-size:15px; font-weight:900; }
-    .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
-    .small{ font-size:13px; color:var(--muted); }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:780px){ .grid{ grid-template-columns:1fr; } }
+
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:.2px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    h3{
+      margin:0;
+      font-size:15px;
+      font-weight:900;
+    }
+
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:780px){
+      .grid{ grid-template-columns:1fr; }
+    }
 
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      height:var(--btn-h); padding:var(--btn-a) var(--btn-x); border-radius:999px;
-      border:1px solid var(--line); background:#fff; font-weight:900; font-size:var(--btn-fs);
-      cursor:pointer; color:#111; text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
-    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
+
+    .btn:hover{
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transform:translateY(-1px);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-sm{
+      height:40px;
+      padding:8px calc(var(--btn-b)*1.25);
+      font-size:15px;
+    }
 
     .pill{
-      display:inline-flex; border:1px solid var(--line); border-radius:999px;
-      padding:6px 10px; font-size:13px; background:#fff;
-    }
-    .warn{ color:#b91c1c; font-weight:900; }
-    .ok{ color:#166534; font-weight:900; }
-
-    input[type="text"], select{
-      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
-      font-size:16px; background:#fff;
+      display:inline-flex;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:13px;
+      background:#fff;
     }
 
-    .list{ display:grid; gap:12px; margin-top:12px; }
+    .warn{
+      color:#b91c1c;
+      font-weight:900;
+    }
+
+    .ok{
+      color:#166534;
+      font-weight:900;
+    }
+
+    input[type="text"],
+    select{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      font-size:16px;
+      background:#fff;
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
     .item{
-      border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
       box-shadow:0 10px 26px rgba(0,0,0,.05);
     }
-    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
-    .divider{ height:1px; background:var(--line); margin:12px 0; }
+
+    .item-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    .divider{
+      height:1px;
+      background:var(--line);
+      margin:12px 0;
+    }
 
     .stats{
-      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
     }
 
     .memberList{
-      display:grid; gap:10px; margin-top:12px;
+      display:grid;
+      gap:10px;
+      margin-top:12px;
     }
+
     .memberItem{
       border:1px dashed var(--line);
       border-radius:14px;
       padding:10px 12px;
       background:#fff;
     }
+
     .memberMeta{
       margin-top:4px;
       color:var(--muted);
@@ -102,10 +250,14 @@
       <div class="section">
         <div class="header">
           <div>
-            <h1>全組織管理狀況</h1>
-            <div class="sub">平台管理員可查看各校驗證狀態、後台人員分布與角色配置。</div>
-            <div class="small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+            <h1>校園管理狀況</h1>
+            <div class="sub">查看各校目前的管理狀態與人員配置。</div>
+            <div class="small">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="roleText" class="mono">-</span>
+            </div>
           </div>
+
           <div class="row" style="justify-content:flex-end;">
             <a class="btn btn-sm" href="dashboard.html">回主選單</a>
             <button class="btn btn-sm" id="logoutBtn">登出</button>
@@ -117,15 +269,16 @@
         <div class="grid">
           <div>
             <label style="font-weight:900; display:block; margin-bottom:6px;">搜尋</label>
-            <input id="searchInput" type="text" placeholder="搜尋 schoolId、校名、email、team…" />
+            <input id="searchInput" type="text" placeholder="搜尋校名、帳號、分工" />
           </div>
+
           <div>
             <label style="font-weight:900; display:block; margin-bottom:6px;">人員篩選</label>
             <select id="roleFilter">
               <option value="all">全部角色</option>
-              <option value="org_super">org_super</option>
-              <option value="org_admin">org_admin</option>
-              <option value="org_staff">org_staff</option>
+              <option value="org_super">主要管理</option>
+              <option value="org_admin">管理人員</option>
+              <option value="org_staff">一般人員</option>
             </select>
           </div>
         </div>
@@ -152,9 +305,11 @@
       messagingSenderId: "704757384914",
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
+
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
+
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
@@ -173,14 +328,22 @@
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
       }[m]));
     }
-    function norm(s){ return String(s ?? "").trim(); }
+
+    function norm(s){
+      return String(s ?? "").trim();
+    }
 
     async function doLogout(){
       await firebase.auth().signOut();
     }
+
     logoutBtn.onclick = doLogout;
 
     function showGate(title, msg, showLogin){
@@ -192,6 +355,7 @@
           ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
         </div>
       `;
+
       if (showLogin){
         document.getElementById("loginBtn").onclick = async () => {
           const email = window.prompt("請輸入 Email");
@@ -203,6 +367,7 @@
       } else {
         document.getElementById("outBtn").onclick = doLogout;
       }
+
       gate.style.display = "block";
       app.style.display = "none";
     }
@@ -210,10 +375,14 @@
     async function loadMyRole(uid){
       const snap = await db.collection("users").doc(uid).get();
       if (!snap.exists) return { ok:false, reason:"等待授權" };
+
       const u = snap.data() || {};
       if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
-      const role = String(u.role || "").trim();
-      return { ok:true, role };
+
+      return {
+        ok:true,
+        role:String(u.role || "").trim()
+      };
     }
 
     function getSchoolMembers(sid){
@@ -223,13 +392,26 @@
       );
     }
 
+    function getRoleLabel(role){
+      const r = norm(role);
+      if (r === "org_super") return "主要管理";
+      if (r === "org_admin") return "管理人員";
+      if (r === "org_staff") return "一般人員";
+      return r || "未設定";
+    }
+
+    function getRoleFilterMatch(role, filterValue){
+      if (filterValue === "all") return true;
+      return norm(role) === filterValue;
+    }
+
     function schoolMatches(item){
       const q = norm(searchInput.value).toLowerCase();
       const rf = roleFilter.value;
 
       const members = getSchoolMembers(item.id);
 
-      if (rf !== "all" && !members.some(m => String(m.role || "") === rf)) {
+      if (rf !== "all" && !members.some(m => getRoleFilterMatch(m.role, rf))) {
         return false;
       }
 
@@ -238,18 +420,14 @@
       const schoolFields = [
         item.id,
         item.name,
-        item.verifyEnabled ? "true" : "false",
-        item.verifyLocked ? "true" : "false"
+        item.statusText
       ].map(x => norm(x).toLowerCase());
 
       const memberHit = members.some(m => {
         const fields = [
-          m.id,
           m.email,
           m.role,
-          m.team,
-          m.orgId,
-          m.schoolId
+          m.team
         ].map(x => norm(x).toLowerCase());
         return fields.some(x => x.includes(q));
       });
@@ -261,7 +439,7 @@
       const rows = schoolCache.filter(schoolMatches);
 
       if (!rows.length){
-        list.innerHTML = `<div class="empty">目前沒有符合條件的校園資料。</div>`;
+        list.innerHTML = `<div class="empty">目前沒有符合條件的資料。</div>`;
         return;
       }
 
@@ -282,22 +460,21 @@
               <div style="min-width:0; flex:1;">
                 <h3>${esc(item.name || item.id)}</h3>
                 <div class="small" style="margin-top:6px;">
-                  schoolId：<span class="mono">${esc(sid)}</span>
+                  校園代號：<span class="mono">${esc(sid)}</span>
                 </div>
 
                 <div class="stats">
-                  <span class="pill">verifyEnabled：${item.verifyEnabled ? "true" : "false"}</span>
-                  <span class="pill">verifyLocked：${item.verifyLocked ? "true" : "false"}</span>
-                  <span class="pill">recordsCount：${esc(item.recordsCount)}</span>
-                  <span class="pill">後台人員：${members.length}</span>
-                  <span class="pill">啟用：${enabledMembers.length}</span>
-                  <span class="pill">停用：${disabledMembers.length}</span>
+                  <span class="pill">${esc(item.statusText)}</span>
+                  <span class="pill">資料筆數：${esc(item.recordsCount)}</span>
+                  <span class="pill">人員總數：${members.length}</span>
+                  <span class="pill">啟用中：${enabledMembers.length}</span>
+                  <span class="pill">已停用：${disabledMembers.length}</span>
                 </div>
 
                 <div class="stats">
-                  <span class="pill">org_super：${orgSuper}</span>
-                  <span class="pill">org_admin：${orgAdmin}</span>
-                  <span class="pill">org_staff：${orgStaff}</span>
+                  <span class="pill">主要管理：${orgSuper}</span>
+                  <span class="pill">管理人員：${orgAdmin}</span>
+                  <span class="pill">一般人員：${orgStaff}</span>
                 </div>
               </div>
 
@@ -309,22 +486,19 @@
 
             <div class="divider"></div>
 
-            <h3>後台人員明細</h3>
+            <h3>人員明細</h3>
             ${
               members.length
                 ? `<div class="memberList">
                     ${members.map(m => `
                       <div class="memberItem">
                         <div style="font-weight:900;">
-                          ${esc(m.email || m.id)}
-                          <span class="pill">${esc(m.role || "-")}</span>
+                          ${esc(m.email || "未填寫")}
+                          <span class="pill">${esc(getRoleLabel(m.role))}</span>
                           ${m.enabled === true ? `<span class="ok">啟用中</span>` : `<span class="warn">已停用</span>`}
                         </div>
                         <div class="memberMeta">
-                          uid：<span class="mono">${esc(m.id)}</span><br/>
-                          orgId：<span class="mono">${esc(m.orgId || "-")}</span>｜
-                          schoolId：<span class="mono">${esc(m.schoolId || "-")}</span>｜
-                          team：<span class="mono">${esc(m.team || "-")}</span>
+                          分工：<span class="mono">${esc(m.team || "未設定")}</span>
                         </div>
                       </div>
                     `).join("")}
@@ -346,11 +520,18 @@
 
       schoolCache = schoolSnap.docs.map(d => {
         const s = d.data() || {};
+        const enabled = s.verifyEnabled === true;
+        const locked = s.verifyLocked === true;
+
+        let statusText = "尚未開放";
+        if (enabled && !locked) statusText = "可正常使用";
+        if (enabled && locked) statusText = "已鎖定";
+        if (!enabled) statusText = "未開啟";
+
         return {
           id: d.id,
           name: s.name || d.id,
-          verifyEnabled: s.verifyEnabled === true,
-          verifyLocked: s.verifyLocked === true,
+          statusText,
           recordsCount: Number(s.recordsCount || 0)
         };
       });
@@ -369,7 +550,7 @@
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user){
-        showGate("全組織管理狀況", "請先使用 Email / 密碼登入後台。", true);
+        showGate("校園管理狀況", "請先使用 Email / 密碼登入後台。", true);
         return;
       }
 
@@ -393,10 +574,9 @@
         app.style.display = "block";
 
         await loadOverview();
-
       }catch(e){
         console.error(e);
-        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+        showGate("發生錯誤", "無法讀取資料，請稍後再試。", false);
       }
     });
   </script>

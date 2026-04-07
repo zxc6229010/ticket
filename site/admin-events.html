@@ -376,7 +376,7 @@
         <div class="header">
           <div>
             <h1>活動管理</h1>
-            <div class="sub">建立活動與管理活動內容。</div>
+            <div class="sub">建立活動與調整活動內容。</div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
               身分：<span id="roleText" class="mono">-</span>
@@ -394,7 +394,7 @@
         <div class="modeCardWrap">
           <div class="modeCard active" id="openCreateMode">
             <div class="modeTitle">建立活動</div>
-            <div class="sub">新增活動與基本設定。</div>
+            <div class="sub">新增活動與基本內容。</div>
           </div>
 
           <div class="modeCard" id="openManageMode">
@@ -407,10 +407,10 @@
       <div class="section">
         <div class="grid">
           <div>
-            <label>管理範圍</label>
+            <label>目前可管理範圍</label>
             <div class="box">
-              <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
-              <div style="margin-top:8px;">目前組織：<span id="myOrgText" class="mono">-</span></div>
+              <div>校園：<span id="mySchoolText" class="mono">-</span></div>
+              <div style="margin-top:8px;">組織：<span id="myOrgText" class="mono">-</span></div>
             </div>
           </div>
 
@@ -475,7 +475,7 @@
             <input id="location" type="text" placeholder="例如：活動中心" />
 
             <label>活動說明</label>
-            <textarea id="description" placeholder="活動介紹"></textarea>
+            <textarea id="description" placeholder="請輸入活動介紹"></textarea>
           </div>
 
           <div>
@@ -756,6 +756,13 @@
       return orgNameMap[value] ? orgNameMap[value] : value;
     }
 
+    function getApprovalText(value){
+      const v = norm(value).toLowerCase();
+      if (v === "approved") return "已通過";
+      if (v === "rejected") return "未通過";
+      return "審核中";
+    }
+
     async function loadNameMaps(){
       schoolNameMap = {};
       orgNameMap = {};
@@ -884,7 +891,7 @@
               </div>
 
               <div>
-                <label style="margin-top:0;">是否啟用</label>
+                <label style="margin-top:0;">狀態</label>
                 <select onchange="updateInviteCode(${idx}, 'enabled', this.value)">
                   <option value="true" ${item.enabled === true ? "selected" : ""}>啟用</option>
                   <option value="false" ${item.enabled === true ? "" : "selected"}>停用</option>
@@ -1260,7 +1267,7 @@
         const title = e.title || "(未命名)";
         const owner = e.ownerSchoolId || "-";
         const published = e.published === true;
-        const approvalStatus = e.approvalStatus || "pending";
+        const approvalStatus = getApprovalText(e.approvalStatus || "pending");
         const saleStart = toInputDateTime(e.saleStartAt);
         const saleEnd = toInputDateTime(e.saleEndAt);
         const eventStart = toInputDateTime(e.eventStartAt);
@@ -1392,7 +1399,6 @@
 
       try {
         await db.collection("events").doc(eventId).delete();
-
         resetEditor();
         await loadEvents();
         alert("已刪除");
@@ -1459,16 +1465,12 @@
           if (payload[key] === null) delete payload[key];
         });
 
-        let eventId = editingId;
-
         if (!editingId) {
           payload.createdAt = new Date();
           payload.createdBy = currentUser ? currentUser.uid : "";
-          const ref = await db.collection("events").add(payload);
-          eventId = ref.id;
+          await db.collection("events").add(payload);
         } else {
           await db.collection("events").doc(editingId).update(payload);
-          eventId = editingId;
         }
 
         if (isEditing) {

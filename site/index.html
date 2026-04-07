@@ -467,7 +467,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -527,9 +527,7 @@
       const now = new Date();
       const saleStart = toDate(event.saleStartAt);
       const saleEnd = toDate(event.saleEndAt);
-      const published = event.published === true;
 
-      if (!published) return { text:"未公開", key:"hidden", order:4 };
       if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming", order:2 };
       if (saleEnd && now > saleEnd) return { text:"已截止", key:"ended", order:3 };
       return { text:"受理中", key:"selling", order:1 };
@@ -614,9 +612,8 @@
     }
 
     function renderSections(){
-      const published = eventsCache.filter(item => item.published === true);
-      const featured = sortEvents(published.filter(item => getEventStatus(item).key === "selling"));
-      const upcoming = sortEvents(published.filter(item => getEventStatus(item).key === "upcoming"));
+      const featured = sortEvents(eventsCache.filter(item => getEventStatus(item).key === "selling"));
+      const upcoming = sortEvents(eventsCache.filter(item => getEventStatus(item).key === "upcoming"));
 
       if (!featured.length) {
         featuredGrid.innerHTML = `<div class="empty" style="grid-column:1/-1;">目前沒有公開中的活動。</div>`;
@@ -633,14 +630,22 @@
 
     async function loadEvents(){
       try {
-        const snap = await getDocs(collection(db, "events"));
+        const q = query(
+          collection(db, "events"),
+          where("published", "==", true),
+          where("approvalStatus", "==", "approved")
+        );
+
+        const snap = await getDocs(q);
         const rows = [];
+
         snap.forEach(docSnap => {
           rows.push({
             id: docSnap.id,
             ...(docSnap.data() || {})
           });
         });
+
         eventsCache = rows;
         renderSections();
       } catch (e) {

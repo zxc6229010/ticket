@@ -290,25 +290,21 @@
 
     <div class="card">
       <h2>活動人員</h2>
-      <div class="sub">顯示這場活動已安排的人員資料。</div>
       <div class="list" id="staff"></div>
     </div>
 
     <div class="card">
       <h2>驗票人員</h2>
-      <div class="sub">顯示各入口相關安排。</div>
       <div class="list" id="checkin"></div>
     </div>
 
     <div class="card">
       <h2>訂單</h2>
-      <div class="sub">顯示最近的訂單資料。</div>
       <div class="list" id="orders"></div>
     </div>
 
     <div class="card">
       <h2>票券</h2>
-      <div class="sub">顯示最近的票券使用狀況。</div>
       <div class="list" id="tickets"></div>
     </div>
   </div>
@@ -484,7 +480,7 @@ function getTicketFlowText(ticket){
   if (status === "exited") return "已離場";
   if (status === "not_entered") return "未入場";
   if (!status) return ticket.checkedIn === true ? "已入場" : "未入場";
-  return status;
+  return "處理中";
 }
 
 function getPaymentText(value){

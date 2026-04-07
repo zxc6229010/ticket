@@ -17,7 +17,6 @@
       --ok:#166534;
       --warn:#b91c1c;
       --blue:#1d4ed8;
-      --black:#111827;
     }
 
     *{ box-sizing:border-box; }
@@ -29,7 +28,10 @@
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
 
     .wrap{
       max-width:1200px;
@@ -147,6 +149,13 @@
       box-shadow:none;
     }
 
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
     .btn-primary{
       background:#111827;
       color:#fff;
@@ -159,7 +168,8 @@
       font-size:14px;
     }
 
-    input[type="text"], select{
+    input[type="text"],
+    select{
       width:100%;
       padding:12px;
       border-radius:14px;
@@ -489,12 +499,12 @@
       const eventStart = toDate(event.eventStartAt)?.getTime() ?? null;
       const eventEnd = toDate(event.eventEndAt)?.getTime() ?? null;
 
-      if (eventStart && now < eventStart) {
-        return { text:"即將開始", key:"upcoming", className:"blue" };
-      }
-
       if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
         return { text:"受理中", key:"selling", className:"ok" };
+      }
+
+      if (eventStart && now < eventStart) {
+        return { text:"即將開始", key:"upcoming", className:"blue" };
       }
 
       if ((saleEnd && now > saleEnd) || (eventEnd && now > eventEnd)) {
