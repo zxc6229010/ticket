@@ -16,7 +16,6 @@
     --ok:#16a34a;
     --warn:#dc2626;
     --blue:#2563eb;
-    --dark:#111827;
   }
 
   *{ box-sizing:border-box; }
@@ -87,20 +86,6 @@
     flex-wrap:wrap;
   }
 
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-    margin-top:12px;
-  }
-
-  .grid3{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-    margin-top:12px;
-  }
-
   .grid4{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -110,10 +95,6 @@
 
   @media (max-width:980px){
     .grid4{ grid-template-columns:repeat(2,1fr); }
-  }
-
-  @media (max-width:780px){
-    .grid, .grid3{ grid-template-columns:1fr; }
   }
 
   @media (max-width:620px){
@@ -209,10 +190,6 @@
     border-color:rgba(37,99,235,.16);
   }
 
-  .ok{ color:var(--ok); }
-  .warn{ color:var(--warn); }
-  .blue{ color:var(--blue); }
-
   .btn{
     padding:10px 14px;
     border:none;
@@ -239,6 +216,13 @@
     border:1px solid #ddd;
   }
 
+  .btn[disabled]{
+    opacity:.55;
+    cursor:not-allowed;
+    box-shadow:none;
+    transform:none;
+  }
+
   .empty{
     color:var(--muted);
     padding:8px 0;
@@ -250,66 +234,108 @@
     background:#eceff3;
     margin:16px 0;
   }
+
+  .page{
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .22s ease, transform .22s ease;
+  }
+
+  .page.on{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .page.leaving{
+    opacity:0;
+    transform:translateY(6px);
+  }
 </style>
 </head>
 
 <body>
-<div class="wrap">
+<div class="wrap page" id="pageRoot">
 
-  <div class="card">
-    <div class="topbar">
-      <div>
-        <h1>活動詳情</h1>
-        <div class="sub">此頁只專注顯示單一活動的完整資訊，不顯示其他活動內容。</div>
-      </div>
+  <div id="gate" class="card" style="display:none;"></div>
 
-      <div class="row">
-        <a class="btn secondary" href="admin-events-overview.html">← 返回活動總覽</a>
-        <a class="btn secondary" href="admin-events.html">活動管理</a>
-        <a class="btn" id="staffAssignBtn" href="#">工作人員指派</a>
+  <div id="app" style="display:none;">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>活動詳情</h1>
+          <div class="sub">查看這場活動的內容、現況與相關資料。</div>
+          <div class="sub" style="margin-top:8px;">
+            登入：<span id="who" class="mono">-</span>｜
+            身分：<span id="roleText" class="mono">-</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <a class="btn secondary" href="admin-events-overview.html">← 返回活動總覽</a>
+          <a class="btn secondary" href="admin-events.html">活動管理</a>
+          <a class="btn" id="staffAssignBtn" href="#">人員安排</a>
+          <button class="btn secondary" id="logoutBtn">登出</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="card" id="eventInfo">
-    載入中…
-  </div>
+    <div class="card" id="eventInfo">
+      載入中…
+    </div>
 
-  <div class="card">
-    <h2>統計</h2>
-    <div class="grid4" id="stats"></div>
-  </div>
+    <div class="card">
+      <h2>統計</h2>
+      <div class="grid4" id="stats"></div>
+    </div>
 
-  <div class="card">
-    <h2>工作人員</h2>
-    <div class="sub">此區顯示一般工作人員、服務中心、活動管理員等活動內身份，不含核銷人員。</div>
-    <div class="list" id="staff"></div>
-  </div>
+    <div class="card">
+      <h2>活動人員</h2>
+      <div class="sub">顯示這場活動已安排的人員資料。</div>
+      <div class="list" id="staff"></div>
+    </div>
 
-  <div class="card">
-    <h2>核銷人員</h2>
-    <div class="sub">此區只顯示核銷相關人員與入口配置。</div>
-    <div class="list" id="checkin"></div>
-  </div>
+    <div class="card">
+      <h2>驗票人員</h2>
+      <div class="sub">顯示各入口相關安排。</div>
+      <div class="list" id="checkin"></div>
+    </div>
 
-  <div class="card">
-    <h2>訂單</h2>
-    <div class="sub">顯示最近的訂單資料。之後若你要，我可以再幫你加上付款狀態統計與更多欄位。</div>
-    <div class="list" id="orders"></div>
-  </div>
+    <div class="card">
+      <h2>訂單</h2>
+      <div class="sub">顯示最近的訂單資料。</div>
+      <div class="list" id="orders"></div>
+    </div>
 
-  <div class="card">
-    <h2>票券</h2>
-    <div class="sub">顯示最近的票券狀況。已核銷與未核銷會清楚分開顯示。</div>
-    <div class="list" id="tickets"></div>
+    <div class="card">
+      <h2>票券</h2>
+      <div class="sub">顯示最近的票券使用狀況。</div>
+      <div class="list" id="tickets"></div>
+    </div>
   </div>
-
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 <script>
+const pageRoot = document.getElementById("pageRoot");
+requestAnimationFrame(() => pageRoot.classList.add("on"));
+
+function go(href){
+  pageRoot.classList.add("leaving");
+  setTimeout(() => location.href = href, 140);
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a");
+  if (!a) return;
+  const href = a.getAttribute("href");
+  if (!href || href.startsWith("#") || href.startsWith("http")) return;
+  e.preventDefault();
+  go(href);
+});
+
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey:"AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -317,14 +343,30 @@ if (!firebase.apps.length) {
     projectId:"concert-1ff7e"
   });
 }
+
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+const gate = document.getElementById("gate");
+const app = document.getElementById("app");
+const whoEl = document.getElementById("who");
+const roleText = document.getElementById("roleText");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const eventInfoEl = document.getElementById("eventInfo");
+const statsEl = document.getElementById("stats");
+const staffEl = document.getElementById("staff");
+const checkinEl = document.getElementById("checkin");
+const ordersEl = document.getElementById("orders");
+const ticketsEl = document.getElementById("tickets");
+const staffAssignBtn = document.getElementById("staffAssignBtn");
 
 const url = new URL(location.href);
 const eventId = url.searchParams.get("eventId");
 
-function goBack(){
-  location.href="admin-events-overview.html";
-}
+let currentUser = null;
+let currentRole = "";
+let currentUserData = null;
 
 function esc(s){
   return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -339,6 +381,45 @@ function esc(s){
 function norm(v){
   return String(v ?? "").trim();
 }
+
+function showGate(title, text, showLogin){
+  gate.style.display = "block";
+  app.style.display = "none";
+  gate.innerHTML = `
+    <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+    <div class="sub">${esc(text)}</div>
+    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+      ${showLogin ? `<button class="btn" id="loginBtn">使用 Email 登入</button>` : `<button class="btn" id="logoutGateBtn">登出</button>`}
+    </div>
+  `;
+
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.onclick = async () => {
+      const email = window.prompt("請輸入 Email");
+      if (!email) return;
+      const password = window.prompt("請輸入密碼");
+      if (!password) return;
+      await auth.signInWithEmailAndPassword(email.trim(), password);
+    };
+  }
+
+  const logoutGateBtn = document.getElementById("logoutGateBtn");
+  if (logoutGateBtn) {
+    logoutGateBtn.onclick = doLogout;
+  }
+}
+
+async function doLogout(){
+  try{
+    await auth.signOut();
+  }catch(e){
+    console.error(e);
+    alert("登出失敗");
+  }
+}
+
+logoutBtn.onclick = doLogout;
 
 function toMillis(t){
   if(!t) return null;
@@ -366,35 +447,106 @@ function getStatus(event){
   const end = toMillis(event.eventEndAt);
 
   if (start && now < start) {
-    if (saleStart && now < saleStart) return { text:"尚未開始 / 尚未開賣", className:"blue" };
-    return { text:"尚未開始", className:"blue" };
+    if (saleStart && now < saleStart) return { text:"尚未開始", className:"blue" };
+    return { text:"即將開始", className:"blue" };
   }
 
   if (start && end && now >= start && now <= end) {
-    if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
-      return { text:"進行中 / 開賣中", className:"ok" };
-    }
     return { text:"進行中", className:"ok" };
   }
 
   if ((saleEnd && now > saleEnd) || (end && now > end)) {
-    return { text:"已結束 / 已截止", className:"warn" };
+    return { text:"已結束", className:"warn" };
   }
 
   return { text:"活動資訊", className:"blue" };
 }
 
-async function load(){
-  const eventInfoEl = document.getElementById("eventInfo");
-  const statsEl = document.getElementById("stats");
-  const staffEl = document.getElementById("staff");
-  const checkinEl = document.getElementById("checkin");
-  const ordersEl = document.getElementById("orders");
-  const ticketsEl = document.getElementById("tickets");
-  const staffAssignBtn = document.getElementById("staffAssignBtn");
+function getPublicTypeText(event){
+  return event.published === true ? "已公開" : "未公開";
+}
 
+function getSimpleApprovalText(value){
+  const v = norm(value).toLowerCase();
+  if (v === "approved") return "已核准";
+  if (v === "rejected") return "未核准";
+  if (v === "pending") return "審核中";
+  return "未設定";
+}
+
+function getInviteText(event){
+  return event.inviteCodeEnabled === true ? "已開啟" : "未開啟";
+}
+
+function getTicketFlowText(ticket){
+  const status = norm(ticket.status).toLowerCase();
+  if (status === "inside") return "在場";
+  if (status === "exited") return "已離場";
+  if (status === "not_entered") return "未入場";
+  if (!status) return ticket.checkedIn === true ? "已入場" : "未入場";
+  return status;
+}
+
+function getPaymentText(value){
+  const v = norm(value).toLowerCase();
+  if (v === "paid") return "已付款";
+  if (v === "pending") return "待付款";
+  if (v === "failed") return "付款失敗";
+  if (v === "refunded") return "已退款";
+  return "未標記";
+}
+
+async function loadUserRole(uid){
+  const doc = await db.collection("users").doc(uid).get();
+  if (!doc.exists) return { ok:false, reason:"尚未授權" };
+
+  const userData = doc.data() || {};
+  if (userData.enabled !== true) return { ok:false, reason:"帳號已停用" };
+
+  return {
+    ok: true,
+    role: String(userData.role || "").trim(),
+    userData
+  };
+}
+
+function isAllowedRole(role){
+  return [
+    "platform_super",
+    "platform_admin",
+    "org_super",
+    "org_admin",
+    "org_staff"
+  ].includes(role);
+}
+
+function canManageEvent(eventData){
+  if (!eventData) return false;
+
+  if (currentRole === "platform_super" || currentRole === "platform_admin") {
+    return true;
+  }
+
+  const mySchoolId = norm(currentUserData?.schoolId || currentUserData?.orgSchoolId || "");
+  const myOrgId = norm(currentUserData?.orgId || currentUserData?.organizationId || "");
+
+  const eventSchoolId = norm(eventData.ownerSchoolId || "");
+  const eventOrgId = norm(eventData.orgId || eventData.ownerOrgId || "");
+
+  if (mySchoolId && eventSchoolId && mySchoolId === eventSchoolId) return true;
+  if (myOrgId && eventOrgId && myOrgId === eventOrgId) return true;
+
+  return false;
+}
+
+async function loadEventPage(){
   if(!eventId){
-    eventInfoEl.innerHTML = `<div class="empty">缺少 eventId，無法載入活動。</div>`;
+    eventInfoEl.innerHTML = `<div class="empty">缺少活動資料，無法載入。</div>`;
+    statsEl.innerHTML = "";
+    staffEl.innerHTML = `<div class="empty">無資料</div>`;
+    checkinEl.innerHTML = `<div class="empty">無資料</div>`;
+    ordersEl.innerHTML = `<div class="empty">無資料</div>`;
+    ticketsEl.innerHTML = `<div class="empty">無資料</div>`;
     return;
   }
 
@@ -407,31 +559,35 @@ async function load(){
   }
 
   const event = eventSnap.data() || {};
+
+  if (!canManageEvent(event)) {
+    showGate("權限不足", "你沒有權限查看這場活動。", false);
+    return;
+  }
+
   const status = getStatus(event);
 
   eventInfoEl.innerHTML = `
     <div class="topbar">
       <div>
-        <h1>${esc(event.title || eventId)}</h1>
+        <h1>${esc(event.title || "未命名活動")}</h1>
         <div class="sub">
           地點：${esc(event.location || "-")}<br>
           活動時間：${esc(formatTime(event.eventStartAt))} ～ ${esc(formatTime(event.eventEndAt))}<br>
-          開賣時間：${esc(formatTime(event.saleStartAt))} ～ ${esc(formatTime(event.saleEndAt))}
+          受理時間：${esc(formatTime(event.saleStartAt))} ～ ${esc(formatTime(event.saleEndAt))}
         </div>
         <div class="row" style="margin-top:10px;">
           <span class="pill ${status.className}">${esc(status.text)}</span>
-          <span class="pill">${event.publishScope === "platform" ? "平台活動" : "校園活動"}</span>
-          <span class="pill">${event.published === true ? "公開" : "不公開"}</span>
-          <span class="pill">${esc(event.approvalStatus || "pending")}</span>
-          <span class="pill mono">${esc(eventId)}</span>
+          <span class="pill">${esc(getPublicTypeText(event))}</span>
+          <span class="pill">${esc(getSimpleApprovalText(event.approvalStatus))}</span>
         </div>
       </div>
 
       <div style="min-width:260px;">
         <div class="small">
-          名額：<span class="mono">${esc(event.capacity ?? "-")}</span><br>
-          邀請碼功能：<span class="mono">${event.inviteCodeEnabled === true ? "true" : "false"}</span><br>
-          出入口數量：<span class="mono">${Array.isArray(event.gates) ? event.gates.length : 0}</span>
+          名額：<span>${esc(event.capacity ?? "-")}</span><br>
+          邀請碼：<span>${esc(getInviteText(event))}</span><br>
+          入口數量：<span>${Array.isArray(event.gates) ? event.gates.length : 0}</span>
         </div>
       </div>
     </div>
@@ -459,15 +615,13 @@ async function load(){
   const checked = tickets.filter(t => t.checkedIn === true).length;
   const notChecked = tickets.length - checked;
   const inside = tickets.filter(t => t.status === "inside").length;
-  const exited = tickets.filter(t => t.status === "exited").length;
+  const orderTotalAmount = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
 
   const nonCheckinStaff = staffAssignments.filter(s => {
     const roleInEvent = norm(s.roleInEvent);
     const canCheckin = s?.permissions?.canCheckin === true;
     return !(roleInEvent === "checkin" || canCheckin);
   });
-
-  const orderTotalAmount = orders.reduce((sum, o) => sum + Number(o.total || 0), 0);
 
   statsEl.innerHTML = `
     <div class="stat">
@@ -479,23 +633,23 @@ async function load(){
       <b>${tickets.length}</b>
     </div>
     <div class="stat">
-      <span>已核銷</span>
+      <span>已使用</span>
       <b>${checked}</b>
     </div>
     <div class="stat">
-      <span>未核銷</span>
+      <span>未使用</span>
       <b>${notChecked}</b>
     </div>
     <div class="stat">
-      <span>工作人員</span>
+      <span>活動人員</span>
       <b>${nonCheckinStaff.length}</b>
     </div>
     <div class="stat">
-      <span>核銷人員</span>
+      <span>驗票人員</span>
       <b>${checkinAssignments.length}</b>
     </div>
     <div class="stat">
-      <span>在場中</span>
+      <span>在場人數</span>
       <b>${inside}</b>
     </div>
     <div class="stat">
@@ -508,40 +662,32 @@ async function load(){
     ? nonCheckinStaff.map(s => `
         <div class="item">
           <div class="itemTitle">
-            ${esc(s.email || s.uid || "-")}
-            <span class="tag">${esc(s.roleInEvent || "staff")}</span>
+            ${esc(s.email || "-")}
+            <span class="tag">${esc(s.roleInEvent || "活動人員")}</span>
           </div>
           <div class="itemMeta">
-            uid：<span class="mono">${esc(s.uid || s.id || "-")}</span><br>
-            分組：<span class="mono">${esc(s.groupName || "-")}</span><br>
-            備註：<span class="mono">${esc(s.note || "-")}</span><br>
-            權限：
-            <span class="mono">
-              canService=${s?.permissions?.canService === true ? "true" : "false"}｜
-              canViewOrders=${s?.permissions?.canViewOrders === true ? "true" : "false"}｜
-              canViewMembers=${s?.permissions?.canViewMembers === true ? "true" : "false"}
-            </span>
+            分組：${esc(s.groupName || "-")}<br>
+            備註：${esc(s.note || "-")}
           </div>
         </div>
       `).join("")
-    : `<div class="empty">目前沒有一般工作人員 / 服務中心 / 活動管理員資料。</div>`;
+    : `<div class="empty">目前沒有活動人員資料。</div>`;
 
   checkinEl.innerHTML = checkinAssignments.length
     ? checkinAssignments.map(c => `
         <div class="item">
           <div class="itemTitle">
-            ${esc(c.email || c.uid || "-")}
+            ${esc(c.email || "-")}
             <span class="tag">${esc(c.gateName || "未指定入口")}</span>
           </div>
           <div class="itemMeta">
-            uid：<span class="mono">${esc(c.uid || c.id || "-")}</span><br>
-            分組：<span class="mono">${esc(c.groupName || "-")}</span><br>
-            身份：<span class="mono">${esc(c.role || "checkin")}</span><br>
-            指派時間：<span class="mono">${esc(formatTime(c.assignedAt))}</span>
+            分組：${esc(c.groupName || "-")}<br>
+            身分：${esc(c.role || "驗票人員")}<br>
+            安排時間：${esc(formatTime(c.assignedAt))}
           </div>
         </div>
       `).join("")
-    : `<div class="empty">目前沒有核銷人員資料。</div>`;
+    : `<div class="empty">目前沒有驗票人員資料。</div>`;
 
   ordersEl.innerHTML = orders.length
     ? orders
@@ -551,13 +697,12 @@ async function load(){
           <div class="item">
             <div class="itemTitle">
               ${esc(o.email || o.userEmail || "-")}
-              <span class="tag">${esc(o.paymentStatus || "未標記")}</span>
+              <span class="tag">${esc(getPaymentText(o.paymentStatus))}</span>
             </div>
             <div class="itemMeta">
-              訂單ID：<span class="mono">${esc(o.id || "-")}</span><br>
-              姓名：<span class="mono">${esc(o.name || "-")}</span><br>
-              金額：<span class="mono">${formatMoney(o.total || 0)}</span><br>
-              建立時間：<span class="mono">${esc(formatTime(o.createdAt))}</span>
+              姓名：${esc(o.name || "-")}<br>
+              金額：${formatMoney(o.total || 0)}<br>
+              建立時間：${esc(formatTime(o.createdAt))}
             </div>
           </div>
         `).join("")
@@ -576,22 +721,56 @@ async function load(){
           <div class="item">
             <div class="itemTitle">
               ${esc(t.name || "-")}
-              <span class="tag ${t.checkedIn ? 'ok' : 'warn'}">${t.checkedIn ? '已入場' : '未入場'}</span>
+              <span class="tag">${t.checkedIn ? '已使用' : '未使用'}</span>
             </div>
             <div class="itemMeta">
-              Email：<span class="mono">${esc(t.email || "-")}</span><br>
-              票券ID：<span class="mono">${esc(t.ticketId || t.id || "-")}</span><br>
-              狀態：<span class="mono">${esc(t.status || (t.checkedIn ? "inside" : "not_entered"))}</span><br>
-              核銷入口：<span class="mono">${esc(t.checkedInGate || "-")}</span><br>
-              入場時間：<span class="mono">${esc(formatTime(t.checkedInAt))}</span><br>
-              出場時間：<span class="mono">${esc(formatTime(t.checkedOutAt))}</span>
+              Email：${esc(t.email || "-")}<br>
+              狀態：${esc(getTicketFlowText(t))}<br>
+              入口：${esc(t.checkedInGate || "-")}<br>
+              入場時間：${esc(formatTime(t.checkedInAt))}<br>
+              離場時間：${esc(formatTime(t.checkedOutAt))}
             </div>
           </div>
         `).join("")
     : `<div class="empty">目前沒有票券資料。</div>`;
 }
 
-load();
+auth.onAuthStateChanged(async (user) => {
+  currentUser = user || null;
+
+  if (!user) {
+    showGate("活動詳情", "請先登入後台帳號。", true);
+    return;
+  }
+
+  try{
+    const result = await loadUserRole(user.uid);
+
+    if (!result.ok) {
+      showGate("無法進入", result.reason, false);
+      return;
+    }
+
+    currentRole = result.role;
+    currentUserData = result.userData || {};
+
+    if (!isAllowedRole(currentRole)) {
+      showGate("權限不足", "你沒有權限查看此頁面。", false);
+      return;
+    }
+
+    whoEl.textContent = user.email || "-";
+    roleText.textContent = currentRole || "-";
+
+    gate.style.display = "none";
+    app.style.display = "block";
+
+    await loadEventPage();
+  }catch(e){
+    console.error(e);
+    showGate("發生錯誤", "無法讀取資料，請稍後再試。", false);
+  }
+});
 </script>
 </body>
 </html>

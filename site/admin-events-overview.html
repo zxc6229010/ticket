@@ -257,7 +257,7 @@
 
     .summaryGrid{
       display:grid;
-      grid-template-columns:repeat(4,1fr);
+      grid-template-columns:repeat(5,1fr);
       gap:10px;
       margin-top:14px;
     }
@@ -300,22 +300,38 @@
       line-height:1.8;
       padding:8px 0;
     }
+
+    .page{
+      opacity:0;
+      transform:translateY(6px);
+      transition:opacity .22s ease, transform .22s ease;
+    }
+
+    .page.on{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .page.leaving{
+      opacity:0;
+      transform:translateY(6px);
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div id="gate" class="section"></div>
+  <div class="wrap page" id="pageRoot">
+    <div id="gate" class="section" style="display:none;"></div>
 
     <div id="app" style="display:none;">
       <div class="section">
         <div class="header">
           <div>
             <h1>活動列表</h1>
-            <div class="sub">顯示活動摘要與統計資訊。點入後可進一步查看單一活動詳情，不在這一頁塞入過多細節。</div>
+            <div class="sub">查看活動概況與統計。</div>
             <div class="small">
               登入：<span id="who" class="mono">-</span>｜
-              角色：<span id="roleText" class="mono">-</span>｜
-              學校：<span id="schoolText" class="mono">-</span>
+              身分：<span id="roleText" class="mono">-</span>｜
+              校園：<span id="schoolText" class="mono">-</span>
             </div>
           </div>
 
@@ -330,16 +346,16 @@
         <div class="grid">
           <div>
             <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">搜尋活動</div>
-            <input id="searchInput" type="text" placeholder="搜尋活動名稱、地點、活動ID" />
+            <input id="searchInput" type="text" placeholder="搜尋活動名稱、地點" />
           </div>
 
           <div>
-            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">狀態篩選</div>
+            <div class="small" style="margin-bottom:6px;font-weight:900;color:#111827;">狀態</div>
             <select id="statusFilter">
               <option value="all">全部活動</option>
-              <option value="selling">開賣中</option>
-              <option value="upcoming">尚未開始 / 尚未開賣</option>
-              <option value="ended">已結束 / 已截止</option>
+              <option value="selling">受理中</option>
+              <option value="upcoming">即將開始</option>
+              <option value="ended">已結束</option>
             </select>
           </div>
         </div>
@@ -364,7 +380,7 @@
             <div class="statValue" id="sumTickets">-</div>
           </div>
           <div class="statCard">
-            <div class="statLabel">已核銷票券</div>
+            <div class="statLabel">已使用票券</div>
             <div class="statValue" id="sumCheckedIn">-</div>
           </div>
         </div>
@@ -372,7 +388,6 @@
 
       <div class="section">
         <h2>活動摘要</h2>
-        <div class="sub">本頁只顯示摘要資訊；工作人員、核銷人員、訂單細節、票券細節請點進單一活動詳情頁查看。</div>
         <div id="activityList" class="list"></div>
       </div>
     </div>
@@ -383,6 +398,23 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(() => location.href = href, 140);
+    }
+
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
+
     if (!firebase.apps.length) {
       firebase.initializeApp({
         apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -440,19 +472,6 @@
       return isNaN(d.getTime()) ? null : d;
     }
 
-    function formatDateTime(value){
-      const d = toDate(value);
-      if (!d) return "-";
-      return d.toLocaleString("zh-Hant", {
-        year:"numeric",
-        month:"2-digit",
-        day:"2-digit",
-        hour:"2-digit",
-        minute:"2-digit",
-        hour12:false
-      });
-    }
-
     function formatDateOnly(value){
       const d = toDate(value);
       if (!d) return "-";
@@ -471,24 +490,38 @@
       const eventEnd = toDate(event.eventEndAt)?.getTime() ?? null;
 
       if (eventStart && now < eventStart) {
-        if (saleStart && now < saleStart) {
-          return { text:"尚未開始 / 尚未開賣", key:"upcoming", className:"blue" };
-        }
-        return { text:"尚未開始", key:"upcoming", className:"blue" };
+        return { text:"即將開始", key:"upcoming", className:"blue" };
       }
 
-      if (eventStart && eventEnd && now >= eventStart && now <= eventEnd) {
-        if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
-          return { text:"進行中 / 開賣中", key:"selling", className:"ok" };
-        }
-        return { text:"進行中", key:"selling", className:"ok" };
+      if (saleStart && saleEnd && now >= saleStart && now <= saleEnd) {
+        return { text:"受理中", key:"selling", className:"ok" };
       }
 
       if ((saleEnd && now > saleEnd) || (eventEnd && now > eventEnd)) {
-        return { text:"已結束 / 已截止", key:"ended", className:"warn" };
+        return { text:"已結束", key:"ended", className:"warn" };
+      }
+
+      if (eventStart && eventEnd && now >= eventStart && now <= eventEnd) {
+        return { text:"進行中", key:"selling", className:"ok" };
       }
 
       return { text:"活動資訊", key:"all", className:"blue" };
+    }
+
+    function getPublishText(item){
+      return item.published === true ? "公開" : "未公開";
+    }
+
+    function getScopeText(item){
+      return item.publishScope === "platform" ? "平台活動" : "校園活動";
+    }
+
+    function getApprovalText(value){
+      const v = norm(value).toLowerCase();
+      if (v === "approved") return "已核准";
+      if (v === "pending") return "審核中";
+      if (v === "rejected") return "未核准";
+      return "未設定";
     }
 
     function showGate(title, msg, showLogin){
@@ -496,8 +529,7 @@
         <h1 style="font-size:22px; margin:0 0 6px;">${esc(title)}</h1>
         <div class="sub">${esc(msg)}</div>
         <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : ``}
-          ${!showLogin ? `<button class="btn" id="outBtn">登出</button>` : ``}
+          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : `<button class="btn" id="outBtn">登出</button>`}
         </div>
       `;
 
@@ -621,7 +653,6 @@
         if (!q) return true;
 
         const fields = [
-          item.id,
           item.title,
           item.location,
           item.description
@@ -658,16 +689,15 @@
               <div style="min-width:0; flex:1;">
                 <div class="activityTitle">${esc(item.title || "未命名活動")}</div>
                 <div class="activityMeta">
-                  活動ID：<span class="mono">${esc(item.id)}</span><br>
                   活動日期：${esc(formatDateOnly(item.eventStartAt))}<br>
                   地點：${esc(item.location || "-")}
                 </div>
 
                 <div class="row" style="margin-top:10px;">
                   <span class="pill ${status.className}">${esc(status.text)}</span>
-                  <span class="pill">${item.publishScope === "platform" ? "平台活動" : "校園活動"}</span>
-                  <span class="pill">${item.published === true ? "公開" : "不公開"}</span>
-                  <span class="pill">${esc(item.approvalStatus || "pending")}</span>
+                  <span class="pill">${esc(getScopeText(item))}</span>
+                  <span class="pill">${esc(getPublishText(item))}</span>
+                  <span class="pill">${esc(getApprovalText(item.approvalStatus))}</span>
                 </div>
               </div>
 
@@ -688,17 +718,17 @@
               </div>
 
               <div class="summaryBox">
-                <div class="summaryLabel">已核銷</div>
+                <div class="summaryLabel">已使用</div>
                 <div class="summaryValue">${esc(item.counts.checkedIn)}</div>
               </div>
 
               <div class="summaryBox">
-                <div class="summaryLabel">工作人員</div>
+                <div class="summaryLabel">活動人員</div>
                 <div class="summaryValue">${esc(item.counts.staff)}</div>
               </div>
 
               <div class="summaryBox">
-                <div class="summaryLabel">核銷人員</div>
+                <div class="summaryLabel">驗票人員</div>
                 <div class="summaryValue">${esc(item.counts.checkin)}</div>
               </div>
             </div>
@@ -731,7 +761,7 @@
         myOrgId = r.orgId;
 
         if (!["platform_super","platform_admin","org_super","org_admin","org_staff"].includes(currentRole)) {
-          showGate("權限不足", "此頁僅限平台 / 組織 / 校方後台角色使用。", false);
+          showGate("權限不足", "你沒有權限查看此頁面。", false);
           return;
         }
 
@@ -745,7 +775,7 @@
         await loadActivities();
       } catch (e) {
         console.error(e);
-        showGate("發生錯誤", "無法讀取資料，請查看 Console。", false);
+        showGate("發生錯誤", "無法讀取資料，請稍後再試。", false);
       }
     });
   </script>

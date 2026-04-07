@@ -348,11 +348,27 @@
       flex-wrap:wrap;
       margin-top:12px;
     }
+
+    .page{
+      opacity:0;
+      transform:translateY(6px);
+      transition:opacity .22s ease, transform .22s ease;
+    }
+
+    .page.on{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .page.leaving{
+      opacity:0;
+      transform:translateY(6px);
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+  <div class="wrap page" id="pageRoot">
     <div id="gate" class="section"></div>
 
     <div id="app" style="display:none;">
@@ -360,12 +376,10 @@
         <div class="header">
           <div>
             <h1>活動管理</h1>
-            <div class="sub">
-              可建立活動、管理活動、設定邀請碼與出入口。活動內工作人員、核銷人員、服務中心與權限，請至「工作人員指派」頁面設定。
-            </div>
+            <div class="sub">建立活動與管理活動內容。</div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
-              角色：<span id="roleText" class="mono">-</span>
+              身分：<span id="roleText" class="mono">-</span>
             </div>
           </div>
 
@@ -380,12 +394,12 @@
         <div class="modeCardWrap">
           <div class="modeCard active" id="openCreateMode">
             <div class="modeTitle">建立活動</div>
-            <div class="sub">建立新活動、設定活動類型、主辦對象、時間、邀請碼與出入口等內容。</div>
+            <div class="sub">新增活動與基本設定。</div>
           </div>
 
           <div class="modeCard" id="openManageMode">
             <div class="modeTitle">管理活動</div>
-            <div class="sub">查看既有活動、編輯內容、刪除活動、查看詳情與前往工作人員指派。</div>
+            <div class="sub">查看、編輯與刪除既有活動。</div>
           </div>
         </div>
       </div>
@@ -397,20 +411,15 @@
             <div class="box">
               <div>目前校園：<span id="mySchoolText" class="mono">-</span></div>
               <div style="margin-top:8px;">目前組織：<span id="myOrgText" class="mono">-</span></div>
-              <div class="small" style="margin-top:8px;">
-                校方角色只能管理自己校園相關活動；平台角色可管理全部活動。
-              </div>
             </div>
           </div>
 
           <div>
-            <label>本頁定位</label>
+            <label>目前帳號</label>
             <div class="box">
-              <div class="small">
-                <span class="ok">本頁</span>：活動內容管理（標題、時間、邀請碼、出入口）<br>
-                <span class="ok">工作人員指派頁</span>：設定核銷人員、服務中心、活動內身份與權限<br>
-                <span class="ok">活動詳情頁</span>：查看單一活動完整資訊與統計
-              </div>
+              <div>身分：<span id="creatorRoleText" class="mono">-</span></div>
+              <div style="margin-top:8px;">校園：<span id="creatorSchoolText" class="mono">-</span></div>
+              <div style="margin-top:8px;">組織：<span id="creatorOrgText" class="mono">-</span></div>
             </div>
           </div>
         </div>
@@ -421,7 +430,7 @@
       <div class="section" id="editorSection">
         <div class="row" style="justify-content:space-between;">
           <div>
-            <h2>建立 / 編輯活動</h2>
+            <h2>活動內容</h2>
             <div class="sub small" id="editingHint">目前：<span class="mono">新增模式</span></div>
           </div>
           <div class="row">
@@ -433,18 +442,15 @@
 
         <div class="grid3">
           <div>
-            <label style="margin-top:0;">活動發布類型</label>
+            <label style="margin-top:0;">活動類型</label>
             <select id="publishScope">
               <option value="school">校園活動</option>
               <option value="platform">平台活動</option>
             </select>
-            <div class="small" style="margin-top:8px;">
-              校園活動會綁定校園；平台活動視為全平台活動。
-            </div>
           </div>
 
           <div>
-            <label style="margin-top:0;">主辦校園</label>
+            <label style="margin-top:0;">主辦單位</label>
             <select id="ownerSchoolSel"></select>
             <div class="small" id="ownerHint" style="margin-top:8px;">-</div>
           </div>
@@ -452,9 +458,9 @@
           <div>
             <label style="margin-top:0;">審核狀態</label>
             <select id="approvalStatus">
-              <option value="pending">pending（待平台審核）</option>
-              <option value="approved">approved（已通過）</option>
-              <option value="rejected">rejected（已退回）</option>
+              <option value="pending">審核中</option>
+              <option value="approved">已通過</option>
+              <option value="rejected">未通過</option>
             </select>
             <div class="small" id="approvalHint" style="margin-top:8px;">-</div>
           </div>
@@ -462,68 +468,57 @@
 
         <div class="grid" style="margin-top:12px;">
           <div>
-            <label>活動標題（必填）</label>
-            <input id="title" type="text" placeholder="例：校園演唱會" />
+            <label>活動名稱</label>
+            <input id="title" type="text" placeholder="例如：校園演唱會" />
 
-            <label>活動地點（選填）</label>
-            <input id="location" type="text" placeholder="例：活動中心" />
+            <label>活動地點</label>
+            <input id="location" type="text" placeholder="例如：活動中心" />
 
-            <label>活動說明（選填）</label>
-            <textarea id="description" placeholder="活動簡介、注意事項…"></textarea>
+            <label>活動說明</label>
+            <textarea id="description" placeholder="活動介紹"></textarea>
           </div>
 
           <div>
-            <label>是否公開（published）</label>
+            <label>是否公開</label>
             <select id="published">
-              <option value="false">false（不公開）</option>
-              <option value="true">true（公開）</option>
+              <option value="false">不公開</option>
+              <option value="true">公開</option>
             </select>
 
-            <label>名額（選填）</label>
-            <input id="capacity" type="number" min="0" placeholder="例：500" />
-
-            <label>建立者所屬資訊</label>
-            <div class="box">
-              <div>role：<span id="creatorRoleText" class="mono">-</span></div>
-              <div style="margin-top:8px;">schoolId：<span id="creatorSchoolText" class="mono">-</span></div>
-              <div style="margin-top:8px;">orgId：<span id="creatorOrgText" class="mono">-</span></div>
-            </div>
+            <label>名額</label>
+            <input id="capacity" type="number" min="0" placeholder="例如：500" />
           </div>
         </div>
 
         <div class="grid" style="margin-top:12px;">
           <div>
-            <label>搶票開始（saleStartAt）</label>
+            <label>開放時間</label>
             <input id="saleStartAt" type="datetime-local" />
 
-            <label>搶票結束（saleEndAt）</label>
+            <label>截止時間</label>
             <input id="saleEndAt" type="datetime-local" />
           </div>
 
           <div>
-            <label>活動開始（eventStartAt）</label>
+            <label>活動開始時間</label>
             <input id="eventStartAt" type="datetime-local" />
 
-            <label>活動結束（eventEndAt）</label>
+            <label>活動結束時間</label>
             <input id="eventEndAt" type="datetime-local" />
           </div>
         </div>
 
         <div class="divider"></div>
 
-        <h2>邀請碼設定</h2>
-        <div class="sub">可選手動輸入或隨機產生，並可設定每組邀請碼可用次數。</div>
+        <h2>邀請碼</h2>
 
         <div class="box" style="margin-top:12px;">
           <div class="switchRow">
             <span class="pill">邀請碼功能</span>
             <select id="inviteCodeEnabled" style="max-width:220px;">
-              <option value="false">false（不啟用）</option>
-              <option value="true">true（啟用）</option>
+              <option value="false">關閉</option>
+              <option value="true">開啟</option>
             </select>
-          </div>
-          <div class="small" style="margin-top:8px;">
-            啟用後，前台流程可要求輸入邀請碼才能報名 / 購票。
           </div>
         </div>
 
@@ -536,17 +531,13 @@
         </div>
 
         <div class="box" id="inviteUsageBox" style="margin-top:12px; display:none;">
-          <div style="font-weight:900; margin-bottom:8px;">邀請碼使用名單</div>
-          <div class="small" style="margin-bottom:8px;">顯示此活動中使用邀請碼報名的人員。</div>
+          <div style="font-weight:900; margin-bottom:8px;">使用紀錄</div>
           <div id="inviteUsageList" class="small">尚無資料</div>
         </div>
 
         <div class="divider"></div>
 
-        <h2>出入口設定</h2>
-        <div class="sub">
-          此處僅管理活動的出入口名稱。核銷人員綁定、服務中心、人員權限與入口指派，請至「工作人員指派」頁面設定。
-        </div>
+        <h2>出入口</h2>
 
         <div style="margin-top:12px;">
           <div class="row" style="justify-content:space-between;">
@@ -566,9 +557,6 @@
 
       <div class="section hidden" id="manageSection">
         <h2>活動清單</h2>
-        <div class="sub">
-          點「編輯」會直接在該活動卡片下方展開編輯區。若要查看單一活動完整資訊，請點「活動詳情」；若要設定工作人員、核銷人員或活動內權限，請點「工作人員指派」。
-        </div>
         <div class="list" id="list"></div>
       </div>
     </div>
@@ -579,6 +567,23 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(() => location.href = href, 140);
+    }
+
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
+
     if (!firebase.apps.length) {
       firebase.initializeApp({
         apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -679,7 +684,7 @@
         await firebase.auth().signOut();
       }catch(e){
         console.error(e);
-        alert("登出失敗（看 Console）");
+        alert("登出失敗");
       }
     }
 
@@ -741,14 +746,14 @@
     function formatSchoolLabel(id){
       const value = norm(id);
       if (!value) return "-";
-      if (value === "__global__") return "平台（__global__）";
-      return schoolNameMap[value] ? `${schoolNameMap[value]}（${value}）` : value;
+      if (value === "__global__") return "平台";
+      return schoolNameMap[value] ? schoolNameMap[value] : value;
     }
 
     function formatOrgLabel(id){
       const value = norm(id);
       if (!value) return "-";
-      return orgNameMap[value] ? `${orgNameMap[value]}（${value}）` : value;
+      return orgNameMap[value] ? orgNameMap[value] : value;
     }
 
     async function loadNameMaps(){
@@ -873,34 +878,34 @@
               <div>
                 <label style="margin-top:0;">模式</label>
                 <select onchange="updateInviteCode(${idx}, 'mode', this.value)">
-                  <option value="manual" ${item.mode === "manual" ? "selected" : ""}>manual（手動）</option>
-                  <option value="random" ${item.mode === "random" ? "selected" : ""}>random（隨機）</option>
+                  <option value="manual" ${item.mode === "manual" ? "selected" : ""}>手動輸入</option>
+                  <option value="random" ${item.mode === "random" ? "selected" : ""}>隨機產生</option>
                 </select>
               </div>
 
               <div>
                 <label style="margin-top:0;">是否啟用</label>
                 <select onchange="updateInviteCode(${idx}, 'enabled', this.value)">
-                  <option value="true" ${item.enabled === true ? "selected" : ""}>true</option>
-                  <option value="false" ${item.enabled === true ? "" : "selected"}>false</option>
+                  <option value="true" ${item.enabled === true ? "selected" : ""}>啟用</option>
+                  <option value="false" ${item.enabled === true ? "" : "selected"}>停用</option>
                 </select>
               </div>
             </div>
 
             <div class="grid">
               <div>
-                <label>code</label>
+                <label>邀請碼</label>
                 <input
                   type="text"
                   value="${esc(item.code)}"
                   ${isRandom ? "readonly" : ""}
                   oninput="updateInviteCode(${idx}, 'code', this.value)"
-                  placeholder="${isRandom ? "隨機產生" : "例如：VIP2026"}"
+                  placeholder="${isRandom ? "隨機產生" : "請輸入邀請碼"}"
                 />
               </div>
 
               <div>
-                <label>${isRandom ? "亂數長度" : "可用次數（maxUses）"}</label>
+                <label>${isRandom ? "亂數長度" : "可用次數"}</label>
                 ${
                   isRandom
                     ? `<input type="number" min="4" max="20" value="${item.randomLength}" onchange="updateInviteCode(${idx}, 'randomLength', this.value)" />`
@@ -911,7 +916,7 @@
 
             <div class="grid">
               <div>
-                <label>${isRandom ? "可用次數（maxUses）" : "已使用次數（usedCount）"}</label>
+                <label>${isRandom ? "可用次數" : "已使用次數"}</label>
                 ${
                   isRandom
                     ? `<input type="number" min="0" value="${item.maxUses}" onchange="updateInviteCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
@@ -920,18 +925,18 @@
               </div>
 
               <div>
-                <label>${isRandom ? "已使用次數（usedCount）" : "備註（note）"}</label>
+                <label>${isRandom ? "已使用次數" : "備註"}</label>
                 ${
                   isRandom
                     ? `<div class="box small" style="display:flex;align-items:center;min-height:48px;">${item.usedCount}</div>`
-                    : `<input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />`
+                    : `<input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="備註" />`
                 }
               </div>
             </div>
 
             ${isRandom ? `
-              <label>備註（note）</label>
-              <input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="例如：貴賓 / 工作人員 / 家長" />
+              <label>備註</label>
+              <input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="備註" />
             ` : ``}
           </div>
         `;
@@ -959,12 +964,8 @@
               type="text"
               value="${esc(item.name || "")}"
               oninput="updateGateAssign(${idx}, 'name', this.value)"
-              placeholder="例如：A入口 / 北門 / 側門"
+              placeholder="例如：A入口"
             />
-          </div>
-
-          <div class="small" style="margin-top:8px;">
-            核銷人員與活動內身份請至「工作人員指派」頁面設定。
           </div>
         </div>
       `).join("");
@@ -1050,10 +1051,10 @@
       if (!isPlatform()) {
         approvalStatusEl.value = "pending";
         approvalStatusEl.disabled = true;
-        approvalHint.innerHTML = `非平台管理員不可直接將審核狀態改為已通過，建立時會固定為 <span class="mono">pending</span>。`;
+        approvalHint.innerHTML = `目前無法調整審核狀態。`;
       } else {
         approvalStatusEl.disabled = false;
-        approvalHint.innerHTML = `平台管理員可調整審核狀態。`;
+        approvalHint.innerHTML = `可調整審核狀態。`;
       }
     }
 
@@ -1066,10 +1067,10 @@
           return refreshOwnerSelectState();
         }
 
-        ownerSchoolSel.innerHTML = `<option value="__global__">平台（__global__）</option>`;
+        ownerSchoolSel.innerHTML = `<option value="__global__">平台</option>`;
         ownerSchoolSel.value = "__global__";
         ownerSchoolSel.disabled = true;
-        ownerHint.innerHTML = `平台活動會以 <span class="mono">__global__</span> 作為歸屬。`;
+        ownerHint.innerHTML = `此活動會歸在平台。`;
         updateSaveBtn();
         return;
       }
@@ -1089,7 +1090,7 @@
         });
 
         ownerSchoolSel.disabled = false;
-        ownerHint.innerHTML = `平台角色建立校園活動時，可指定任一校園作為主辦校園。`;
+        ownerHint.innerHTML = `可選擇主辦校園。`;
       } else {
         ownerSchoolSel.insertAdjacentHTML(
           "beforeend",
@@ -1097,7 +1098,7 @@
         );
         ownerSchoolSel.value = mySchoolId || "";
         ownerSchoolSel.disabled = true;
-        ownerHint.innerHTML = `你目前屬於校方角色，建立校園活動時只能使用自己的校園。`;
+        ownerHint.innerHTML = `目前只能使用自己的校園。`;
       }
 
       updateSaveBtn();
@@ -1128,14 +1129,13 @@
 
           rows.push({
             inviteCode: norm(r.inviteCode),
-            email: norm(r.userEmail || r.email || doc.id),
-            uid: doc.id,
+            email: norm(r.userEmail || r.email || ""),
             createdAt: r.createdAt
           });
         });
 
         if (!rows.length) {
-          inviteUsageList.innerHTML = "目前沒有使用邀請碼的報名資料。";
+          inviteUsageList.innerHTML = "目前沒有使用資料。";
           return;
         }
 
@@ -1149,12 +1149,11 @@
           <div style="padding:10px 0; border-top:1px solid var(--line);">
             <div><span class="pill">${esc(row.inviteCode)}</span></div>
             <div style="margin-top:6px;">${esc(row.email || "-")}</div>
-            <div class="small mono" style="margin-top:4px;">${esc(row.uid)}</div>
           </div>
         `).join("");
       } catch (err) {
         console.error(err);
-        inviteUsageList.innerHTML = `讀取失敗：${esc(err.message || err)}`;
+        inviteUsageList.innerHTML = `讀取失敗`;
       }
     }
 
@@ -1279,14 +1278,13 @@
               <div style="min-width:0;">
                 <div class="item-title">${esc(title)} ${tag}</div>
                 <div class="item-meta">
-                  eventId：<span class="mono">${esc(id)}</span><br>
-                  ownerSchoolId：<span class="mono">${esc(formatSchoolLabel(owner))}</span><br>
-                  approvalStatus：<span class="mono">${esc(approvalStatus)}</span>｜
-                  published：<span class="mono">${published ? "true" : "false"}</span><br>
-                  搶票：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
-                  活動開始：<span class="mono">${esc(eventStart || "-")}</span><br>
-                  inviteCodeEnabled：<span class="mono">${inviteEnabled ? "true" : "false"}</span>｜
-                  邀請碼數量：<span class="mono">${inviteCount}</span><br>
+                  主辦單位：<span class="mono">${esc(formatSchoolLabel(owner))}</span><br>
+                  審核狀態：<span class="mono">${esc(approvalStatus)}</span>｜
+                  公開：<span class="mono">${published ? "是" : "否"}</span><br>
+                  開放時間：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
+                  活動時間：<span class="mono">${esc(eventStart || "-")}</span><br>
+                  邀請碼：<span class="mono">${inviteEnabled ? "開啟" : "關閉"}</span>｜
+                  數量：<span class="mono">${inviteCount}</span><br>
                   出入口數量：<span class="mono">${gateCount}</span>
                 </div>
 
@@ -1332,7 +1330,7 @@
         const e = doc.data() || {};
         editingId = eventId;
 
-        editingHint.innerHTML = `目前：<span class="mono">編輯模式</span>（eventId：<span class="mono">${esc(eventId)}</span>）`;
+        editingHint.innerHTML = `目前：<span class="mono">編輯模式</span>`;
 
         titleEl.value = e.title || "";
         locationEl.value = e.location || "";
@@ -1384,16 +1382,15 @@
         }
       } catch (err) {
         console.error(err);
-        alert("載入失敗：\n" + (err.message || err));
+        alert("載入失敗");
       }
     };
 
     window.deleteEvent = async (eventId, title) => {
-      const ok = confirm(`確定要刪除活動「${title}」嗎？\n此動作無法復原。`);
+      const ok = confirm(`確定要刪除活動「${title}」嗎？`);
       if (!ok) return;
 
       try {
-        // 刪除 staffAssignments / checkinAssignments / 其他子集合資料本身若要完整刪，建議之後做 cloud function
         await db.collection("events").doc(eventId).delete();
 
         resetEditor();
@@ -1401,7 +1398,7 @@
         alert("已刪除");
       } catch (err) {
         console.error(err);
-        alert("刪除失敗：\n" + (err.message || err));
+        alert("刪除失敗");
       }
     };
 
@@ -1420,15 +1417,15 @@
         const inviteCodes = buildInviteCodesPayload();
         const gates = buildGateAssignmentsPayload();
 
-        if (!title) throw new Error("請輸入活動標題");
-        if (!ownerSchoolId) throw new Error("缺少主辦對象");
+        if (!title) throw new Error("請輸入活動名稱");
+        if (!ownerSchoolId) throw new Error("請選擇主辦單位");
 
         if (!isPlatform() && publishScope === "platform") {
-          throw new Error("校方角色不可直接建立平台活動");
+          throw new Error("目前無法建立平台活動");
         }
 
         if (isOrgRole() && publishScope === "school" && ownerSchoolId !== mySchoolId) {
-          throw new Error("校方角色只能建立自己校園的活動");
+          throw new Error("目前只能建立自己的校園活動");
         }
 
         const payload = {
@@ -1486,7 +1483,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("儲存失敗：\n" + (err.message || err));
+        alert(err.message || "儲存失敗");
       } finally {
         saveBtn.textContent = oldText;
         updateSaveBtn();
@@ -1592,7 +1589,7 @@
         console.error(err);
         showGate(`
           <h1>發生錯誤</h1>
-          <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
+          <div class="sub warn">無法讀取資料，請稍後再試。</div>
           <div style="margin-top:16px;">
             <button class="btn" id="outBtn">登出</button>
           </div>
