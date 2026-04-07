@@ -168,10 +168,9 @@
       <div class="card">
         <div class="row">
           <div>
-            <h1>初選單選單管理</h1>
+            <h1>主選單顯示設定</h1>
             <div class="sub">
-              在這裡決定「各身分」在初選單會看到哪些功能，以及哪些要置頂。<br/>
-              組織端只能在平台允許的範圍內做子集合，不能超過你設定的上限。
+              在這裡決定各身分在主選單會看到哪些功能，以及哪些要置頂。
             </div>
             <div class="sub" style="margin-top:10px;">
               登入：<span id="email" class="mono">-</span>｜
@@ -185,19 +184,15 @@
         </div>
 
         <div class="pinnedHint">
-          📌 <b>置頂</b>：會顯示在初選單最上方灰底區塊。<br/>
-          置頂必須先勾選「顯示」才可設定。<br/>
-          這份設定的功能 id 已經對齊新版 <span class="mono">dashboard.html</span>。
+          勾選「顯示」＝該身分看得到。<br/>
+          勾選「置頂」＝顯示在主選單上方。
         </div>
       </div>
 
       <div class="card">
         <div class="row">
           <div>
-            <span class="pill">選單顯示設定</span>
-            <div class="sub" style="margin-top:8px;">
-              勾選「顯示」＝該身分看的到；勾選「置頂」＝出現在最上方。
-            </div>
+            <span class="pill">顯示設定</span>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="btn" id="reloadBtn">重新載入</button>
@@ -207,13 +202,6 @@
       </div>
 
       <div class="grid" id="rolesGrid"></div>
-
-      <div class="card">
-        <div class="sub">
-          儲存後會立刻生效；如果初選單有「勾選但看不到」，通常是功能 id 沒和 dashboard 對齊。<br/>
-          這頁會把未登錄的功能 id 一起列出來，方便你檢查。
-        </div>
-      </div>
     </div>
   </div>
 
@@ -276,25 +264,27 @@
       catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
     };
 
-    // 一定要和 dashboard.html 的 FEATURES id 對齊
+    // 這份一定要和 dashboard.html 的 FEATURES 完全對齊
     const FEATURES = [
-      { id:"admin-dashboard-home",     title:"📊 後台總覽" },
-      { id:"admin-events",             title:"🎟️ 活動管理" },
-      { id:"admin-event-orders",       title:"🧾 活動訂單管理" },
       { id:"partner-schools",          title:"🏫 特約校園管理" },
-      { id:"import-verify",            title:"📥 名單匯入 / 驗證設定" },
-      { id:"member-lookup",            title:"🔎 會員查詢" },
+      { id:"import-verify",            title:"📥 名單匯入" },
+      { id:"admin-member-lookup",      title:"🔎 會員查詢" },
+
+      { id:"admin-events",             title:"🎟️ 活動管理" },
+      { id:"admin-events-overview",    title:"📋 活動總覽" },
+      { id:"admin-event-orders",       title:"🧾 訂單管理" },
+
       { id:"seat-editor",              title:"🪑 座位編輯器" },
-      { id:"staff-checkin",            title:"✅ 核銷人員掃碼" },
+      { id:"staff-checkin",            title:"✅ 核銷掃碼" },
       { id:"service-center",           title:"🛠️ 服務中心" },
-      { id:"admin-staff-users",        title:"🧑‍💼 後台人員 / 審核" },
-      { id:"admin-user-assignment",    title:"🪪 使用者權限配置" },
-      { id:"admin-org-overview",       title:"🏢 全組織管理狀況" },
-      { id:"org-team",                 title:"👥 組織團隊 / 工作組別" },
-      { id:"admin-dashboard-settings", title:"⚙️ 初選單顯示設定" },
-      { id:"admin-impersonate",        title:"🧪 身分 / 學校模擬" },
-      { id:"admin-platform-users",     title:"🌐 平台使用者管理" },
-      { id:"admin-school-overview",    title:"🏫 校園總覽" }
+
+      { id:"admin-staff-users",        title:"🧑‍💼 後台人員管理" },
+      { id:"admin-user-assignment",    title:"🪪 權限細部設定" },
+      { id:"org-team",                 title:"👥 組織團隊" },
+
+      { id:"admin-dashboard-settings", title:"⚙️ 主選單設定" },
+      { id:"admin-impersonate",        title:"🧪 身分模擬" },
+      { id:"admin-platform-users",     title:"🌐 平台使用者" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -337,32 +327,25 @@
       return (r && typeof r === "object") ? r : {};
     }
 
-    function collectAllFeatureIds(){
-      const ids = new Set(FEATURES.map(f => f.id));
-      ensureCfgSkeleton();
-
-      for (const [roleId, roleCfg] of Object.entries(cfg.roles || {})){
-        if (!roleCfg || typeof roleCfg !== "object") continue;
-        for (const fid of Object.keys(roleCfg)){
-          ids.add(fid);
-        }
-      }
-      return Array.from(ids);
-    }
-
     function normalizeRoleCfg(){
       ensureCfgSkeleton();
-      const allIds = collectAllFeatureIds();
 
       ROLES.forEach(r => {
-        allIds.forEach(fid => {
-          const now = cfg.roles[r.id][fid] || {};
-          cfg.roles[r.id][fid] = {
+        FEATURES.forEach(f => {
+          const now = cfg.roles[r.id][f.id] || {};
+          cfg.roles[r.id][f.id] = {
             visible: now.visible === true,
             pinned: now.pinned === true
           };
-          if (cfg.roles[r.id][fid].pinned === true && cfg.roles[r.id][fid].visible !== true) {
-            cfg.roles[r.id][fid].pinned = false;
+          if (cfg.roles[r.id][f.id].pinned === true && cfg.roles[r.id][f.id].visible !== true) {
+            cfg.roles[r.id][f.id].pinned = false;
+          }
+        });
+
+        // 刪掉舊的無效功能 id
+        Object.keys(cfg.roles[r.id]).forEach(fid => {
+          if (!FEATURE_MAP.has(fid)) {
+            delete cfg.roles[r.id][fid];
           }
         });
       });
@@ -370,12 +353,6 @@
 
     function render(){
       rolesGrid.innerHTML = "";
-
-      const allIds = collectAllFeatureIds();
-      const ordered = [
-        ...FEATURES.map(f => f.id),
-        ...allIds.filter(id => !FEATURE_MAP.has(id))
-      ];
 
       ROLES.forEach(r => {
         const roleId = r.id;
@@ -388,22 +365,19 @@
               <span class="pill">可置頂</span>
             </div>
             <div class="roleHint">
-              勾選「顯示」＝該身分看的到；勾選「置頂」＝出現在初選單最上方灰底區。
+              勾選「顯示」＝該身分看得到；勾選「置頂」＝顯示在主選單上方。
             </div>
 
             <div style="margin-top:10px;">
-              ${ordered.map(fid => {
-                const meta = FEATURE_MAP.get(fid);
-                const title = meta ? meta.title : "🧩 未登錄功能";
-                const fc = roleCfg[fid] || {};
+              ${FEATURES.map(f => {
+                const fc = roleCfg[f.id] || {};
                 const visible = fc.visible === true;
                 const pinned = fc.pinned === true;
 
                 return `
                   <div class="feat">
                     <div style="min-width:0;">
-                      <div class="featName">${esc(title)}</div>
-                      ${meta ? `` : `<div class="featNote mono">featureId：${esc(fid)}</div>`}
+                      <div class="featName">${esc(f.title)}</div>
                     </div>
 
                     <div class="controls">
@@ -411,7 +385,7 @@
                         <input type="checkbox"
                           data-kind="visible"
                           data-role="${esc(roleId)}"
-                          data-fid="${esc(fid)}"
+                          data-fid="${esc(f.id)}"
                           ${visible ? "checked" : ""}>
                         顯示
                       </label>
@@ -420,7 +394,7 @@
                         <input type="checkbox"
                           data-kind="pinned"
                           data-role="${esc(roleId)}"
-                          data-fid="${esc(fid)}"
+                          data-fid="${esc(f.id)}"
                           ${pinned ? "checked" : ""} ${visible ? "" : "disabled"}>
                         置頂
                       </label>
@@ -498,7 +472,7 @@
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user){
-        showGate("初選單顯示設定", "請先使用 Email / 密碼登入後台。", true);
+        showGate("主選單顯示設定", "請先使用 Email / 密碼登入後台。", true);
         return;
       }
 
