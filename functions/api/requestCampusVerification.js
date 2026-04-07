@@ -21,7 +21,7 @@ export async function onRequestPost(context) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: "校園驗證 <campus-verify-noreply@ticket.kmshteam.org>",
+        from: "校園驗證 <campus-verify@ticket.kmshteam.org>",
         to: schoolEmail,
         subject: "校園驗證信",
         html: `

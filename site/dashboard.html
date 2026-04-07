@@ -185,7 +185,6 @@
     <div id="gate" class="card" style="display:none;"></div>
 
     <div id="app" style="display:none;">
-      <!-- impersonation banner -->
       <div id="impersonateBanner" class="card impersonate-wrap" style="display:none;">
         <div class="row">
           <div>
@@ -404,29 +403,27 @@
       }
     };
 
-    // 這裡是重點：保留「admin-dashboard-settings」用 id 控制顯示的機制
     const FEATURES = [
-      { id:"admin-events",             title:"🎟️ 活動管理",               desc:"建立活動、設定票種、邀請碼、資格與基本資訊。", ready:true, href:"admin-events.html" },
-      { id:"admin-event-orders",       title:"🧾 活動訂單管理",             desc:"查看訂單、報名資料、後台人工處理訂單。", ready:true, href:"admin-event-orders.html" },
       { id:"partner-schools",          title:"🏫 特約校園管理",             desc:"新增 / 停用校園，設定校園驗證方式。", ready:true, href:"partner-schools.html" },
       { id:"import-verify",            title:"📥 名單匯入 / 驗證設定",       desc:"匯入資格名單、驗證名單與相關資料。", ready:true, href:"admin-studentslist-import.html" },
       { id:"member-lookup",            title:"🔎 會員查詢",                 desc:"查詢會員資料、驗證狀態與帳號資訊。", ready:true, href:"admin-member-lookup.html" },
+      { id:"admin-org-overview",       title:"🏢 全組織管理狀況",           desc:"查看各組織的人員與管理現況。", ready:true, href:"admin-org-overview.html" },
 
+      { id:"admin-events",             title:"🎟️ 活動管理",               desc:"建立活動、設定票種、邀請碼、資格與基本資訊。", ready:true, href:"admin-events.html" },
+      { id:"admin-event-orders",       title:"🧾 活動訂單管理",             desc:"查看訂單、報名資料、後台人工處理訂單。", ready:true, href:"admin-event-orders.html" },
+      { id:"admin-events-overview",    title:"📋 活動總覽",                 desc:"查看活動整體狀況與列表總覽。", ready:true, href:"admin-events-overview.html" },
       { id:"seat-editor",              title:"🪑 座位編輯器",               desc:"設定座位圖、座位位置、區域、價格與可售狀態。", ready:true, href:"seat-editor.html" },
       { id:"staff-checkin",            title:"✅ 核銷人員掃碼",             desc:"工作人員使用 QR 掃描進行票券核銷。", ready:true, href:"staff-checkin.html" },
       { id:"service-center",           title:"🛠️ 服務中心",               desc:"活動現場查票、查單、協助處理會員問題。", ready:true, href:"service-center.html" },
 
       { id:"admin-staff-users",        title:"🧑‍💼 後台人員 / 審核",        desc:"審核後台帳號、分派角色與工作權限。", ready:true, href:"admin-staff-users.html" },
-      { id:"admin-user-assignment",    title:"🪪 使用者權限配置",           desc:"設定使用者可看到哪些後台功能與入口。", ready:true, href:"admin-user-assignment.html" },
-      { id:"admin-org-overview",       title:"🏢 全組織管理狀況",           desc:"查看各組織的人員與管理現況。", ready:true, href:"admin-org-overview.html" },
+      { id:"admin-user-assignment",    title:"🪪 使用者權限配置",           desc:"設定使用者可看到哪些後台功能與入口。", ready:true, href:"admin-user-assign.html" },
       { id:"org-team",                 title:"👥 組織團隊 / 工作組別",       desc:"管理組織人員、工作組別與團隊配置。", ready:true, href:"org-team.html" },
-
       { id:"admin-dashboard-settings", title:"⚙️ 初選單顯示設定",          desc:"設定不同角色在 dashboard 顯示 / 置頂哪些功能。", ready:true, href:"admin-dashboard-settings.html" },
       { id:"admin-impersonate",        title:"🧪 身分 / 學校模擬",          desc:"platform_super 模擬其他帳號測試頁面與權限。", ready:true, href:"admin-impersonate.html" },
-
-      { id:"admin-platform-users",     title:"🌐 平台使用者管理",           desc:"管理平台層帳號與高權限人員。", ready:true, href:"admin-platform-users.html" },
+      { id:"admin-platform-users",     title:"🌐 平台使用者管理",           desc:"管理平台所有使用者帳號。", ready:true, href:"admin-platform-users.html" },
       { id:"admin-school-overview",    title:"🏫 校園總覽",                 desc:"查看各校園啟用狀態與管理情況。", ready:true, href:"admin-school-overview.html" },
-      { id:"admin-dashboard-home",     title:"📊 後台總覽",                 desc:"查看後台總覽、主要資料與統計。", ready:true, href:"dashboard.html" }
+      { id:"admin-dashboard-home",     title:"📊 後台總覽",                 desc:"查看後台首頁與主要總覽資訊。", ready:true, href:"dashboard.html" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -515,26 +512,26 @@
       const sysRoles = (sys && sys.roles) ? sys.roles : {};
       const sysParsed = parseRoleCfg(sysRoles[role] || {});
 
-      // fallback：至少 platform_super 不會空白
       const fallbackVisible = (role === "platform_super")
         ? [
-            "admin-dashboard-home",
-            "admin-events",
-            "admin-event-orders",
             "partner-schools",
             "import-verify",
             "member-lookup",
+            "admin-org-overview",
+            "admin-events",
+            "admin-event-orders",
+            "admin-events-overview",
             "seat-editor",
             "staff-checkin",
             "service-center",
             "admin-staff-users",
             "admin-user-assignment",
-            "admin-org-overview",
             "org-team",
             "admin-dashboard-settings",
             "admin-impersonate",
             "admin-platform-users",
-            "admin-school-overview"
+            "admin-school-overview",
+            "admin-dashboard-home"
           ]
         : [];
 
@@ -566,12 +563,12 @@
         finalPinned = finalPinned.filter(id => allowSet2.has(id));
       }
 
-      // 自動補幾個常用功能給高權限者，避免明明做了但進不去
       const autoAddForHighRoles = ["platform_super","platform_admin","org_super","org_admin"];
       if (autoAddForHighRoles.includes(role)) {
         [
           "admin-events",
           "admin-event-orders",
+          "admin-events-overview",
           "seat-editor",
           "staff-checkin",
           "service-center",
@@ -682,8 +679,10 @@
       if (!user){
         currentUserData = null;
         currentRole = "";
-        if (unsubSys) unsubSys(); unsubSys = null;
-        if (unsubOrg) unsubOrg(); unsubOrg = null;
+        if (unsubSys) unsubSys();
+        unsubSys = null;
+        if (unsubOrg) unsubOrg();
+        unsubOrg = null;
         sysCfgCache = null;
         orgCfgCache = null;
 
@@ -699,8 +698,10 @@
         if (!snap.exists){
           currentUserData = null;
           currentRole = "";
-          if (unsubSys) unsubSys(); unsubSys = null;
-          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          if (unsubSys) unsubSys();
+          unsubSys = null;
+          if (unsubOrg) unsubOrg();
+          unsubOrg = null;
           sysCfgCache = null;
           orgCfgCache = null;
 
@@ -719,8 +720,10 @@
         if (u.enabled !== true){
           currentUserData = null;
           currentRole = "";
-          if (unsubSys) unsubSys(); unsubSys = null;
-          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          if (unsubSys) unsubSys();
+          unsubSys = null;
+          if (unsubOrg) unsubOrg();
+          unsubOrg = null;
           sysCfgCache = null;
           orgCfgCache = null;
 
@@ -739,8 +742,10 @@
         if (!role){
           currentUserData = null;
           currentRole = "";
-          if (unsubSys) unsubSys(); unsubSys = null;
-          if (unsubOrg) unsubOrg(); unsubOrg = null;
+          if (unsubSys) unsubSys();
+          unsubSys = null;
+          if (unsubOrg) unsubOrg();
+          unsubOrg = null;
           sysCfgCache = null;
           orgCfgCache = null;
 
@@ -766,7 +771,6 @@
 
         updateImpersonateBanner();
 
-        // 保留你原本那個「不同身分顯示不同功能」設定來源
         startSysListener();
 
         const orgId = String(u.orgId || u.organizationId || u.org || "").trim();
