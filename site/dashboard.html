@@ -2,197 +2,406 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜初選單</title>
+  <title>後台｜主選單</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
-      --bg:#f6f7fb;
-      --card:#fff;
-      --text:#111;
-      --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10);
-      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --bg:#f5f5f7;
+      --card:rgba(255,255,255,.92);
+      --card-strong:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 18px 44px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.045);
       --danger:#b91c1c;
+      --danger-bg:#fff1f2;
+      --max:1180px;
     }
+
     *{ box-sizing:border-box; }
-    body{
+
+    html,body{
       margin:0;
+      padding:0;
       background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
-    }
-    .wrap{ max-width:1160px; margin:0 auto; padding:48px 24px; }
-    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:18px;
-      margin-bottom:18px;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    h1{ margin:0 0 6px; font-size:24px; }
-    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
-    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    body{
+      min-height:100vh;
+    }
+
+    button,input{
+      font:inherit;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:30px 20px 64px;
+      opacity:0;
+      transform:translateY(8px);
+      transition:opacity .24s ease, transform .24s ease;
+    }
+
+    .page.on{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .page.leaving{
+      opacity:0;
+      transform:translateY(8px);
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      margin-bottom:20px;
+      padding:28px 26px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:34px;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.95), rgba(255,255,255,.88) 42%, rgba(255,255,255,.82) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-72px;
+      top:-72px;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.04), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(30px,4.4vw,48px);
+      line-height:1.04;
+      letter-spacing:-.04em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.9;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
 
     .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      height:44px;
+      min-height:44px;
       padding:10px 18px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      color:#111;
-      font-weight:900;
-      font-size:16px;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
       cursor:pointer;
-      text-decoration:none;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+      box-shadow:var(--shadow-soft);
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
-    .btn[aria-disabled="true"],
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none; }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled],
+    .btn[aria-disabled="true"]{
+      opacity:.55;
+      cursor:not-allowed;
+      pointer-events:none;
+      box-shadow:none;
+      transform:none;
+    }
 
     .btn-primary{
       background:#111;
       color:#fff;
       border-color:#111;
     }
+
     .btn-danger{
       background:var(--danger);
       color:#fff;
       border-color:var(--danger);
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:14px;
-    }
-    .tile{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px;
-      box-shadow:0 10px 26px rgba(0,0,0,.05);
-      min-height:132px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      justify-content:space-between;
-    }
-    .tile h3{ margin:0; font-size:16px; }
-    .tile p{ margin:0; color:var(--muted); font-size:14px; line-height:1.6; }
-
     .pill{
       display:inline-flex;
       align-items:center;
-      gap:8px;
+      justify-content:center;
+      min-height:36px;
+      padding:8px 12px;
       border:1px solid var(--line);
       border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      font-size:14px;
       background:#fff;
+      font-size:13px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
     }
+
     .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
     }
 
-    .pinned-wrap{
-      background:#f1f2f6;
-      border:1px solid rgba(17,17,17,.12);
+    .panel{
+      margin-bottom:18px;
+      padding:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      backdrop-filter:saturate(180%) blur(18px);
     }
-    .pinned-title{
-      font-weight:900;
-      font-size:16px;
-      margin:0 0 10px;
+
+    .panel-title{
+      margin:0 0 12px;
+      font-size:22px;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+
+    .panel-head{
       display:flex;
-      align-items:center;
       justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .panel-head .panel-title{
+      margin:0;
+      font-size:20px;
+    }
+
+    .alert{
+      border:1px solid rgba(185,28,28,.10);
+      background:var(--danger-bg);
+    }
+
+    .alert-title{
+      font-size:15px;
+      font-weight:800;
+      color:var(--danger);
+    }
+
+    .alert-text{
+      margin-top:8px;
+      color:#7f1d1d;
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:16px;
+    }
+
+    .tile{
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:12px;
+      min-height:150px;
+      padding:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:26px;
+      background:var(--card-strong);
+      box-shadow:var(--shadow-soft);
+      transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+    }
+
+    .tile:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 34px rgba(0,0,0,.06);
+      border-color:rgba(0,0,0,.10);
+    }
+
+    .tile-title{
+      margin:0;
+      font-size:20px;
+      line-height:1.18;
+      letter-spacing:-.02em;
+      font-weight:800;
+      word-break:break-word;
+    }
+
+    .tile-desc{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.85;
+    }
+
+    .gate-box{
+      max-width:420px;
+      margin:72px auto 0;
+      padding:24px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+
+    .gate-title{
+      margin:0 0 8px;
+      font-size:28px;
+      line-height:1.12;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+
+    .gate-text{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.85;
+    }
+
+    .form-stack{
+      display:grid;
       gap:10px;
+      margin-top:16px;
     }
 
-    .impersonate-wrap{
-      background:#fff5f5;
-      border:1px solid rgba(185,28,28,.18);
+    .input{
+      width:100%;
+      min-height:48px;
+      padding:12px 14px;
+      border:1px solid var(--line-strong);
+      border-radius:16px;
+      background:#fff;
+      color:#111;
+      font-size:15px;
+      outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease;
     }
 
-    .page{
-      opacity:0;
-      transform: translateY(6px);
-      transition: opacity .22s ease, transform .22s ease;
-    }
-    .page.on{
-      opacity:1;
-      transform: translateY(0);
-    }
-    .page.leaving{
-      opacity:0;
-      transform: translateY(6px);
+    .input:focus{
+      border-color:rgba(0,0,0,.24);
+      box-shadow:0 0 0 4px rgba(0,0,0,.04);
     }
 
-    .section-title{
-      margin:0 0 10px;
-      font-size:18px;
-      font-weight:1000;
+    .hidden{
+      display:none !important;
+    }
+
+    @media (max-width:720px){
+      .page{
+        padding:20px 14px 52px;
+      }
+
+      .hero{
+        padding:24px 18px;
+        border-radius:28px;
+      }
+
+      .panel{
+        border-radius:24px;
+        padding:16px;
+      }
+
+      .tile{
+        border-radius:22px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap page" id="pageRoot">
+  <div class="page" id="pageRoot">
 
-    <div id="gate" class="card" style="display:none;"></div>
+    <div id="gate" class="hidden"></div>
 
-    <div id="app" style="display:none;">
-      <div id="impersonateBanner" class="card impersonate-wrap" style="display:none;">
-        <div class="row">
+    <div id="app" class="hidden">
+      <div id="impersonateBanner" class="panel alert hidden">
+        <div class="panel-head" style="margin-bottom:0;">
           <div>
-            <div style="font-weight:900; color:#b91c1c;">⚠ 目前正在模擬帳號</div>
-            <div class="sub" id="impersonateText" style="margin-top:6px;"></div>
+            <div class="alert-title">目前正在模擬帳號</div>
+            <div class="alert-text" id="impersonateText"></div>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div>
             <button class="btn btn-danger" id="stopImpersonateBtn">結束模擬</button>
           </div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="row">
+      <section class="hero">
+        <div class="hero-top">
           <div>
-            <h1>後台管理系統</h1>
-            <div class="sub">
-              登入帳號：<span id="email">-</span><br />
-              角色身分：<span id="role">-</span>
+            <h1 class="hero-title">後台主選單</h1>
+            <div class="hero-sub">
+              歡迎使用管理後台
+            </div>
+            <div class="hero-actions" style="margin-top:16px;">
+              <span class="pill" id="rolePill">-</span>
+              <span class="pill mono" id="email">-</span>
             </div>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <span class="pill" id="rolePill">Role</span>
+
+          <div class="hero-actions">
             <button class="btn" onclick="doLogout()">登出</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div id="pinnedSection" class="card pinned-wrap" style="display:none;">
-        <div class="pinned-title">
-          <span>📌 置頂功能</span>
-          <span class="pill mono" id="pinnedRoleTag" style="font-size:12px;">-</span>
+      <section id="pinnedSection" class="panel hidden">
+        <div class="panel-head">
+          <h2 class="panel-title">常用功能</h2>
+          <span class="pill mono" id="pinnedRoleTag">-</span>
         </div>
         <div class="grid" id="pinnedTiles"></div>
-      </div>
+      </section>
 
-      <div class="card">
-        <div class="section-title">後台功能</div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">功能</h2>
+        </div>
         <div class="grid" id="tiles"></div>
-      </div>
+      </section>
     </div>
   </div>
 
@@ -251,37 +460,28 @@
       }[m]));
     }
 
-    function showGate(title, msg, showLogin, extraButtonsHtml = ""){
-      gate.style.display = "block";
-      app.style.display = "none";
+    function showGate(title, msg, showLogin){
+      gate.classList.remove("hidden");
+      app.classList.add("hidden");
 
       gate.innerHTML = `
-        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
-        <div class="sub">${msg}</div>
+        <div class="gate-box">
+          <h1 class="gate-title">${esc(title)}</h1>
+          <div class="gate-text">${msg}</div>
 
-        ${
-          showLogin ? `
-            <div style="margin-top:16px; max-width:360px; display:grid; gap:10px;">
-              <input
-                id="loginEmail"
-                type="text"
-                placeholder="帳號"
-                style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.10); font-size:16px; background:#fff; outline:none;"
-              />
-              <input
-                id="loginPassword"
-                type="password"
-                placeholder="密碼"
-                style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.10); font-size:16px; background:#fff; outline:none;"
-              />
-              <button class="btn btn-primary" id="loginBtn">登入</button>
-            </div>
-          ` : ``
-        }
-
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${extraButtonsHtml || ``}
-          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+          ${
+            showLogin ? `
+              <div class="form-stack">
+                <input id="loginEmail" class="input" type="text" placeholder="帳號">
+                <input id="loginPassword" class="input" type="password" placeholder="密碼">
+                <button class="btn btn-primary" id="loginBtn">登入</button>
+              </div>
+            ` : `
+              <div style="margin-top:16px;">
+                <button class="btn" onclick="doLogout()">登出</button>
+              </div>
+            `
+          }
         </div>
       `;
 
@@ -326,31 +526,31 @@
         await firebase.auth().signOut();
       } catch(e){
         console.error(e);
-        alert("登出失敗（請看 Console）");
+        alert("登出失敗");
       }
     };
 
     const FEATURES = [
-  { id:"partner-schools",       title:"🏫 特約校園管理",   desc:"管理校園與驗證方式。", ready:true, href:"partner-schools.html" },
-  { id:"import-verify",         title:"📥 名單匯入",       desc:"匯入活動資格名單。", ready:true, href:"admin-studentslist-import.html" },
-  { id:"admin-member-lookup",   title:"🔎 會員查詢",       desc:"查詢會員帳號資料。", ready:true, href:"admin-member-lookup.html" },
+      { id:"partner-schools",       title:"特約校園管理", desc:"管理校園與驗證方式。", ready:true, href:"partner-schools.html" },
+      { id:"import-verify",         title:"名單匯入",     desc:"匯入活動資格名單。", ready:true, href:"admin-studentslist-import.html" },
+      { id:"admin-member-lookup",   title:"會員查詢",     desc:"查詢會員帳號資料。", ready:true, href:"admin-member-lookup.html" },
 
-  { id:"admin-events",          title:"🎟️ 活動管理",       desc:"建立與設定活動。", ready:true, href:"admin-events.html" },
-  { id:"admin-events-overview", title:"📋 活動總覽",       desc:"查看全部活動。", ready:true, href:"admin-events-overview.html" },
-  { id:"admin-event-orders",    title:"🧾 訂單管理",       desc:"查看訂單與報名資料。", ready:true, href:"admin-event-orders.html" },
+      { id:"admin-events",          title:"活動管理",     desc:"建立與設定活動。", ready:true, href:"admin-events.html" },
+      { id:"admin-events-overview", title:"活動總覽",     desc:"查看全部活動。", ready:true, href:"admin-events-overview.html" },
+      { id:"admin-event-orders",    title:"訂單管理",     desc:"查看訂單與報名資料。", ready:true, href:"admin-event-orders.html" },
 
-  { id:"seat-editor",           title:"🪑 座位編輯器",     desc:"設定座位與區域。", ready:true, href:"seat-editor.html" },
-  { id:"staff-checkin",         title:"✅ 核銷掃碼",       desc:"掃碼核銷入場。", ready:true, href:"staff-checkin.html" },
-  { id:"service-center",        title:"🛠️ 服務中心",     desc:"查單、補發、處理問題。", ready:true, href:"service-center.html" },
+      { id:"seat-editor",           title:"座位編輯器",   desc:"設定座位與區域。", ready:true, href:"seat-editor.html" },
+      { id:"staff-checkin",         title:"核銷掃碼",     desc:"掃碼核銷入場。", ready:true, href:"staff-checkin.html" },
+      { id:"service-center",        title:"服務中心",     desc:"查單、補發、處理問題。", ready:true, href:"service-center.html" },
 
-  { id:"admin-staff-users",     title:"🧑‍💼 後台人員管理", desc:"管理後台帳號。", ready:true, href:"admin-staff-users.html" },
-  { id:"admin-user-assignment", title:"🪪 權限細部設定",   desc:"設定功能顯示與權限。", ready:true, href:"admin-user-assign.html" },
-  { id:"org-team",              title:"👥 組織團隊",       desc:"管理組織與人員。", ready:true, href:"org-team.html" },
+      { id:"admin-staff-users",     title:"後台人員管理", desc:"管理後台帳號。", ready:true, href:"admin-staff-users.html" },
+      { id:"admin-user-assignment", title:"權限細部設定", desc:"設定功能顯示與權限。", ready:true, href:"admin-user-assign.html" },
+      { id:"org-team",              title:"組織團隊",     desc:"管理組織與人員。", ready:true, href:"org-team.html" },
 
-  { id:"admin-dashboard-settings", title:"⚙️ 初選單設定", desc:"設定不同角色看到的功能。", ready:true, href:"admin-dashboard-settings.html" },
-  { id:"admin-impersonate",        title:"🧪 身分模擬",   desc:"測試不同帳號權限。", ready:true, href:"admin-impersonate.html" },
-  { id:"admin-platform-users",     title:"🌐 平台使用者", desc:"管理平台帳號。", ready:true, href:"admin-platform-users.html" }
-];
+      { id:"admin-dashboard-settings", title:"主選單設定", desc:"設定不同角色看到的功能。", ready:true, href:"admin-dashboard-settings.html" },
+      { id:"admin-impersonate",        title:"身分模擬",   desc:"測試不同帳號權限。", ready:true, href:"admin-impersonate.html" },
+      { id:"admin-platform-users",     title:"平台使用者", desc:"管理平台帳號。", ready:true, href:"admin-platform-users.html" }
+    ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
     const FEATURE_ORDER = new Map(FEATURES.map((x, i) => [x.id, i]));
@@ -393,15 +593,7 @@
         .filter(Boolean);
 
       if (!ids.length){
-        containerEl.innerHTML = `
-          <div class="tile">
-            <div>
-              <h3>⚠️ 無可用功能</h3>
-              <p>目前沒有可顯示的功能。</p>
-            </div>
-            <span class="btn" aria-disabled="true">無功能</span>
-          </div>
-        `;
+        containerEl.innerHTML = "";
         return;
       }
 
@@ -411,20 +603,23 @@
           return `
             <div class="tile">
               <div>
-                <h3>${esc(it.title)}</h3>
-                <p>${esc(it.desc || "")}</p>
+                <h3 class="tile-title">${esc(it.title)}</h3>
+                <div class="tile-desc">${esc(it.desc || "")}</div>
               </div>
-              <a class="btn" href="${esc(it.href)}">進入</a>
+              <div>
+                <a class="btn" href="${esc(it.href)}">進入</a>
+              </div>
             </div>
           `;
         }
         return `
           <div class="tile">
             <div>
-              <h3>${esc(it.title)}</h3>
-              <p>${esc(it.desc || "")}</p>
+              <h3 class="tile-title">${esc(it.title)}</h3>
             </div>
-            <span class="btn" aria-disabled="true">未開放</span>
+            <div>
+              <span class="btn" aria-disabled="true">未開放</span>
+            </div>
           </div>
         `;
       }).join("");
@@ -504,10 +699,10 @@
       pinnedRoleTag.textContent = role;
 
       if (finalPinned.length){
-        pinnedSection.style.display = "block";
+        pinnedSection.classList.remove("hidden");
         renderTiles(pinnedTiles, finalPinned);
       } else {
-        pinnedSection.style.display = "none";
+        pinnedSection.classList.add("hidden");
         pinnedTiles.innerHTML = "";
       }
 
@@ -521,8 +716,7 @@
       unsubSys = db.collection("system").doc("dashboard").onSnapshot((snap)=>{
         sysCfgCache = snap.exists ? (snap.data() || {}) : null;
         computeAndRenderFromCache();
-      }, (err)=>{
-        console.warn("system/dashboard snapshot error:", err);
+      }, ()=>{
         computeAndRenderFromCache();
       });
     }
@@ -541,8 +735,7 @@
         .onSnapshot((snap)=>{
           orgCfgCache = snap.exists ? (snap.data() || {}) : null;
           computeAndRenderFromCache();
-        }, (err)=>{
-          console.warn("org dashboard snapshot error:", err);
+        }, ()=>{
           computeAndRenderFromCache();
         });
     }
@@ -559,17 +752,17 @@
       const impersonateSchoolId = sessionStorage.getItem("impersonateSchoolId");
 
       if (!impersonateUid){
-        impersonateBanner.style.display = "none";
+        impersonateBanner.classList.add("hidden");
         impersonateText.innerHTML = "";
         return;
       }
 
-      impersonateBanner.style.display = "block";
+      impersonateBanner.classList.remove("hidden");
       impersonateText.innerHTML = `
-        目前模擬：<span class="mono">${esc(impersonateEmail || impersonateUid)}</span><br/>
-        角色：<span class="mono">${esc(impersonateRole || "-")}</span>｜
-        組織：<span class="mono">${esc(impersonateOrgId || "-")}</span>｜
-        校園：<span class="mono">${esc(impersonateSchoolId || "-")}</span>
+        ${esc(impersonateEmail || impersonateUid)}<br>
+        ${esc(impersonateRole || "-")}｜
+        ${esc(impersonateOrgId || "-")}｜
+        ${esc(impersonateSchoolId || "-")}
       `;
     }
 
@@ -610,7 +803,7 @@
         orgCfgCache = null;
 
         updateImpersonateBanner();
-        showGate("後台管理", "請先登入管理帳號以繼續。", true);
+        showGate("登入後台", "請先登入", true);
         return;
       }
 
@@ -629,12 +822,7 @@
           orgCfgCache = null;
 
           updateImpersonateBanner();
-          showGate(
-            "尚未擁有後台權限",
-            `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前尚未開通後台權限。`,
-            false,
-            `<span class="sub">請聯絡管理員。</span>`
-          );
+          showGate("無法進入", "目前無法使用後台", false);
           return;
         }
 
@@ -651,12 +839,7 @@
           orgCfgCache = null;
 
           updateImpersonateBanner();
-          showGate(
-            "後台權限未啟用",
-            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前不可使用後台。`,
-            false,
-            `<span class="sub">請聯絡管理員。</span>`
-          );
+          showGate("無法進入", "目前無法使用後台", false);
           return;
         }
 
@@ -673,12 +856,7 @@
           orgCfgCache = null;
 
           updateImpersonateBanner();
-          showGate(
-            "尚未完成後台指派",
-            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>目前尚未設定角色。`,
-            false,
-            `<span class="sub">請聯絡管理員。</span>`
-          );
+          showGate("無法進入", "目前無法使用後台", false);
           return;
         }
 
@@ -686,11 +864,10 @@
         currentRole = role;
 
         document.getElementById("email").textContent = (u.email || user.email || "-");
-        document.getElementById("role").textContent = role;
         document.getElementById("rolePill").textContent = role;
 
-        gate.style.display = "none";
-        app.style.display = "block";
+        gate.classList.add("hidden");
+        app.classList.remove("hidden");
 
         updateImpersonateBanner();
 
@@ -705,7 +882,7 @@
       }catch(err){
         console.error(err);
         updateImpersonateBanner();
-        showGate("發生錯誤", "無法讀取權限資料，請稍後再試。", false);
+        showGate("發生錯誤", "請稍後再試", false);
       }
     });
   </script>
