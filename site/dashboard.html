@@ -119,12 +119,6 @@
       justify-content:space-between;
       gap:10px;
     }
-    .hint{
-      color:rgba(17,17,17,.72);
-      font-size:13px;
-      line-height:1.6;
-      margin-top:6px;
-    }
 
     .impersonate-wrap{
       background:#fff5f5;
@@ -149,32 +143,6 @@
       margin:0 0 10px;
       font-size:18px;
       font-weight:1000;
-    }
-
-    .mini-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:12px;
-    }
-
-    .mini{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:#fff;
-      padding:14px;
-    }
-
-    .mini h4{
-      margin:0 0 6px;
-      font-size:14px;
-      font-weight:1000;
-    }
-
-    .mini p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.7;
     }
   </style>
 </head>
@@ -202,7 +170,6 @@
           <div>
             <h1>後台管理系統</h1>
             <div class="sub">
-              依你的身分顯示可用功能（平台上限＋組織自訂子集合）。<br/>
               登入帳號：<span id="email">-</span><br />
               角色身分：<span id="role">-</span>
             </div>
@@ -214,56 +181,16 @@
         </div>
       </div>
 
-      <div class="card">
-        <div class="section-title">快速入口</div>
-        <div class="mini-grid">
-          <div class="mini">
-            <h4>前台首頁</h4>
-            <p>快速回到前台活動首頁查看目前活動狀態。</p>
-            <div style="margin-top:10px;">
-              <a class="btn" href="index.html">前往首頁</a>
-            </div>
-          </div>
-          <div class="mini">
-            <h4>會員中心</h4>
-            <p>檢查前台會員資料、票券、訂單頁面是否正常。</p>
-            <div style="margin-top:10px;">
-              <a class="btn" href="member.html">前往會員中心</a>
-            </div>
-          </div>
-          <div class="mini">
-            <h4>我的票券</h4>
-            <p>測試使用者端票券顯示與 QR Code 相關流程。</p>
-            <div style="margin-top:10px;">
-              <a class="btn" href="my-tickets.html">前往票券頁</a>
-            </div>
-          </div>
-          <div class="mini">
-            <h4>我的訂單</h4>
-            <p>快速檢查前台訂單頁面與資料是否正確串接。</p>
-            <div style="margin-top:10px;">
-              <a class="btn" href="my-orders.html">前往訂單頁</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div id="pinnedSection" class="card pinned-wrap" style="display:none;">
         <div class="pinned-title">
           <span>📌 置頂功能</span>
           <span class="pill mono" id="pinnedRoleTag" style="font-size:12px;">-</span>
         </div>
-        <div class="hint">你被設定為「置頂」的功能會顯示在這裡。</div>
-        <div style="height:10px;"></div>
         <div class="grid" id="pinnedTiles"></div>
       </div>
 
       <div class="card">
         <div class="section-title">後台功能</div>
-        <div class="hint" style="margin-bottom:12px;">
-          下面功能會依照平台設定與組織設定顯示。  
-          你在 <span class="mono">admin-dashboard-settings.html</span> 設定不同角色顯示內容的機制會保留並繼續生效。
-        </div>
         <div class="grid" id="tiles"></div>
       </div>
     </div>
@@ -338,7 +265,7 @@
               <input
                 id="loginEmail"
                 type="text"
-                placeholder="帳號（建議用 email）"
+                placeholder="帳號"
                 style="width:100%; padding:12px; border-radius:14px; border:1px solid rgba(17,17,17,.10); font-size:16px; background:#fff; outline:none;"
               />
               <input
@@ -404,32 +331,26 @@
     };
 
     const FEATURES = [
-  // ===== 校園 / 驗證 =====
-  { id:"partner-schools",       title:"🏫 特約校園管理",       desc:"新增 / 停用校園，設定校園驗證方式。", ready:true, href:"partner-schools.html" },
-  { id:"import-verify",         title:"📥 名單匯入 / 驗證設定", desc:"匯入資格名單、驗證名單與相關資料。", ready:true, href:"admin-studentslist-import.html" },
-  { id:"admin-member-lookup",   title:"🔎 會員查詢",           desc:"平台可查全部帳號，組織僅限自己範圍。", ready:true, href:"admin-member-lookup.html" },
+      { id:"partner-schools",       title:"🏫 特約校園管理",   desc:"管理校園與驗證方式。", ready:true, href:"partner-schools.html" },
+      { id:"import-verify",         title:"📥 名單匯入",       desc:"匯入活動資格名單。", ready:true, href:"admin-studentslist-import.html" },
+      { id:"admin-member-lookup",   title:"🔎 會員查詢",       desc:"查詢會員帳號資料。", ready:true, href:"admin-member-lookup.html" },
 
-  // ===== 活動核心 =====
-  { id:"admin-events",          title:"🎟️ 活動管理",           desc:"建立活動、設定票種、邀請碼與資格。", ready:true, href:"admin-events.html" },
-  { id:"admin-events-overview", title:"📋 活動總覽",           desc:"查看所有活動與狀態。", ready:true, href:"admin-events-overview.html" },
-  { id:"admin-event-orders",    title:"🧾 訂單管理",           desc:"查看訂單與報名資料（需強化細節）。", ready:true, href:"admin-event-orders.html" },
+      { id:"admin-events",          title:"🎟️ 活動管理",       desc:"建立與設定活動。", ready:true, href:"admin-events.html" },
+      { id:"admin-events-overview", title:"📋 活動總覽",       desc:"查看全部活動。", ready:true, href:"admin-events-overview.html" },
+      { id:"admin-event-orders",    title:"🧾 訂單管理",       desc:"查看訂單與報名資料。", ready:true, href:"admin-event-orders.html" },
 
-  // ===== 現場 / 票務 =====
-  { id:"seat-editor",           title:"🪑 座位編輯器",         desc:"設定座位圖、區域與價格。", ready:true, href:"seat-editor.html" },
-  { id:"staff-checkin",         title:"✅ 核銷掃碼",           desc:"工作人員掃 QR Code 核銷入場。", ready:true, href:"staff-checkin.html" },
-  { id:"service-center",        title:"🛠️ 服務中心",         desc:"現場查單、補發、處理問題。", ready:true, href:"service-center.html" },
+      { id:"seat-editor",           title:"🪑 座位編輯器",     desc:"設定座位與區域。", ready:true, href:"seat-editor.html" },
+      { id:"staff-checkin",         title:"✅ 核銷掃碼",       desc:"掃碼核銷入場。", ready:true, href:"staff-checkin.html" },
+      { id:"service-center",        title:"🛠️ 服務中心",     desc:"查單、補發、處理問題。", ready:true, href:"service-center.html" },
 
-  // ===== 人員 / 權限 =====
-  { id:"admin-staff-users",     title:"🧑‍💼 後台人員管理",     desc:"審核帳號、分派角色。", ready:true, href:"admin-staff-users.html" },
-  { id:"admin-user-assignment", title:"🪪 權限細部設定",       desc:"同角色不同權限配置（重要）。", ready:true, href:"admin-user-assign.html" },
-  { id:"org-team",              title:"👥 組織團隊",           desc:"管理組織與工作組別。", ready:true, href:"org-team.html" },
+      { id:"admin-staff-users",     title:"🧑‍💼 後台人員管理", desc:"管理後台帳號。", ready:true, href:"admin-staff-users.html" },
+      { id:"admin-user-assignment", title:"🪪 權限細部設定",   desc:"設定功能顯示與權限。", ready:true, href:"admin-user-assign.html" },
+      { id:"org-team",              title:"👥 組織團隊",       desc:"管理組織與人員。", ready:true, href:"org-team.html" },
 
-  // ===== 系統 =====
-  { id:"admin-dashboard-settings", title:"⚙️ 初選單設定",   desc:"控制不同角色看到的功能。", ready:true, href:"admin-dashboard-settings.html" },
-  { id:"admin-impersonate",        title:"🧪 身分模擬",     desc:"測試不同帳號權限。", ready:true, href:"admin-impersonate.html" },
-  { id:"admin-platform-users",     title:"🌐 平台使用者",   desc:"管理整個平台所有帳號。", ready:true, href:"admin-platform-users.html" },
-  { id:"admin-dashboard-home",     title:"📊 後台總覽",     desc:"後台首頁總覽。", ready:true, href:"dashboard.html" }
-];
+      { id:"admin-dashboard-settings", title:"⚙️ 初選單設定", desc:"設定不同角色看到的功能。", ready:true, href:"admin-dashboard-settings.html" },
+      { id:"admin-impersonate",        title:"🧪 身分模擬",   desc:"測試不同帳號權限。", ready:true, href:"admin-impersonate.html" },
+      { id:"admin-platform-users",     title:"🌐 平台使用者", desc:"管理平台帳號。", ready:true, href:"admin-platform-users.html" }
+    ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
     const FEATURE_ORDER = new Map(FEATURES.map((x, i) => [x.id, i]));
@@ -476,9 +397,9 @@
           <div class="tile">
             <div>
               <h3>⚠️ 無可用功能</h3>
-              <p>此角色目前沒有可用的後台功能，請洽平台管理員。</p>
+              <p>目前沒有可顯示的功能。</p>
             </div>
-            <span class="btn" aria-disabled="true">尚未開放</span>
+            <span class="btn" aria-disabled="true">無功能</span>
           </div>
         `;
         return;
@@ -503,7 +424,7 @@
               <h3>${esc(it.title)}</h3>
               <p>${esc(it.desc || "")}</p>
             </div>
-            <span class="btn" aria-disabled="true">未製作</span>
+            <span class="btn" aria-disabled="true">未開放</span>
           </div>
         `;
       }).join("");
@@ -521,11 +442,10 @@
         ? [
             "partner-schools",
             "import-verify",
-            "member-lookup",
-            "admin-org-overview",
+            "admin-member-lookup",
             "admin-events",
-            "admin-event-orders",
             "admin-events-overview",
+            "admin-event-orders",
             "seat-editor",
             "staff-checkin",
             "service-center",
@@ -534,9 +454,7 @@
             "org-team",
             "admin-dashboard-settings",
             "admin-impersonate",
-            "admin-platform-users",
-            "admin-school-overview",
-            "admin-dashboard-home"
+            "admin-platform-users"
           ]
         : [];
 
@@ -572,8 +490,8 @@
       if (autoAddForHighRoles.includes(role)) {
         [
           "admin-events",
-          "admin-event-orders",
           "admin-events-overview",
+          "admin-event-orders",
           "seat-editor",
           "staff-checkin",
           "service-center",
@@ -649,9 +567,9 @@
       impersonateBanner.style.display = "block";
       impersonateText.innerHTML = `
         目前模擬：<span class="mono">${esc(impersonateEmail || impersonateUid)}</span><br/>
-        role：<span class="mono">${esc(impersonateRole || "-")}</span>｜
-        orgId：<span class="mono">${esc(impersonateOrgId || "-")}</span>｜
-        schoolId：<span class="mono">${esc(impersonateSchoolId || "-")}</span>
+        角色：<span class="mono">${esc(impersonateRole || "-")}</span>｜
+        組織：<span class="mono">${esc(impersonateOrgId || "-")}</span>｜
+        校園：<span class="mono">${esc(impersonateSchoolId || "-")}</span>
       `;
     }
 
@@ -713,9 +631,9 @@
           updateImpersonateBanner();
           showGate(
             "尚未擁有後台權限",
-            `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前你的帳號尚未被授權為後台管理人員。若你需要使用後台功能，請先提出申請。`,
+            `你已登入：<span class="mono">${esc(user.email || "-")}</span><br/>目前尚未開通後台權限。`,
             false,
-            `<span class="small">請洽系統管理員開通後台帳號。</span>`
+            `<span class="sub">請聯絡管理員。</span>`
           );
           return;
         }
@@ -735,9 +653,9 @@
           updateImpersonateBanner();
           showGate(
             "後台權限未啟用",
-            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前尚未啟用後台權限，或已被停用。若你需要使用後台功能，可重新提出申請或聯絡平台管理員。`,
+            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>此帳號目前不可使用後台。`,
             false,
-            `<span class="small">請洽系統管理員開通後台帳號。</span>`
+            `<span class="sub">請聯絡管理員。</span>`
           );
           return;
         }
@@ -757,9 +675,9 @@
           updateImpersonateBanner();
           showGate(
             "尚未完成後台指派",
-            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>你的帳號目前尚未完成角色指派，因此無法進入後台。若你需要使用後台功能，請先提出申請。`,
+            `你已登入：<span class="mono">${esc(u.email || user.email || "-")}</span><br/>目前尚未設定角色。`,
             false,
-            `<span class="small">請洽系統管理員開通後台帳號。</span>`
+            `<span class="sub">請聯絡管理員。</span>`
           );
           return;
         }
@@ -787,7 +705,7 @@
       }catch(err){
         console.error(err);
         updateImpersonateBanner();
-        showGate("發生錯誤", "無法讀取權限資料，請稍後再試或查看 Console。", false);
+        showGate("發生錯誤", "無法讀取權限資料，請稍後再試。", false);
       }
     });
   </script>

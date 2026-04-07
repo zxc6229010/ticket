@@ -2,409 +2,957 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜活動報名狀況</title>
+  <title>後台｜活動訂單管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
-      --bg:#f6f7fb; --card:#fff; --text:#111; --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10); --shadow:0 14px 40px rgba(0,0,0,.08);
-      --btn-a:10px; --btn-b:14px; --btn-x:calc(var(--btn-b)*1.5);
-      --btn-h:46px; --btn-fs:16px; --r:18px;
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --ok:#166534;
+      --warn:#b91c1c;
+      --orange:#c2410c;
+      --blue:#1d4ed8;
+      --soft:#f1f2f6;
     }
+
     *{ box-sizing:border-box; }
+
     body{
-      margin:0; background:var(--bg); color:var(--text);
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
-    .section{
-      background:var(--card); border:1px solid var(--line); border-radius:var(--r);
-      box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+
+    .wrap{
+      max-width:1180px;
+      margin:0 auto;
+      padding:48px 24px;
     }
-    .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
-    h2{ margin:0; font-size:16px; font-weight:900; }
-    .sub{ margin-top:6px; color:var(--muted); line-height:1.6; font-size:14px; }
-    .small{ font-size:13px; color:var(--muted); }
-    label{ font-weight:900; display:block; margin:12px 0 6px; }
-    input[type="text"], select{
-      width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
-      font-size:16px; background:#fff;
+
+    @media (max-width:640px){
+      .wrap{ padding:28px 16px; }
     }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    .card{
+      margin-bottom:18px;
+      padding:18px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+    }
+
+    .soft{
+      background:var(--soft);
+      border:1px solid rgba(17,17,17,.12);
+    }
+
+    h1{
+      margin:0 0 6px;
+      font-size:22px;
+    }
+
+    h2{
+      margin:0;
+      font-size:16px;
+    }
+
+    .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns:1.2fr 1fr;
+      gap:14px;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns:1.2fr .8fr .8fr;
+      gap:14px;
+    }
+
+    @media (max-width:900px){
+      .grid2,.grid3{ grid-template-columns:1fr; }
+    }
+
     .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      height:var(--btn-h); padding:var(--btn-a) var(--btn-x);
-      border-radius:999px; border:1px solid var(--line);
-      background:#fff; font-weight:900; font-size:var(--btn-fs);
-      cursor:pointer; color:#111; text-decoration:none;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:44px;
+      padding:10px 18px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      color:#111;
+      font-size:15px;
+      font-weight:900;
+      text-decoration:none;
+      cursor:pointer;
       user-select:none;
+      white-space:nowrap;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform:translateY(-1px); }
-    .btn:active{ transform:translateY(0) scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
 
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
 
-    .box{ border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff; }
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-danger{
+      background:#fff;
+      color:var(--warn);
+      border-color:rgba(185,28,28,.24);
+    }
+
+    .btn-sm{
+      height:38px;
+      padding:8px 14px;
+      font-size:14px;
+    }
+
+    label{
+      display:block;
+      margin:12px 0 6px;
+      font-weight:900;
+      font-size:14px;
+    }
+
+    input[type="text"],
+    textarea,
+    select{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      font-size:15px;
+      outline:none;
+    }
+
+    textarea{
+      min-height:96px;
+      resize:vertical;
+    }
+
     .pill{
-      display:inline-flex; padding:6px 10px; border:1px solid var(--line);
-      border-radius:999px; font-size:13px; background:#fff;
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
     }
-    .warn{ color:#b91c1c; font-weight:900; }
-    .ok{ color:#166534; font-weight:900; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
 
-    table{ width:100%; border-collapse:collapse; margin-top:12px; }
-    th, td{ border-bottom:1px solid var(--line); padding:10px 6px; text-align:left; vertical-align:top; }
-    th{ font-size:13px; color:var(--muted); font-weight:900; }
-    td{ font-size:14px; }
+    .ok{ color:var(--ok); font-weight:900; }
+    .warn{ color:var(--warn); font-weight:900; }
+    .orange{ color:var(--orange); font-weight:900; }
+    .blue{ color:var(--blue); font-weight:900; }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+    }
+
+    .item{
+      padding:16px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 10px 26px rgba(0,0,0,.05);
+    }
+
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .itemTitle{
+      margin:0;
+      font-size:16px;
+      font-weight:1000;
+      line-height:1.5;
+    }
+
+    .meta{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+      word-break:break-word;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .detail{
+      display:none;
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px dashed var(--line);
+    }
+
+    .detail.show{
+      display:block;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:130px 1fr;
+      gap:8px 12px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+    }
+
+    .kv:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .k{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .v{
+      font-size:13px;
+      font-weight:900;
+      line-height:1.7;
+      word-break:break-word;
+    }
+
+    .ticketBox{
+      margin-top:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fafafa;
+      padding:12px;
+    }
+
+    .ticketItem{
+      padding:10px 0;
+      border-top:1px dashed var(--line);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .ticketItem:first-child{
+      border-top:none;
+      padding-top:0;
+    }
+
+    .empty{
+      padding:24px 8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .page{
+      opacity:0;
+      transform:translateY(6px);
+      transition:opacity .22s ease, transform .22s ease;
+    }
+
+    .page.on{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .page.leaving{
+      opacity:0;
+      transform:translateY(6px);
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div id="gate" class="section"></div>
+  <div class="wrap page" id="pageRoot">
+    <div id="gate" class="card" style="display:none;"></div>
 
     <div id="app" style="display:none;">
-      <div class="section">
-        <div class="header">
+      <div class="card">
+        <div class="row">
           <div>
-            <h1>活動報名狀況</h1>
-            <div class="sub">查看各活動報名數量與入場核銷狀況（即時更新）。</div>
-            <div class="sub small">登入：<span id="who" class="mono">-</span>｜角色：<span id="roleText" class="mono">-</span></div>
+            <h1>活動訂單管理</h1>
+            <div class="sub">
+              可查詢活動訂單、查看對應票券、修改訂單狀態、填寫後台備註。<br>
+              此頁讀取的是 <span class="mono">events/{eventId}/orders</span>。
+            </div>
+            <div class="sub" style="margin-top:8px;">
+              登入：<span id="who" class="mono">-</span>｜
+              角色：<span id="myRole" class="mono">-</span>
+            </div>
           </div>
-          <div class="row" style="justify-content:flex-end;">
-            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
-            <button class="btn btn-sm" id="logoutBtn">登出</button>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn" href="dashboard.html">回主選單</a>
+            <button class="btn" id="logoutBtn">登出</button>
           </div>
         </div>
       </div>
 
-      <div class="section">
-        <div class="grid">
+      <div class="card soft">
+        <div class="grid3">
           <div>
-            <label>選擇活動</label>
-            <select id="eventSel"></select>
-            <div class="small" id="eventMeta" style="margin-top:8px;"></div>
+            <label style="margin-top:0;">搜尋</label>
+            <input type="text" id="searchInput" placeholder="搜尋 訂單ID / email / uid / eventId / 活動名稱 / 票種 / 座位" />
           </div>
 
           <div>
-            <label>統計</label>
-            <div class="box">
-              <div>總訂單：<span id="totalText" class="mono">0</span></div>
-              <div>已入場：<span id="checkedText" class="mono">0</span></div>
-              <div>未入場：<span id="uncheckedText" class="mono">0</span></div>
-              <div class="small" style="margin-top:8px;">提示：若訂單欄位你之後要加「付款狀態」也可以，我再幫你補統計。</div>
+            <label style="margin-top:0;">訂單狀態</label>
+            <select id="statusFilter">
+              <option value="all">全部狀態</option>
+              <option value="registered">已建立</option>
+              <option value="pending">待處理</option>
+              <option value="paid">已付款</option>
+              <option value="processing">處理中</option>
+              <option value="completed">已完成</option>
+              <option value="cancelled">已取消</option>
+              <option value="refunded">已退款</option>
+              <option value="void">已作廢</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="margin-top:0;">操作</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn" id="reloadBtn">重新載入</button>
             </div>
           </div>
         </div>
 
-        <div class="row" style="justify-content:flex-end; margin-top:12px;">
-          <button class="btn" id="reloadBtn">重新載入</button>
-        </div>
+        <div class="small" id="summaryText" style="margin-top:12px;">讀取中…</div>
       </div>
 
-      <div class="section">
-        <h2>訂單列表</h2>
-        <div class="sub">這裡以 orders 集合的 <span class="mono">eventId</span> 過濾。</div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>orderId</th>
-              <th>email</th>
-              <th>狀態</th>
-              <th>核銷</th>
-              <th>建立時間</th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-
-        <div id="empty" class="small" style="margin-top:10px; display:none;">目前沒有訂單</div>
-      </div>
+      <div class="list" id="orderList"></div>
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    firebase.initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e"
-    });
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
     const db = firebase.firestore();
+
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+
+    function go(href){
+      pageRoot.classList.add("leaving");
+      setTimeout(() => location.href = href, 140);
+    }
+
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (!a) return;
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("http")) return;
+      e.preventDefault();
+      go(href);
+    });
 
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
     const whoEl = document.getElementById("who");
-    const roleText = document.getElementById("roleText");
+    const myRoleEl = document.getElementById("myRole");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    const eventSel = document.getElementById("eventSel");
-    const eventMeta = document.getElementById("eventMeta");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
     const reloadBtn = document.getElementById("reloadBtn");
-
-    const totalText = document.getElementById("totalText");
-    const checkedText = document.getElementById("checkedText");
-    const uncheckedText = document.getElementById("uncheckedText");
-
-    const rowsEl = document.getElementById("rows");
-    const emptyEl = document.getElementById("empty");
+    const summaryText = document.getElementById("summaryText");
+    const orderList = document.getElementById("orderList");
 
     let currentUser = null;
-    let currentRole = "";
-    let userData = null;
-    let mySchoolId = "";
-
-    let unsubscribe = null;
+    let myRole = "";
+    let myUserDoc = null;
+    let orderCache = [];
+    let ticketCacheMap = new Map();
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
       }[m]));
     }
-    function norm(v){ return String(v ?? "").trim(); }
 
-    function showGate(html){
-      gate.innerHTML = html;
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function lower(v){
+      return norm(v).toLowerCase();
+    }
+
+    function tsToText(ts){
+      try{
+        if (!ts) return "-";
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return d.toLocaleString("zh-Hant", { hour12:false });
+      }catch(e){
+        return "-";
+      }
+    }
+
+    function formatPrice(v){
+      const n = Number(v || 0);
+      if (!n) return "免費";
+      return "NT$ " + n.toLocaleString("zh-Hant");
+    }
+
+    function showGate(title, msg, showLogin){
       gate.style.display = "block";
       app.style.display = "none";
-    }
 
-    async function doLogout(){
-      try { await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（看 Console）"); }
-    }
-    logoutBtn.onclick = doLogout;
-
-    async function loadUserRole(uid){
-      const doc = await db.collection("users").doc(uid).get();
-      if (!doc.exists) return { ok:false, reason:"尚未授權" };
-      const u = doc.data() || {};
-      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
-      const role = String(u.role || "").trim();
-      return { ok:true, role, userData:u };
-    }
-
-    function isPlatform(){
-      return currentRole === "platform_super" || currentRole === "platform_admin";
-    }
-    function isOrgRole(){
-      return ["org_super","org_admin","org_staff"].includes(currentRole);
-    }
-
-    function fmtTime(ts){
-      if (!ts) return "-";
-      const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
-      if (!d) return "-";
-      return d.toLocaleString();
-    }
-
-    async function loadEventOptions(){
-      eventSel.innerHTML = "";
-
-      let q = db.collection("events");
-
-      if (isPlatform()) {
-        q = q.orderBy("createdAt", "desc").limit(100);
-      } else {
-        q = q.where("ownerSchoolId", "==", mySchoolId).orderBy("createdAt", "desc").limit(100);
-      }
-
-      const snap = await q.get();
-      if (snap.empty) {
-        eventSel.innerHTML = `<option value="">（目前沒有活動）</option>`;
-        return;
-      }
-
-      snap.forEach(d => {
-        const e = d.data() || {};
-        const owner = String(e.ownerSchoolId || "");
-        const tag = owner === "__global__" ? "平台" : "校園";
-        eventSel.insertAdjacentHTML("beforeend",
-          `<option value="${esc(d.id)}">${esc(e.title || d.id)}（${tag}）</option>`
-        );
-      });
-    }
-
-    function clearStats(){
-      totalText.textContent = "0";
-      checkedText.textContent = "0";
-      uncheckedText.textContent = "0";
-    }
-
-    async function bindOrdersRealtime(eventId){
-      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-
-      rowsEl.innerHTML = "";
-      emptyEl.style.display = "none";
-      clearStats();
-
-      const id = norm(eventId);
-      if (!id) {
-        eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
-        emptyEl.style.display = "block";
-        return;
-      }
-
-      const eventDoc = await db.collection("events").doc(id).get();
-      if (!eventDoc.exists) {
-        eventMeta.innerHTML = `<span class="warn">找不到活動</span>`;
-        emptyEl.style.display = "block";
-        return;
-      }
-
-      const e = eventDoc.data() || {};
-      eventMeta.innerHTML = `
-        eventId：<span class="mono">${esc(id)}</span>｜
-        ownerSchoolId：<span class="mono">${esc(e.ownerSchoolId || "-")}</span>｜
-        published：<span class="mono">${e.published === true ? "true" : "false"}</span>
+      gate.innerHTML = `
+        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
+        <div class="sub">${msg}</div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          ${showLogin ? `<button class="btn" id="loginBtn">使用 Email 登入</button>` : ``}
+          ${!showLogin ? `<button class="btn" id="logoutGateBtn">登出</button>` : ``}
+        </div>
       `;
 
-      // orders where eventId == id
-      const q = db.collection("orders").where("eventId", "==", id);
-
-      unsubscribe = q.onSnapshot((snap) => {
-        if (snap.empty) {
-          rowsEl.innerHTML = "";
-          emptyEl.style.display = "block";
-          clearStats();
-          return;
-        }
-
-        let total = 0;
-        let checked = 0;
-
-        const html = [];
-        snap.forEach(doc => {
-          total++;
-          const o = doc.data() || {};
-          const checkedIn = o.checkedIn === true;
-          if (checkedIn) checked++;
-
-          html.push(`
-            <tr>
-              <td class="mono">${esc(doc.id)}</td>
-              <td>${esc(o.userEmail || o.email || "-")}</td>
-              <td class="mono">${esc(o.status || "-")}</td>
-              <td>${checkedIn ? `<span class="ok">已入場</span>` : `<span class="warn">未入場</span>`}</td>
-              <td class="mono">${esc(fmtTime(o.createdAt))}</td>
-            </tr>
-          `);
-        });
-
-        rowsEl.innerHTML = html.join("");
-        emptyEl.style.display = "none";
-
-        totalText.textContent = String(total);
-        checkedText.textContent = String(checked);
-        uncheckedText.textContent = String(Math.max(0, total - checked));
-      }, (err) => {
-        console.error(err);
-        alert("即時讀取失敗：\n" + (err.message || err));
-      });
-    }
-
-    reloadBtn.onclick = async () => {
-      await loadEventOptions();
-      await bindOrdersRealtime(eventSel.value);
-    };
-
-    eventSel.onchange = async () => {
-      await bindOrdersRealtime(eventSel.value);
-    };
-
-    firebase.auth().onAuthStateChanged(async (user) => {
-      currentUser = user || null;
-
-      if (!user) {
-        showGate(`
-          <h1>活動報名狀況</h1>
-          <div class="sub">請先使用 Email / 密碼登入後台。</div>
-          <div style="margin-top:16px;">
-            <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
-          </div>
-        `);
-        document.getElementById("loginBtn").onclick = async () => {
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn) {
+        loginBtn.onclick = async () => {
           const email = window.prompt("請輸入 Email");
           if (!email) return;
           const password = window.prompt("請輸入密碼");
           if (!password) return;
           await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
         };
+      }
+
+      const logoutGateBtn = document.getElementById("logoutGateBtn");
+      if (logoutGateBtn) logoutGateBtn.onclick = doLogout;
+    }
+
+    async function doLogout(){
+      try{
+        await firebase.auth().signOut();
+      }catch(e){
+        console.error(e);
+        alert("登出失敗（請看 Console）");
+      }
+    }
+
+    logoutBtn.onclick = doLogout;
+
+    async function loadMyUser(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      if (!snap.exists) return null;
+      return snap.data() || null;
+    }
+
+    function canUsePage(role){
+      return ["platform_super","platform_admin","org_super","org_admin","org_staff"].includes(role);
+    }
+
+    function isPlatform(role){
+      return ["platform_super","platform_admin"].includes(role);
+    }
+
+    function orderInMyScope(order){
+      if (isPlatform(myRole)) return true;
+
+      const mySchoolId = norm(myUserDoc?.schoolId || myUserDoc?.orgSchoolId || "");
+      const myOrgId = norm(myUserDoc?.orgId || "");
+
+      const orderSchoolId = norm(order.ownerSchoolId || order.schoolId || order.verifiedSchoolId || "");
+      const orderOrgId = norm(order.orgId || order.ownerOrgId || "");
+
+      if (mySchoolId && orderSchoolId && mySchoolId === orderSchoolId) return true;
+      if (myOrgId && orderOrgId && myOrgId === orderOrgId) return true;
+
+      return false;
+    }
+
+    function getStatusClass(status){
+      status = lower(status);
+      if (["paid","completed"].includes(status)) return "ok";
+      if (["pending","processing","registered"].includes(status)) return "orange";
+      if (["cancelled","refunded","void"].includes(status)) return "warn";
+      return "blue";
+    }
+
+    function getStatusText(status){
+      status = lower(status);
+      if (status === "registered") return "已建立";
+      if (status === "pending") return "待處理";
+      if (status === "processing") return "處理中";
+      if (status === "paid") return "已付款";
+      if (status === "completed") return "已完成";
+      if (status === "cancelled") return "已取消";
+      if (status === "refunded") return "已退款";
+      if (status === "void") return "已作廢";
+      return status || "-";
+    }
+
+    function getOrderSearchText(order){
+      const inlineTickets = Array.isArray(order.tickets) ? order.tickets : [];
+      const seatLabels = Array.isArray(order.seatLabels) ? order.seatLabels : [];
+      const sectionIds = Array.isArray(order.sectionIds) ? order.sectionIds : [];
+
+      return [
+        order.id,
+        order.eventId,
+        order.eventTitle,
+        order.email,
+        order.uid,
+        order.ticketTypeName,
+        order.paymentStatus,
+        order.status,
+        order.verifiedSchoolName,
+        order.verifiedSchoolId,
+        order.matchedRole,
+        order.note,
+        ...seatLabels,
+        ...sectionIds,
+        ...inlineTickets.map(t => t.ticketId),
+        ...inlineTickets.map(t => t.seatLabel),
+        ...inlineTickets.map(t => t.ticketTypeName)
+      ].map(lower).join(" ");
+    }
+
+    function renderSummary(){
+      const filtered = getFilteredOrders();
+      summaryText.textContent = `目前顯示 ${filtered.length} 筆訂單，總資料 ${orderCache.length} 筆。`;
+    }
+
+    function getFilteredOrders(){
+      const q = lower(searchInput.value);
+      const sf = statusFilter.value;
+
+      return orderCache.filter(order => {
+        if (sf !== "all" && lower(order.status) !== sf) return false;
+        if (!q) return true;
+        return getOrderSearchText(order).includes(q);
+      });
+    }
+
+    function toggleDetail(orderId){
+      const box = document.getElementById(`detail-${orderId}`);
+      if (!box) return;
+      box.classList.toggle("show");
+    }
+
+    async function ensureTicketsLoaded(order){
+      const cacheKey = `${order.eventId}__${order.id}`;
+      if (ticketCacheMap.has(cacheKey)) return ticketCacheMap.get(cacheKey);
+
+      try{
+        const snap = await db.collection("events")
+          .doc(order.eventId)
+          .collection("tickets")
+          .where("orderId", "==", order.id)
+          .get();
+
+        const rows = snap.docs.map(doc => ({
+          id: doc.id,
+          ...(doc.data() || {})
+        }));
+
+        ticketCacheMap.set(cacheKey, rows);
+        return rows;
+      }catch(e){
+        console.error("load tickets error", e);
+        ticketCacheMap.set(cacheKey, []);
+        return [];
+      }
+    }
+
+    function buildTicketHtml(ticket){
+      const checkedIn = ticket.checkedIn === true || lower(ticket.checkinStatus) === "checked_in";
+      return `
+        <div class="ticketItem">
+          票券 ID：<span class="mono">${esc(ticket.id || "-")}</span><br>
+          票種：<span class="mono">${esc(ticket.ticketTypeName || "-")}</span><br>
+          座位：<span class="mono">${esc(ticket.seatLabel || "-")}</span><br>
+          狀態：<span class="${checkedIn ? "ok" : "blue"}">${checkedIn ? "已入場" : "未入場"}</span><br>
+          核銷入口：<span class="mono">${esc(ticket.checkedInGate || "-")}</span><br>
+          核銷時間：<span class="mono">${esc(tsToText(ticket.checkedInAt))}</span>
+        </div>
+      `;
+    }
+
+    function renderOrders(){
+      const filtered = getFilteredOrders();
+      renderSummary();
+
+      if (!filtered.length){
+        orderList.innerHTML = `<div class="card empty">目前沒有符合條件的訂單資料。</div>`;
         return;
       }
 
-      try {
-        const r = await loadUserRole(user.uid);
-        if (!r.ok) {
-          showGate(`
-            <h1>無法進入</h1>
-            <div class="sub warn">${esc(r.reason)}</div>
-            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
-          `);
-          document.getElementById("outBtn").onclick = doLogout;
+      orderList.innerHTML = filtered.map(order => {
+        const statusText = getStatusText(order.status);
+        const statusClass = getStatusClass(order.status);
+
+        const seatLabels = Array.isArray(order.seatLabels) ? order.seatLabels : [];
+        const sectionIds = Array.isArray(order.sectionIds) ? order.sectionIds : [];
+        const inlineTickets = Array.isArray(order.tickets) ? order.tickets : [];
+        const notes = norm(order.adminNote || order.note || "");
+
+        return `
+          <div class="item">
+            <div class="itemTop">
+              <div style="min-width:280px; flex:1;">
+                <div class="itemTitle">
+                  ${esc(order.eventTitle || "未命名活動")}
+                  <span class="pill mono">${esc(order.id)}</span>
+                </div>
+
+                <div class="badges">
+                  <span class="pill ${statusClass}">${esc(statusText)}</span>
+                  <span class="pill">付款：${esc(order.paymentStatus || "-")}</span>
+                  <span class="pill">張數：${esc(order.quantity || 0)}</span>
+                  <span class="pill">金額：${esc(formatPrice(order.totalAmount ?? order.total ?? 0))}</span>
+                </div>
+
+                <div class="meta">
+                  email：<span class="mono">${esc(order.email || "-")}</span><br>
+                  uid：<span class="mono">${esc(order.uid || "-")}</span><br>
+                  eventId：<span class="mono">${esc(order.eventId || "-")}</span><br>
+                  建立時間：<span class="mono">${esc(tsToText(order.createdAt))}</span><br>
+                  票種：<span class="mono">${esc(order.ticketTypeName || "-")}</span><br>
+                  座位：<span class="mono">${esc(seatLabels.length ? seatLabels.join("、") : "-")}</span><br>
+                  區域：<span class="mono">${esc(sectionIds.length ? sectionIds.join("、") : "-")}</span>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-sm" data-toggle="${esc(order.id)}">查看詳情</button>
+              </div>
+            </div>
+
+            <div class="detail" id="detail-${esc(order.id)}">
+              <div class="grid2">
+                <div>
+                  <div class="kv">
+                    <div class="k">訂單 ID</div>
+                    <div class="v mono">${esc(order.id)}</div>
+
+                    <div class="k">活動 ID</div>
+                    <div class="v mono">${esc(order.eventId || "-")}</div>
+
+                    <div class="k">活動名稱</div>
+                    <div class="v">${esc(order.eventTitle || "-")}</div>
+
+                    <div class="k">uid</div>
+                    <div class="v mono">${esc(order.uid || "-")}</div>
+
+                    <div class="k">email</div>
+                    <div class="v mono">${esc(order.email || "-")}</div>
+
+                    <div class="k">票種</div>
+                    <div class="v">${esc(order.ticketTypeName || "-")}</div>
+
+                    <div class="k">張數</div>
+                    <div class="v">${esc(order.quantity || 0)}</div>
+
+                    <div class="k">總金額</div>
+                    <div class="v">${esc(formatPrice(order.totalAmount ?? order.total ?? 0))}</div>
+
+                    <div class="k">付款狀態</div>
+                    <div class="v">${esc(order.paymentStatus || "-")}</div>
+
+                    <div class="k">訂單狀態</div>
+                    <div class="v ${statusClass}">${esc(statusText)}</div>
+
+                    <div class="k">驗證學校</div>
+                    <div class="v">${esc(order.verifiedSchoolName || order.verifiedSchoolId || "-")}</div>
+
+                    <div class="k">購買身份</div>
+                    <div class="v">${esc(order.matchedRole || "-")}</div>
+
+                    <div class="k">建立時間</div>
+                    <div class="v">${esc(tsToText(order.createdAt))}</div>
+
+                    <div class="k">更新時間</div>
+                    <div class="v">${esc(tsToText(order.updatedAt))}</div>
+                  </div>
+
+                  <div class="ticketBox" id="ticketBox-${esc(order.id)}">
+                    <div style="font-weight:900; margin-bottom:8px;">關聯票券</div>
+                    ${
+                      inlineTickets.length
+                        ? inlineTickets.map(buildTicketHtml).join("")
+                        : `<div class="small">尚未展開讀取票券，點下面的「讀取票券」即可查看。</div>`
+                    }
+
+                    <div style="margin-top:10px;">
+                      <button class="btn btn-sm" data-load-tickets="${esc(order.id)}">讀取票券</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label style="margin-top:0;">修改訂單狀態</label>
+                  <select id="statusSel-${esc(order.id)}">
+                    <option value="registered" ${lower(order.status)==="registered" ? "selected" : ""}>已建立</option>
+                    <option value="pending" ${lower(order.status)==="pending" ? "selected" : ""}>待處理</option>
+                    <option value="processing" ${lower(order.status)==="processing" ? "selected" : ""}>處理中</option>
+                    <option value="paid" ${lower(order.status)==="paid" ? "selected" : ""}>已付款</option>
+                    <option value="completed" ${lower(order.status)==="completed" ? "selected" : ""}>已完成</option>
+                    <option value="cancelled" ${lower(order.status)==="cancelled" ? "selected" : ""}>已取消</option>
+                    <option value="refunded" ${lower(order.status)==="refunded" ? "selected" : ""}>已退款</option>
+                    <option value="void" ${lower(order.status)==="void" ? "selected" : ""}>已作廢</option>
+                  </select>
+
+                  <label>後台備註</label>
+                  <textarea id="note-${esc(order.id)}" placeholder="輸入客服備註 / 補發說明 / 退款說明">${esc(notes)}</textarea>
+
+                  <div class="small" style="margin-top:8px;">
+                    備註只建議後台內部使用。
+                  </div>
+
+                  <div class="actions" style="margin-top:14px;">
+                    <button class="btn btn-primary btn-sm" data-save="${esc(order.id)}">儲存變更</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      orderList.querySelectorAll("[data-toggle]").forEach(btn => {
+        btn.onclick = () => toggleDetail(btn.dataset.toggle);
+      });
+
+      orderList.querySelectorAll("[data-load-tickets]").forEach(btn => {
+        btn.onclick = async () => {
+          const order = orderCache.find(item => item.id === btn.dataset.loadTickets);
+          if (!order) return;
+
+          btn.disabled = true;
+          const oldText = btn.textContent;
+          btn.textContent = "讀取中…";
+
+          try{
+            const tickets = await ensureTicketsLoaded(order);
+            const box = document.getElementById(`ticketBox-${order.id}`);
+            if (!box) return;
+
+            box.innerHTML = `
+              <div style="font-weight:900; margin-bottom:8px;">關聯票券</div>
+              ${
+                tickets.length
+                  ? tickets.map(buildTicketHtml).join("")
+                  : `<div class="small">目前找不到對應票券。</div>`
+              }
+              <div style="margin-top:10px;">
+                <button class="btn btn-sm" data-load-tickets="${esc(order.id)}">重新讀取票券</button>
+              </div>
+            `;
+
+            box.querySelector("[data-load-tickets]").onclick = btn.onclick;
+          }catch(e){
+            console.error(e);
+            alert("票券讀取失敗");
+          }finally{
+            btn.disabled = false;
+            btn.textContent = oldText;
+          }
+        };
+      });
+
+      orderList.querySelectorAll("[data-save]").forEach(btn => {
+        btn.onclick = () => saveOrder(btn.dataset.save);
+      });
+    }
+
+    async function loadOrders(){
+      orderList.innerHTML = `<div class="card empty">讀取中…</div>`;
+      reloadBtn.disabled = true;
+
+      try{
+        const snap = await db.collectionGroup("orders").get();
+        let rows = snap.docs.map(doc => {
+          const data = doc.data() || {};
+          const parentEventRef = doc.ref.parent.parent;
+          return {
+            id: doc.id,
+            eventId: data.eventId || (parentEventRef ? parentEventRef.id : ""),
+            ...data
+          };
+        });
+
+        rows = rows.filter(orderInMyScope);
+
+        rows.sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+
+        orderCache = rows;
+        ticketCacheMap = new Map();
+        renderOrders();
+      }catch(e){
+        console.error(e);
+        orderList.innerHTML = `<div class="card empty">訂單讀取失敗，請查看 Console。</div>`;
+      }finally{
+        reloadBtn.disabled = false;
+      }
+    }
+
+    async function saveOrder(orderId){
+      const order = orderCache.find(item => item.id === orderId);
+      if (!order) return;
+
+      const nextStatus = norm(document.getElementById(`statusSel-${orderId}`)?.value || "");
+      const nextNote = norm(document.getElementById(`note-${orderId}`)?.value || "");
+
+      if (!nextStatus) {
+        alert("請選擇狀態");
+        return;
+      }
+
+      const ok = confirm("確定要儲存這筆訂單變更嗎？");
+      if (!ok) return;
+
+      try{
+        await db.collection("events").doc(order.eventId).collection("orders").doc(order.id).update({
+          status: nextStatus,
+          adminNote: nextNote,
+          updatedAt: new Date(),
+          updatedByUid: currentUser ? currentUser.uid : ""
+        });
+
+        alert("已儲存");
+        await loadOrders();
+      }catch(e){
+        console.error(e);
+        alert("儲存失敗，可能是權限不足。");
+      }
+    }
+
+    searchInput.oninput = renderOrders;
+    statusFilter.onchange = renderOrders;
+    reloadBtn.onclick = loadOrders;
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+      if (!user) {
+        showGate("活動訂單管理", "請先登入管理帳號以繼續。", true);
+        return;
+      }
+
+      try{
+        myUserDoc = await loadMyUser(user.uid);
+
+        if (!myUserDoc) {
+          showGate("等待授權", "你的帳號尚未被授權為管理者。", false);
           return;
         }
 
-        currentRole = r.role;
-        userData = r.userData || {};
-        mySchoolId = norm(userData.schoolId || userData.orgSchoolId || "");
-
-        whoEl.textContent = user.email || "";
-        roleText.textContent = currentRole || "-";
-
-        // 允許進入：platform_* / org_*（活動當天工作人員也會用）
-        if (![ "platform_super","platform_admin","org_super","org_admin","org_staff" ].includes(currentRole)) {
-          showGate(`
-            <h1>權限不足</h1>
-            <div class="sub warn">你的角色無法使用此功能。</div>
-            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
-          `);
-          document.getElementById("outBtn").onclick = doLogout;
+        if (myUserDoc.enabled !== true) {
+          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
           return;
         }
 
-        // 校方至少要有 schoolId
-        if (isOrgRole() && !mySchoolId) {
-          showGate(`
-            <h1>尚未綁定校園</h1>
-            <div class="sub warn">你的帳號沒有 schoolId，無法載入校園活動。</div>
-            <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
-          `);
-          document.getElementById("outBtn").onclick = doLogout;
+        myRole = norm(myUserDoc.role);
+
+        if (!canUsePage(myRole)) {
+          showGate("權限不足", "此頁面目前僅開放後台管理角色使用。", false);
           return;
         }
+
+        whoEl.textContent = myUserDoc.email || user.email || "-";
+        myRoleEl.textContent = myRole || "-";
 
         gate.style.display = "none";
         app.style.display = "block";
 
-        await loadEventOptions();
-
-        // auto bind first
-        const first = eventSel.value || (eventSel.options[0] ? eventSel.options[0].value : "");
-        eventSel.value = first;
-        await bindOrdersRealtime(first);
-
-      } catch (err) {
-        console.error(err);
-        showGate(`
-          <h1>發生錯誤</h1>
-          <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
-          <div style="margin-top:16px;"><button class="btn" id="outBtn">登出</button></div>
-        `);
-        document.getElementById("outBtn").onclick = doLogout;
+        await loadOrders();
+      }catch(e){
+        console.error(e);
+        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
       }
     });
   </script>
