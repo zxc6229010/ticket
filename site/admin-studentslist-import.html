@@ -335,7 +335,7 @@
         <div class="header">
           <div>
             <h1>活動名單匯入與資格設定</h1>
-            <div class="sub">此頁以活動為單位管理可參加名單。不同活動可有不同資格名單，不再與單一校園名單綁死。</div>
+            <div class="sub">此頁可為每個活動設定可參加名單，不同活動彼此獨立。</div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
               角色：<span id="roleText" class="mono">-</span>
@@ -359,13 +359,10 @@
           </div>
 
           <div>
-            <label>目前活動名單狀態</label>
+            <label>目前名單狀態</label>
             <div class="box">
-              <div>資格名單啟用：<span id="allowedEnabledText" class="mono">-</span></div>
-              <div style="margin-top:8px;">比對欄位：<span id="matchFieldsText" class="mono">-</span></div>
-              <div class="small" style="margin-top:8px;">
-                你可為每個活動設定不同名單與不同欄位，不同活動彼此互不影響。
-              </div>
+              <div>名單狀態：<span id="allowedEnabledText" class="mono">-</span></div>
+              <div style="margin-top:8px;">識別欄位：<span id="matchFieldsText" class="mono">-</span></div>
             </div>
           </div>
         </div>
@@ -374,8 +371,8 @@
       <div class="section">
         <h2>步驟 1｜上傳名單檔案</h2>
         <div class="sub">
-          支援 CSV / XLSX。第一列必須是欄位名稱。<br>
-          若該活動或該校需要使用 <span class="mono">email 驗證</span>，你的名單中就應該包含 <span class="mono">email</span> 欄位。
+          支援 CSV / XLSX，第一列需為欄位名稱。<br>
+          若該活動需要依信箱判斷資格，名單中請包含 email 欄位。
         </div>
 
         <div class="row" style="margin-top:12px;">
@@ -387,23 +384,22 @@
       </div>
 
       <div class="section" id="configSection">
-        <h2>步驟 2｜設定比對欄位</h2>
+        <h2>步驟 2｜設定識別欄位</h2>
         <div class="sub">
-          系統會用你勾選的欄位組成 <span class="mono">matchKey</span>。<br>
-          建議至少勾選 <span class="mono">email</span> 或 <span class="mono">studentId</span>。如果活動要靠信箱驗證，請務必有 <span class="mono">email</span>。
+          系統會用你勾選的欄位組合成唯一識別值。<br>
+          建議至少勾選 email 或 studentId 作為識別依據。
         </div>
 
         <div class="grid" style="margin-top:12px;">
           <div>
-            <div class="small" style="margin-bottom:8px;">matchFields（活動資格比對欄位）</div>
+            <div class="small" style="margin-bottom:8px;">識別欄位</div>
             <div class="box" id="matchFieldsBox"></div>
           </div>
 
           <div>
-            <div class="small" style="margin-bottom:8px;">建議</div>
+            <div class="small" style="margin-bottom:8px;">常見欄位</div>
             <div class="box">
               <div class="small">
-                常見欄位範例：<br>
                 <span class="pill">email</span>
                 <span class="pill">studentId</span>
                 <span class="pill">name</span>
@@ -419,10 +415,10 @@
       </div>
 
       <div class="section">
-        <h2>步驟 3｜匯入到資料庫</h2>
+        <h2>步驟 3｜開始匯入</h2>
         <div class="sub">
-          每一列會寫入 <span class="mono">events/{eventId}/allowedUsers</span>。<br>
-          文件 ID 會使用 <span class="mono">matchKey</span>；若重複則跳過。
+          系統會自動建立活動名單資料。<br>
+          若出現重複資料，將自動略過。
         </div>
 
         <div class="row" style="margin-top:12px; justify-content:flex-end;">
@@ -448,7 +444,7 @@
         <div class="header">
           <div>
             <h2>目前活動名單</h2>
-            <div class="sub">可搜尋、查看、刪除單筆，或清空整個活動名單。下方會顯示你實際匯入的所有欄位資料。</div>
+            <div class="sub">可搜尋、查看、刪除單筆，或清空整個活動名單。</div>
           </div>
           <div class="row">
             <button class="btn btn-sm" id="reloadAllowedBtn">重新載入</button>
@@ -462,11 +458,11 @@
             <input type="text" id="allowedSearch" placeholder="搜尋任一欄位內容" />
           </div>
           <div>
-            <label style="margin-top:0;">篩選 canRegister</label>
+            <label style="margin-top:0;">篩選是否可報名</label>
             <select id="registerFilter">
               <option value="all">全部</option>
-              <option value="true">canRegister = true</option>
-              <option value="false">canRegister = false</option>
+              <option value="true">可報名</option>
+              <option value="false">不可報名</option>
               <option value="missing">未設定</option>
             </select>
           </div>
@@ -603,8 +599,8 @@
       resultSummary.innerHTML = `
         總列數：<span class="mono">${total}</span><br>
         新增：<span class="mono">${ok}</span><br>
-        跳過（matchKey 已存在 / 本次重複）：<span class="mono">${skip}</span><br>
-        略過（缺少比對欄位 / 不合法）：<span class="mono">${bad}</span>
+        跳過：<span class="mono">${skip}</span><br>
+        略過：<span class="mono">${bad}</span>
       `;
     }
 
@@ -671,26 +667,17 @@
       if (currentRole === "platform_super") {
         eventNotice.style.display = "block";
         eventNotice.innerHTML = `
-          <div class="ok">你是超級管理員</div>
-          <div class="small" style="margin-top:6px;">
-            你可以替任一活動設定 matchFields、重新匯入名單，並直接清空整個活動名單。
-          </div>
+          <div class="ok">你可管理所有活動名單</div>
         `;
       } else if (isPlatformRole(currentRole)) {
         eventNotice.style.display = "block";
         eventNotice.innerHTML = `
-          <div class="ok">你是平台管理員</div>
-          <div class="small" style="margin-top:6px;">
-            可管理所有活動名單與資格資料。
-          </div>
+          <div class="ok">你可管理所有活動名單</div>
         `;
       } else {
         eventNotice.style.display = "block";
         eventNotice.innerHTML = `
-          <div class="ok">你是校方 / 組織管理者</div>
-          <div class="small" style="margin-top:6px;">
-            只能管理自己校園的活動名單。
-          </div>
+          <div class="ok">你可管理自己範圍內的活動名單</div>
         `;
       }
     }
@@ -718,7 +705,7 @@
 
       const doc = await db.collection("events").doc(eventId).get();
       if (!doc.exists) {
-        eventMeta.innerHTML = `<span class="warn">找不到活動文件：${esc(eventId)}</span>`;
+        eventMeta.innerHTML = `<span class="warn">找不到活動</span>`;
         allowedEnabledText.textContent = "-";
         matchFieldsText.textContent = "-";
         return;
@@ -727,23 +714,18 @@
       eventDoc = doc.data() || {};
 
       const title = eventDoc.title || "(未命名)";
-      const ownerSchoolId = norm(eventDoc.ownerSchoolId || "-");
       const enabled = eventDoc.allowedUsersEnabled !== false;
       const existingMatchFields = Array.isArray(eventDoc.allowedUserMatchFields) ? eventDoc.allowedUserMatchFields : [];
 
       eventMeta.innerHTML = `
-        活動：<b>${esc(title)}</b>｜
-        ownerSchoolId：<span class="mono">${esc(ownerSchoolId)}</span>｜
-        published：<span class="mono">${eventDoc.published === true ? "true" : "false"}</span>
+        活動：<b>${esc(title)}</b>
       `;
 
-      allowedEnabledText.textContent = enabled ? "true" : "false";
+      allowedEnabledText.textContent = enabled ? "已啟用" : "未啟用";
       matchFieldsText.textContent = existingMatchFields.length ? existingMatchFields.join("｜") : "-";
 
       configHint.innerHTML = `
-        <span class="ok">此活動的名單與其他活動分開管理。</span><br>
-        匯入後會把資料寫進 <span class="mono">events/${esc(eventId)}/allowedUsers</span>。<br>
-        若你的活動資格需要靠信箱判斷，請在名單中提供 <span class="mono">email</span> 欄位。
+        <span class="ok">此活動的名單會獨立管理。</span>
       `;
 
       if (existingMatchFields.length) {
@@ -925,12 +907,12 @@
       const matchFields = readChecks(matchFieldsBox);
 
       if (!matchFields.length) {
-        alert("請至少勾選 1 個比對欄位");
+        alert("請至少勾選 1 個識別欄位");
         return;
       }
 
       if (!matchFields.some(field => ["email","studentId"].includes(norm(field)))) {
-        const ok = confirm("你目前沒有勾選 email 或 studentId。這通常不建議，確定仍要匯入嗎？");
+        const ok = confirm("你目前沒有勾選 email 或 studentId，確定仍要匯入嗎？");
         if (!ok) return;
       }
 
@@ -1094,7 +1076,7 @@
       if (!q) return true;
 
       const fields = Object.entries(item)
-        .filter(([key]) => !["createdAt", "updatedAt", "matchFields"].includes(key))
+        .filter(([key]) => !["createdAt", "updatedAt", "matchFields", "matchKey"].includes(key))
         .map(([, value]) => norm(value).toLowerCase());
 
       return fields.some(v => v.includes(q));
@@ -1123,7 +1105,7 @@
       }
 
       allowedList.innerHTML = rows.map(item => {
-        const titleText = item.name || item.email || item.studentId || item.matchKey || "(未命名)";
+        const titleText = item.name || item.email || item.studentId || "(未命名)";
         const displayFields = getDisplayFields(item);
 
         return `
@@ -1132,18 +1114,13 @@
               <div style="min-width:0; flex:1;">
                 <div class="itemTitle">
                   ${esc(titleText)}
-                  <span class="pill mono">${esc(item.matchKey || "-")}</span>
                   ${
                     item.canRegister === true
-                      ? `<span class="pill ok">canRegister = true</span>`
+                      ? `<span class="pill ok">可報名</span>`
                       : item.canRegister === false
-                        ? `<span class="pill warn">canRegister = false</span>`
+                        ? `<span class="pill warn">不可報名</span>`
                         : ``
                   }
-                </div>
-
-                <div class="itemMeta">
-                  顯示此筆匯入的所有欄位資料
                 </div>
 
                 <div class="record-grid">
@@ -1151,12 +1128,6 @@
                     <div class="record-key">${esc(key)}</div>
                     <div class="record-value">${esc(formatFieldValue(item[key]))}</div>
                   `).join("")}
-
-                  <div class="record-key">matchKey</div>
-                  <div class="record-value mono">${esc(item.matchKey || "-")}</div>
-
-                  <div class="record-key">updatedAt</div>
-                  <div class="record-value mono">${esc(formatFieldValue(item.updatedAt))}</div>
                 </div>
               </div>
 
@@ -1198,13 +1169,13 @@
         renderAllowedList();
       } catch (e) {
         console.error(e);
-        allowedList.innerHTML = `<div class="warn">讀取活動名單失敗</div>`;
+        allowedList.innerHTML = `<div class="warn">讀取失敗，請稍後再試</div>`;
       }
     }
 
     async function deleteAllowedRecord(docId){
       if (!eventId || !docId) return;
-      const ok = confirm(`確定要刪除這筆活動資格資料嗎？\n\n${docId}`);
+      const ok = confirm(`確定要刪除這筆名單資料嗎？`);
       if (!ok) return;
 
       try {
@@ -1212,13 +1183,13 @@
         await loadAllowedUsers();
       } catch (e) {
         console.error(e);
-        alert("刪除失敗，可能是權限不足。");
+        alert("刪除失敗，請稍後再試。");
       }
     }
 
     async function clearAllAllowedRecords(){
       if (!eventId) return;
-      const ok = confirm(`確定要清空此活動全部名單嗎？\n\n活動：${eventId}\n\n此動作無法復原。`);
+      const ok = confirm(`確定要清空此活動全部名單嗎？\n\n此動作無法復原。`);
       if (!ok) return;
 
       clearAllowedBtn.disabled = true;
@@ -1253,10 +1224,10 @@
         }
 
         await loadAllowedUsers();
-        alert(`已清空 ${processed} 筆活動名單資料`);
+        alert(`已清空 ${processed} 筆名單資料`);
       } catch (e) {
         console.error(e);
-        alert("清空失敗，可能是權限不足。");
+        alert("清空失敗，請稍後再試。");
       } finally {
         clearAllowedBtn.disabled = false;
       }
@@ -1278,7 +1249,7 @@
       if (!user) {
         showGate(`
           <h1>活動名單匯入與資格設定</h1>
-          <div class="sub">請先使用 Email / 密碼登入後台。</div>
+          <div class="sub">請先登入後台。</div>
           <div style="margin-top:16px;">
             <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
           </div>
@@ -1344,7 +1315,7 @@
         console.error(e);
         showGate(`
           <h1>發生錯誤</h1>
-          <div class="sub warn">無法讀取權限資料，請查看 Console。</div>
+          <div class="sub warn">無法讀取資料，請稍後再試。</div>
           <div style="margin-top:16px;">
             <button class="btn" id="outBtn">登出</button>
           </div>

@@ -2,124 +2,235 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜主選單顯示設定</title>
+  <title>後台｜主選單設定</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
-      --bg:#f6f7fb;
-      --card:#fff;
-      --text:#111;
-      --muted:rgba(17,17,17,.65);
-      --line:rgba(17,17,17,.10);
-      --shadow:0 14px 40px rgba(0,0,0,.08);
-      --btn-h:44px;
+      --bg:#f5f5f7;
+      --card:rgba(255,255,255,.92);
+      --card-strong:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 18px 44px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.045);
+      --max:1180px;
     }
+
     *{ box-sizing:border-box; }
-    body{
+
+    html,body{
       margin:0;
+      padding:0;
       background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
-    .wrap{ max-width:1080px; margin:0 auto; padding:48px 24px; }
-    @media (max-width:640px){ .wrap{ padding:28px 16px; } }
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:18px;
+    button,input{
+      font:inherit;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:30px 20px 64px;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      margin-bottom:20px;
+      padding:28px 26px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:34px;
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.95), rgba(255,255,255,.88) 42%, rgba(255,255,255,.82) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-72px;
+      top:-72px;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.04), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(30px,4.4vw,48px);
+      line-height:1.04;
+      letter-spacing:-.04em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.9;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .panel{
       margin-bottom:18px;
+      padding:18px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      backdrop-filter:saturate(180%) blur(18px);
     }
 
-    h1{ margin:0 0 6px; font-size:22px; }
-    .sub{ color:var(--muted); font-size:14px; line-height:1.7; }
-    .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+    .panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .panel-title{
+      margin:0;
+      font-size:22px;
+      line-height:1.2;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
 
     .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      height:var(--btn-h);
+      min-height:44px;
       padding:10px 18px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      color:#111;
-      font-weight:900;
-      font-size:16px;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
       cursor:pointer;
-      text-decoration:none;
-      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       user-select:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+      box-shadow:var(--shadow-soft);
     }
-    .btn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0) scale(.98); box-shadow:none; }
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn[disabled]{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
 
     .pill{
       display:inline-flex;
       align-items:center;
-      gap:8px;
+      justify-content:center;
+      min-height:36px;
+      padding:8px 12px;
       border:1px solid var(--line);
       border-radius:999px;
-      padding:8px 12px;
-      font-weight:900;
-      font-size:14px;
       background:#fff;
+      font-size:13px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
     }
+
     .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
     }
 
     .grid{
       display:grid;
       grid-template-columns:1fr 1fr;
-      gap:14px;
+      gap:16px;
     }
-    @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
 
     .roleBox{
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fff;
-      box-shadow:0 10px 26px rgba(0,0,0,.05);
-      padding:16px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:26px;
+      background:var(--card-strong);
+      box-shadow:var(--shadow-soft);
+      padding:18px;
     }
+
     .roleTitle{
-      margin:0 0 10px;
-      font-size:16px;
-      font-weight:900;
+      margin:0 0 14px;
+      font-size:20px;
+      line-height:1.2;
+      font-weight:800;
+      letter-spacing:-.02em;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex-wrap:wrap;
     }
-    .roleHint{ color:var(--muted); font-size:13px; line-height:1.6; margin-top:-2px; }
 
     .feat{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap:10px;
-      padding:10px 0;
-      border-top:1px dashed var(--line);
+      gap:12px;
+      padding:12px 0;
+      border-top:1px solid rgba(0,0,0,.06);
     }
-    .feat:first-of-type{ border-top:none; }
+
+    .feat:first-of-type{
+      border-top:none;
+      padding-top:0;
+    }
 
     .featName{
-      font-weight:900;
-      font-size:14px;
-      line-height:1.4;
-    }
-    .featNote{
-      color:rgba(17,17,17,.55);
-      font-size:12px;
-      line-height:1.5;
-      margin-top:6px;
+      font-weight:800;
+      font-size:15px;
+      line-height:1.45;
+      word-break:break-word;
     }
 
     .controls{
@@ -128,9 +239,10 @@
       align-items:center;
       flex-wrap:wrap;
       justify-content:flex-end;
-      min-width:160px;
+      min-width:164px;
       padding-top:2px;
     }
+
     .check{
       display:inline-flex;
       align-items:center;
@@ -138,70 +250,142 @@
       border:1px solid var(--line);
       border-radius:999px;
       padding:8px 10px;
-      font-weight:900;
+      font-weight:800;
       font-size:13px;
       background:#fff;
       user-select:none;
       white-space:nowrap;
     }
-    .check input{ width:18px; height:18px; margin:0; }
 
-    .pinnedHint{
-      margin-top:10px;
-      background:#f1f2f6;
-      border:1px solid rgba(17,17,17,.12);
-      border-radius:14px;
-      padding:10px 12px;
-      color:rgba(17,17,17,.78);
-      font-size:13px;
-      line-height:1.6;
+    .check input{
+      width:18px;
+      height:18px;
+      margin:0;
+    }
+
+    .gate-box{
+      max-width:420px;
+      margin:72px auto 0;
+      padding:24px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+
+    .gate-title{
+      margin:0 0 8px;
+      font-size:28px;
+      line-height:1.12;
+      letter-spacing:-.03em;
+      font-weight:800;
+    }
+
+    .gate-text{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.85;
+    }
+
+    .form-stack{
+      display:grid;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .input{
+      width:100%;
+      min-height:48px;
+      padding:12px 14px;
+      border:1px solid var(--line-strong);
+      border-radius:16px;
+      background:#fff;
+      color:#111;
+      font-size:15px;
+      outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .input:focus{
+      border-color:rgba(0,0,0,.24);
+      box-shadow:0 0 0 4px rgba(0,0,0,.04);
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @media (max-width:920px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:720px){
+      .page{
+        padding:20px 14px 52px;
+      }
+
+      .hero{
+        padding:24px 18px;
+        border-radius:28px;
+      }
+
+      .panel{
+        border-radius:24px;
+        padding:16px;
+      }
+
+      .roleBox{
+        border-radius:22px;
+      }
+
+      .feat{
+        flex-direction:column;
+      }
+
+      .controls{
+        min-width:0;
+        justify-content:flex-start;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+  <div class="page">
+    <div id="gate" class="hidden"></div>
 
-    <div id="gate" class="card" style="display:none;"></div>
-
-    <div id="app" style="display:none;">
-      <div class="card">
-        <div class="row">
+    <div id="app" class="hidden">
+      <section class="hero">
+        <div class="hero-top">
           <div>
-            <h1>主選單顯示設定</h1>
-            <div class="sub">
-              在這裡決定各身分在主選單會看到哪些功能，以及哪些要置頂。
-            </div>
-            <div class="sub" style="margin-top:10px;">
-              登入：<span id="email" class="mono">-</span>｜
-              身分：<span id="role" class="mono">-</span>
+            <h1 class="hero-title">主選單設定</h1>
+            <div class="hero-sub">設定不同身分可看到的功能。</div>
+            <div class="hero-actions" style="margin-top:16px;">
+              <span class="pill mono" id="email">-</span>
+              <span class="pill" id="role">-</span>
             </div>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+
+          <div class="hero-actions">
             <a class="btn" href="dashboard.html">回主選單</a>
             <button class="btn" onclick="doLogout()">登出</button>
           </div>
         </div>
+      </section>
 
-        <div class="pinnedHint">
-          勾選「顯示」＝該身分看得到。<br/>
-          勾選「置頂」＝顯示在主選單上方。
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="row">
-          <div>
-            <span class="pill">顯示設定</span>
-          </div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">設定</h2>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="btn" id="reloadBtn">重新載入</button>
-            <button class="btn btn-primary" id="saveBtn">儲存設定</button>
+            <button class="btn btn-primary" id="saveBtn">儲存</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="grid" id="rolesGrid"></div>
+      <section class="grid" id="rolesGrid"></section>
     </div>
   </div>
 
@@ -237,54 +421,87 @@
     }
 
     function showGate(title, msg, showLogin){
-      gate.style.display = "block";
-      app.style.display = "none";
+      gate.classList.remove("hidden");
+      app.classList.add("hidden");
+
       gate.innerHTML = `
-        <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
-        <div class="sub">${esc(msg)}</div>
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>` : ``}
-          ${!showLogin ? `<button class="btn" onclick="doLogout()">登出</button>` : ``}
+        <div class="gate-box">
+          <h1 class="gate-title">${esc(title)}</h1>
+          <div class="gate-text">${esc(msg)}</div>
+
+          ${
+            showLogin ? `
+              <div class="form-stack">
+                <input id="loginEmail" class="input" type="text" placeholder="帳號">
+                <input id="loginPassword" class="input" type="password" placeholder="密碼">
+                <button class="btn btn-primary" id="loginBtn">登入</button>
+              </div>
+            ` : `
+              <div style="margin-top:16px;">
+                <button class="btn" onclick="doLogout()">登出</button>
+              </div>
+            `
+          }
         </div>
       `;
+
       const loginBtn = document.getElementById("loginBtn");
       if (loginBtn){
         loginBtn.onclick = async () => {
-          const email = window.prompt("請輸入 Email");
-          if (!email) return;
-          const password = window.prompt("請輸入密碼");
-          if (!password) return;
-          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+          const email = String(document.getElementById("loginEmail")?.value || "").trim();
+          const password = String(document.getElementById("loginPassword")?.value || "");
+
+          if (!email || !password){
+            alert("請輸入帳號與密碼");
+            return;
+          }
+
+          loginBtn.disabled = true;
+          const oldText = loginBtn.textContent;
+          loginBtn.textContent = "登入中…";
+
+          try{
+            await firebase.auth().signInWithEmailAndPassword(email, password);
+          }catch(e){
+            console.error(e);
+            alert("登入失敗");
+          }finally{
+            loginBtn.disabled = false;
+            loginBtn.textContent = oldText;
+          }
         };
       }
     }
 
     window.doLogout = async () => {
-      try { await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+      try {
+        await firebase.auth().signOut();
+      } catch(e){
+        console.error(e);
+        alert("登出失敗");
+      }
     };
 
-    // 這份一定要和 dashboard.html 的 FEATURES 完全對齊
     const FEATURES = [
-      { id:"partner-schools",          title:"🏫 特約校園管理" },
-      { id:"import-verify",            title:"📥 名單匯入" },
-      { id:"admin-member-lookup",      title:"🔎 會員查詢" },
+      { id:"partner-schools",          title:"特約校園管理" },
+      { id:"import-verify",            title:"名單匯入" },
+      { id:"admin-member-lookup",      title:"會員查詢" },
 
-      { id:"admin-events",             title:"🎟️ 活動管理" },
-      { id:"admin-events-overview",    title:"📋 活動總覽" },
-      { id:"admin-event-orders",       title:"🧾 訂單管理" },
+      { id:"admin-events",             title:"活動管理" },
+      { id:"admin-events-overview",    title:"活動總覽" },
+      { id:"admin-event-orders",       title:"訂單管理" },
 
-      { id:"seat-editor",              title:"🪑 座位編輯器" },
-      { id:"staff-checkin",            title:"✅ 核銷掃碼" },
-      { id:"service-center",           title:"🛠️ 服務中心" },
+      { id:"seat-editor",              title:"座位編輯器" },
+      { id:"staff-checkin",            title:"核銷掃碼" },
+      { id:"service-center",           title:"服務中心" },
 
-      { id:"admin-staff-users",        title:"🧑‍💼 後台人員管理" },
-      { id:"admin-user-assignment",    title:"🪪 權限細部設定" },
-      { id:"org-team",                 title:"👥 組織團隊" },
+      { id:"admin-staff-users",        title:"後台人員管理" },
+      { id:"admin-user-assignment",    title:"權限細部設定" },
+      { id:"org-team",                 title:"組織團隊" },
 
-      { id:"admin-dashboard-settings", title:"⚙️ 主選單設定" },
-      { id:"admin-impersonate",        title:"🧪 身分模擬" },
-      { id:"admin-platform-users",     title:"🌐 平台使用者" }
+      { id:"admin-dashboard-settings", title:"主選單設定" },
+      { id:"admin-impersonate",        title:"身分模擬" },
+      { id:"admin-platform-users",     title:"平台使用者" }
     ];
 
     const FEATURE_MAP = new Map(FEATURES.map(x => [x.id, x]));
@@ -342,7 +559,6 @@
           }
         });
 
-        // 刪掉舊的無效功能 id
         Object.keys(cfg.roles[r.id]).forEach(fid => {
           if (!FEATURE_MAP.has(fid)) {
             delete cfg.roles[r.id][fid];
@@ -361,14 +577,11 @@
         const html = `
           <div class="roleBox" data-role="${esc(roleId)}">
             <div class="roleTitle">
-              <span>${esc(r.name)} <span class="mono" style="font-size:12px; font-weight:900; color:rgba(17,17,17,.55);">${esc(roleId)}</span></span>
+              <span>${esc(r.name)}</span>
               <span class="pill">可置頂</span>
             </div>
-            <div class="roleHint">
-              勾選「顯示」＝該身分看得到；勾選「置頂」＝顯示在主選單上方。
-            </div>
 
-            <div style="margin-top:10px;">
+            <div>
               ${FEATURES.map(f => {
                 const fc = roleCfg[f.id] || {};
                 const visible = fc.visible === true;
@@ -460,7 +673,7 @@
         alert("已儲存");
       }catch(e){
         console.error(e);
-        alert("儲存失敗（可能是 Rules 權限不足）");
+        alert("儲存失敗");
       }finally{
         saveBtn.disabled = false;
         saveBtn.textContent = old;
@@ -472,20 +685,20 @@
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user){
-        showGate("主選單顯示設定", "請先使用 Email / 密碼登入後台。", true);
+        showGate("登入後台", "請先登入", true);
         return;
       }
 
       try{
         const snap = await db.collection("users").doc(user.uid).get();
         if (!snap.exists){
-          showGate("等待授權", "你的帳號尚未被系統授權為管理者。", false);
+          showGate("無法進入", "目前無法使用此頁面", false);
           return;
         }
 
         const u = snap.data() || {};
         if (u.enabled !== true){
-          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          showGate("無法進入", "目前無法使用此頁面", false);
           return;
         }
 
@@ -494,18 +707,18 @@
         document.getElementById("role").textContent = currentRole || "-";
 
         if (currentRole !== "platform_super"){
-          showGate("權限不足", "此頁面僅限平台超級管理員使用。", false);
+          showGate("無法進入", "目前無法使用此頁面", false);
           return;
         }
 
-        gate.style.display = "none";
-        app.style.display = "block";
+        gate.classList.add("hidden");
+        app.classList.remove("hidden");
 
         await load();
 
       }catch(err){
         console.error(err);
-        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
+        showGate("發生錯誤", "請稍後再試", false);
       }
     });
   </script>

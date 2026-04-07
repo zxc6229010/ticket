@@ -56,11 +56,6 @@
       font-size:16px;
     }
 
-    h3{
-      margin:0 0 6px;
-      font-size:15px;
-    }
-
     .sub{
       color:var(--muted);
       font-size:14px;
@@ -381,17 +376,6 @@
       opacity:0;
       transform:translateY(6px);
     }
-
-    .hint-box{
-      margin-top:12px;
-      padding:12px 14px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#fafafa;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.8;
-    }
   </style>
 </head>
 
@@ -405,12 +389,11 @@
           <div>
             <h1>後台帳號管理</h1>
             <div class="sub">
-              可進行 <span class="mono">單筆新增</span>、<span class="mono">批次匯入</span>、<span class="mono">現有人員管理</span>。<br>
-              帳號設定只保留：<span class="mono">email / role / enabled / schoolId / orgId</span>。
+              可進行單筆新增、批次匯入與後台人員管理。
             </div>
             <div class="sub" style="margin-top:8px;">
               登入：<span id="who" class="mono">-</span>｜
-              角色：<span id="myRole" class="mono">-</span>
+              身分：<span id="myRole" class="mono">-</span>
             </div>
           </div>
 
@@ -436,9 +419,6 @@
           <div class="row">
             <div>
               <h2>單筆新增帳號</h2>
-              <div class="sub">
-                直接建立 1 筆後台帳號，並同步寫入 <span class="mono">Auth</span> 與 <span class="mono">users/{uid}</span>。
-              </div>
             </div>
           </div>
 
@@ -454,36 +434,31 @@
             </div>
 
             <div>
-              <label>角色（role）</label>
+              <label>身分</label>
               <select id="singleRole"></select>
             </div>
 
             <div>
-              <label>啟用（enabled）</label>
+              <label>狀態</label>
               <select id="singleEnabled">
-                <option value="true">true</option>
-                <option value="false">false</option>
+                <option value="true">啟用</option>
+                <option value="false">停用</option>
               </select>
             </div>
 
             <div>
-              <label>校園（schoolId）</label>
+              <label>校園</label>
               <select id="singleSchoolId"></select>
             </div>
 
             <div>
-              <label>組織（orgId）</label>
+              <label>組織</label>
               <select id="singleOrgId"></select>
             </div>
           </div>
 
           <div class="actions" style="margin-top:14px;">
             <button class="btn btn-primary" id="singleCreateBtn">建立帳號</button>
-          </div>
-
-          <div class="hint-box">
-            說明：這裡只建立帳號基本設定。<br>
-            活動內的工作組別、服務台、核銷入口、活動指派等，都請到各活動頁面另外設定。
           </div>
 
           <div class="small" id="singleMsg" style="margin-top:12px;"></div>
@@ -496,8 +471,7 @@
             <div>
               <h2>批次匯入帳號</h2>
               <div class="sub">
-                支援上傳 <span class="mono">CSV / Excel（.csv / .xlsx / .xls）</span>。<br>
-                必填欄位：<span class="mono">email,password,role,enabled,schoolId,orgId</span>
+                支援上傳 CSV / Excel。
               </div>
             </div>
           </div>
@@ -510,18 +484,12 @@
             <button class="btn" id="downloadCsvSampleBtn">下載 CSV 範本</button>
             <button class="btn btn-primary" id="parseImportBtn">解析檔案</button>
           </div>
-
-          <div class="hint-box">
-            範本中的欄位會依目前這個帳號管理頁實際使用的資料欄位建立。<br>
-            角色、啟用狀態、校園、組織的可用值，會一起放在範本的「參考資料」工作表中。
-          </div>
         </div>
 
         <div class="card" id="importPreviewCard" style="display:none;">
           <div class="row">
             <div>
               <h2>匯入預覽</h2>
-              <div class="sub">確認資料無誤後，再批次建立帳號。</div>
             </div>
             <div class="small" id="importInfo">-</div>
           </div>
@@ -545,7 +513,7 @@
             <div>
               <h2>後台人員</h2>
               <div class="sub">
-                可查看與管理現有後台人員資料。只保留：email、角色、啟用與否、校園、組織。
+                可查看與管理現有後台人員資料。
               </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -555,11 +523,11 @@
 
           <div class="grid2" style="margin-top:12px;">
             <div>
-              <label style="margin-top:0;">搜尋（email / uid / schoolId / orgId / role）</label>
+              <label style="margin-top:0;">搜尋</label>
               <input type="text" id="userSearch" placeholder="輸入關鍵字…" />
             </div>
             <div>
-              <label style="margin-top:0;">角色篩選</label>
+              <label style="margin-top:0;">身分篩選</label>
               <select id="userRoleSel"></select>
             </div>
           </div>
@@ -583,46 +551,45 @@
       </div>
 
       <div class="kv">
-        <div class="k">uid</div><div class="v mono" id="sUid">-</div>
-        <div class="k">email</div><div class="v mono" id="sEmail">-</div>
+        <div class="k">帳號</div><div class="v mono" id="sEmail">-</div>
         <div class="k">建立時間</div><div class="v mono" id="sApprovedAt">-</div>
-        <div class="k">目前角色</div><div class="v mono" id="sCurrentRole">-</div>
+        <div class="k">目前身分</div><div class="v mono" id="sCurrentRole">-</div>
       </div>
 
       <div class="card soft" style="margin:14px 0 0;">
         <div class="row">
           <div>
             <h2>帳號設定</h2>
-            <div class="sub">可修改 email、角色、啟用狀態、校園、組織。</div>
+            <div class="sub">可修改帳號資料。</div>
           </div>
         </div>
 
         <div class="grid2" style="margin-top:12px;">
           <div>
-            <label style="margin-top:0;">email</label>
-            <input type="email" id="sEditEmail" placeholder="輸入 email" />
+            <label style="margin-top:0;">Email</label>
+            <input type="email" id="sEditEmail" placeholder="輸入 Email" />
           </div>
 
           <div>
-            <label style="margin-top:0;">角色（role）</label>
+            <label style="margin-top:0;">身分</label>
             <select id="sEditRole"></select>
           </div>
 
           <div>
-            <label>啟用（enabled）</label>
+            <label>狀態</label>
             <select id="sEditEnabled">
-              <option value="true">true</option>
-              <option value="false">false</option>
+              <option value="true">啟用</option>
+              <option value="false">停用</option>
             </select>
           </div>
 
           <div>
-            <label>校園（schoolId）</label>
+            <label>校園</label>
             <select id="sEditSchoolId"></select>
           </div>
 
           <div>
-            <label>組織（orgId）</label>
+            <label>組織</label>
             <select id="sEditOrgId"></select>
           </div>
         </div>
@@ -711,6 +678,14 @@
 
     const STAFF_ROLE_SET = new Set(STAFF_ROLES);
 
+    const ROLE_LABELS = {
+      platform_super: "平台超級管理員",
+      platform_admin: "平台管理員",
+      org_super: "組織超級管理員",
+      org_admin: "組織管理員",
+      org_staff: "組織服務人員"
+    };
+
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
 
@@ -751,7 +726,6 @@
     const staffModalBack = document.getElementById("staffModalBack");
     const sCloseBtn = document.getElementById("sCloseBtn");
     const sSub = document.getElementById("sSub");
-    const sUid = document.getElementById("sUid");
     const sEmail = document.getElementById("sEmail");
     const sApprovedAt = document.getElementById("sApprovedAt");
     const sCurrentRole = document.getElementById("sCurrentRole");
@@ -769,7 +743,6 @@
     let userCache = [];
     let currentStaffUser = null;
     let parsedImportRows = [];
-    let parsedImportHeaders = [];
     let schoolOptions = [];
     let orgOptions = [];
 
@@ -809,6 +782,10 @@
       return fallback;
     }
 
+    function getRoleLabel(role){
+      return ROLE_LABELS[norm(role)] || norm(role) || "未設定";
+    }
+
     function isPlatform(role){
       return role === "platform_super" || role === "platform_admin";
     }
@@ -823,12 +800,12 @@
 
     function getSchoolLabelById(id){
       const item = schoolOptions.find(x => x.id === norm(id));
-      return item ? `${item.name}（${item.id}）` : (norm(id) || "（未設定）");
+      return item ? item.name : (norm(id) || "未設定");
     }
 
     function getOrgLabelById(id){
       const item = orgOptions.find(x => x.id === norm(id));
-      return item ? `${item.name}（${item.id}）` : (norm(id) || "（未設定）");
+      return item ? item.name : (norm(id) || "未設定");
     }
 
     function showGate(title, msg, showLogin){
@@ -839,7 +816,7 @@
         <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
         <div class="sub">${esc(msg)}</div>
         <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn" id="loginBtn">使用 Email 登入</button>` : ``}
+          ${showLogin ? `<button class="btn" id="loginBtn">登入</button>` : ``}
           ${!showLogin ? `<button class="btn" id="logoutGateBtn">登出</button>` : ``}
         </div>
       `;
@@ -864,7 +841,7 @@
         await firebase.auth().signOut();
       }catch(e){
         console.error(e);
-        alert("登出失敗（請看 Console）");
+        alert("登出失敗");
       }
     }
 
@@ -891,7 +868,7 @@
         rows.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
         schoolOptions = rows;
       }catch(e){
-        console.error("loadSchools error", e);
+        console.error(e);
         schoolOptions = [];
       }
     }
@@ -910,31 +887,31 @@
         rows.sort((a,b) => a.name.localeCompare(b.name, "zh-Hant"));
         orgOptions = rows;
       }catch(e){
-        console.error("loadOrganizations error", e);
+        console.error(e);
         orgOptions = [];
       }
     }
 
     function buildRoleOptionsHtml(selectedValue = "org_staff"){
       return STAFF_ROLES.map(role => `
-        <option value="${esc(role)}" ${norm(selectedValue) === role ? "selected" : ""}>${esc(role)}</option>
+        <option value="${esc(role)}" ${norm(selectedValue) === role ? "selected" : ""}>${esc(getRoleLabel(role))}</option>
       `).join("");
     }
 
     function buildSchoolOptionsHtml(selectedValue = ""){
       return `
-        <option value="">（不設定）</option>
+        <option value="">未設定</option>
         ${schoolOptions.map(item => `
-          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}（${esc(item.id)}）</option>
+          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}</option>
         `).join("")}
       `;
     }
 
     function buildOrgOptionsHtml(selectedValue = ""){
       return `
-        <option value="">（不設定）</option>
+        <option value="">未設定</option>
         ${orgOptions.map(item => `
-          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}（${esc(item.id)}）</option>
+          <option value="${esc(item.id)}" ${norm(selectedValue) === item.id ? "selected" : ""}>${esc(item.name)}</option>
         `).join("")}
       `;
     }
@@ -943,7 +920,7 @@
       singleRole.innerHTML = buildRoleOptionsHtml("org_staff");
       userRoleSel.innerHTML = `
         <option value="all">全部</option>
-        ${STAFF_ROLES.map(role => `<option value="${esc(role)}">${esc(role)}</option>`).join("")}
+        ${STAFF_ROLES.map(role => `<option value="${esc(role)}">${esc(getRoleLabel(role))}</option>`).join("")}
       `;
       sEditRole.innerHTML = buildRoleOptionsHtml("org_staff");
 
@@ -977,11 +954,11 @@
       tabStaff.style.display = tab === "staff" ? "block" : "none";
 
       if (tab === "single") {
-        tabHint.textContent = "新增單一後台帳號。";
+        tabHint.textContent = "新增單一帳號";
       } else if (tab === "import") {
-        tabHint.textContent = "上傳 CSV / Excel 並預覽批次匯入資料。";
+        tabHint.textContent = "上傳檔案後批次建立帳號";
       } else {
-        tabHint.textContent = "查看與管理現有後台人員。";
+        tabHint.textContent = "查看與管理現有後台人員";
         loadStaffUsers();
       }
     }
@@ -998,7 +975,7 @@
 
       if (!email) return alert("請輸入 Email");
       if (!password) return alert("請輸入密碼");
-      if (!STAFF_ROLE_SET.has(role)) return alert("角色不正確");
+      if (!STAFF_ROLE_SET.has(role)) return alert("身分不正確");
 
       singleCreateBtn.disabled = true;
       const oldText = singleCreateBtn.textContent;
@@ -1025,7 +1002,7 @@
         await loadStaffUsers();
       }catch(e){
         console.error(e);
-        singleMsg.innerHTML = `<span class="warn">${esc(e.message || "建立失敗")}</span>`;
+        singleMsg.innerHTML = `<span class="warn">建立失敗</span>`;
       }finally{
         singleCreateBtn.disabled = false;
         singleCreateBtn.textContent = oldText;
@@ -1095,18 +1072,18 @@
 
       const errors = [];
 
-      if (!email) errors.push("缺少 email");
-      if (!password) errors.push("缺少 password");
-      if (!role) errors.push("缺少 role");
-      if (role && !STAFF_ROLE_SET.has(role)) errors.push("role 不在允許清單");
+      if (!email) errors.push("缺少 Email");
+      if (!password) errors.push("缺少密碼");
+      if (!role) errors.push("缺少身分");
+      if (role && !STAFF_ROLE_SET.has(role)) errors.push("身分不正確");
       if (enabledRaw && !["true","false","1","0","yes","no","y","n"].includes(lower(enabledRaw))) {
-        errors.push("enabled 格式錯誤");
+        errors.push("狀態格式錯誤");
       }
       if (schoolId && !schoolOptions.some(x => x.id === schoolId)) {
-        errors.push("schoolId 不存在");
+        errors.push("校園不存在");
       }
       if (orgId && !orgOptions.some(x => x.id === orgId)) {
-        errors.push("orgId 不存在");
+        errors.push("組織不存在");
       }
 
       return {
@@ -1204,9 +1181,7 @@
           return;
         }
 
-        parsedImportHeaders = headers;
         parsedImportRows = rows;
-
         renderImportPreview(headers, rows);
 
       }catch(e){
@@ -1254,7 +1229,7 @@
 
     function buildReferenceSheetData(){
       const rows = [];
-      rows.push(["欄位","可填值 / 說明"]);
+      rows.push(["欄位","內容"]);
       rows.push(["role", STAFF_ROLES.join(" / ")]);
       rows.push(["enabled", "true / false"]);
       rows.push(["schoolId", schoolOptions.length ? schoolOptions.map(x => `${x.name}（${x.id}）`).join("、") : "目前沒有校園資料"]);
@@ -1358,13 +1333,12 @@
             await createAuthUserAndProfile(payload);
             okCount++;
           } catch (e) {
-            failed.push(`${payload.email}：${e.message || e}`);
+            failed.push(payload.email);
           }
         }
 
         alert(
-          `批次建立完成\n成功：${okCount}\n失敗：${failed.length}` +
-          (failed.length ? `\n\n${failed.join("\n")}` : "")
+          `批次建立完成\n成功：${okCount}\n失敗：${failed.length}`
         );
 
         await loadStaffUsers();
@@ -1384,8 +1358,6 @@
       if (!q) return true;
 
       const fields = [
-        u.id,
-        u.uid,
         u.email,
         u.orgId,
         u.schoolId,
@@ -1402,7 +1374,6 @@
         userList.innerHTML = `
           <div class="item">
             <div class="itemTitle">目前沒有後台人員資料</div>
-            <div class="meta">請確認是否已有建立好的後台帳號。</div>
           </div>
         `;
         return;
@@ -1416,7 +1387,7 @@
         if (isMe) {
           toggleHtml = `<button class="btn btn-sm" disabled>不可停用自己</button>`;
         } else if (isSuperProtected) {
-          toggleHtml = `<button class="btn btn-sm" disabled>不可停用 super</button>`;
+          toggleHtml = `<button class="btn btn-sm" disabled>不可停用</button>`;
         } else {
           toggleHtml = `
             <button class="btn btn-sm" data-toggle-user="${esc(u.id)}" data-enabled="${u.enabled === true ? "true" : "false"}">
@@ -1430,17 +1401,15 @@
             <div class="itemTop">
               <div style="min-width:260px; flex:1;">
                 <div class="itemTitle">
-                  ${esc(u.email || u.id)}
-                  <span class="badge mono">${esc(u.role || "-")}</span>
-                  ${u.enabled === true ? `<span class="badge ok">enabled</span>` : `<span class="badge warn">disabled</span>`}
+                  ${esc(u.email || "未設定")}
+                  <span class="badge">${esc(getRoleLabel(u.role))}</span>
+                  ${u.enabled === true ? `<span class="badge ok">啟用中</span>` : `<span class="badge warn">已停用</span>`}
                   ${isMe ? `<span class="badge">你自己</span>` : ``}
-                  ${isSuperProtected ? `<span class="badge">platform_super</span>` : ``}
                 </div>
                 <div class="meta">
-                  uid：<span class="mono">${esc(u.id)}</span><br>
                   校園：<span class="mono">${esc(getSchoolLabelById(u.schoolId))}</span><br>
                   組織：<span class="mono">${esc(getOrgLabelById(u.orgId))}</span><br>
-                  approvedAt / createdAt：<span class="mono">${esc(tsToText(u.approvedAt || u.createdAt))}</span>
+                  建立時間：<span class="mono">${esc(tsToText(u.approvedAt || u.createdAt))}</span>
                 </div>
               </div>
 
@@ -1487,8 +1456,7 @@
         console.error("loadStaffUsers 失敗", e);
         userList.innerHTML = `
           <div class="item">
-            <div class="itemTitle warn">讀取後台人員失敗</div>
-            <div class="meta">請查看 Console 的詳細錯誤訊息。</div>
+            <div class="itemTitle warn">讀取失敗</div>
           </div>
         `;
       }finally{
@@ -1505,7 +1473,7 @@
       }
 
       if (target && isProtectedSuperUser(target)) {
-        alert("platform_super 不可被停用");
+        alert("此帳號不可停用");
         return;
       }
 
@@ -1521,7 +1489,7 @@
         await loadStaffUsers();
       }catch(e){
         console.error(e);
-        alert("更新失敗（可能是 Firestore Rules 權限不足）");
+        alert("更新失敗");
       }
     }
 
@@ -1536,10 +1504,9 @@
 
       currentStaffUser = u;
 
-      sUid.textContent = u.id || "-";
       sEmail.textContent = u.email || "-";
       sApprovedAt.textContent = tsToText(u.approvedAt || u.createdAt);
-      sCurrentRole.textContent = u.role || "-";
+      sCurrentRole.textContent = getRoleLabel(u.role);
 
       sEditEmail.value = norm(u.email || "");
       sEditRole.innerHTML = buildRoleOptionsHtml(norm(u.role) || "org_staff");
@@ -1554,11 +1521,11 @@
       sEditEnabled.disabled = !!isMe || !!isSuperProtected;
 
       if (isMe) {
-        sSub.textContent = "這是你自己的帳號，可查看資料，但不可修改自己的角色或停用自己。";
+        sSub.textContent = "這是你自己的帳號";
       } else if (isSuperProtected) {
-        sSub.textContent = "這是 platform_super 帳號，不可修改角色、不可停用、不可刪除。";
+        sSub.textContent = "此帳號不可修改身分、停用或刪除";
       } else {
-        sSub.textContent = "可直接修改此後台人員的 email、角色、啟用狀態、校園、組織。";
+        sSub.textContent = "可修改此帳號資料";
       }
 
       sDeleteBtn.style.display = (isPlatformSuper(myRole) && !isMe && !isSuperProtected) ? "inline-flex" : "none";
@@ -1575,19 +1542,19 @@
       const schoolId = norm(sEditSchoolId.value);
       const orgId = norm(sEditOrgId.value);
 
-      if (!uid) return alert("缺少 uid");
-      if (!email) return alert("請輸入 email");
-      if (!STAFF_ROLE_SET.has(role)) return alert("角色不正確");
+      if (!uid) return alert("資料不完整");
+      if (!email) return alert("請輸入 Email");
+      if (!STAFF_ROLE_SET.has(role)) return alert("身分不正確");
 
       const isMe = currentUser && uid === currentUser.uid;
       const isSuperProtected = isProtectedSuperUser(currentStaffUser);
 
       if (isMe && enabled === false) return alert("不可停用自己的帳號");
-      if (isMe && role !== norm(currentStaffUser.role)) return alert("不可修改自己的角色");
-      if (isSuperProtected && enabled === false) return alert("platform_super 不可被停用");
-      if (isSuperProtected && role !== norm(currentStaffUser.role)) return alert("platform_super 不可被改角色");
+      if (isMe && role !== norm(currentStaffUser.role)) return alert("不可修改自己的身分");
+      if (isSuperProtected && enabled === false) return alert("此帳號不可停用");
+      if (isSuperProtected && role !== norm(currentStaffUser.role)) return alert("此帳號不可修改身分");
 
-      if (!confirm("確定要儲存這位後台人員的變更嗎？")) return;
+      if (!confirm("確定要儲存變更嗎？")) return;
 
       sSaveBtn.disabled = true;
       sDeleteBtn.disabled = true;
@@ -1608,7 +1575,7 @@
         await loadStaffUsers();
       }catch(e){
         console.error(e);
-        alert("儲存失敗（可能是 Firestore Rules 權限不足）");
+        alert("儲存失敗");
       }finally{
         sSaveBtn.disabled = false;
         sDeleteBtn.disabled = false;
@@ -1618,29 +1585,26 @@
     async function deleteStaffUser(){
       if (!currentStaffUser) return;
 
-      if (!isPlatformSuper(myRole)) return alert("只有 platform_super 可以刪除後台人員");
+      if (!isPlatformSuper(myRole)) return alert("你沒有權限刪除");
       if (currentUser && currentStaffUser.id === currentUser.uid) return alert("不可刪除自己的帳號");
-      if (isProtectedSuperUser(currentStaffUser)) return alert("platform_super 不可刪除");
+      if (isProtectedSuperUser(currentStaffUser)) return alert("此帳號不可刪除");
 
-      const uid = currentStaffUser.id;
-      const email = currentStaffUser.email || uid;
+      const email = currentStaffUser.email || "";
 
-      const ok = confirm(
-        `確定要刪除這位後台人員嗎？\n\n${email}\n\n只會刪除 users/${uid}，不會刪除其他資料。`
-      );
+      const ok = confirm(`確定要刪除這位後台人員嗎？\n\n${email}`);
       if (!ok) return;
 
       sSaveBtn.disabled = true;
       sDeleteBtn.disabled = true;
 
       try{
-        await db.collection("users").doc(uid).delete();
-        alert("已刪除後台人員資料");
+        await db.collection("users").doc(currentStaffUser.id).delete();
+        alert("已刪除");
         closeStaffModal();
         await loadStaffUsers();
       }catch(e){
         console.error(e);
-        alert("刪除失敗（可能是 Firestore Rules 權限不足）");
+        alert("刪除失敗");
       }finally{
         sSaveBtn.disabled = false;
         sDeleteBtn.disabled = false;
@@ -1671,24 +1635,24 @@
         myUserDoc = await loadMyUser(user.uid);
 
         if (!myUserDoc) {
-          showGate("等待授權", "你的帳號尚未被授權為管理者。", false);
+          showGate("無法進入", "目前無法使用此頁面。", false);
           return;
         }
 
         if (myUserDoc.enabled !== true) {
-          showGate("已停用", "此帳號已被停用，請聯絡系統管理員。", false);
+          showGate("無法進入", "目前無法使用此頁面。", false);
           return;
         }
 
         myRole = norm(myUserDoc.role);
 
         if (!isPlatform(myRole)) {
-          showGate("權限不足", "此頁面目前僅開放平台管理員使用。", false);
+          showGate("權限不足", "目前無法使用此頁面。", false);
           return;
         }
 
         whoEl.textContent = myUserDoc.email || user.email || "-";
-        myRoleEl.textContent = myRole || "-";
+        myRoleEl.textContent = getRoleLabel(myRole);
 
         await Promise.all([
           loadSchools(),
@@ -1703,7 +1667,7 @@
         renderTabs();
       }catch(e){
         console.error(e);
-        showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
+        showGate("發生錯誤", "請稍後再試。", false);
       }
     });
   </script>
