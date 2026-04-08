@@ -33,7 +33,14 @@
       font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .shell{
+      min-height:100vh;
+    }
 
     .nav-wrap{
       position:sticky;
@@ -52,6 +59,7 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
+      gap:16px;
     }
 
     .brand{
@@ -60,6 +68,8 @@
       gap:10px;
       font-size:18px;
       font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
     }
 
     .brand-mark{
@@ -70,7 +80,58 @@
       color:#fff;
       display:grid;
       place-items:center;
+      font-size:14px;
       font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .account-icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      cursor:pointer;
+    }
+
+    .account-icon-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
     }
 
     .page{
@@ -85,25 +146,43 @@
     }
 
     .hero{
-      background:#fff;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
       border:1px solid rgba(0,0,0,.05);
-      border-radius:32px;
-      box-shadow:var(--shadow);
-      padding:28px;
-      margin-bottom:18px;
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:32px 28px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:240px;
+      height:240px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
     }
 
     .hero-title{
       margin:0;
-      font-size:42px;
+      font-size:clamp(34px, 5vw, 52px);
+      line-height:1.05;
+      letter-spacing:-.05em;
       font-weight:800;
-      letter-spacing:-.04em;
     }
 
     .hero-sub{
-      margin-top:10px;
+      margin-top:12px;
       color:var(--muted);
-      font-size:14px;
+      font-size:15px;
+      line-height:1.9;
     }
 
     .card{
@@ -111,6 +190,20 @@
       border:1px solid rgba(0,0,0,.06);
       border-radius:32px;
       box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:20px 22px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .card-title{
+      margin:0;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.02em;
     }
 
     .card-body{
@@ -124,7 +217,9 @@
     }
 
     @media (max-width:760px){
-      .grid{ grid-template-columns:1fr; }
+      .grid{
+        grid-template-columns:1fr;
+      }
     }
 
     .field{
@@ -139,142 +234,498 @@
     .label{
       font-size:13px;
       font-weight:800;
+      color:#111827;
     }
 
-    .input{
+    .input,
+    .select{
+      width:100%;
       min-height:48px;
       padding:12px 14px;
       border:1px solid rgba(0,0,0,.12);
       border-radius:16px;
+      background:#fff;
+      color:#111827;
       font-size:15px;
+      outline:none;
+      transition:border-color .12s ease, box-shadow .12s ease;
     }
 
-    .input:focus{
-      border-color:#111;
-      outline:none;
+    .input:focus,
+    .select:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 4px rgba(17,24,39,.06);
+    }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.7;
     }
 
     .btn{
-      width:100%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       min-height:46px;
+      padding:11px 18px;
       border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+    }
+
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .btn-primary{
       background:#111;
       color:#fff;
-      font-weight:800;
-      border:none;
-      cursor:pointer;
+      border-color:#111;
+    }
+
+    .btn-block{
+      width:100%;
       margin-top:18px;
     }
 
     .notice{
-      margin-top:14px;
-      padding:12px;
-      border-radius:14px;
+      margin-top:16px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:#fff;
       font-size:13px;
+      line-height:1.9;
+      color:#4b5563;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
 
-    .info{ background:var(--blue-bg); color:var(--blue); }
-    .ok{ background:var(--green-bg); color:var(--green); }
-    .warn{ background:var(--red-bg); color:var(--red); }
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
+      color:var(--blue);
+    }
 
-    .row{
+    .notice.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.12);
+      color:var(--green);
+    }
+
+    .notice.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.12);
+      color:var(--red);
+    }
+
+    .row-between{
       display:flex;
       justify-content:space-between;
-      margin-top:10px;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .text-link{
       font-size:13px;
-      font-weight:700;
+      font-weight:800;
+      color:#111827;
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .copyright{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:24px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .card{
+        border-radius:28px;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="nav-wrap">
-    <div class="nav">
-      <a class="brand" href="index.html">
-        <span class="brand-mark">P</span>
-        <span>Passium</span>
-      </a>
-    </div>
-  </div>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
+        </a>
 
-  <main class="page">
-    <div class="wrap">
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+        </div>
 
-      <div class="hero">
-        <h1 class="hero-title">註冊</h1>
-        <div class="hero-sub">建立你的會員帳號</div>
+        <div class="nav-actions">
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
       </div>
+    </div>
 
-      <div class="card">
-        <div class="card-body">
+    <main class="page">
+      <div class="wrap">
+        <div class="hero">
+          <h1 class="hero-title">註冊</h1>
+          <div class="hero-sub">建立你的會員帳號。</div>
+        </div>
 
-          <div class="grid">
-            <input id="name" class="input" placeholder="姓名" />
-            <input id="gender" class="input" placeholder="性別" />
-            <input id="birthday" class="input" type="date" />
-            <input id="phone" class="input" placeholder="手機" />
-
-            <input id="email" class="input field full" placeholder="Email" />
-            <input id="password" class="input" type="password" placeholder="密碼" />
-            <input id="confirmPassword" class="input" type="password" placeholder="確認密碼" />
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">會員資料</h2>
           </div>
 
-          <div id="msg" class="notice info">請填寫資料</div>
+          <div class="card-body">
+            <div class="grid">
+              <div class="field">
+                <label class="label" for="name">姓名</label>
+                <input id="name" class="input" type="text" placeholder="請輸入姓名" />
+              </div>
 
-          <button id="registerBtn" class="btn">建立帳號</button>
+              <div class="field">
+                <label class="label" for="gender">性別</label>
+                <select id="gender" class="select">
+                  <option value="">請選擇</option>
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                  <option value="其他">其他</option>
+                  <option value="不提供">不提供</option>
+                </select>
+              </div>
 
-          <div class="row">
-            <span></span>
-            <a href="login.html">登入</a>
+              <div class="field">
+                <label class="label" for="birthday">生日</label>
+                <input id="birthday" class="input" type="date" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="phone">手機</label>
+                <input id="phone" class="input" type="tel" placeholder="例如：0912345678" />
+              </div>
+
+              <div class="field full">
+                <label class="label" for="email">電子郵件</label>
+                <input id="email" class="input" type="email" placeholder="Email" autocomplete="email" />
+                <div class="hint">這會作為你的登入帳號</div>
+              </div>
+
+              <div class="field">
+                <label class="label" for="password">密碼</label>
+                <input id="password" class="input" type="password" placeholder="至少 6 碼" autocomplete="new-password" />
+              </div>
+
+              <div class="field">
+                <label class="label" for="confirmPassword">確認密碼</label>
+                <input id="confirmPassword" class="input" type="password" placeholder="再次輸入密碼" autocomplete="new-password" />
+              </div>
+            </div>
+
+            <div id="msg" class="notice info">請填寫註冊資料。</div>
+
+            <button id="registerBtn" class="btn btn-primary btn-block">建立帳號</button>
+
+            <div class="row-between">
+              <span></span>
+              <a class="text-link" href="login.html">已經有帳號？前往登入</a>
+            </div>
           </div>
-
         </div>
       </div>
 
-    </div>
-  </main>
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="login.html">登入</a>
+          <a class="footer-link" href="forgot-password.html">忘記密碼</a>
+          <a class="footer-link" href="member.html">會員中心</a>
+        </div>
+      </footer>
 
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSy...",
-  authDomain:"concert-1ff7e.firebaseapp.com",
-  projectId:"concert-1ff7e"
-});
+      <div class="copyright">
+        © 2026 Passium. All rights reserved.
+      </div>
+    </main>
+  </div>
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
-const msg=document.getElementById("msg");
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
 
-function setMsg(type,text){
-  msg.className="notice "+type;
-  msg.innerHTML=text;
-}
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-document.getElementById("registerBtn").onclick=async()=>{
-  const email=emailEl.value;
-  const password=passwordEl.value;
+    const accountBtn = document.getElementById("accountBtn");
+    const nameEl = document.getElementById("name");
+    const genderEl = document.getElementById("gender");
+    const birthdayEl = document.getElementById("birthday");
+    const phoneEl = document.getElementById("phone");
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const confirmPasswordEl = document.getElementById("confirmPassword");
+    const registerBtn = document.getElementById("registerBtn");
+    const msg = document.getElementById("msg");
 
-  try{
-    const cred=await auth.createUserWithEmailAndPassword(email,password);
+    const params = new URLSearchParams(location.search);
+    const redirectTarget = params.get("redirect");
 
-    await db.collection("users").doc(cred.user.uid).set({
-      email
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function setMsg(type, text){
+      msg.className = `notice ${type}`;
+      msg.innerHTML = text;
+    }
+
+    function isValidEmail(email){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isValidPhone(phone){
+      return /^[0-9+\-\s()]{8,20}$/.test(phone);
+    }
+
+    function getSafeRedirect(){
+      if (!redirectTarget) return "member.html";
+      if (redirectTarget.startsWith("http://") || redirectTarget.startsWith("https://")) return "member.html";
+      return redirectTarget;
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function getFormData(){
+      return {
+        name: norm(nameEl.value),
+        gender: norm(genderEl.value),
+        birthday: norm(birthdayEl.value),
+        phone: norm(phoneEl.value),
+        email: norm(emailEl.value).toLowerCase(),
+        password: passwordEl.value,
+        confirmPassword: confirmPasswordEl.value
+      };
+    }
+
+    function validateForm(data){
+      if (!data.name) return "請輸入姓名";
+      if (!data.gender) return "請選擇性別";
+      if (!data.birthday) return "請選擇生日";
+      if (!data.phone) return "請輸入手機";
+      if (!isValidPhone(data.phone)) return "手機格式不正確";
+      if (!data.email) return "請輸入電子郵件";
+      if (!isValidEmail(data.email)) return "電子郵件格式不正確";
+      if (!data.password) return "請輸入密碼";
+      if (data.password.length < 6) return "密碼至少需要 6 碼";
+      if (!data.confirmPassword) return "請輸入確認密碼";
+      if (data.password !== data.confirmPassword) return "兩次輸入的密碼不一致";
+      return "";
+    }
+
+    async function register(){
+      const data = getFormData();
+      const error = validateForm(data);
+
+      if (error) {
+        setMsg("warn", esc(error));
+        return;
+      }
+
+      registerBtn.disabled = true;
+      const oldText = registerBtn.textContent;
+      registerBtn.textContent = "建立中…";
+      setMsg("info", "正在建立帳號…");
+
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(data.email, data.password);
+        const user = cred.user;
+
+        if (!user) {
+          throw new Error("帳號建立失敗");
+        }
+
+        await db.collection("users").doc(user.uid).set({
+          uid: user.uid,
+          name: data.name,
+          gender: data.gender,
+          birthday: data.birthday,
+          phone: data.phone,
+          email: data.email,
+          enabled: true,
+          role: "member",
+          verifiedSchoolId: "",
+          verifiedSchoolName: "",
+          verifyMethod: "",
+          schoolEmail: "",
+          profileNotice: "姓名、性別、生日為會員固定資料，若需更正請聯絡主辦單位。",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }, { merge: true });
+
+        setMsg("ok", `註冊成功<br><span class="mono">${esc(data.email)}</span>`);
+
+        setTimeout(() => {
+          location.href = getSafeRedirect();
+        }, 600);
+
+      } catch (e) {
+        console.error(e);
+
+        let text = "註冊失敗";
+        const code = String(e.code || "");
+
+        if (code.includes("auth/email-already-in-use")) {
+          text = "此電子郵件已被註冊";
+        } else if (code.includes("auth/invalid-email")) {
+          text = "電子郵件格式不正確";
+        } else if (code.includes("auth/weak-password")) {
+          text = "密碼強度不足，至少要 6 碼";
+        } else if (code.includes("auth/network-request-failed")) {
+          text = "網路連線失敗";
+        } else if (e.message) {
+          text = e.message;
+        }
+
+        setMsg("warn", esc(text));
+      } finally {
+        registerBtn.disabled = false;
+        registerBtn.textContent = oldText;
+      }
+    }
+
+    registerBtn.onclick = register;
+
+    [nameEl, genderEl, birthdayEl, phoneEl, emailEl, passwordEl, confirmPasswordEl].forEach(el => {
+      el.addEventListener("keydown", e => {
+        if (e.key === "Enter") register();
+      });
     });
 
-    setMsg("ok","註冊成功");
+    auth.onAuthStateChanged(user => {
+      updateAccountLinks(user || null);
 
-    setTimeout(()=>location.href="member.html",500);
-
-  }catch(e){
-    setMsg("warn","註冊失敗");
-  }
-};
-</script>
-
+      if (user) {
+        location.href = getSafeRedirect();
+      }
+    });
+  </script>
 </body>
 </html>
