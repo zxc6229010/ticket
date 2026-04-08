@@ -364,6 +364,59 @@
       opacity:0;
       transform:translateY(6px);
     }
+
+    .image-preview-wrap{
+      margin-top:12px;
+    }
+
+    .image-preview-box{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .image-preview-box img{
+      width:100%;
+      max-height:240px;
+      object-fit:cover;
+      border-radius:12px;
+      display:block;
+      background:#f3f4f6;
+    }
+
+    .image-empty{
+      border:1px dashed var(--line);
+      border-radius:12px;
+      min-height:140px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:13px;
+      background:#fafafa;
+      text-align:center;
+      padding:16px;
+      line-height:1.8;
+    }
+
+    .cover-thumb{
+      margin-top:10px;
+      width:120px;
+      height:72px;
+      border-radius:12px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:#f3f4f6;
+    }
+
+    .cover-thumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
   </style>
 </head>
 
@@ -473,6 +526,16 @@
 
             <label>活動地點</label>
             <input id="location" type="text" placeholder="例如：活動中心" />
+
+            <label>活動圖片網址</label>
+            <input id="coverImage" type="text" placeholder="請輸入活動圖片網址，例如：https://..." />
+
+            <div class="image-preview-wrap">
+              <div class="small" style="font-weight:900; color:#111; margin-bottom:6px;">圖片預覽</div>
+              <div class="image-preview-box" id="coverPreviewBox">
+                <div class="image-empty">目前沒有活動圖片</div>
+              </div>
+            </div>
 
             <label>活動說明</label>
             <textarea id="description" placeholder="請輸入活動介紹"></textarea>
@@ -623,6 +686,8 @@
 
     const titleEl = document.getElementById("title");
     const locationEl = document.getElementById("location");
+    const coverImageEl = document.getElementById("coverImage");
+    const coverPreviewBox = document.getElementById("coverPreviewBox");
     const descriptionEl = document.getElementById("description");
 
     const saleStartAtEl = document.getElementById("saleStartAt");
@@ -677,6 +742,22 @@
       gate.innerHTML = html;
       gate.style.display = "block";
       app.style.display = "none";
+    }
+
+    function renderCoverPreview(value){
+      const url = norm(value);
+      if (!url) {
+        coverPreviewBox.innerHTML = `<div class="image-empty">目前沒有活動圖片</div>`;
+        return;
+      }
+
+      coverPreviewBox.innerHTML = `
+        <img
+          src="${esc(url)}"
+          alt="活動圖片預覽"
+          onerror="this.outerHTML='<div class=&quot;image-empty&quot;>圖片載入失敗，請檢查網址是否正確</div>';"
+        />
+      `;
     }
 
     async function doLogout(){
@@ -1175,6 +1256,7 @@
 
       titleEl.value = "";
       locationEl.value = "";
+      coverImageEl.value = "";
       descriptionEl.value = "";
       publishedEl.value = "false";
       capacityEl.value = "";
@@ -1189,6 +1271,7 @@
       gateAssignmentsState = [];
       renderInviteCodes();
       renderGateAssignments();
+      renderCoverPreview("");
 
       if (inviteUsageBox) inviteUsageBox.style.display = "none";
       if (inviteUsageList) inviteUsageList.innerHTML = "尚無資料";
@@ -1274,6 +1357,7 @@
         const inviteEnabled = e.inviteCodeEnabled === true;
         const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
         const gateCount = Array.isArray(e.gates) ? e.gates.length : 0;
+        const coverImage = norm(e.coverImage || "");
 
         const tag = owner === "__global__"
           ? `<span class="pill">平台活動</span>`
@@ -1288,12 +1372,19 @@
                   主辦單位：<span class="mono">${esc(formatSchoolLabel(owner))}</span><br>
                   審核狀態：<span class="mono">${esc(approvalStatus)}</span>｜
                   公開：<span class="mono">${published ? "是" : "否"}</span><br>
+                  圖片：<span class="mono">${coverImage ? "已設定" : "未設定"}</span><br>
                   開放時間：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
                   活動時間：<span class="mono">${esc(eventStart || "-")}</span><br>
                   邀請碼：<span class="mono">${inviteEnabled ? "開啟" : "關閉"}</span>｜
                   數量：<span class="mono">${inviteCount}</span><br>
                   出入口數量：<span class="mono">${gateCount}</span>
                 </div>
+
+                ${
+                  coverImage
+                    ? `<div class="cover-thumb"><img src="${esc(coverImage)}" alt="活動縮圖" onerror="this.parentNode.innerHTML='';" /></div>`
+                    : ``
+                }
 
                 <div class="quick-links">
                   <a class="btn btn-sm" href="admin-event-detail.html?eventId=${encodeURIComponent(id)}">活動詳情</a>
@@ -1341,6 +1432,7 @@
 
         titleEl.value = e.title || "";
         locationEl.value = e.location || "";
+        coverImageEl.value = e.coverImage || "";
         descriptionEl.value = e.description || "";
         publishedEl.value = e.published === true ? "true" : "false";
         approvalStatusEl.value = e.approvalStatus || "pending";
@@ -1364,6 +1456,7 @@
           : [];
         renderGateAssignments();
 
+        renderCoverPreview(e.coverImage || "");
         await loadInviteUsage(eventId);
 
         const owner = String(e.ownerSchoolId || "");
@@ -1441,6 +1534,7 @@
           approvalStatus: isPlatform() ? approvalStatusEl.value : "pending",
           published: publishedEl.value === "true",
           location: norm(locationEl.value),
+          coverImage: norm(coverImageEl.value),
           description: norm(descriptionEl.value),
           capacity: capacityEl.value === "" ? null : Number(capacityEl.value),
 
@@ -1498,6 +1592,10 @@
     [titleEl, ownerSchoolSel].forEach(el => {
       el.addEventListener("input", updateSaveBtn);
       el.addEventListener("change", updateSaveBtn);
+    });
+
+    coverImageEl.addEventListener("input", () => {
+      renderCoverPreview(coverImageEl.value);
     });
 
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
