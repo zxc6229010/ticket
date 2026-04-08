@@ -87,6 +87,7 @@
     input[type="text"],
     input[type="number"],
     input[type="datetime-local"],
+    input[type="file"],
     textarea,
     select{
       width:100%;
@@ -527,8 +528,9 @@
             <label>活動地點</label>
             <input id="location" type="text" placeholder="例如：活動中心" />
 
-            <label>活動圖片網址</label>
-            <input id="coverImage" type="text" placeholder="請輸入活動圖片網址，例如：https://..." />
+            <label>活動圖片上傳</label>
+            <input id="coverImageFile" type="file" accept="image/*" />
+            <div class="small">支援 JPG / PNG / WEBP，建議 5MB 以下</div>
 
             <div class="image-preview-wrap">
               <div class="small" style="font-weight:900; color:#111; margin-bottom:6px;">圖片預覽</div>
@@ -628,6 +630,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
   <script>
     const pageRoot = document.getElementById("pageRoot");
@@ -651,11 +654,13 @@
       firebase.initializeApp({
         apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
         authDomain: "concert-1ff7e.firebaseapp.com",
-        projectId: "concert-1ff7e"
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app"
       });
     }
 
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     const gate = document.getElementById("gate");
     const app = document.getElementById("app");
@@ -686,7 +691,7 @@
 
     const titleEl = document.getElementById("title");
     const locationEl = document.getElementById("location");
-    const coverImageEl = document.getElementById("coverImage");
+    const coverImageFileEl = document.getElementById("coverImageFile");
     const coverPreviewBox = document.getElementById("coverPreviewBox");
     const descriptionEl = document.getElementById("description");
 
@@ -723,6 +728,8 @@
 
     let schoolNameMap = {};
     let orgNameMap = {};
+    let existingCoverImage = "";
+    let selectedCoverFile = null;
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -744,20 +751,48 @@
       app.style.display = "none";
     }
 
-    function renderCoverPreview(value){
-      const url = norm(value);
-      if (!url) {
+    function renderCoverPreview(url){
+      const value = norm(url);
+      if (!value) {
         coverPreviewBox.innerHTML = `<div class="image-empty">目前沒有活動圖片</div>`;
         return;
       }
 
       coverPreviewBox.innerHTML = `
         <img
-          src="${esc(url)}"
+          src="${esc(value)}"
           alt="活動圖片預覽"
-          onerror="this.outerHTML='<div class=&quot;image-empty&quot;>圖片載入失敗，請檢查網址是否正確</div>';"
+          onerror="this.outerHTML='<div class=&quot;image-empty&quot;>圖片載入失敗，請重新選擇圖片</div>';"
         />
       `;
+    }
+
+    function previewLocalFile(file){
+      if (!file) {
+        renderCoverPreview(existingCoverImage);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        renderCoverPreview(e.target.result || "");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function uploadCoverImage(file){
+      if (!file) return "";
+
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("圖片不能超過 5MB");
+      }
+
+      const safeName = String(file.name || "image").replace(/[^\w.\-]+/g, "_");
+      const filePath = `events/${Date.now()}_${safeName}`;
+      const ref = storage.ref().child(filePath);
+
+      await ref.put(file);
+      return await ref.getDownloadURL();
     }
 
     async function doLogout(){
@@ -1229,7 +1264,7 @@
 
         rows.sort((a, b) => {
           const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-          const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt?.toDate ? b.data().createdAt.toDate().getTime() : 0;
           return tb - ta;
         });
 
@@ -1249,6 +1284,9 @@
       const wasManage = currentView === "manage";
 
       editingId = "";
+      existingCoverImage = "";
+      selectedCoverFile = null;
+      coverImageFileEl.value = "";
       editingHint.innerHTML = `目前：<span class="mono">新增模式</span>`;
 
       publishScopeEl.value = "school";
@@ -1256,7 +1294,6 @@
 
       titleEl.value = "";
       locationEl.value = "";
-      coverImageEl.value = "";
       descriptionEl.value = "";
       publishedEl.value = "false";
       capacityEl.value = "";
@@ -1382,7 +1419,7 @@
 
                 ${
                   coverImage
-                    ? `<div class="cover-thumb"><img src="${esc(coverImage)}" alt="活動縮圖" onerror="this.parentNode.innerHTML='';" /></div>`
+                    ? `<div class="cover-thumb"><img src="${esc(coverImage)}" alt="活動縮圖" /></div>`
                     : ``
                 }
 
@@ -1427,12 +1464,14 @@
 
         const e = doc.data() || {};
         editingId = eventId;
+        existingCoverImage = norm(e.coverImage || "");
+        selectedCoverFile = null;
+        coverImageFileEl.value = "";
 
         editingHint.innerHTML = `目前：<span class="mono">編輯模式</span>`;
 
         titleEl.value = e.title || "";
         locationEl.value = e.location || "";
-        coverImageEl.value = e.coverImage || "";
         descriptionEl.value = e.description || "";
         publishedEl.value = e.published === true ? "true" : "false";
         approvalStatusEl.value = e.approvalStatus || "pending";
@@ -1456,7 +1495,7 @@
           : [];
         renderGateAssignments();
 
-        renderCoverPreview(e.coverImage || "");
+        renderCoverPreview(existingCoverImage);
         await loadInviteUsage(eventId);
 
         const owner = String(e.ownerSchoolId || "");
@@ -1527,6 +1566,12 @@
           throw new Error("目前只能建立自己的校園活動");
         }
 
+        let finalCoverImage = existingCoverImage;
+
+        if (selectedCoverFile) {
+          finalCoverImage = await uploadCoverImage(selectedCoverFile);
+        }
+
         const payload = {
           title,
           ownerSchoolId,
@@ -1534,7 +1579,7 @@
           approvalStatus: isPlatform() ? approvalStatusEl.value : "pending",
           published: publishedEl.value === "true",
           location: norm(locationEl.value),
-          coverImage: norm(coverImageEl.value),
+          coverImage: norm(finalCoverImage),
           description: norm(descriptionEl.value),
           capacity: capacityEl.value === "" ? null : Number(capacityEl.value),
 
@@ -1594,8 +1639,13 @@
       el.addEventListener("change", updateSaveBtn);
     });
 
-    coverImageEl.addEventListener("input", () => {
-      renderCoverPreview(coverImageEl.value);
+    coverImageFileEl.addEventListener("change", () => {
+      const file = coverImageFileEl.files && coverImageFileEl.files[0]
+        ? coverImageFileEl.files[0]
+        : null;
+
+      selectedCoverFile = file || null;
+      previewLocalFile(selectedCoverFile);
     });
 
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
