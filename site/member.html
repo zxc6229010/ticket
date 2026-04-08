@@ -664,9 +664,10 @@
     <main class="page">
       <div class="back-row">
         <a class="back-link" href="index.html">← 返回首頁</a>
-        <div class="row">
-          <a class="ghost-btn" href="my-tickets.html">我的票券</a>
-          <button class="ghost-btn" id="logoutTopBtn">登出</button>
+        <div class="row" id="topActionRow">
+          <a class="ghost-btn hidden" id="topTicketsBtn" href="my-tickets.html">我的票券</a>
+          <a class="ghost-btn hidden" id="topLoginBtn" href="login.html">登入</a>
+          <button class="ghost-btn hidden" id="logoutTopBtn">登出</button>
         </div>
       </div>
 
@@ -854,6 +855,8 @@
 
     const logoutBtn = document.getElementById("logoutBtn");
     const logoutTopBtn = document.getElementById("logoutTopBtn");
+    const topTicketsBtn = document.getElementById("topTicketsBtn");
+    const topLoginBtn = document.getElementById("topLoginBtn");
     const resetPasswordBtn = document.getElementById("resetPasswordBtn");
     const securityMsg = document.getElementById("securityMsg");
 
@@ -940,9 +943,21 @@
       }
     }
 
-    function showGate(text){
+    function updateTopBarButtons(user){
+      if (user) {
+        topTicketsBtn.classList.remove("hidden");
+        logoutTopBtn.classList.remove("hidden");
+        topLoginBtn.classList.add("hidden");
+      } else {
+        topTicketsBtn.classList.add("hidden");
+        logoutTopBtn.classList.add("hidden");
+        topLoginBtn.classList.remove("hidden");
+      }
+    }
+
+    function showGate(html){
       gate.className = "empty";
-      gate.innerHTML = text;
+      gate.innerHTML = html;
       gate.style.display = "block";
       app.classList.add("hidden");
     }
@@ -1183,9 +1198,13 @@
     auth.onAuthStateChanged(async user => {
       currentUser = user || null;
       updateAccountLinks(currentUser);
+      updateTopBarButtons(currentUser);
 
       if (!user) {
-        showGate("請先登入會員帳號。");
+        showGate(`
+          請先登入會員帳號。<br><br>
+          <a class="btn btn-primary" href="login.html">前往登入</a>
+        `);
         return;
       }
 
