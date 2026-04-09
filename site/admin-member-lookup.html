@@ -9,36 +9,23 @@
     :root{
       --bg:#f6f7fb;
       --card:#ffffff;
-      --text:#111111;
+      --text:#111;
       --muted:rgba(17,17,17,.65);
       --line:rgba(17,17,17,.10);
-      --line-strong:rgba(17,17,17,.16);
-      --shadow:0 16px 40px rgba(0,0,0,.08);
-      --shadow-soft:0 10px 24px rgba(0,0,0,.05);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
 
-      --black:#111111;
-      --blue:#1d4ed8;
-      --blue-bg:#dbeafe;
-      --green:#166534;
-      --green-bg:#dcfce7;
-      --red:#b91c1c;
-      --red-bg:#fee2e2;
-      --orange:#c2410c;
-      --orange-bg:#ffedd5;
-      --gray:#6b7280;
-      --gray-bg:#f3f4f6;
-
-      --max:1120px;
-      --radius-xl:28px;
-      --radius-lg:22px;
-      --radius-md:16px;
+      --btn-a:10px;
+      --btn-b:14px;
+      --btn-x:calc(var(--btn-b)*1.5);
+      --btn-h:46px;
+      --btn-fs:16px;
+      --r:18px;
     }
 
     *{ box-sizing:border-box; }
 
-    html,body{
+    body{
       margin:0;
-      padding:0;
       background:var(--bg);
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
@@ -49,414 +36,73 @@
       text-decoration:none;
     }
 
-    .page{
-      max-width:var(--max);
+    .wrap{
+      max-width:1080px;
       margin:0 auto;
-      padding:32px 18px 72px;
+      padding:48px 16px;
     }
 
-    .topbar{
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:16px;
+    }
+
+    .header{
       display:flex;
       justify-content:space-between;
-      align-items:center;
+      align-items:flex-start;
       gap:12px;
       flex-wrap:wrap;
-      margin-bottom:18px;
     }
 
-    .topbar-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .topbar-right{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .back-link,
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      font-size:14px;
-      font-weight:800;
-      cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .back-link:hover,
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 12px 28px rgba(0,0,0,.07);
-    }
-
-    .btn:active{
-      transform:translateY(0) scale(.98);
-      box-shadow:none;
-    }
-
-    .btn-primary{
-      background:var(--black);
-      color:#fff;
-      border-color:var(--black);
-    }
-
-    .btn-danger{
-      color:var(--red);
-      border-color:rgba(185,28,28,.16);
-      background:#fff;
-    }
-
-    .btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
-      transform:none;
-      box-shadow:none;
-    }
-
-    .hero{
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
-        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
-      border:1px solid rgba(0,0,0,.05);
-      border-radius:32px;
-      box-shadow:0 24px 60px rgba(0,0,0,.06);
-      padding:28px 24px;
-      margin-bottom:18px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .hero::after{
-      content:"";
-      position:absolute;
-      right:-80px;
-      top:-90px;
-      width:250px;
-      height:250px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(0,0,0,.035), rgba(0,0,0,0));
-      pointer-events:none;
-    }
-
-    .hero-title{
+    h1{
       margin:0;
-      font-size:clamp(28px, 4vw, 46px);
-      line-height:1.05;
-      letter-spacing:-.04em;
-      font-weight:900;
+      font-size:22px;
+      letter-spacing:.2px;
     }
 
-    .hero-sub{
-      margin-top:12px;
-      color:var(--muted);
-      font-size:15px;
-      line-height:1.9;
-      max-width:860px;
-    }
-
-    .hero-pills{
-      margin-top:18px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 11px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:12px;
-      font-weight:900;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns:300px minmax(0,1fr);
-      gap:18px;
-      align-items:start;
-    }
-
-    @media (max-width:920px){
-      .layout{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .sidebar,
-    .content,
-    .gate-card{
-      background:var(--card);
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-    }
-
-    .sidebar{
-      padding:16px;
-      position:sticky;
-      top:18px;
-    }
-
-    @media (max-width:920px){
-      .sidebar{
-        position:static;
-      }
-    }
-
-    .content{
-      padding:22px;
-    }
-
-    .gate-card{
-      padding:24px 22px;
-    }
-
-    .menu{
-      display:grid;
-      gap:8px;
-    }
-
-    .menu-btn{
-      width:100%;
-      text-align:left;
-      min-height:48px;
-      padding:12px 16px;
-      border:none;
-      border-radius:16px;
-      background:#fff;
-      color:#111827;
-      font-size:14px;
-      font-weight:900;
-      cursor:pointer;
-      border:1px solid transparent;
-      transition:background .12s ease, color .12s ease, border-color .12s ease;
-    }
-
-    .menu-btn:hover{
-      border-color:var(--line);
-    }
-
-    .menu-btn.active{
-      background:#111827;
-      color:#fff;
-    }
-
-    .card-title{
+    h2{
       margin:0;
-      font-size:24px;
-      line-height:1.15;
-      letter-spacing:-.03em;
+      font-size:16px;
       font-weight:900;
     }
 
-    .card-sub{
-      margin-top:8px;
-      font-size:14px;
-      line-height:1.9;
+    .sub{
+      margin-top:6px;
       color:var(--muted);
-    }
-
-    .search-box{
-      margin-top:18px;
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:24px;
-      background:#fbfbfc;
-      padding:18px;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .label{
-      display:block;
-      margin-bottom:8px;
-      font-size:13px;
-      font-weight:900;
-      color:#111;
-    }
-
-    .input{
-      width:100%;
-      min-height:48px;
-      padding:12px 14px;
-      border:1px solid var(--line-strong);
-      border-radius:18px;
-      background:#fff;
-      color:#111827;
-      font-size:15px;
-      outline:none;
-      transition:border-color .12s ease, box-shadow .12s ease;
-    }
-
-    .input:focus{
-      border-color:#111827;
-      box-shadow:0 0 0 4px rgba(17,24,39,.05);
-    }
-
-    .form-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      margin-top:14px;
-      flex-wrap:wrap;
-    }
-
-    .info-grid{
-      display:grid;
-      grid-template-columns:1.2fr 1fr;
-      gap:16px;
-      margin-top:18px;
-    }
-
-    @media (max-width:900px){
-      .info-grid{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .info-box{
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:22px;
-      background:#fff;
-      padding:18px;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .info-title{
-      font-size:13px;
-      font-weight:900;
-      color:#111;
-      margin-bottom:10px;
+      line-height:1.6;
+      font-size:14px;
     }
 
     .small{
       font-size:13px;
       color:var(--muted);
-      line-height:1.8;
+      line-height:1.6;
     }
 
-    .notice{
-      margin-top:18px;
-      padding:16px 18px;
-      border-radius:20px;
-      background:#fff;
+    label{
+      font-weight:900;
+      display:block;
+      margin:12px 0 6px;
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px;
+      border-radius:14px;
       border:1px solid var(--line);
-      font-size:13px;
-      line-height:1.95;
-      color:#4b5563;
-      box-shadow:var(--shadow-soft);
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .notice.ok{
-      background:var(--green-bg);
-      border-color:rgba(22,101,52,.12);
-      color:var(--green);
-      box-shadow:none;
-    }
-
-    .notice.warn{
-      background:var(--red-bg);
-      border-color:rgba(185,28,28,.12);
-      color:var(--red);
-      box-shadow:none;
-    }
-
-    .notice.info{
-      background:var(--blue-bg);
-      border-color:rgba(29,78,216,.12);
-      color:var(--blue);
-      box-shadow:none;
-    }
-
-    .result-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .result-list{
-      display:grid;
-      gap:14px;
-    }
-
-    .result-item{
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:24px;
+      font-size:16px;
       background:#fff;
-      padding:18px;
-      box-shadow:var(--shadow-soft);
+      outline:none;
     }
 
-    .item-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .item-title{
-      font-size:18px;
-      font-weight:900;
-      line-height:1.5;
-      letter-spacing:-.02em;
-      word-break:break-word;
-    }
-
-    .item-meta{
-      margin-top:8px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.9;
-      word-break:break-word;
-    }
-
-    .status{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-      white-space:nowrap;
-      border:1px solid transparent;
-    }
-
-    .status-ok{
-      background:var(--green-bg);
-      color:var(--green);
-    }
-
-    .status-warn{
-      background:var(--red-bg);
-      color:var(--red);
-    }
-
-    .status-blue{
-      background:var(--blue-bg);
-      color:var(--blue);
+    input[type="text"]:focus{
+      border-color:#111;
+      box-shadow:0 0 0 4px rgba(17,17,17,.05);
     }
 
     .row{
@@ -466,12 +112,158 @@
       align-items:center;
     }
 
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height:var(--btn-h);
+      padding:var(--btn-a) var(--btn-x);
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-weight:900;
+      font-size:var(--btn-fs);
+      cursor:pointer;
+      color:#111;
+      text-decoration:none;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      user-select:none;
+    }
+
+    .btn:hover{
+      box-shadow:0 10px 22px rgba(0,0,0,.08);
+      transform:translateY(-1px);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-danger{
+      border-color:rgba(239,68,68,.35);
+      color:#b91c1c;
+      background:#fff;
+    }
+
+    .btn-sm{
+      height:40px;
+      padding:8px calc(var(--btn-b)*1.25);
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.2fr 1fr;
+      gap:12px;
+    }
+
+    @media (max-width:860px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .box{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#fff;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      font-size:13px;
+      background:#fff;
+      font-weight:900;
+    }
+
+    .warn{
+      color:#b91c1c;
+      font-weight:900;
+    }
+
+    .ok{
+      color:#166534;
+      font-weight:900;
+    }
+
+    .blue{
+      color:#1d4ed8;
+      font-weight:900;
+    }
+
+    .mono{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .form-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .resultList{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .resultItem{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .itemTitle{
+      font-weight:900;
+      font-size:16px;
+      line-height:1.6;
+      word-break:break-word;
+    }
+
+    .itemMeta{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      word-break:break-word;
+    }
+
     .kv{
       display:grid;
       grid-template-columns:140px 1fr;
       gap:10px;
       padding:10px 0;
-      border-top:1px dashed var(--line);
+      border-top:1px solid var(--line);
     }
 
     .kv:first-child{
@@ -479,126 +271,110 @@
       padding-top:0;
     }
 
-    .k{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.8;
-      font-weight:700;
-    }
-
-    .v{
-      font-size:13px;
-      color:#111827;
-      font-weight:800;
-      line-height:1.9;
-      word-break:break-word;
-    }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-    }
-
-    @media (max-width:680px){
+    @media (max-width:720px){
       .kv{
         grid-template-columns:1fr;
         gap:4px;
       }
     }
+
+    .gate-card-title{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+    }
+
+    .gate-actions{
+      margin-top:16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .page{
+      opacity:0;
+      transform:translateY(6px);
+      transition:opacity .22s ease, transform .22s ease;
+    }
+
+    .page.on{
+      opacity:1;
+      transform:translateY(0);
+    }
   </style>
 </head>
 
 <body>
-  <main class="page">
-    <div class="topbar">
-      <div class="topbar-left">
-        <a class="back-link" href="dashboard.html">← 返回主選單</a>
-      </div>
-      <div class="topbar-right">
-        <a class="btn btn-sm" href="dashboard.html">後台首頁</a>
-      </div>
-    </div>
-
-    <div class="hero">
-      <h1 class="hero-title">會員 / 帳號查詢中心</h1>
-      <div class="hero-sub">
-        提供後台管理員快速查詢會員與帳號資料。支援以 email、uid、學號、姓名、schoolId、orgId、verifyKey、角色與驗證學校進行模糊搜尋。
-      </div>
-      <div class="hero-pills">
-        <span class="pill" id="whoPill">登入帳號：-</span>
-        <span class="pill" id="scopePill">查詢範圍：-</span>
-      </div>
-    </div>
-
-    <div id="loginGate"></div>
+  <div class="wrap page" id="pageRoot">
+    <div id="loginGate" class="section"></div>
 
     <div id="adminApp" style="display:none;">
-      <div class="layout">
-        <aside class="sidebar">
-          <div class="menu">
-            <button class="menu-btn active" type="button">會員 / 帳號查詢</button>
+      <div class="section">
+        <div class="header">
+          <div>
+            <h1>會員 / 帳號查詢中心</h1>
+            <div class="sub">
+              使用單一欄位查詢 email、uid、學號、姓名、schoolId、orgId、verifyKey 等資訊。
+            </div>
+            <div class="sub small">
+              登入：<span id="who" class="mono">-</span>
+            </div>
           </div>
 
-          <div class="notice info" style="margin-top:14px;">
-            可搜尋欄位：
-            email / uid / 學號 / 姓名 / schoolId / orgId / verifyKey / role / 驗證學校
+          <div class="row" style="justify-content:flex-end;">
+            <a href="dashboard.html" class="btn btn-sm">回主選單</a>
+            <button class="btn btn-sm" id="logoutBtn">登出</button>
           </div>
+        </div>
+      </div>
 
-          <div class="row" style="margin-top:14px;">
-            <button class="btn btn-danger" id="logoutBtn" type="button">登出</button>
-          </div>
-        </aside>
-
-        <section class="content">
-          <h2 class="card-title">查詢條件</h2>
-          <div class="card-sub">
-            輸入任一關鍵字後，即可搜尋你權限範圍內符合條件的會員或帳號資料。
-          </div>
-
-          <div class="search-box">
-            <label class="label" for="searchInput">搜尋關鍵字</label>
+      <div class="section">
+        <div class="grid">
+          <div>
+            <label for="searchInput">查詢條件</label>
             <input
               id="searchInput"
-              class="input"
               type="text"
               placeholder="可輸入 email / uid / 學號 / 姓名 / schoolId / orgId / verifyKey"
             />
 
             <div class="form-actions">
-              <button class="btn" id="clearBtn" type="button">清除</button>
-              <button class="btn btn-primary" id="searchBtn" type="button">查詢</button>
+              <button class="btn" id="clearBtn">清除</button>
+              <button class="btn btn-primary" id="searchBtn">查詢</button>
+            </div>
+
+            <div class="small" style="margin-top:10px;">
+              系統會在你有權限的資料範圍內搜尋相符的會員 / 帳號。
             </div>
           </div>
 
-          <div class="info-grid">
-            <div class="info-box">
-              <div class="info-title">查詢規則</div>
-              <div class="small">
-                1. 平台端可查全部帳號與會員。<br>
-                2. 校方 / 組織方只可查自己範圍。<br>
-                3. 查詢採模糊比對。<br>
-                4. 可查看角色、校園驗證與基本資料。<br>
-                5. 後續可再擴充活動報名狀態與近期活動資訊。
-              </div>
-            </div>
-
-            <div class="info-box">
-              <div class="info-title">目前登入資訊</div>
-              <div class="small" id="whoText">-</div>
-              <div class="small" id="scopeText" style="margin-top:8px;">-</div>
+          <div>
+            <label>目前查詢範圍</label>
+            <div class="box">
+              <div>角色：<span id="roleText" class="mono">-</span></div>
+              <div style="margin-top:8px;">範圍：<span id="scopeText" class="mono">-</span></div>
+              <div style="margin-top:8px;">schoolId：<span id="schoolText" class="mono">-</span></div>
+              <div style="margin-top:8px;">orgId：<span id="orgText" class="mono">-</span></div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="notice" id="resultBox" style="margin-top:20px;">尚未查詢</div>
-        </section>
+      <div class="section">
+        <h2>查詢結果</h2>
+        <div id="resultBox" class="small" style="margin-top:10px;">尚未查詢</div>
       </div>
     </div>
-  </main>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
+    const pageRoot = document.getElementById("pageRoot");
+    requestAnimationFrame(() => pageRoot.classList.add("on"));
+
     if (!firebase.apps.length) {
       firebase.initializeApp({
         apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -610,19 +386,20 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const loginGate   = document.getElementById("loginGate");
-    const adminApp    = document.getElementById("adminApp");
+    const loginGate = document.getElementById("loginGate");
+    const adminApp = document.getElementById("adminApp");
 
-    const whoPill     = document.getElementById("whoPill");
-    const scopePill   = document.getElementById("scopePill");
-    const whoText     = document.getElementById("whoText");
-    const scopeText   = document.getElementById("scopeText");
+    const whoEl = document.getElementById("who");
+    const roleText = document.getElementById("roleText");
+    const scopeText = document.getElementById("scopeText");
+    const schoolText = document.getElementById("schoolText");
+    const orgText = document.getElementById("orgText");
 
-    const logoutBtn   = document.getElementById("logoutBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const searchInput = document.getElementById("searchInput");
-    const clearBtn    = document.getElementById("clearBtn");
-    const searchBtn   = document.getElementById("searchBtn");
-    const resultBox   = document.getElementById("resultBox");
+    const clearBtn = document.getElementById("clearBtn");
+    const searchBtn = document.getElementById("searchBtn");
+    const resultBox = document.getElementById("resultBox");
 
     let currentRole = "";
     let mySchoolId = "";
@@ -651,12 +428,12 @@
 
     function showGate({ title, message, showLogin, showLogout }){
       loginGate.innerHTML = `
-        <div class="gate-card">
-          <h2 class="gate-title">${escapeHtml(title)}</h2>
-          <div class="gate-sub">${message}</div>
+        <div>
+          <h1 class="gate-card-title">${escapeHtml(title)}</h1>
+          <div class="sub">${escapeHtml(message)}</div>
           <div class="gate-actions">
             ${showLogin ? `<a class="btn btn-primary" href="${getLoginUrl()}">前往登入</a>` : ``}
-            ${showLogout ? `<button class="btn" id="gateLogoutBtn" type="button">登出</button>` : ``}
+            ${showLogout ? `<button class="btn" id="gateLogoutBtn">登出</button>` : ``}
             <a class="btn" href="dashboard.html">回主選單</a>
           </div>
         </div>
@@ -686,17 +463,7 @@
     logoutBtn.onclick = doLogout;
 
     function setResult(html){
-      resultBox.className = "notice";
-      resultBox.innerHTML = html;
-    }
-
-    function setResultInfo(html){
-      resultBox.className = "notice info";
-      resultBox.innerHTML = html;
-    }
-
-    function setResultWarn(html){
-      resultBox.className = "notice warn";
+      resultBox.className = "small";
       resultBox.innerHTML = html;
     }
 
@@ -754,67 +521,63 @@
       const name = norm(u.name || u.displayName || "-");
 
       return `
-        <div class="result-item">
-          <div class="item-top">
+        <div class="resultItem">
+          <div class="itemTop">
             <div>
-              <div class="item-title">${escapeHtml(email || "(無 email)")}</div>
-              <div class="item-meta">
+              <div class="itemTitle">${escapeHtml(email || "(無 email)")}</div>
+              <div class="itemMeta">
                 uid：<span class="mono">${escapeHtml(uid || "-")}</span>
               </div>
             </div>
 
             <div class="row">
-              <span class="status ${enabled ? "status-ok" : "status-warn"}">
-                ${enabled ? "啟用中" : "已停用"}
-              </span>
-              <span class="status ${verified ? "status-ok" : "status-warn"}">
-                ${verified ? "已驗證" : "未驗證"}
-              </span>
-              <span class="status status-blue">${escapeHtml(role || "-")}</span>
+              <span class="pill">${enabled ? `<span class="ok">啟用中</span>` : `<span class="warn">已停用</span>`}</span>
+              <span class="pill">${verified ? `<span class="ok">已驗證</span>` : `<span class="warn">未驗證</span>`}</span>
+              <span class="pill">${escapeHtml(role || "-")}</span>
             </div>
           </div>
 
           <div class="kv">
-            <div class="k">姓名</div>
-            <div class="v">${escapeHtml(name)}</div>
+            <div class="small">姓名</div>
+            <div>${escapeHtml(name)}</div>
           </div>
 
           <div class="kv">
-            <div class="k">學號</div>
-            <div class="v mono">${escapeHtml(studentId)}</div>
+            <div class="small">學號</div>
+            <div><span class="mono">${escapeHtml(studentId)}</span></div>
           </div>
 
           <div class="kv">
-            <div class="k">schoolId</div>
-            <div class="v mono">${escapeHtml(norm(u.schoolId || u.orgSchoolId || "-"))}</div>
+            <div class="small">schoolId</div>
+            <div><span class="mono">${escapeHtml(norm(u.schoolId || u.orgSchoolId || "-"))}</span></div>
           </div>
 
           <div class="kv">
-            <div class="k">orgId</div>
-            <div class="v mono">${escapeHtml(orgId)}</div>
+            <div class="small">orgId</div>
+            <div><span class="mono">${escapeHtml(orgId)}</span></div>
           </div>
 
           <div class="kv">
-            <div class="k">驗證學校</div>
-            <div class="v">
+            <div class="small">驗證學校</div>
+            <div>
               ${escapeHtml(schoolName || "-")}
               <div class="small"><span class="mono">${escapeHtml(schoolId || "-")}</span></div>
             </div>
           </div>
 
           <div class="kv">
-            <div class="k">驗證方式</div>
-            <div class="v">${escapeHtml(verifyMethod || "-")}</div>
+            <div class="small">驗證方式</div>
+            <div>${escapeHtml(verifyMethod || "-")}</div>
           </div>
 
           <div class="kv">
-            <div class="k">verifyKey</div>
-            <div class="v mono">${escapeHtml(verifyKey || "-")}</div>
+            <div class="small">verifyKey</div>
+            <div><span class="mono">${escapeHtml(verifyKey || "-")}</span></div>
           </div>
 
           <div class="kv">
-            <div class="k">驗證時間</div>
-            <div class="v">${escapeHtml(timeText)}</div>
+            <div class="small">驗證時間</div>
+            <div>${escapeHtml(timeText)}</div>
           </div>
         </div>
       `;
@@ -830,7 +593,7 @@
 
       searchBtn.disabled = true;
       searchBtn.textContent = "查詢中…";
-      setResultInfo("查詢中…");
+      setResult(`<div class="small">查詢中…</div>`);
 
       try {
         const snap = await db.collection("users").limit(3000).get();
@@ -848,29 +611,31 @@
         });
 
         if (!rows.length) {
-          setResultWarn(`
-<b>查無資料</b>
-可能原因：查詢值不符、資料尚未建立，或你目前沒有查看該筆資料的權限。
-          `.trim());
+          setResult(`
+            <div class="warn">查無資料</div>
+            <div class="small" style="margin-top:6px;">
+              可能原因：查詢值不符、資料尚未建立，或你目前沒有查看該筆資料的權限。
+            </div>
+          `);
           return;
         }
 
         setResult(`
-          <div class="result-toolbar">
-            <div><b>共找到 ${rows.length} 筆資料</b></div>
-          </div>
-          <div class="result-list">
+          <div class="small">共找到 ${rows.length} 筆資料</div>
+          <div class="resultList">
             ${rows.map(u => renderUserCard(u, u.uid)).join("")}
           </div>
         `);
 
       } catch (e) {
         console.error(e);
-        setResultWarn(`
-<b>查詢失敗</b>
-code: <span class="mono">${escapeHtml(e.code || "(no code)")}</span>
-message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
-        `.trim());
+        setResult(`
+          <div class="warn">查詢失敗</div>
+          <div class="small" style="margin-top:6px;">
+            code：<span class="mono">${escapeHtml(e.code || "(no code)")}</span><br>
+            message：<span class="mono">${escapeHtml(e.message || String(e))}</span>
+          </div>
+        `);
       } finally {
         searchBtn.disabled = false;
         searchBtn.textContent = "查詢";
@@ -889,19 +654,15 @@ message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
-        currentRole = "";
-        mySchoolId = "";
-        myOrgId = "";
-        currentUserEmail = "";
-
-        whoPill.textContent = "登入帳號：未登入";
-        scopePill.textContent = "查詢範圍：未登入";
-        whoText.textContent = "未登入";
-        scopeText.textContent = "未登入";
+        whoEl.textContent = "-";
+        roleText.textContent = "-";
+        scopeText.textContent = "-";
+        schoolText.textContent = "-";
+        orgText.textContent = "-";
 
         showGate({
-          title: "請先登入",
-          message: "你需要先登入後台帳號，才能使用會員 / 帳號查詢中心。",
+          title: "會員 / 帳號查詢中心",
+          message: "請先登入後台帳號。",
           showLogin: true,
           showLogout: false
         });
@@ -922,6 +683,7 @@ message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
         }
 
         const u = userDoc.data() || {};
+
         if (u.enabled !== true) {
           showGate({
             title: "帳號已停用",
@@ -950,16 +712,15 @@ message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
         myOrgId = norm(u.orgId || "");
         currentUserEmail = lower(user.email || "");
 
-        whoPill.textContent = `登入帳號：${currentUserEmail || "-"}`;
-        whoText.textContent = `登入帳號：${currentUserEmail || "-"}`;
+        whoEl.textContent = currentUserEmail || "-";
+        roleText.textContent = currentRole || "-";
+        schoolText.textContent = mySchoolId || "-";
+        orgText.textContent = myOrgId || "-";
 
         if (["platform_super", "platform_admin"].includes(currentRole)) {
-          scopePill.textContent = "查詢範圍：全部帳號 / 全部會員";
-          scopeText.textContent = "查詢範圍：全部帳號 / 全部會員";
+          scopeText.textContent = "全部帳號 / 全部會員";
         } else {
-          const scope = `查詢範圍：schoolId=${mySchoolId || "-"} / orgId=${myOrgId || "-"}`;
-          scopePill.textContent = scope;
-          scopeText.textContent = scope;
+          scopeText.textContent = `schoolId=${mySchoolId || "-"} / orgId=${myOrgId || "-"}`;
         }
 
         showApp();
@@ -969,7 +730,7 @@ message: <span class="mono">${escapeHtml(e.message || String(e))}</span>
         console.error(e);
         showGate({
           title: "發生錯誤",
-          message: "無法讀取權限資料，請稍後再試，或查看 Console。",
+          message: "無法讀取權限資料，請稍後再試。",
           showLogin: false,
           showLogout: true
         });
