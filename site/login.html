@@ -425,7 +425,10 @@
       <div class="login-wrap">
         <div class="hero">
           <h1 class="hero-title">登入</h1>
-          <div class="hero-sub">使用你的會員帳號登入。</div>
+          <div class="hero-sub">
+            使用你的會員帳號登入。<br>
+            若尚未完成 Email 驗證，請先到信箱點擊驗證連結。
+          </div>
         </div>
 
         <div class="card">
@@ -466,8 +469,8 @@
         <div>
           <div class="footer-title">Account</div>
           <a class="footer-link" href="member.html">會員中心</a>
-          <a class="footer-link" href="register.html">註冊帳號</a>
-          <a class="footer-link" href="forgot-password.html">忘記密碼</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
         </div>
       </footer>
 
@@ -479,6 +482,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
     if (!firebase.apps.length) {
@@ -493,6 +497,7 @@
     }
 
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
     const accountBtn = document.getElementById("accountBtn");
     const emailEl = document.getElementById("email");
@@ -569,11 +574,34 @@
       setMsg("info", "登入中…");
 
       try {
-        await auth.signInWithEmailAndPassword(email, password);
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const user = cred.user;
+
+        if (!user) {
+          throw new Error("登入失敗");
+        }
+
+        if (!user.emailVerified) {
+          await auth.signOut();
+          setMsg(
+            "warn",
+            `此帳號尚未完成 Email 驗證。<br>請先前往信箱完成驗證後再登入。<br><span class="mono">${esc(email)}</span>`
+          );
+          return;
+        }
+
+        await db.collection("users").doc(user.uid).set({
+          emailVerified: true,
+          verified: true,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
         setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
+
         setTimeout(() => {
           location.href = getSafeRedirect();
         }, 500);
+
       } catch (e) {
         console.error(e);
 
@@ -592,6 +620,8 @@
           text = "嘗試次數過多，請稍後再試";
         } else if (code.includes("auth/network-request-failed")) {
           text = "網路連線失敗";
+        } else if (e.message) {
+          text = e.message;
         }
 
         setMsg("warn", esc(text));
@@ -612,7 +642,7 @@
     auth.onAuthStateChanged(user => {
       updateAccountLinks(user || null);
 
-      if (user) {
+      if (user && user.emailVerified) {
         location.href = getSafeRedirect();
       }
     });
