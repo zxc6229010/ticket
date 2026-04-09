@@ -179,7 +179,7 @@
 
     .kv{
       display:grid;
-      grid-template-columns: 140px 1fr;
+      grid-template-columns:140px 1fr;
       gap:10px;
       padding:10px 0;
       border-top:1px solid var(--line);
@@ -239,6 +239,13 @@
       line-height:1.7;
       margin-top:6px;
       word-break:break-word;
+    }
+
+    .gate-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
     }
   </style>
 </head>
@@ -314,6 +321,7 @@
       });
     }
 
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
     const loginGate = document.getElementById("loginGate");
@@ -346,26 +354,24 @@
         .replaceAll("'","&#39;");
     }
 
+    function getRedirectUrl(){
+      return encodeURIComponent(location.pathname + location.search);
+    }
+
+    function getLoginUrl(){
+      return `login.html?redirect=${getRedirectUrl()}`;
+    }
+
     function showGate({ title, message, showLogin, showLogout }){
       loginGate.innerHTML = `
         <h1>${escapeHtml(title)}</h1>
-        <div class="sub">${escapeHtml(message)}</div>
-        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-          ${showLogin ? `<button class="btn btn-primary" id="gateLoginBtn">使用 Email 登入</button>` : ``}
+        <div class="sub">${message}</div>
+        <div class="gate-actions">
+          ${showLogin ? `<a class="btn btn-primary" href="${getLoginUrl()}">前往登入</a>` : ``}
           ${showLogout ? `<button class="btn" id="gateLogoutBtn">登出</button>` : ``}
+          <a class="btn" href="dashboard.html">回主選單</a>
         </div>
       `;
-
-      const gateLoginBtn = document.getElementById("gateLoginBtn");
-      if (gateLoginBtn) {
-        gateLoginBtn.onclick = async () => {
-          const email = window.prompt("請輸入 Email");
-          if (!email) return;
-          const password = window.prompt("請輸入密碼");
-          if (!password) return;
-          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
-        };
-      }
 
       const gateLogoutBtn = document.getElementById("gateLogoutBtn");
       if (gateLogoutBtn) gateLogoutBtn.onclick = doLogout;
@@ -375,8 +381,12 @@
     }
 
     async function doLogout(){
-      try { await firebase.auth().signOut(); }
-      catch (e){ console.error(e); alert("登出失敗（看 Console）"); }
+      try {
+        await auth.signOut();
+      } catch (e) {
+        console.error(e);
+        alert("登出失敗（看 Console）");
+      }
     }
     logoutBtn.onclick = doLogout;
 
@@ -515,7 +525,6 @@
       setResult(`<div class="small">查詢中…</div>`);
 
       try {
-        // 為了支援單一欄位多條件查詢，直接載入 users 再於前端依權限與關鍵字過濾
         const snap = await db.collection("users").limit(3000).get();
 
         const rows = [];
@@ -574,13 +583,18 @@
       if (e.key === "Enter") doSearch();
     });
 
-    firebase.auth().onAuthStateChanged(async (user) => {
+    auth.onAuthStateChanged(async (user) => {
       if (!user) {
+        currentRole = "";
+        mySchoolId = "";
+        myOrgId = "";
+        currentUserEmail = "";
         whoEl.textContent = "";
         scopeText.textContent = "";
+
         showGate({
           title: "會員 / 帳號查詢中心",
-          message: "請先使用 Email / 密碼登入後台。",
+          message: "請先登入後台帳號。",
           showLogin: true,
           showLogout: false
         });
