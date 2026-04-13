@@ -20,6 +20,8 @@
       --blue-bg:#dbeafe;
       --green:#166534;
       --green-bg:#dcfce7;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
       --max:1280px;
     }
 
@@ -183,6 +185,7 @@
       color:var(--muted);
       font-size:15px;
       line-height:1.9;
+      white-space:pre-wrap;
     }
 
     .card{
@@ -295,6 +298,12 @@
       width:100%;
     }
 
+    .btn-row{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+
     .notice{
       margin-top:16px;
       padding:14px 16px;
@@ -324,6 +333,12 @@
       background:var(--red-bg);
       border-color:rgba(185,28,28,.12);
       color:var(--red);
+    }
+
+    .notice.pending{
+      background:var(--orange-bg);
+      border-color:rgba(194,65,12,.12);
+      color:var(--orange);
     }
 
     .footer{
@@ -368,6 +383,10 @@
 
     .mono{
       font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .hidden{
+      display:none !important;
     }
 
     @media (max-width:860px){
@@ -425,10 +444,8 @@
       <div class="login-wrap">
         <div class="hero">
           <h1 class="hero-title">登入</h1>
-          <div class="hero-sub">
-            使用你的會員帳號登入。<br>
-            若尚未完成 Email 驗證，請先到信箱點擊驗證連結。
-          </div>
+          <div class="hero-sub">使用你的會員帳號登入。
+若尚未完成信箱驗證，系統會提示你先完成驗證。</div>
         </div>
 
         <div class="card">
@@ -439,12 +456,12 @@
           <div class="card-body">
             <div class="field">
               <label class="label" for="email">電子郵件</label>
-              <input id="email" class="input" type="email" placeholder="Email" autocomplete="email" />
+              <input id="email" class="input" type="email" placeholder="請輸入 Email" autocomplete="email" />
             </div>
 
             <div class="field">
               <label class="label" for="password">密碼</label>
-              <input id="password" class="input" type="password" placeholder="Password" autocomplete="current-password" />
+              <input id="password" class="input" type="password" placeholder="請輸入密碼" autocomplete="current-password" />
             </div>
 
             <div class="row-between">
@@ -454,7 +471,12 @@
 
             <div id="msg" class="notice info">請輸入登入資料。</div>
 
-            <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
+            <div class="btn-row">
+              <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
+              <button class="btn btn-block hidden" id="checkVerifyBtn">我已完成驗證，重新檢查</button>
+              <button class="btn btn-block hidden" id="resendVerifyBtn">重寄驗證信</button>
+              <button class="btn btn-block hidden" id="logoutBtn">登出目前帳號</button>
+            </div>
           </div>
         </div>
       </div>
@@ -468,9 +490,8 @@
 
         <div>
           <div class="footer-title">Account</div>
+          <a class="footer-link" href="register.html">註冊</a>
           <a class="footer-link" href="member.html">會員中心</a>
-          <a class="footer-link" href="my-tickets.html">我的票券</a>
-          <a class="footer-link" href="my-orders.html">我的訂單</a>
         </div>
       </footer>
 
@@ -480,33 +501,44 @@
     </main>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      sendEmailVerification,
+      signOut,
+      onAuthStateChanged,
+      reload
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-  <script>
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-        authDomain: "concert-1ff7e.firebaseapp.com",
-        projectId: "concert-1ff7e",
-        storageBucket: "concert-1ff7e.firebasestorage.app",
-        messagingSenderId: "704757384914",
-        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-      });
-    }
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
 
     const accountBtn = document.getElementById("accountBtn");
     const emailEl = document.getElementById("email");
     const passwordEl = document.getElementById("password");
     const loginBtn = document.getElementById("loginBtn");
+    const checkVerifyBtn = document.getElementById("checkVerifyBtn");
+    const resendVerifyBtn = document.getElementById("resendVerifyBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const msg = document.getElementById("msg");
 
     const params = new URLSearchParams(location.search);
     const redirectTarget = params.get("redirect");
+    const prefillEmail = params.get("email");
+
+    let lastSignedUser = null;
+    let redirecting = false;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -533,8 +565,14 @@
 
     function getSafeRedirect(){
       if (!redirectTarget) return "member.html";
-      if (redirectTarget.startsWith("http://") || redirectTarget.startsWith("https://")) return "member.html";
-      return redirectTarget;
+
+      const target = String(redirectTarget).trim();
+
+      if (!target) return "member.html";
+      if (target.startsWith("http://") || target.startsWith("https://")) return "member.html";
+      if (target.includes("login.html")) return "member.html";
+
+      return target;
     }
 
     function updateAccountLinks(user){
@@ -546,6 +584,26 @@
         accountBtn.href = "login.html";
         accountBtn.title = "登入 / 會員中心";
         accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function showVerifyActions(show){
+      checkVerifyBtn.classList.toggle("hidden", !show);
+      resendVerifyBtn.classList.toggle("hidden", !show);
+      logoutBtn.classList.toggle("hidden", !show);
+    }
+
+    function goNext(){
+      if (redirecting) return;
+      redirecting = true;
+      location.href = getSafeRedirect();
+    }
+
+    if (prefillEmail) {
+      try {
+        emailEl.value = decodeURIComponent(prefillEmail);
+      } catch {
+        emailEl.value = prefillEmail;
       }
     }
 
@@ -572,34 +630,31 @@
       const oldText = loginBtn.textContent;
       loginBtn.textContent = "登入中…";
       setMsg("info", "登入中…");
+      showVerifyActions(false);
 
       try {
-        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
         const user = cred.user;
+        lastSignedUser = user;
 
-        if (!user) {
-          throw new Error("登入失敗");
-        }
+        await reload(user);
 
         if (!user.emailVerified) {
-          await auth.signOut();
+          if (!emailEl.value) emailEl.value = user.email || "";
+
           setMsg(
-            "warn",
-            `此帳號尚未完成 Email 驗證。<br>請先前往信箱完成驗證後再登入。<br><span class="mono">${esc(email)}</span>`
+            "pending",
+            `你已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || email)}</span> 收信並點擊驗證連結。`
           );
+          showVerifyActions(true);
           return;
         }
 
-        await db.collection("users").doc(user.uid).set({
-          emailVerified: true,
-          verified: true,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge:true });
-
         setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
+        showVerifyActions(false);
 
         setTimeout(() => {
-          location.href = getSafeRedirect();
+          goNext();
         }, 500);
 
       } catch (e) {
@@ -620,18 +675,95 @@
           text = "嘗試次數過多，請稍後再試";
         } else if (code.includes("auth/network-request-failed")) {
           text = "網路連線失敗";
-        } else if (e.message) {
-          text = e.message;
         }
 
         setMsg("warn", esc(text));
+        showVerifyActions(false);
       } finally {
         loginBtn.disabled = false;
         loginBtn.textContent = oldText;
       }
     }
 
+    async function resendVerificationEmail(){
+      const user = auth.currentUser || lastSignedUser;
+
+      if (!user) {
+        setMsg("warn", "目前沒有可重寄驗證信的帳號");
+        return;
+      }
+
+      resendVerifyBtn.disabled = true;
+      const oldText = resendVerifyBtn.textContent;
+      resendVerifyBtn.textContent = "寄送中…";
+
+      try {
+        await sendEmailVerification(user);
+        setMsg("ok", `驗證信已重新寄出到：<span class="mono">${esc(user.email || "-")}</span>`);
+      } catch (e) {
+        console.error(e);
+        setMsg("warn", "重寄驗證信失敗，請稍後再試");
+      } finally {
+        resendVerifyBtn.disabled = false;
+        resendVerifyBtn.textContent = oldText;
+      }
+    }
+
+    async function checkVerificationNow(){
+      const user = auth.currentUser || lastSignedUser;
+
+      if (!user) {
+        setMsg("warn", "目前沒有登入中的帳號");
+        return;
+      }
+
+      checkVerifyBtn.disabled = true;
+      const oldText = checkVerifyBtn.textContent;
+      checkVerifyBtn.textContent = "檢查中…";
+
+      try {
+        await reload(user);
+
+        if (user.emailVerified) {
+          setMsg("ok", `信箱驗證完成<br><span class="mono">${esc(user.email || "-")}</span>`);
+          showVerifyActions(false);
+
+          setTimeout(() => {
+            goNext();
+          }, 500);
+          return;
+        }
+
+        setMsg(
+          "pending",
+          `目前尚未完成驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信後，再按一次重新檢查。`
+        );
+        showVerifyActions(true);
+      } catch (e) {
+        console.error(e);
+        setMsg("warn", "重新檢查失敗，請稍後再試");
+      } finally {
+        checkVerifyBtn.disabled = false;
+        checkVerifyBtn.textContent = oldText;
+      }
+    }
+
+    async function logoutCurrentUser(){
+      try {
+        await signOut(auth);
+        lastSignedUser = null;
+        showVerifyActions(false);
+        setMsg("info", "已登出，目前可重新登入。");
+      } catch (e) {
+        console.error(e);
+        setMsg("warn", "登出失敗，請稍後再試");
+      }
+    }
+
     loginBtn.onclick = login;
+    resendVerifyBtn.onclick = resendVerificationEmail;
+    checkVerifyBtn.onclick = checkVerificationNow;
+    logoutBtn.onclick = logoutCurrentUser;
 
     [emailEl, passwordEl].forEach(el => {
       el.addEventListener("keydown", e => {
@@ -639,12 +771,36 @@
       });
     });
 
-    auth.onAuthStateChanged(user => {
+    onAuthStateChanged(auth, async user => {
       updateAccountLinks(user || null);
 
-      if (user && user.emailVerified) {
-        location.href = getSafeRedirect();
+      if (!user) {
+        showVerifyActions(false);
+        return;
       }
+
+      try {
+        await reload(user);
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (user.emailVerified) {
+        goNext();
+        return;
+      }
+
+      lastSignedUser = user;
+
+      if (!emailEl.value) {
+        emailEl.value = user.email || "";
+      }
+
+      setMsg(
+        "pending",
+        `你目前已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信並完成驗證。`
+      );
+      showVerifyActions(true);
     });
   </script>
 </body>

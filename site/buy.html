@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Passium｜選擇票種</title>
+
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --black:#111111;
+
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1280px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 22px;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .account-icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      cursor:pointer;
+    }
+
+    .account-icon-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
+    }
+
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:14px;
+      max-width:900px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .hero-meta{
+      margin-top:20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 390px;
+      gap:20px;
+      align-items:start;
+    }
+
+    @media (max-width:980px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .ticket-list{
+      display:grid;
+      gap:16px;
+    }
+
+    .ticket-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .ticket-head{
+      padding:20px 20px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .ticket-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .ticket-title{
+      margin:0;
+      font-size:24px;
+      line-height:1.3;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .ticket-price{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
+      white-space:nowrap;
+    }
+
+    .ticket-sub{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .ticket-body{
+      padding:20px;
+    }
+
+    .ticket-grid{
+      display:grid;
+      grid-template-columns:1fr 180px;
+      gap:14px;
+      align-items:end;
+    }
+
+    @media (max-width:680px){
+      .ticket-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .meta-pills{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .meta-pill{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .field{
+      display:grid;
+      gap:6px;
+    }
+
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:#111827;
+    }
+
+    .select{
+      width:100%;
+      min-height:48px;
+      padding:12px 14px;
+      border:1px solid rgba(0,0,0,.12);
+      border-radius:16px;
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      outline:none;
+    }
+
+    .select:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 4px rgba(17,24,39,.06);
+    }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .side-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      padding:20px;
+      position:sticky;
+      top:82px;
+    }
+
+    @media (max-width:980px){
+      .side-card{
+        position:static;
+      }
+    }
+
+    .side-title{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .side-sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .summary{
+      display:grid;
+      gap:10px;
+      margin-top:18px;
+      padding-top:16px;
+      border-top:1px solid var(--line);
+    }
+
+    .summary-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:14px;
+      line-height:1.8;
+      color:var(--muted);
+    }
+
+    .summary-row strong{
+      color:#111;
+      text-align:right;
+    }
+
+    .summary-detail{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .summary-item{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:18px;
+      background:#fafafa;
+      padding:12px 14px;
+    }
+
+    .summary-item-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      line-height:1.7;
+    }
+
+    .summary-item-sub{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .notice{
+      margin-top:16px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.95;
+      white-space:pre-wrap;
+      word-break:break-word;
+      border-radius:18px;
+      padding:14px;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.05);
+    }
+
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.10);
+      color:var(--blue);
+    }
+
+    .notice.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.10);
+      color:var(--red);
+    }
+
+    .notice.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.10);
+      color:var(--green);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .action-stack{
+      display:grid;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .loading,
+    .empty{
+      padding:42px 18px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.95;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" id="backLink" href="ticket.html">← 返回活動頁</a>
+      </div>
+
+      <div id="app" class="loading">載入中…</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        建立訂單後，需在期限內完成持票人資料填寫。未完成的訂單會失效釋出。
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      collection,
+      addDoc,
+      serverTimestamp,
+      Timestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
+
+    const app = document.getElementById("app");
+    const accountBtn = document.getElementById("accountBtn");
+    const backLink = document.getElementById("backLink");
+
+    const params = new URLSearchParams(location.search);
+    const eventId = String(params.get("id") || "").trim();
+
+    let currentUser = null;
+    let currentEvent = null;
+    let quantityMap = {};
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input?.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "日期未定";
+      return d.toLocaleString("zh-Hant", {
+        year:"numeric",
+        month:"long",
+        day:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      });
+    }
+
+    function formatPrice(value){
+      const num = Number(value || 0);
+      if (!num) return "免費";
+      return `NT$ ${num.toLocaleString("zh-Hant")}`;
+    }
+
+    function getEventStatus(event){
+      const now = new Date();
+      const saleStart = toDate(event.saleStartAt);
+      const saleEnd = toDate(event.saleEndAt);
+      const published = event.published === true;
+
+      if (!published) return { text:"未公開", key:"hidden" };
+      if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming" };
+      if (saleEnd && now > saleEnd) return { text:"已截止", key:"ended" };
+      return { text:"受理中", key:"selling" };
+    }
+
+    function getEventVenue(event){
+      return norm(
+        event.venueName ||
+        event.location ||
+        event.place ||
+        event.eventLocation ||
+        ""
+      );
+    }
+
+    function getEventDescription(event){
+      return norm(
+        event.summary ||
+        event.subtitle ||
+        event.description ||
+        event.shortDescription ||
+        ""
+      );
+    }
+
+    function getTicketTypes(event){
+      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      if (!raw.length) {
+        return [{
+          id:"general",
+          name:"一般報名",
+          price:0,
+          description:"此活動目前未細分票種。",
+          enabled:true,
+          maxPerOrder:6,
+          visibility:"public"
+        }];
+      }
+
+      return raw
+        .map((item, index) => ({
+          id: norm(item.id || `ticket_${index + 1}`),
+          name: norm(item.name || `票種 ${index + 1}`),
+          price: Number(item.price || 0),
+          description: norm(item.description || ""),
+          enabled: item.enabled !== false,
+          maxPerOrder: Math.max(0, Number(item.maxPerOrder || item.maxPerUser || 6) || 6),
+          visibility: norm(item.visibility || item.type || "public")
+        }))
+        .filter(item => item.enabled !== false);
+    }
+
+    async function getEventById(id){
+      const snap = await getDoc(doc(db, "events", id));
+      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        const redirect = encodeURIComponent(location.pathname + location.search);
+        accountBtn.href = `login.html?redirect=${redirect}`;
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function buildLoginRedirectUrl(){
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      return `login.html?redirect=${redirect}`;
+    }
+
+    function canCreateOrder(event){
+      return getEventStatus(event).key === "selling";
+    }
+
+    function getSelectedItems(){
+      const types = getTicketTypes(currentEvent);
+      return types
+        .map(type => {
+          const quantity = Number(quantityMap[type.id] || 0);
+          return {
+            ticketTypeId: type.id,
+            ticketTypeName: type.name,
+            unitPrice: Number(type.price || 0),
+            quantity,
+            subtotal: Number(type.price || 0) * quantity,
+            visibility: type.visibility || "public"
+          };
+        })
+        .filter(item => item.quantity > 0);
+    }
+
+    function getTotalQuantity(){
+      return getSelectedItems().reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    }
+
+    function getTotalAmount(){
+      return getSelectedItems().reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
+    }
+
+    function getExpiresAtDate(){
+      const minutes = 10;
+      return new Date(Date.now() + minutes * 60 * 1000);
+    }
+
+    function getSummaryNotice(){
+      const totalQty = getTotalQuantity();
+
+      if (!canCreateOrder(currentEvent)) {
+        return {
+          className: "warn",
+          text: "目前尚未開放建立訂單，請依活動開賣時間為準。"
+        };
+      }
+
+      if (!totalQty) {
+        return {
+          className: "warn",
+          text: "請先選擇至少 1 張票。\n每個票種預設都是 0 張，你可以用下拉式選單慢慢選。"
+        };
+      }
+
+      if (!currentUser) {
+        return {
+          className: "info",
+          text: "你已選好票種，但建立訂單前需要先登入。\n登入後系統會回到這一頁。"
+        };
+      }
+
+      return {
+        className: "ok",
+        text: "建立訂單後，系統會先保留這批票。\n你需要在期限內完成每張票的持票人資料填寫，訂單才會正式完成。"
+      };
+    }
+
+    function renderSelectedSummaryItems(selectedItems){
+      if (!selectedItems.length) {
+        return `
+          <div class="summary-item">
+            <div class="summary-item-title">尚未選擇票種</div>
+            <div class="summary-item-sub">請從左側票種卡片選擇你要的張數。</div>
+          </div>
+        `;
+      }
+
+      return selectedItems.map(item => `
+        <div class="summary-item">
+          <div class="summary-item-title">
+            ${esc(item.ticketTypeName)} × ${esc(item.quantity)} 張
+          </div>
+          <div class="summary-item-sub">
+            單價：${esc(formatPrice(item.unitPrice))} ｜ 小計：${esc(formatPrice(item.subtotal))}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderTicketCard(type){
+      const max = Math.max(0, Number(type.maxPerOrder || 6) || 6);
+      const currentQty = Number(quantityMap[type.id] || 0);
+      const options = Array.from({ length: max + 1 }, (_, i) => i);
+
+      return `
+        <div class="ticket-card">
+          <div class="ticket-head">
+            <div class="ticket-top">
+              <div>
+                <h3 class="ticket-title">${esc(type.name)}</h3>
+              </div>
+              <div class="ticket-price">${esc(formatPrice(type.price))}</div>
+            </div>
+
+            <div class="ticket-sub">
+              ${esc(type.description || "請選擇此票種的張數。")}
+            </div>
+
+            <div class="meta-pills">
+              <span class="meta-pill">票種代碼：${esc(type.id)}</span>
+              <span class="meta-pill">單筆上限：${esc(max)} 張</span>
+              <span class="meta-pill">${esc(type.visibility === "pr" ? "公關票" : "一般票")}</span>
+            </div>
+          </div>
+
+          <div class="ticket-body">
+            <div class="ticket-grid">
+              <div>
+                <div class="hint">
+                  若要幫朋友一起購買，可以先把多張票放進同一筆訂單，
+                  下一步再逐張填寫持票人資料。
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label" for="qty_${esc(type.id)}">選擇張數</label>
+                <select class="select" id="qty_${esc(type.id)}" data-ticket-id="${esc(type.id)}">
+                  ${options.map(n => `
+                    <option value="${n}" ${currentQty === n ? "selected" : ""}>${n} 張</option>
+                  `).join("")}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPage(){
+      const status = getEventStatus(currentEvent);
+      const desc = getEventDescription(currentEvent) || "請先選擇你要的票種與張數。";
+      const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
+      const saleStartText = formatDateTime(currentEvent.saleStartAt);
+      const saleEndText = formatDateTime(currentEvent.saleEndAt);
+      const ticketTypes = getTicketTypes(currentEvent);
+      const selectedItems = getSelectedItems();
+      const totalQty = getTotalQuantity();
+      const totalAmount = getTotalAmount();
+      const canOrder = canCreateOrder(currentEvent);
+      const notice = getSummaryNotice();
+
+      backLink.href = `ticket.html?id=${encodeURIComponent(currentEvent.id)}`;
+
+      app.className = "";
+      app.innerHTML = `
+        <section class="hero">
+          <h1 class="hero-title">選擇票種</h1>
+          <div class="hero-sub">
+活動：${esc(currentEvent.title || "未命名活動")}
+${esc(desc)}
+          </div>
+          <div class="hero-meta">
+            <span class="pill">狀態：${esc(status.text)}</span>
+            <span class="pill">地點：${esc(venue)}</span>
+            <span class="pill">開賣：${esc(saleStartText)}</span>
+            <span class="pill">截止：${esc(saleEndText)}</span>
+          </div>
+        </section>
+
+        <div class="layout">
+          <section class="ticket-list">
+            ${ticketTypes.map(type => renderTicketCard(type)).join("")}
+          </section>
+
+          <aside class="side-card">
+            <h2 class="side-title">訂單摘要</h2>
+            <div class="side-sub">
+              先選票種與張數，再建立訂單。
+              建立後會進入持票人資料填寫頁面。
+            </div>
+
+            <div class="summary">
+              <div class="summary-row">
+                <span>活動</span>
+                <strong>${esc(currentEvent.title || "-")}</strong>
+              </div>
+              <div class="summary-row">
+                <span>已選票種</span>
+                <strong>${esc(selectedItems.length)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總張數</span>
+                <strong>${esc(totalQty)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總金額</span>
+                <strong>${esc(formatPrice(totalAmount))}</strong>
+              </div>
+            </div>
+
+            <div class="summary-detail">
+              ${renderSelectedSummaryItems(selectedItems)}
+            </div>
+
+            <div class="notice ${notice.className}">
+              ${esc(notice.text)}
+            </div>
+
+            <div class="action-stack">
+              <button class="btn btn-primary" id="createOrderBtn" ${canOrder ? "" : "disabled"}>
+                建立訂單並填寫持票人資料
+              </button>
+              <a class="btn" href="ticket.html?id=${encodeURIComponent(currentEvent.id)}">返回活動資訊</a>
+            </div>
+          </aside>
+        </div>
+      `;
+
+      document.querySelectorAll("[data-ticket-id]").forEach(select => {
+        select.addEventListener("change", e => {
+          const ticketId = e.target.dataset.ticketId || "";
+          quantityMap[ticketId] = Number(e.target.value || 0);
+          renderPage();
+        });
+      });
+
+      const createOrderBtn = document.getElementById("createOrderBtn");
+      if (createOrderBtn) {
+        createOrderBtn.onclick = createOrder;
+      }
+    }
+
+    async function createOrder(){
+      if (!currentEvent) return;
+
+      if (!canCreateOrder(currentEvent)) {
+        alert("目前尚未開放建立訂單。");
+        return;
+      }
+
+      if (!currentUser) {
+        location.href = buildLoginRedirectUrl();
+        return;
+      }
+
+      const selectedItems = getSelectedItems();
+      const totalQty = getTotalQuantity();
+      const totalAmount = getTotalAmount();
+
+      if (!selectedItems.length || totalQty <= 0) {
+        alert("請先選擇至少 1 張票。");
+        return;
+      }
+
+      const btn = document.getElementById("createOrderBtn");
+      const oldText = btn ? btn.textContent : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "建立中…";
+      }
+
+      try {
+        const expiresAtDate = getExpiresAtDate();
+        const expiresAt = Timestamp.fromDate(expiresAtDate);
+
+        const holderAssignments = [];
+        let holderIndex = 0;
+
+        selectedItems.forEach(item => {
+          for (let i = 0; i < item.quantity; i++) {
+            holderAssignments.push({
+              holderIndex,
+              ticketTypeId: item.ticketTypeId,
+              ticketTypeName: item.ticketTypeName,
+              price: Number(item.unitPrice || 0),
+
+              email: "",
+              name: "",
+              uid: "",
+              verifiedSchoolId: "",
+              verifiedSchoolName: "",
+              verifyMethod: "",
+
+              status: "",
+              message: ""
+            });
+            holderIndex += 1;
+          }
+        });
+
+        const orderPayload = {
+          uid: currentUser.uid,
+          buyerUid: currentUser.uid,
+          buyerEmail: lower(currentUser.email || ""),
+          eventId: currentEvent.id,
+          eventTitle: currentEvent.title || "",
+
+          status: "pending_holder_info",
+          paymentStatus: "unpaid",
+          fillStatus: "pending",
+
+          totalQuantity: totalQty,
+          totalAmount,
+
+          itemSummary: selectedItems,
+          holderAssignments,
+
+          participantEmails: [],
+          participantUids: [],
+          sharedOrderRefs: [],
+
+          fillDeadlineMinutes: 10,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          expiresAt
+        };
+
+        const ref = await addDoc(
+          collection(db, "events", currentEvent.id, "orders"),
+          orderPayload
+        );
+
+        location.href = `order-fill.html?id=${encodeURIComponent(currentEvent.id)}&orderId=${encodeURIComponent(ref.id)}`;
+      } catch (err) {
+        console.error(err);
+        alert("建立訂單失敗，請稍後再試。");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = oldText || "建立訂單並填寫持票人資料";
+        }
+      }
+    }
+
+    async function initPage(){
+      if (!eventId) {
+        app.className = "empty";
+        app.innerHTML = "缺少活動 ID。";
+        return;
+      }
+
+      currentEvent = await getEventById(eventId);
+
+      if (!currentEvent) {
+        app.className = "empty";
+        app.innerHTML = "找不到活動。";
+        return;
+      }
+
+      const ticketTypes = getTicketTypes(currentEvent);
+      quantityMap = {};
+      ticketTypes.forEach(type => {
+        quantityMap[type.id] = 0;
+      });
+
+      renderPage();
+    }
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user || null;
+      updateAccountLinks(currentUser);
+      await initPage();
+    });
+  </script>
+</body>
+</html>

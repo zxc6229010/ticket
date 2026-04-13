@@ -277,6 +277,7 @@
       color:var(--muted);
       font-size:16px;
       line-height:1.9;
+      white-space:pre-wrap;
     }
 
     .hero-meta{
@@ -392,6 +393,7 @@
       font-size:15px;
       line-height:1.9;
       max-width:860px;
+      white-space:pre-wrap;
     }
 
     .grid{
@@ -436,6 +438,7 @@
       font-size:12px;
       color:var(--muted);
       line-height:1.8;
+      white-space:pre-wrap;
     }
 
     .notice{
@@ -470,6 +473,13 @@
       background:var(--blue-bg);
       border-color:rgba(29,78,216,.12);
       color:var(--blue);
+      box-shadow:none;
+    }
+
+    .notice.pending{
+      background:var(--orange-bg);
+      border-color:rgba(194,65,12,.12);
+      color:var(--orange);
       box-shadow:none;
     }
 
@@ -555,6 +565,7 @@
       font-size:14px;
       line-height:1.95;
       box-shadow:var(--shadow-soft);
+      white-space:pre-wrap;
     }
 
     .mono{
@@ -677,10 +688,11 @@
         <div class="hero">
           <h1 class="hero-title">會員中心</h1>
           <div class="hero-sub">
-            查看你的基本資料、校園驗證、訂單與票券。
+            查看你的基本資料、信箱驗證、校園驗證、訂單與票券。
           </div>
           <div class="hero-meta">
             <span class="pill" id="heroUserText">登入帳號：-</span>
+            <span class="pill" id="heroEmailVerifyText">信箱驗證：-</span>
             <span class="pill" id="heroVerifyText">校園驗證：-</span>
           </div>
         </div>
@@ -701,7 +713,7 @@
             <section class="section active" id="tab-profile">
               <h2 class="section-title">基本資料</h2>
               <div class="section-sub">
-                這裡顯示目前帳號的個人資料與校園驗證狀態。
+                這裡顯示目前帳號的個人資料、信箱驗證與校園驗證狀態。
               </div>
 
               <div class="grid">
@@ -732,7 +744,7 @@
                 <div class="info-box">
                   <div class="info-label">電子郵件</div>
                   <div class="info-value" id="profileEmail">-</div>
-                  <div class="info-note">登入帳號</div>
+                  <div class="info-note" id="profileEmailNote">登入帳號</div>
                 </div>
 
                 <div class="info-box">
@@ -746,12 +758,17 @@
                 目前沒有其他會員資訊。
               </div>
 
+              <div class="notice" id="emailVerifyNoticeBox">
+                載入信箱驗證狀態中…
+              </div>
+
               <div class="notice" id="verifyNoticeBox">
                 載入校園驗證狀態中…
               </div>
 
               <div class="row" style="margin-top:18px;">
                 <a class="btn btn-primary" href="campus-verify.html">前往校園驗證</a>
+                <button class="btn hidden" id="resendVerifyBtn">重寄信箱驗證信</button>
               </div>
             </section>
 
@@ -780,10 +797,11 @@
             <section class="section" id="tab-security">
               <h2 class="section-title">帳號安全</h2>
               <div class="section-sub">
-                你可以在這裡重設密碼或登出。
+                你可以在這裡重設密碼、重寄驗證信或登出。
               </div>
 
               <div class="row" style="margin-top:18px;">
+                <button class="btn" id="resendVerifyBtnSecurity">重寄驗證信</button>
                 <button class="btn btn-primary" id="resetPasswordBtn">寄送重設密碼信</button>
                 <button class="btn btn-danger" id="logoutBtn">登出帳號</button>
               </div>
@@ -839,6 +857,7 @@
     const app = document.getElementById("app");
 
     const heroUserText = document.getElementById("heroUserText");
+    const heroEmailVerifyText = document.getElementById("heroEmailVerifyText");
     const heroVerifyText = document.getElementById("heroVerifyText");
 
     const profileName = document.getElementById("profileName");
@@ -847,7 +866,9 @@
     const profilePhone = document.getElementById("profilePhone");
     const profileEmail = document.getElementById("profileEmail");
     const profileUid = document.getElementById("profileUid");
+    const profileEmailNote = document.getElementById("profileEmailNote");
     const profileCustomNotice = document.getElementById("profileCustomNotice");
+    const emailVerifyNoticeBox = document.getElementById("emailVerifyNoticeBox");
     const verifyNoticeBox = document.getElementById("verifyNoticeBox");
 
     const ordersWrap = document.getElementById("ordersWrap");
@@ -857,6 +878,8 @@
     const logoutTopBtn = document.getElementById("logoutTopBtn");
     const topTicketsBtn = document.getElementById("topTicketsBtn");
     const topLoginBtn = document.getElementById("topLoginBtn");
+    const resendVerifyBtn = document.getElementById("resendVerifyBtn");
+    const resendVerifyBtnSecurity = document.getElementById("resendVerifyBtnSecurity");
     const resetPasswordBtn = document.getElementById("resetPasswordBtn");
     const securityMsg = document.getElementById("securityMsg");
 
@@ -1134,6 +1157,27 @@
         ? customNotice.replace(/\n/g, "<br>")
         : "目前沒有其他會員資訊。";
 
+      if (user.emailVerified) {
+        heroEmailVerifyText.textContent = "信箱驗證：已完成";
+        profileEmailNote.textContent = "登入帳號（已完成信箱驗證）";
+        emailVerifyNoticeBox.className = "notice ok";
+        emailVerifyNoticeBox.innerHTML = `
+<b>已完成信箱驗證</b>
+你目前可以正常使用會員功能。
+        `.trim();
+        resendVerifyBtn.classList.add("hidden");
+      } else {
+        heroEmailVerifyText.textContent = "信箱驗證：尚未完成";
+        profileEmailNote.textContent = "登入帳號（尚未完成信箱驗證）";
+        emailVerifyNoticeBox.className = "notice pending";
+        emailVerifyNoticeBox.innerHTML = `
+<b>尚未完成信箱驗證</b>
+請先到信箱收取驗證信並完成驗證。
+若沒有收到，可以使用下方按鈕重新寄送。
+        `.trim();
+        resendVerifyBtn.classList.remove("hidden");
+      }
+
       const verifiedSchoolId = norm(data.verifiedSchoolId || "");
       const verifiedSchoolName = norm(data.verifiedSchoolName || verifiedSchoolId);
       const verifyMethod = norm(data.verifyMethod || "");
@@ -1167,8 +1211,33 @@
       }
     }
 
+    async function doResendVerification(){
+      if (!currentUser) return;
+
+      securityMsg.classList.add("hidden");
+      securityMsg.innerHTML = "";
+
+      try {
+        await currentUser.sendEmailVerification();
+        securityMsg.className = "notice ok";
+        securityMsg.innerHTML = `驗證信已重新寄出到：${esc(currentUser.email || "-")}`;
+        securityMsg.classList.remove("hidden");
+
+        if (switchTab) {
+          // 保持目前分頁，不做切換
+        }
+      } catch (e) {
+        console.error(e);
+        securityMsg.className = "notice warn";
+        securityMsg.innerHTML = `重寄失敗：${esc(e.message || "請稍後再試")}`;
+        securityMsg.classList.remove("hidden");
+      }
+    }
+
     logoutBtn.onclick = doLogout;
     logoutTopBtn.onclick = doLogout;
+    resendVerifyBtn.onclick = doResendVerification;
+    resendVerifyBtnSecurity.onclick = doResendVerification;
 
     resetPasswordBtn.onclick = async () => {
       securityMsg.classList.add("hidden");
@@ -1202,17 +1271,21 @@
 
       if (!user) {
         showGate(`
-          請先登入會員帳號。<br><br>
-          <a class="btn btn-primary" href="login.html">前往登入</a>
-        `);
+請先登入會員帳號。
+
+<a class="btn btn-primary" href="login.html" style="margin-top:14px;">前往登入</a>
+        `.trim());
         return;
       }
 
       try {
-        heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
-        currentUserData = await loadUserData(user.uid);
+        await user.reload();
+        currentUser = auth.currentUser || user;
 
-        renderProfile(user, currentUserData);
+        heroUserText.textContent = `登入帳號：${currentUser.email || currentUser.uid}`;
+        currentUserData = await loadUserData(currentUser.uid);
+
+        renderProfile(currentUser, currentUserData);
         showApp();
 
         ordersWrap.className = "loading";
@@ -1221,8 +1294,8 @@
         ticketSummaryWrap.innerHTML = `<div class="loading">票券摘要載入中…</div>`;
 
         await Promise.all([
-          loadOrders(user.uid),
-          loadTickets(user.uid)
+          loadOrders(currentUser.uid),
+          loadTickets(currentUser.uid)
         ]);
 
       } catch (e) {

@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Passium｜填寫持票人資料</title>
+
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --line-strong:rgba(0,0,0,.12);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --black:#111111;
+
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+
+      --max:1280px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .shell{
+      min-height:100vh;
+    }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.78);
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .nav{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:0 22px;
+      min-height:60px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
+    }
+
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
+    .nav-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .account-icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      cursor:pointer;
+    }
+
+    .account-icon-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
+    }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 88px;
+    }
+
+    .back-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .back-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:40px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow-soft);
+      color:#111;
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:20px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(32px, 5vw, 52px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:14px;
+      max-width:900px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .hero-meta{
+      margin-top:20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    @media (max-width:980px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .main-card,
+    .side-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .main-card{
+      padding:22px;
+    }
+
+    .side-card{
+      padding:20px;
+      position:sticky;
+      top:82px;
+    }
+
+    @media (max-width:980px){
+      .side-card{
+        position:static;
+      }
+    }
+
+    .section-title{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .section-sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .holder-list{
+      display:grid;
+      gap:16px;
+      margin-top:20px;
+    }
+
+    .holder-card{
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:26px;
+      background:#fff;
+      box-shadow:var(--shadow-soft);
+      overflow:hidden;
+    }
+
+    .holder-head{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+    }
+
+    .holder-title{
+      margin:0;
+      font-size:18px;
+      line-height:1.4;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    .holder-sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.85;
+      word-break:break-word;
+    }
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+      border:1px solid transparent;
+    }
+
+    .status-ok{
+      background:var(--green-bg);
+      color:var(--green);
+    }
+
+    .status-warn{
+      background:var(--red-bg);
+      color:var(--red);
+    }
+
+    .status-gray{
+      background:var(--gray-bg);
+      color:var(--gray);
+    }
+
+    .status-blue{
+      background:var(--blue-bg);
+      color:var(--blue);
+    }
+
+    .holder-body{
+      padding:18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .field{
+      display:grid;
+      gap:6px;
+    }
+
+    .field.full{
+      grid-column:1 / -1;
+    }
+
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:#111827;
+    }
+
+    .input{
+      width:100%;
+      min-height:48px;
+      padding:12px 14px;
+      border:1px solid rgba(0,0,0,.12);
+      border-radius:16px;
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      outline:none;
+      transition:border-color .12s ease, box-shadow .12s ease;
+    }
+
+    .input:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 4px rgba(17,24,39,.06);
+    }
+
+    .input[disabled]{
+      background:#f9fafb;
+      color:#6b7280;
+      cursor:not-allowed;
+    }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .check-row{
+      margin-top:16px;
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      background:#fafafa;
+      display:grid;
+      gap:8px;
+    }
+
+    .check-line{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .check-label{
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .check-value{
+      font-weight:800;
+      color:#111827;
+      text-align:right;
+    }
+
+    .notice{
+      margin-top:16px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.95;
+      white-space:pre-wrap;
+      word-break:break-word;
+      border-radius:18px;
+      padding:14px;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.05);
+    }
+
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.10);
+      color:var(--blue);
+    }
+
+    .notice.warn{
+      background:var(--red-bg);
+      border-color:rgba(185,28,28,.10);
+      color:var(--red);
+    }
+
+    .notice.ok{
+      background:var(--green-bg);
+      border-color:rgba(22,101,52,.10);
+      color:var(--green);
+    }
+
+    .summary{
+      display:grid;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .summary-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:14px;
+      line-height:1.8;
+      color:var(--muted);
+    }
+
+    .summary-row strong{
+      color:#111;
+      text-align:right;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn:active{
+      transform:translateY(0) scale(.98);
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .action-stack{
+      display:grid;
+      gap:10px;
+      margin-top:18px;
+    }
+
+    .loading,
+    .empty{
+      padding:42px 18px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.95;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .bottom-note{
+      margin-top:30px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.8;
+    }
+
+    @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
+      .page{
+        padding:22px 16px 72px;
+      }
+
+      .hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
+        </a>
+
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div class="nav-actions">
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <main class="page">
+      <div class="back-row">
+        <a class="back-link" id="backLink" href="my-orders.html">← 返回我的訂單</a>
+      </div>
+
+      <div id="app" class="loading">載入中…</div>
+
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
+        </div>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+      </footer>
+
+      <div class="bottom-note">
+        持票人資料需於期限內完成填寫。所有持票人皆需具備符合資格的會員帳號。
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
+
+    const app = document.getElementById("app");
+    const accountBtn = document.getElementById("accountBtn");
+    const backLink = document.getElementById("backLink");
+
+    const params = new URLSearchParams(location.search);
+    const eventId = String(params.get("id") || "").trim();
+    const orderId = String(params.get("orderId") || "").trim();
+
+    let currentUser = null;
+    let currentOrder = null;
+    let holderState = [];
+    let checkingMap = {};
+    let userDocCache = new Map();
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(value){
+      return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
+
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input?.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
+
+    function formatPrice(v){
+      const n = Number(v || 0);
+      if (!n) return "免費";
+      return "NT$ " + n.toLocaleString("zh-Hant");
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = buildLoginRedirectUrl();
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function buildLoginRedirectUrl(){
+      const url = new URL("login.html", location.href);
+      url.searchParams.set("redirect", location.pathname + location.search);
+      return url.pathname + url.search;
+    }
+
+    function goLogin(){
+      location.href = buildLoginRedirectUrl();
+    }
+
+    function getOrderRef(){
+      return doc(db, "events", eventId, "orders", orderId);
+    }
+
+    async function getOrder(){
+      const ref = getOrderRef();
+      const snap = await getDoc(ref);
+      return snap.exists() ? { id: snap.id, ref, ...(snap.data() || {}) } : null;
+    }
+
+    async function getUserDocByEmail(email){
+      const key = lower(email);
+      if (!key) return null;
+      if (userDocCache.has(key)) return userDocCache.get(key);
+
+      let userResult = null;
+
+      try {
+        const indexSnap = await getDoc(doc(db, "email_index", key));
+        if (indexSnap.exists()) {
+          const indexData = indexSnap.data() || {};
+          const uid = norm(indexData.uid || "");
+          if (uid) {
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if (userSnap.exists()) {
+              userResult = { uid, ...(userSnap.data() || {}) };
+            }
+          }
+        }
+      } catch (err) {
+        console.error("email_index lookup failed", err);
+      }
+
+      userDocCache.set(key, userResult);
+      return userResult;
+    }
+
+    function flattenItems(order){
+      const summary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
+      const existingAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
+      const flat = [];
+
+      let pointer = 0;
+
+      summary.forEach((item, groupIndex) => {
+        const qty = Number(item.quantity || 0);
+        for (let i = 0; i < qty; i++) {
+          const existing = existingAssignments[pointer] || {};
+          flat.push({
+            holderIndex: pointer,
+            groupIndex,
+            ticketTypeId: norm(item.ticketTypeId || existing.ticketTypeId || ""),
+            ticketTypeName: norm(item.ticketTypeName || existing.ticketTypeName || `票種 ${groupIndex + 1}`),
+            price: Number(item.unitPrice || item.price || existing.price || 0),
+
+            email: norm(existing.email || ""),
+            name: norm(existing.name || ""),
+            uid: norm(existing.uid || ""),
+            verifiedSchoolId: norm(existing.verifiedSchoolId || ""),
+            verifiedSchoolName: norm(existing.verifiedSchoolName || ""),
+            verifyMethod: norm(existing.verifyMethod || ""),
+            status: norm(existing.status || ""),
+            message: norm(existing.message || "")
+          });
+          pointer += 1;
+        }
+      });
+
+      return flat;
+    }
+
+    function isOrderExpired(order){
+      const expiresAt = toDate(order.expiresAt);
+      if (!expiresAt) return false;
+      return Date.now() > expiresAt.getTime();
+    }
+
+    function isOrderLocked(order){
+      const status = lower(order.status);
+      if (["paid","completed","cancelled","void","refunded"].includes(status)) return true;
+      if (isOrderExpired(order)) return true;
+      return false;
+    }
+
+    function holderStatusMeta(item){
+      if (checkingMap[item.holderIndex]) {
+        return { text: "檢查中", className: "status-blue" };
+      }
+
+      if (item.status === "valid") {
+        return { text: "已通過", className: "status-ok" };
+      }
+
+      if (!item.email) {
+        return { text: "尚未填寫", className: "status-gray" };
+      }
+
+      return { text: "未通過", className: "status-warn" };
+    }
+
+    async function validateOneHolder(index){
+      const item = holderState[index];
+      if (!item) return;
+
+      const email = lower(item.email);
+      const name = norm(item.name);
+
+      item.uid = "";
+      item.verifiedSchoolId = "";
+      item.verifiedSchoolName = "";
+      item.verifyMethod = "";
+
+      if (!email) {
+        item.status = "";
+        item.message = "請先填寫持票人 Email。";
+        renderPage();
+        return;
+      }
+
+      checkingMap[index] = true;
+      renderPage();
+
+      try {
+        const user = await getUserDocByEmail(email);
+
+        if (!user) {
+          item.status = "invalid";
+          item.message = "查無此會員帳號，對方必須先完成註冊。";
+          return;
+        }
+
+        const verifiedSchoolId = norm(user.verifiedSchoolId || "");
+        const verifiedSchoolName = norm(user.verifiedSchoolName || "");
+        const verifyMethod = norm(user.verifyMethod || "");
+
+        if (!verifiedSchoolId) {
+          item.uid = norm(user.uid || "");
+          item.status = "invalid";
+          item.message = "此會員尚未完成校園驗證。";
+          return;
+        }
+
+        item.uid = norm(user.uid || "");
+        item.verifiedSchoolId = verifiedSchoolId;
+        item.verifiedSchoolName = verifiedSchoolName;
+        item.verifyMethod = verifyMethod;
+        item.status = "valid";
+        item.message = name
+          ? "資料檢查通過。"
+          : "帳號與資格已通過，建議補上持票人姓名。";
+      } catch (err) {
+        console.error(err);
+        item.status = "invalid";
+        item.message = "檢查失敗，請稍後再試。";
+      } finally {
+        delete checkingMap[index];
+        renderPage();
+      }
+    }
+
+    async function validateAllHolders(){
+      for (let i = 0; i < holderState.length; i++) {
+        await validateOneHolder(i);
+      }
+    }
+
+    function allHoldersReady(){
+      if (!holderState.length) return false;
+      return holderState.every(item => {
+        return lower(item.email) && item.status === "valid";
+      });
+    }
+
+    function buildAssignmentsPayload(){
+      return holderState.map(item => ({
+        holderIndex: item.holderIndex,
+        ticketTypeId: item.ticketTypeId,
+        ticketTypeName: item.ticketTypeName,
+        price: Number(item.price || 0),
+
+        email: lower(item.email),
+        name: norm(item.name),
+        uid: norm(item.uid),
+
+        verifiedSchoolId: norm(item.verifiedSchoolId),
+        verifiedSchoolName: norm(item.verifiedSchoolName),
+        verifyMethod: norm(item.verifyMethod),
+
+        status: item.status === "valid" ? "valid" : "invalid",
+        message: norm(item.message)
+      }));
+    }
+
+    function buildParticipantEmails(){
+      const emails = holderState
+        .map(item => lower(item.email))
+        .filter(Boolean);
+
+      return [...new Set(emails)];
+    }
+
+    function buildSharedOrderRefs(){
+      const refs = holderState
+        .map(item => norm(item.uid))
+        .filter(Boolean)
+        .map(uid => ({
+          uid,
+          eventId,
+          orderId
+        }));
+
+      const seen = new Set();
+      return refs.filter(ref => {
+        const key = `${ref.uid}__${ref.eventId}__${ref.orderId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function buildTicketId(order, assignment){
+      const holderKey = assignment.uid || lower(assignment.email) || `holder_${assignment.holderIndex}`;
+      return `${order.id}_${assignment.holderIndex}_${holderKey}`.replace(/[^\w\-@.]/g, "_");
+    }
+
+    async function createTicketsForOrder(order, assignments){
+      const tasks = assignments.map(async assignment => {
+        const ticketId = buildTicketId(order, assignment);
+        const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
+        const ticketSnap = await getDoc(ticketRef);
+
+        if (ticketSnap.exists()) return;
+
+        await setDoc(ticketRef, {
+          eventId,
+          eventTitle: norm(order.eventTitle || ""),
+          orderId: order.id,
+
+          uid: norm(assignment.uid),
+          email: lower(assignment.email),
+          holderEmail: lower(assignment.email),
+          holderName: norm(assignment.name),
+
+          ticketTypeId: norm(assignment.ticketTypeId),
+          ticketTypeName: norm(assignment.ticketTypeName),
+          ticketPrice: Number(assignment.price || 0),
+
+          seatLabel: "",
+          sectionId: "",
+          qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
+
+          status: "valid",
+          checkedIn: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+
+      await Promise.all(tasks);
+    }
+
+    async function saveAssignments(asFinalSubmit = false){
+      if (!currentOrder?.ref) return;
+
+      if (isOrderLocked(currentOrder)) {
+        alert("此訂單目前不可修改。");
+        return;
+      }
+
+      const assignments = buildAssignmentsPayload();
+      const participantEmails = buildParticipantEmails();
+      const sharedOrderRefs = buildSharedOrderRefs();
+      const ready = allHoldersReady();
+
+      if (asFinalSubmit && !ready) {
+        alert("尚有持票人資料未完成或未通過驗證。");
+        return;
+      }
+
+      const payload = {
+        holderAssignments: assignments,
+        participantEmails,
+        sharedOrderRefs,
+        updatedAt: serverTimestamp()
+      };
+
+      if (asFinalSubmit) {
+        payload.status = "ready_for_checkout";
+        payload.holderInfoCompletedAt = serverTimestamp();
+      }
+
+      await updateDoc(currentOrder.ref, payload);
+
+      if (asFinalSubmit) {
+        await createTicketsForOrder(currentOrder, assignments);
+      }
+
+      currentOrder = await getOrder();
+      holderState = flattenItems(currentOrder);
+      renderPage();
+
+      alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
+    }
+
+    function renderHolderCard(item){
+      const meta = holderStatusMeta(item);
+      const locked = isOrderLocked(currentOrder);
+
+      return `
+        <div class="holder-card">
+          <div class="holder-head">
+            <div>
+              <h3 class="holder-title">第 ${item.holderIndex + 1} 張票</h3>
+              <div class="holder-sub">
+                票種：${esc(item.ticketTypeName)}<br>
+                票價：${esc(formatPrice(item.price))}
+              </div>
+            </div>
+
+            <span class="status ${meta.className}">${esc(meta.text)}</span>
+          </div>
+
+          <div class="holder-body">
+            <div class="grid">
+              <div class="field full">
+                <label class="label" for="email_${item.holderIndex}">持票人 Email</label>
+                <input
+                  id="email_${item.holderIndex}"
+                  class="input"
+                  type="email"
+                  value="${esc(item.email)}"
+                  placeholder="請輸入持票人會員 Email"
+                  ${locked ? "disabled" : ""}
+                />
+                <div class="hint">此 Email 必須已註冊會員帳號，且已完成校園驗證。</div>
+              </div>
+
+              <div class="field full">
+                <label class="label" for="name_${item.holderIndex}">持票人姓名</label>
+                <input
+                  id="name_${item.holderIndex}"
+                  class="input"
+                  type="text"
+                  value="${esc(item.name)}"
+                  placeholder="請輸入持票人姓名"
+                  ${locked ? "disabled" : ""}
+                />
+              </div>
+            </div>
+
+            <div class="check-row">
+              <div class="check-line">
+                <span class="check-label">會員 UID</span>
+                <span class="check-value mono">${esc(item.uid || "-")}</span>
+              </div>
+              <div class="check-line">
+                <span class="check-label">驗證學校</span>
+                <span class="check-value">${esc(item.verifiedSchoolName || item.verifiedSchoolId || "-")}</span>
+              </div>
+              <div class="check-line">
+                <span class="check-label">驗證方式</span>
+                <span class="check-value">${esc(item.verifyMethod || "-")}</span>
+              </div>
+            </div>
+
+            <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
+              ${esc(item.message || "尚未檢查。")}
+            </div>
+
+            ${
+              locked
+                ? ""
+                : `
+                  <div class="action-stack">
+                    <button class="btn" data-check-holder="${item.holderIndex}">
+                      驗證這位持票人
+                    </button>
+                  </div>
+                `
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPage(){
+      if (!currentOrder) {
+        app.className = "empty";
+        app.innerHTML = "找不到訂單。";
+        return;
+      }
+
+      const expired = isOrderExpired(currentOrder);
+      const locked = isOrderLocked(currentOrder);
+      const ready = allHoldersReady();
+      const totalQty = holderState.length;
+      const checkedQty = holderState.filter(item => item.status === "valid").length;
+
+      backLink.href = `my-orders.html`;
+
+      app.className = "";
+      app.innerHTML = `
+        <section class="hero">
+          <h1 class="hero-title">填寫持票人資料</h1>
+          <div class="hero-sub">
+活動：${esc(currentOrder.eventTitle || "未命名活動")}
+主購者：${esc(currentUser?.email || "-")}
+${expired ? "此訂單已超過填寫期限。" : ""}
+          </div>
+          <div class="hero-meta">
+            <span class="pill">訂單 ID：${esc(currentOrder.id || "-")}</span>
+            <span class="pill">訂單狀態：${esc(currentOrder.status || "-")}</span>
+            <span class="pill">截止時間：${esc(formatDateTime(currentOrder.expiresAt))}</span>
+            <span class="pill">完成進度：${esc(`${checkedQty} / ${totalQty}`)}</span>
+          </div>
+        </section>
+
+        <div class="layout">
+          <section class="main-card">
+            <h2 class="section-title">持票人名單</h2>
+            <div class="section-sub">
+              請為每一張票填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。
+            </div>
+
+            <div class="holder-list">
+              ${holderState.map(item => renderHolderCard(item)).join("")}
+            </div>
+          </section>
+
+          <aside class="side-card">
+            <h2 class="section-title">訂單摘要</h2>
+            <div class="section-sub">
+              完成全部資料檢查後，這筆訂單才會正式成立並建立票券。
+            </div>
+
+            <div class="summary">
+              <div class="summary-row">
+                <span>活動</span>
+                <strong>${esc(currentOrder.eventTitle || "-")}</strong>
+              </div>
+              <div class="summary-row">
+                <span>訂單狀態</span>
+                <strong>${esc(currentOrder.status || "-")}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總張數</span>
+                <strong>${esc(totalQty)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>已通過</span>
+                <strong>${esc(checkedQty)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總金額</span>
+                <strong>${esc(formatPrice(currentOrder.totalAmount || 0))}</strong>
+              </div>
+            </div>
+
+            <div class="notice ${expired ? "warn" : ready ? "ok" : "info"}">
+              ${
+                expired
+                  ? "這筆訂單已超過填寫期限，不能再修改。"
+                  : ready
+                  ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
+                  : "請先完成所有持票人資料填寫與資格檢查。"
+              }
+            </div>
+
+            <div class="action-stack">
+              <button class="btn" id="checkAllBtn" ${locked ? "disabled" : ""}>檢查全部持票人</button>
+              <button class="btn" id="saveBtn" ${locked ? "disabled" : ""}>先儲存目前資料</button>
+              <button class="btn btn-primary" id="submitBtn" ${(locked || !ready) ? "disabled" : ""}>完成填寫並送出</button>
+            </div>
+          </aside>
+        </div>
+      `;
+
+      holderState.forEach(item => {
+        const emailEl = document.getElementById(`email_${item.holderIndex}`);
+        const nameEl = document.getElementById(`name_${item.holderIndex}`);
+
+        if (emailEl) {
+          emailEl.addEventListener("input", e => {
+            holderState[item.holderIndex].email = lower(e.target.value);
+            holderState[item.holderIndex].status = "";
+            holderState[item.holderIndex].message = "尚未檢查。";
+            holderState[item.holderIndex].uid = "";
+            holderState[item.holderIndex].verifiedSchoolId = "";
+            holderState[item.holderIndex].verifiedSchoolName = "";
+            holderState[item.holderIndex].verifyMethod = "";
+            renderPage();
+          });
+        }
+
+        if (nameEl) {
+          nameEl.addEventListener("input", e => {
+            holderState[item.holderIndex].name = norm(e.target.value);
+          });
+        }
+      });
+
+      document.querySelectorAll("[data-check-holder]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const index = Number(btn.dataset.checkHolder);
+          await validateOneHolder(index);
+        });
+      });
+
+      const checkAllBtn = document.getElementById("checkAllBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const submitBtn = document.getElementById("submitBtn");
+
+      if (checkAllBtn) {
+        checkAllBtn.addEventListener("click", async () => {
+          checkAllBtn.disabled = true;
+          const old = checkAllBtn.textContent;
+          checkAllBtn.textContent = "檢查中…";
+          try {
+            await validateAllHolders();
+          } finally {
+            checkAllBtn.disabled = false;
+            checkAllBtn.textContent = old;
+          }
+        });
+      }
+
+      if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+          saveBtn.disabled = true;
+          const old = saveBtn.textContent;
+          saveBtn.textContent = "儲存中…";
+          try {
+            await saveAssignments(false);
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = old;
+          }
+        });
+      }
+
+      if (submitBtn) {
+        submitBtn.addEventListener("click", async () => {
+          submitBtn.disabled = true;
+          const old = submitBtn.textContent;
+          submitBtn.textContent = "送出中…";
+          try {
+            await saveAssignments(true);
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = old;
+          }
+        });
+      }
+    }
+
+    async function initPage(){
+      if (!eventId || !orderId) {
+        app.className = "empty";
+        app.innerHTML = "缺少訂單資訊。";
+        return;
+      }
+
+      currentOrder = await getOrder();
+
+      if (!currentOrder) {
+        app.className = "empty";
+        app.innerHTML = "找不到訂單。";
+        return;
+      }
+
+      const buyerUid = norm(currentOrder.uid);
+      if (!currentUser || currentUser.uid !== buyerUid) {
+        app.className = "empty";
+        app.innerHTML = "只有主購者可以填寫這筆訂單的持票人資料。";
+        return;
+      }
+
+      holderState = flattenItems(currentOrder);
+      renderPage();
+    }
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user || null;
+      updateAccountLinks(currentUser);
+
+      if (!user) {
+        goLogin();
+        return;
+      }
+
+      try {
+        await initPage();
+      } catch (err) {
+        console.error(err);
+        app.className = "empty";
+        app.innerHTML = "頁面載入失敗，請稍後再試。";
+      }
+    });
+  </script>
+</body>
+</html>

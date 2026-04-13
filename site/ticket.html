@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Event Details</title>
+  <title>Passium｜活動資訊</title>
 
   <style>
     :root{
@@ -12,11 +12,8 @@
       --text:#1d1d1f;
       --muted:#6e6e73;
       --line:rgba(0,0,0,.08);
-      --line-strong:rgba(0,0,0,.12);
       --shadow:0 16px 40px rgba(0,0,0,.06);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
-      --black:#111111;
-      --white:#ffffff;
       --green:#166534;
       --green-bg:#dcfce7;
       --orange:#c2410c;
@@ -25,10 +22,9 @@
       --red-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
-      --radius-xl:34px;
-      --radius-lg:26px;
-      --radius-md:20px;
       --max:1280px;
+      --radius-xl:34px;
+      --radius-lg:28px;
     }
 
     *{ box-sizing:border-box; }
@@ -44,11 +40,6 @@
     a{
       color:inherit;
       text-decoration:none;
-    }
-
-    img{
-      display:block;
-      max-width:100%;
     }
 
     .shell{
@@ -120,7 +111,6 @@
       display:flex;
       align-items:center;
       gap:10px;
-      flex-wrap:wrap;
     }
 
     .account-icon-btn{
@@ -133,7 +123,7 @@
       align-items:center;
       justify-content:center;
       box-shadow:var(--shadow-soft);
-      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease;
       cursor:pointer;
     }
 
@@ -152,45 +142,6 @@
       max-width:var(--max);
       margin:0 auto;
       padding:26px 22px 88px;
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:44px;
-      padding:10px 18px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      font-size:14px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 24px rgba(0,0,0,.06);
-    }
-
-    .btn:active{
-      transform:translateY(0) scale(.98);
-      box-shadow:none;
-    }
-
-    .btn-primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    .btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
-      transform:none;
-      box-shadow:none;
     }
 
     .back-row{
@@ -215,6 +166,40 @@
       color:#111;
       font-size:14px;
       font-weight:700;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
     }
 
     .hero{
@@ -244,12 +229,6 @@
       background:linear-gradient(180deg,#f2f2f4 0%, #ececef 100%);
     }
 
-    @media (max-width:980px){
-      .poster{
-        min-height:360px;
-      }
-    }
-
     .poster img{
       width:100%;
       height:100%;
@@ -269,28 +248,19 @@
       background:linear-gradient(180deg,#f3f4f6 0%, #e5e7eb 100%);
     }
 
-    @media (max-width:980px){
-      .poster-placeholder{
-        min-height:360px;
-      }
-    }
-
     .poster-badge{
       position:absolute;
       left:20px;
       top:20px;
       display:inline-flex;
       align-items:center;
-      gap:8px;
       min-height:34px;
       padding:6px 12px;
       border-radius:999px;
       background:rgba(255,255,255,.92);
       border:1px solid rgba(0,0,0,.06);
-      color:#111;
       font-size:12px;
       font-weight:800;
-      backdrop-filter:blur(12px);
       box-shadow:var(--shadow-soft);
     }
 
@@ -352,7 +322,7 @@
       border:1px solid var(--line);
       border-radius:22px;
       background:#fbfbfc;
-      padding:16px 16px;
+      padding:16px;
     }
 
     .meta-label{
@@ -366,7 +336,6 @@
       font-size:15px;
       line-height:1.75;
       font-weight:700;
-      color:#111;
       white-space:pre-wrap;
       word-break:break-word;
     }
@@ -382,31 +351,26 @@
       font-weight:800;
       width:max-content;
       margin-top:18px;
-      border:1px solid transparent;
     }
 
     .status-chip.selling{
       background:var(--green-bg);
       color:var(--green);
-      border-color:rgba(22,101,52,.08);
     }
 
     .status-chip.upcoming{
       background:var(--orange-bg);
       color:var(--orange);
-      border-color:rgba(194,65,12,.08);
     }
 
     .status-chip.ended{
       background:var(--red-bg);
       color:var(--red);
-      border-color:rgba(185,28,28,.08);
     }
 
     .status-chip.hidden{
       background:#f3f4f6;
       color:#4b5563;
-      border-color:rgba(0,0,0,.05);
     }
 
     .info-note{
@@ -445,26 +409,13 @@
       white-space:pre-wrap;
     }
 
-    .cta-wrap{
-      margin-top:22px;
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 360px;
-      gap:22px;
-      align-items:start;
-    }
-
-    @media (max-width:980px){
-      .cta-wrap{
-        grid-template-columns:1fr;
-      }
-    }
-
     .content-card{
       background:#fff;
       border:1px solid rgba(0,0,0,.06);
       border-radius:30px;
       box-shadow:var(--shadow-soft);
       padding:26px 24px;
+      margin-top:20px;
     }
 
     .content-text{
@@ -475,57 +426,28 @@
       word-break:break-word;
     }
 
-    .buy-card{
+    .cta-card{
+      margin-top:20px;
       background:#fff;
       border:1px solid rgba(0,0,0,.06);
       border-radius:30px;
       box-shadow:var(--shadow);
       padding:22px 20px;
-      position:sticky;
-      top:82px;
     }
 
-    @media (max-width:980px){
-      .buy-card{
-        position:static;
-      }
-    }
-
-    .buy-title{
+    .cta-title{
       margin:0;
       font-size:22px;
       font-weight:800;
       letter-spacing:-.03em;
     }
 
-    .buy-sub{
+    .cta-sub{
       margin-top:8px;
       color:var(--muted);
       font-size:14px;
       line-height:1.85;
       white-space:pre-wrap;
-    }
-
-    .summary{
-      margin-top:18px;
-      border-top:1px solid rgba(0,0,0,.08);
-      padding-top:16px;
-      display:grid;
-      gap:10px;
-    }
-
-    .summary-row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      font-size:14px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .summary-row strong{
-      color:#111;
-      text-align:right;
     }
 
     .notice{
@@ -534,7 +456,6 @@
       padding:14px;
       background:#fafafa;
       border:1px solid rgba(0,0,0,.06);
-      color:var(--muted);
       font-size:13px;
       line-height:1.9;
       white-space:pre-wrap;
@@ -567,14 +488,8 @@
       padding-top:26px;
       border-top:1px solid rgba(0,0,0,.07);
       display:grid;
-      grid-template-columns:repeat(4, minmax(0,1fr));
+      grid-template-columns:repeat(2, minmax(0,1fr));
       gap:20px;
-    }
-
-    @media (max-width:900px){
-      .footer{
-        grid-template-columns:repeat(2, minmax(0,1fr));
-      }
     }
 
     @media (max-width:560px){
@@ -627,6 +542,11 @@
       .hero-info{
         padding:22px 20px 24px;
       }
+
+      .poster,
+      .poster-placeholder{
+        min-height:360px;
+      }
     }
   </style>
 </head>
@@ -671,25 +591,12 @@
         <div>
           <div class="footer-title">Account</div>
           <a class="footer-link" href="member.html">會員中心</a>
-          <a class="footer-link" href="my-tickets.html">我的票券</a>
-          <a class="footer-link" href="my-orders.html">我的訂單</a>
-        </div>
-
-        <div>
-          <div class="footer-title">Support</div>
-          <a class="footer-link" href="member.html">基本資料</a>
-          <a class="footer-link" href="campus-verify.html">校園驗證</a>
-        </div>
-
-        <div>
-          <div class="footer-title">About</div>
-          <a class="footer-link" href="index.html">Passium</a>
-          <a class="footer-link" href="dashboard.html">管理後台</a>
+          <a class="footer-link" href="login.html">登入</a>
         </div>
       </footer>
 
       <div class="bottom-note">
-        票種、資格限制、入場方式與座位圖是否啟用，皆依各活動設定為準。
+        本頁僅提供活動資訊瀏覽；購票將於下一步進行。
       </div>
     </main>
   </div>
@@ -697,11 +604,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -740,7 +643,7 @@
 
     function toDate(input){
       if (!input) return null;
-      if (typeof input.toDate === "function") return input.toDate();
+      if (typeof input?.toDate === "function") return input.toDate();
       const d = new Date(input);
       return isNaN(d.getTime()) ? null : d;
     }
@@ -813,27 +716,7 @@
 
     function getTicketTypes(event){
       const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
-      if (raw.length) {
-        return raw
-          .map((item, index) => ({
-            id: norm(item.id || `ticket_${index + 1}`),
-            name: norm(item.name || `票種 ${index + 1}`),
-            price: Number(item.price || 0),
-            description: norm(item.description || ""),
-            enabled: item.enabled !== false,
-            maxPerUser: Number(item.maxPerUser || 0)
-          }))
-          .filter(item => item.enabled !== false);
-      }
-
-      return [{
-        id:"general",
-        name:"一般報名",
-        price:0,
-        description:"此活動目前未細分票種，將以一般報名方式繼續。",
-        enabled:true,
-        maxPerUser:0
-      }];
+      return raw.filter(item => item?.enabled !== false);
     }
 
     async function getEventById(id){
@@ -841,29 +724,15 @@
       return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
     }
 
-    function canProceedToPurchase(event){
-      return getEventStatus(event).key === "selling";
-    }
-
-    function buildNextPurchaseUrl(event){
-      const types = getTicketTypes(event);
-      const firstType = types[0] || { id:"general" };
-      const quantity = 1;
-      const seatMapEnabled = event.seatMapEnabled === true;
-
-      const url = new URL(
-        seatMapEnabled ? "seat-picker.html" : "register.html",
-        location.href
-      );
-      url.searchParams.set("id", event.id);
-      url.searchParams.set("ticketTypeId", firstType.id || "general");
-      url.searchParams.set("quantity", String(quantity));
+    function buildBuyUrl(){
+      const url = new URL("buy.html", location.href);
+      url.searchParams.set("id", currentEvent.id);
       return url.pathname + url.search;
     }
 
-    function buildLoginRedirectUrl(){
+    function buildLoginRedirectUrl(targetPath){
       const loginUrl = new URL("login.html", location.href);
-      loginUrl.searchParams.set("redirect", location.pathname + location.search);
+      loginUrl.searchParams.set("redirect", targetPath);
       return loginUrl.pathname + loginUrl.search;
     }
 
@@ -873,7 +742,7 @@
         accountBtn.title = user.email || "會員中心";
         accountBtn.setAttribute("aria-label", "會員中心");
       } else {
-        accountBtn.href = buildLoginRedirectUrl();
+        accountBtn.href = "login.html";
         accountBtn.title = "登入 / 會員中心";
         accountBtn.setAttribute("aria-label", "登入 / 會員中心");
       }
@@ -885,13 +754,12 @@
       const desc = getEventDescription(currentEvent) || "探索活動資訊與入場方式。";
       const detailText = getEventDetailText(currentEvent);
       const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
-      const canBuy = canProceedToPurchase(currentEvent);
-      const seatMapEnabled = currentEvent.seatMapEnabled === true;
       const eventStartText = formatDateTime(currentEvent.eventStartAt);
       const eventEndText = formatDateTime(currentEvent.eventEndAt);
       const saleStartText = formatDateTime(currentEvent.saleStartAt);
       const saleEndText = formatDateTime(currentEvent.saleEndAt);
       const ticketTypes = getTicketTypes(currentEvent);
+      const canBuy = status.key === "selling";
 
       app.className = "";
       app.innerHTML = `
@@ -932,7 +800,7 @@
 
               <div class="meta-card">
                 <div class="meta-label">票種數量</div>
-                <div class="meta-value">${esc(String(ticketTypes.length))} 種</div>
+                <div class="meta-value">${esc(String(ticketTypes.length || 0))} 種</div>
               </div>
             </div>
 
@@ -940,7 +808,7 @@
               ${
                 currentUser
                   ? `目前登入：${esc(currentUser.email || currentUser.uid)}`
-                  : `查看活動資訊不需要登入；只有在你按下購買時，系統才會要求先登入。`
+                  : `查看活動資訊不需要登入；只有在你按下「立即購買」時，系統才會要求登入。`
               }
             </div>
 
@@ -952,138 +820,46 @@
             <div class="notice ${canBuy ? "info" : "warn"}">
               ${
                 canBuy
-                  ? "目前活動正在受理中。按下「立即購買」後，才會進入下一步購票流程。"
-                  : "目前尚未開放購票或已截止，暫時無法進入購買流程。"
-              }
-              \n${
-                seatMapEnabled
-                  ? "此活動有啟用座位圖，下一步會進入選位頁面。"
-                  : "此活動未啟用座位圖，下一步會進入一般購買 / 報名流程。"
+                  ? "本頁只顯示活動資訊。按下「立即購買」後，會進入下一步選票頁面。"
+                  : "目前尚未開放購票或已截止，因此暫時不能進入選票頁。"
               }
             </div>
           </div>
         </section>
 
-        ${
-          detailText
-            ? `
-              <section class="section">
-                <h2 class="section-title">About this event.</h2>
-                <div class="section-sub">更完整的活動介紹與說明。</div>
+        <section class="section">
+          <h2 class="section-title">About this event.</h2>
+          <div class="section-sub">更完整的活動介紹與說明。</div>
 
-                <div class="cta-wrap">
-                  <div class="content-card">
-                    <div class="content-text">${esc(detailText)}</div>
-                  </div>
+          <div class="content-card">
+            <div class="content-text">${esc(detailText || "目前主辦單位尚未提供更完整的活動說明。")}</div>
+          </div>
 
-                  <aside class="buy-card">
-                    <h3 class="buy-title">購買說明</h3>
-                    <div class="buy-sub">
-                      這一頁只提供活動資訊瀏覽。
-                      按下下方按鈕後，才會進入購票下一步。
-                    </div>
-
-                    <div class="summary">
-                      <div class="summary-row">
-                        <span>活動</span>
-                        <strong>${esc(currentEvent.title || "-")}</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>狀態</span>
-                        <strong>${esc(status.text)}</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>票種</span>
-                        <strong>${esc(String(ticketTypes.length))} 種</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>購買方式</span>
-                        <strong>${seatMapEnabled ? "選位購票" : "一般購票"}</strong>
-                      </div>
-                    </div>
-
-                    <div class="notice ${canBuy ? "info" : "warn"}">
-                      ${
-                        currentUser
-                          ? "你目前已登入，按下按鈕即可前往下一步。"
-                          : "你目前尚未登入；按下按鈕後會先前往登入頁。"
-                      }
-                    </div>
-
-                    <div style="margin-top:18px;display:grid;gap:10px;">
-                      <button class="btn btn-primary" id="buyNowBtnBottom" ${canBuy ? "" : "disabled"}>立即購買</button>
-                    </div>
-                  </aside>
-                </div>
-              </section>
-            `
-            : `
-              <section class="section">
-                <div class="cta-wrap">
-                  <div class="content-card">
-                    <div class="content-text">目前主辦單位尚未提供更完整的活動說明。</div>
-                  </div>
-
-                  <aside class="buy-card">
-                    <h3 class="buy-title">購買說明</h3>
-                    <div class="buy-sub">
-                      這一頁只提供活動資訊瀏覽。
-                      按下下方按鈕後，才會進入購票下一步。
-                    </div>
-
-                    <div class="summary">
-                      <div class="summary-row">
-                        <span>活動</span>
-                        <strong>${esc(currentEvent.title || "-")}</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>狀態</span>
-                        <strong>${esc(status.text)}</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>票種</span>
-                        <strong>${esc(String(ticketTypes.length))} 種</strong>
-                      </div>
-                      <div class="summary-row">
-                        <span>購買方式</span>
-                        <strong>${seatMapEnabled ? "選位購票" : "一般購票"}</strong>
-                      </div>
-                    </div>
-
-                    <div class="notice ${canBuy ? "info" : "warn"}">
-                      ${
-                        currentUser
-                          ? "你目前已登入，按下按鈕即可前往下一步。"
-                          : "你目前尚未登入；按下按鈕後會先前往登入頁。"
-                      }
-                    </div>
-
-                    <div style="margin-top:18px;display:grid;gap:10px;">
-                      <button class="btn btn-primary" id="buyNowBtnBottom" ${canBuy ? "" : "disabled"}>立即購買</button>
-                    </div>
-                  </aside>
-                </div>
-              </section>
-            `
-        }
+          <div class="cta-card">
+            <h3 class="cta-title">購買說明</h3>
+            <div class="cta-sub">
+              這一頁不會直接顯示購票欄位。
+              按下「立即購買」後，才會進入下一頁選擇票數並建立暫時訂單。
+            </div>
+          </div>
+        </section>
       `;
 
-      const goPurchase = () => {
-        if (!canBuy) return;
-
-        if (!currentUser) {
-          location.href = buildLoginRedirectUrl();
-          return;
-        }
-
-        location.href = buildNextPurchaseUrl(currentEvent);
-      };
-
       const buyNowBtn = document.getElementById("buyNowBtn");
-      const buyNowBtnBottom = document.getElementById("buyNowBtnBottom");
+      if (buyNowBtn) {
+        buyNowBtn.onclick = () => {
+          if (!canBuy) return;
 
-      if (buyNowBtn) buyNowBtn.onclick = goPurchase;
-      if (buyNowBtnBottom) buyNowBtnBottom.onclick = goPurchase;
+          const buyUrl = buildBuyUrl();
+
+          if (!currentUser) {
+            location.href = buildLoginRedirectUrl(buyUrl);
+            return;
+          }
+
+          location.href = buyUrl;
+        };
+      }
     }
 
     async function initPage(){
