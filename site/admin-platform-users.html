@@ -77,7 +77,9 @@
     .warn{ color:#b91c1c; font-weight:900; }
     .ok{ color:#166534; font-weight:900; }
 
-    input[type="text"], select{
+    input[type="text"],
+    input[type="date"],
+    select{
       width:100%;
       padding:12px;
       border-radius:14px;
@@ -144,6 +146,27 @@
       justify-content:flex-end;
     }
 
+    .edit-box{
+      display:none;
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px dashed var(--line);
+    }
+    .edit-box.show{
+      display:block;
+    }
+    .edit-grid{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:720px){
+      .edit-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
     details{
       margin-top:10px;
       border-top:1px dashed var(--line);
@@ -165,7 +188,6 @@
       line-height:1.6;
     }
 
-    /* 淡入轉場（跟你 dashboard 一致，不做花的） */
     .page{
       opacity:0;
       transform: translateY(6px);
@@ -186,7 +208,7 @@
           <div>
             <h1>平台帳號管理</h1>
             <div class="sub">
-              查看平台所有會員/成員：學校/不屬於學校、uid、姓名、帳號、註冊時間、驗證資訊等。<br/>
+              查看平台所有會員/成員：學校/不屬於學校、uid、姓名、性別、生日、帳號、註冊時間、驗證資訊等。<br/>
               登入：<span id="meEmail" class="mono">-</span>｜角色：<span id="meRole" class="mono">-</span>
             </div>
           </div>
@@ -213,7 +235,7 @@
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 220px; gap:10px; margin-top:12px;">
-          <input id="searchBox" type="text" placeholder="搜尋：email / uid / 姓名 / orgId / schoolId / verifyKey" />
+          <input id="searchBox" type="text" placeholder="搜尋：email / uid / 姓名 / 性別 / 生日 / orgId / schoolId / verifyKey" />
           <select id="schoolFilter">
             <option value="">全部（含未歸屬學校）</option>
             <option value="__NONE__">只看：未歸屬學校</option>
@@ -233,13 +255,11 @@
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    // ===== Firebase init（沿用你專案）=====
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
       authDomain: "concert-1ff7e.firebaseapp.com",
@@ -248,10 +268,12 @@
       messagingSenderId: "704757384914",
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
-    firebase.initializeApp(firebaseConfig);
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
-    // ===== page transition（淡入/淡出）=====
     const pageRoot = document.getElementById("pageRoot");
     requestAnimationFrame(() => pageRoot.classList.add("on"));
     function go(href){
@@ -267,7 +289,6 @@
       go(href);
     });
 
-    // ===== DOM =====
     const gate = document.getElementById("gate");
     const app  = document.getElementById("app");
     const meEmail = document.getElementById("meEmail");
@@ -285,21 +306,52 @@
     const list      = document.getElementById("list");
     const empty     = document.getElementById("empty");
 
-    // ===== helpers =====
+    const CANDIDATE_COLLECTIONS = [
+      "members",
+      "platformUsers",
+      "users_public",
+      "users"
+    ];
+
+    let ACTIVE_COL = "";
+    let RAW = [];
+    let VIEW = [];
+
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
       }[m]));
     }
-    function norm(s){ return String(s ?? "").trim(); }
+
+    function norm(s){
+      return String(s ?? "").trim();
+    }
+
     function tsToText(ts){
       try{
         const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
         if (!d) return "-";
         const pad = n => String(n).padStart(2,"0");
         return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      }catch{ return "-"; }
+      }catch{
+        return "-";
+      }
     }
+
+    function normalizeBirthday(v){
+      const s = norm(v);
+      if (!s) return "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return s;
+
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
     async function copyText(txt){
       try{
         await navigator.clipboard.writeText(String(txt||""));
@@ -335,8 +387,12 @@
     }
 
     async function doLogout(){
-      try{ await firebase.auth().signOut(); }
-      catch(e){ console.error(e); alert("登出失敗（請看 Console）"); }
+      try{
+        await firebase.auth().signOut();
+      }catch(e){
+        console.error(e);
+        alert("登出失敗（請看 Console）");
+      }
     }
     logoutBtn.onclick = doLogout;
 
@@ -349,21 +405,7 @@
       return { ok:true, role, userData:u };
     }
 
-    // ====== collection auto detect ======
-    const CANDIDATE_COLLECTIONS = [
-      "members",
-      "platformUsers",
-      "users_public",
-      "users" // 最後才用（避免把後台帳號混進來）
-    ];
-
-    let ACTIVE_COL = "";
-    let RAW = []; // all loaded
-    let VIEW = []; // filtered
-
     async function tryCollection(colName){
-      // 只要能成功讀到（就算 0 筆）也算可用
-      // 但這裡用 limit(1) 先探測是否允許讀取
       const ref = db.collection(colName).limit(1);
       await ref.get();
       return true;
@@ -374,9 +416,7 @@
         try{
           await tryCollection(c);
           return c;
-        }catch(e){
-          // ignore and try next
-        }
+        }catch(e){}
       }
       throw new Error("找不到可讀取的會員集合（Rules 不允許或集合不存在）");
     }
@@ -394,6 +434,8 @@
         uid: doc.id,
         email: pick(d, ["email","accountEmail","mail"]),
         name:  pick(d, ["name","displayName","studentName","fullName"]),
+        gender: pick(d, ["gender","sex"]),
+        birthday: normalizeBirthday(pick(d, ["birthday","birthdate","birthDate"])),
         orgId: pick(d, ["orgId","organizationId","org"]),
         schoolId: pick(d, ["schoolId","school","campusId"]),
         verifyKey: pick(d, ["verifyKey","verify_code","verificationKey"]),
@@ -418,17 +460,13 @@
         }
         sourceCol.textContent = ACTIVE_COL;
 
-        // 先拉 300 筆（之後你要分頁我再幫你加）
-        // 如果 collection 很大，這裡會需要分頁（你之後跟我說）
         const snap = await db.collection(ACTIVE_COL).orderBy("createdAt","desc").limit(300).get().catch(async () => {
-          // 如果沒有 createdAt index/欄位，改成不排序
           return await db.collection(ACTIVE_COL).limit(300).get();
         });
 
         RAW = [];
         snap.forEach(doc => RAW.push(normalizeMember(doc)));
 
-        // 建立 schoolId 下拉選單（動態補齊）
         const schools = Array.from(new Set(RAW.map(x => norm(x.schoolId)).filter(Boolean))).sort();
         const current = schoolFilter.value;
         schoolFilter.innerHTML = `
@@ -436,7 +474,9 @@
           <option value="__NONE__">只看：未歸屬學校</option>
           ${schools.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}
         `;
-        if (schools.includes(current) || current === "" || current === "__NONE__") schoolFilter.value = current;
+        if (schools.includes(current) || current === "" || current === "__NONE__") {
+          schoolFilter.value = current;
+        }
 
         applyFilter();
         hint.innerHTML = `已載入 <span class="mono">${RAW.length}</span> 筆（最多 300）。`;
@@ -458,7 +498,7 @@
       if (!q) return true;
       const t = q.toLowerCase();
       const hay = [
-        m.uid, m.email, m.name, m.orgId, m.schoolId, m.verifyKey
+        m.uid, m.email, m.name, m.gender, m.birthday, m.orgId, m.schoolId, m.verifyKey
       ].map(x => String(x || "").toLowerCase()).join(" | ");
       return hay.includes(t);
     }
@@ -469,15 +509,67 @@
 
       VIEW = RAW.filter(m => {
         if (!matches(m, q)) return false;
-
         if (sf === "__NONE__") return !norm(m.schoolId);
         if (sf) return norm(m.schoolId) === sf;
-
         return true;
       });
 
       countTag.textContent = String(VIEW.length);
       render();
+    }
+
+    function toggleEdit(uid){
+      const el = document.getElementById(`edit-${uid}`);
+      if (!el) return;
+      el.classList.toggle("show");
+    }
+
+    async function saveProfile(uid){
+      const nameEl = document.getElementById(`edit-name-${uid}`);
+      const genderEl = document.getElementById(`edit-gender-${uid}`);
+      const birthdayEl = document.getElementById(`edit-birthday-${uid}`);
+      const saveBtn = document.getElementById(`save-${uid}`);
+
+      if (!nameEl || !genderEl || !birthdayEl || !saveBtn) return;
+
+      const nextName = norm(nameEl.value);
+      const nextGender = norm(genderEl.value);
+      const nextBirthday = normalizeBirthday(birthdayEl.value);
+
+      saveBtn.disabled = true;
+      const oldText = saveBtn.textContent;
+      saveBtn.textContent = "儲存中…";
+
+      try{
+        await db.collection(ACTIVE_COL).doc(uid).set({
+          name: nextName,
+          gender: nextGender,
+          birthday: nextBirthday,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true });
+
+        const target = RAW.find(item => item.uid === uid);
+        if (target) {
+          target.name = nextName;
+          target.gender = nextGender;
+          target.birthday = nextBirthday;
+          target.raw = {
+            ...(target.raw || {}),
+            name: nextName,
+            gender: nextGender,
+            birthday: nextBirthday
+          };
+        }
+
+        applyFilter();
+        alert("已儲存");
+      }catch(e){
+        console.error(e);
+        alert("儲存失敗：" + (e.message || e));
+      }finally{
+        saveBtn.disabled = false;
+        saveBtn.textContent = oldText;
+      }
     }
 
     function render(){
@@ -504,6 +596,14 @@
 
           <div class="kvs">
             <div class="kv">
+              <div class="k">基本資料</div>
+              <div class="v">
+                姓名：${esc(m.name || "(未填)")}<br/>
+                性別：${esc(m.gender || "(未填)")}<br/>
+                生日：${esc(m.birthday || "(未填)")}
+              </div>
+            </div>
+            <div class="kv">
               <div class="k">歸屬</div>
               <div class="v">
                 schoolId：<span class="mono">${esc(m.schoolId || "(無)")}</span><br/>
@@ -517,12 +617,48 @@
                 verified：<span class="mono">${m.verified ? "true" : "false"}</span>
               </div>
             </div>
+            <div class="kv">
+              <div class="k">帳號</div>
+              <div class="v">
+                uid：<span class="mono">${esc(m.uid)}</span><br/>
+                email：<span class="mono">${esc(m.email || "-")}</span>
+              </div>
+            </div>
           </div>
 
           <div class="actions">
             <button class="btn btn-sm" data-copy="uid">複製 UID</button>
             <button class="btn btn-sm" data-copy="email">複製 Email</button>
             <button class="btn btn-sm" data-copy="verifyKey">複製 verifyKey</button>
+            <button class="btn btn-sm" data-edit="1">編輯資料</button>
+          </div>
+
+          <div class="edit-box" id="edit-${esc(m.uid)}">
+            <div class="sub">可修改姓名、性別、生日</div>
+            <div class="edit-grid">
+              <div>
+                <div class="sub" style="margin-bottom:6px;">姓名</div>
+                <input type="text" id="edit-name-${esc(m.uid)}" value="${esc(m.name || "")}" placeholder="請輸入姓名" />
+              </div>
+              <div>
+                <div class="sub" style="margin-bottom:6px;">性別</div>
+                <select id="edit-gender-${esc(m.uid)}">
+                  <option value="" ${!norm(m.gender) ? "selected" : ""}>未填</option>
+                  <option value="男" ${norm(m.gender)==="男" ? "selected" : ""}>男</option>
+                  <option value="女" ${norm(m.gender)==="女" ? "selected" : ""}>女</option>
+                  <option value="其他" ${norm(m.gender)==="其他" ? "selected" : ""}>其他</option>
+                </select>
+              </div>
+              <div>
+                <div class="sub" style="margin-bottom:6px;">生日</div>
+                <input type="date" id="edit-birthday-${esc(m.uid)}" value="${esc(m.birthday || "")}" />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-sm" data-cancel="1">取消</button>
+              <button class="btn btn-sm" id="save-${esc(m.uid)}" data-save="1">儲存變更</button>
+            </div>
           </div>
 
           <details>
@@ -540,6 +676,21 @@
           });
         });
 
+        const editBtn = item.querySelector('[data-edit]');
+        if (editBtn) {
+          editBtn.addEventListener("click", () => toggleEdit(m.uid));
+        }
+
+        const cancelBtn = item.querySelector('[data-cancel]');
+        if (cancelBtn) {
+          cancelBtn.addEventListener("click", () => toggleEdit(m.uid));
+        }
+
+        const saveBtn = item.querySelector('[data-save]');
+        if (saveBtn) {
+          saveBtn.addEventListener("click", () => saveProfile(m.uid));
+        }
+
         list.appendChild(item);
       });
     }
@@ -551,6 +702,8 @@
         uid: m.uid || "",
         email: m.email || "",
         name: m.name || "",
+        gender: m.gender || "",
+        birthday: m.birthday || "",
         schoolId: m.schoolId || "",
         orgId: m.orgId || "",
         verifyKey: m.verifyKey || "",
@@ -587,7 +740,6 @@
     searchBox.addEventListener("input", applyFilter);
     schoolFilter.addEventListener("change", applyFilter);
 
-    // ===== boot =====
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user){
         showGate("平台帳號管理", "請先登入管理帳號以繼續。", true);
@@ -605,7 +757,6 @@
         meEmail.textContent = user.email || "-";
         meRole.textContent = role || "-";
 
-        // 只有 platform_super / platform_admin
         if (!["platform_super","platform_admin"].includes(role)){
           showGate("權限不足", "此頁僅限平台管理員使用。", false);
           return;

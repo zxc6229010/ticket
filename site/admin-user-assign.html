@@ -12,18 +12,22 @@
       --btn-h:46px; --btn-fs:16px;
     }
     *{ box-sizing:border-box; }
-    body{ margin:0; background:var(--bg); color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
     .wrap{ max-width:960px; margin:0 auto; padding:48px 16px; }
     .section{
       background:var(--card); border:1px solid var(--line); border-radius:18px;
       box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
     }
-    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .header{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
     h1{ margin:0; font-size:22px; letter-spacing:.2px; }
     h2{ margin:0; font-size:16px; font-weight:900; }
     .sub{ margin-top:6px; color:var(--muted); line-height:1.7; font-size:14px; }
-    .small{ font-size:13px; color:var(--muted); }
+    .small{ font-size:13px; color:var(--muted); line-height:1.7; }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn{
@@ -41,23 +45,40 @@
     .btn-sm{ height:40px; padding:8px calc(var(--btn-b)*1.25); font-size:15px; }
     .btn-danger{ border-color:rgba(239,68,68,.35); color:#b91c1c; background:#fff; }
 
-    input[type="text"], select{
+    input[type="text"], input[type="date"], select{
       width:100%; padding:12px; border-radius:14px; border:1px solid var(--line);
       background:#fff; font-size:16px;
     }
     label{ font-weight:900; display:block; margin:10px 0 6px; }
     .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:720px){ .grid{ grid-template-columns:1fr; } }
+    .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    @media (max-width:720px){
+      .grid, .grid3{ grid-template-columns:1fr; }
+    }
 
     .list{ display:grid; gap:12px; margin-top:12px; }
     .item{
       border:1px solid var(--line); border-radius:18px; padding:14px; background:#fff;
       box-shadow:0 10px 26px rgba(0,0,0,.05);
     }
-    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .item-top{ display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; }
     .warn{ color:#b91c1c; font-weight:900; }
     .ok{ color:#166534; font-weight:900; }
-    .pill{ display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:13px; background:#fff; }
+    .pill{
+      display:inline-flex; border:1px solid var(--line); border-radius:999px;
+      padding:6px 10px; font-size:13px; background:#fff;
+    }
+    .notice{
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      line-height:1.7;
+      font-size:14px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
   </style>
 </head>
 <body>
@@ -79,20 +100,19 @@
         </div>
       </div>
 
-      <!-- 待審核 -->
       <div class="section">
         <h2>待審核申請</h2>
-        <div class="sub">申請會寫入 <span class="mono">accessRequests</span>，由平台超級管理員核准後寫回 <span class="mono">users/{uid}</span>。</div>
+        <div class="sub">申請會寫入 <span class="mono">accessRequests</span>，核准後寫回 <span class="mono">users/{uid}</span>。</div>
         <div class="row" style="margin-top:12px; justify-content:flex-end;">
           <button class="btn" id="reloadReqBtn">重新載入</button>
         </div>
+        <div id="reqMsg" class="notice" style="display:none;"></div>
         <div class="list" id="reqList"></div>
       </div>
 
-      <!-- 使用者查找 / 派發 -->
       <div class="section">
         <h2>使用者查找與派發</h2>
-        <div class="sub">用 email 查找對應的 users 文件（需平台端已建立/或先用申請核准建立）。</div>
+        <div class="sub">優先用 <span class="mono">email_index</span> 查 uid，再讀取 <span class="mono">users/{uid}</span>。</div>
 
         <div class="grid" style="margin-top:12px;">
           <div>
@@ -122,7 +142,11 @@
       messagingSenderId: "704757384914",
       appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
-    firebase.initializeApp(firebaseConfig);
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
     const db = firebase.firestore();
 
     const gate = document.getElementById("gate");
@@ -132,6 +156,7 @@
     const logoutBtn = document.getElementById("logoutBtn");
 
     const reqList = document.getElementById("reqList");
+    const reqMsg = document.getElementById("reqMsg");
     const reloadReqBtn = document.getElementById("reloadReqBtn");
 
     const emailQ = document.getElementById("emailQ");
@@ -147,7 +172,38 @@
       }[m]));
     }
 
-    async function doLogout(){ await firebase.auth().signOut(); }
+    function norm(s){
+      return String(s ?? "").trim();
+    }
+
+    function lower(s){
+      return norm(s).toLowerCase();
+    }
+
+    function tsToText(v){
+      try{
+        if (!v) return "-";
+        if (typeof v.toDate === "function") return v.toDate().toLocaleString("zh-Hant", { hour12:false });
+        if (v instanceof Date) return v.toLocaleString("zh-Hant", { hour12:false });
+        return String(v);
+      }catch{
+        return "-";
+      }
+    }
+
+    function showReqMsg(text, isError = false){
+      reqMsg.style.display = "block";
+      reqMsg.innerHTML = isError ? `<span class="warn">${esc(text)}</span>` : esc(text);
+    }
+
+    function hideReqMsg(){
+      reqMsg.style.display = "none";
+      reqMsg.innerHTML = "";
+    }
+
+    async function doLogout(){
+      await firebase.auth().signOut();
+    }
     logoutBtn.onclick = doLogout;
 
     function showGate(title, msg, showLogin){
@@ -183,52 +239,52 @@
       return { ok:true, role, me:u };
     }
 
-    function tsToText(v){
-      try{
-        if (!v) return "-";
-        if (typeof v.toDate === "function") return v.toDate().toLocaleString();
-        if (v instanceof Date) return v.toLocaleString();
-        return String(v);
-      }catch{ return "-"; }
-    }
-
     async function loadRequests(){
       reqList.innerHTML = `<div class="small">載入中…</div>`;
+      hideReqMsg();
 
-      const snap = await db.collection("accessRequests")
-        .where("status","==","pending")
-        .orderBy("createdAt","desc")
-        .limit(50)
-        .get();
+      try{
+        const snap = await db.collection("accessRequests")
+          .where("status","==","pending")
+          .orderBy("createdAt","desc")
+          .limit(50)
+          .get();
 
-      if (snap.empty){
-        reqList.innerHTML = `<div class="small">目前沒有待審核申請</div>`;
-        return;
-      }
+        if (snap.empty){
+          reqList.innerHTML = `<div class="small">目前沒有待審核申請</div>`;
+          return;
+        }
 
-      reqList.innerHTML = snap.docs.map(d=>{
-        const r = d.data() || {};
-        return `
-          <div class="item" id="req-${d.id}">
-            <div class="item-top">
-              <div style="min-width:0;">
-                <div style="font-weight:900;">${esc(r.email || "(no email)")}</div>
-                <div class="small" style="margin-top:4px;">
-                  申請角色：<span class="pill">${esc(r.requestedRole || "-")}</span>
-                  校園：<span class="pill">${esc(r.requestedSchoolId || "(空)")}</span>
+        reqList.innerHTML = snap.docs.map(d=>{
+          const r = d.data() || {};
+          return `
+            <div class="item" id="req-${esc(d.id)}">
+              <div class="item-top">
+                <div style="min-width:0;">
+                  <div style="font-weight:900;">${esc(r.email || "(no email)")}</div>
+                  <div class="small" style="margin-top:4px;">
+                    申請角色：<span class="pill">${esc(r.requestedRole || "-")}</span>
+                    校園：<span class="pill">${esc(r.requestedSchoolId || "(空)")}</span>
+                  </div>
+                  <div class="small" style="margin-top:6px;">姓名：${esc(r.name || "-")}</div>
+                  <div class="small">性別：${esc(r.gender || "-")}｜生日：${esc(r.birthday || "-")}</div>
+                  <div class="small" style="margin-top:6px;">備註：${esc(r.note || "-")}</div>
+                  <div class="small" style="margin-top:6px;">申請時間：${esc(tsToText(r.createdAt))}</div>
+                  <div class="small">uid：<span class="mono">${esc(r.uid || "-")}</span></div>
                 </div>
-                <div class="small" style="margin-top:6px;">備註：${esc(r.note || "-")}</div>
-                <div class="small" style="margin-top:6px;">申請時間：${esc(tsToText(r.createdAt))}</div>
-                <div class="small">uid：<span class="mono">${esc(r.uid || "-")}</span></div>
-              </div>
-              <div class="row" style="justify-content:flex-end;">
-                <button class="btn btn-sm" onclick="approveReq('${d.id}')">核准</button>
-                <button class="btn btn-sm btn-danger" onclick="rejectReq('${d.id}')">拒絕</button>
+                <div class="row" style="justify-content:flex-end;">
+                  <button class="btn btn-sm" onclick="approveReq('${esc(d.id)}')">核准</button>
+                  <button class="btn btn-sm btn-danger" onclick="rejectReq('${esc(d.id)}')">拒絕</button>
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join("");
+          `;
+        }).join("");
+      }catch(e){
+        console.error(e);
+        reqList.innerHTML = `<div class="small">目前無法讀取待審核申請</div>`;
+        showReqMsg("讀取待審核申請失敗：" + (e.message || e), true);
+      }
     }
 
     window.approveReq = async (reqId) => {
@@ -236,9 +292,13 @@
         alert("只有 platform_super 可核准");
         return;
       }
+
       const ref = db.collection("accessRequests").doc(reqId);
       const snap = await ref.get();
-      if (!snap.exists) return alert("申請不存在");
+      if (!snap.exists) {
+        alert("申請不存在");
+        return;
+      }
 
       const r = snap.data() || {};
       const ok = confirm(
@@ -250,22 +310,35 @@
         await db.runTransaction(async (tx) => {
           const now = await tx.get(ref);
           if (!now.exists) throw new Error("申請已不存在");
+
           const data = now.data() || {};
           if (data.status !== "pending") throw new Error("申請已被處理");
 
-          const uid = String(data.uid || "").trim();
+          const uid = norm(data.uid);
+          const email = lower(data.email);
           if (!uid) throw new Error("缺少 uid");
 
-          // ✅ 寫回 users/{uid}
           tx.set(db.collection("users").doc(uid), {
+            uid,
             email: data.email || "",
+            name: data.name || "",
+            gender: data.gender || "",
+            birthday: data.birthday || "",
             enabled: true,
             role: data.requestedRole || "org_staff",
             schoolId: data.requestedSchoolId || "",
+            orgGroup: data.requestedOrgGroup || "",
             updatedAt: new Date()
           }, { merge:true });
 
-          // ✅ 更新申請狀態
+          if (email) {
+            tx.set(db.collection("email_index").doc(email), {
+              uid,
+              email,
+              updatedAt: new Date()
+            }, { merge:true });
+          }
+
           tx.update(ref, {
             status: "approved",
             handledAt: new Date(),
@@ -303,11 +376,35 @@
     };
 
     async function findUserByEmail(email){
-      const q = await db.collection("users").where("email","==",email).limit(10).get();
-      if (q.empty) return null;
-      // 理論上 email 應該唯一；先取第一筆
-      const d = q.docs[0];
-      return { id:d.id, data:d.data() || {} };
+      const emailKey = lower(email);
+      if (!emailKey) return null;
+
+      try{
+        const indexSnap = await db.collection("email_index").doc(emailKey).get();
+        if (indexSnap.exists) {
+          const idx = indexSnap.data() || {};
+          const uid = norm(idx.uid);
+          if (uid) {
+            const userSnap = await db.collection("users").doc(uid).get();
+            if (userSnap.exists) {
+              return { id:userSnap.id, data:userSnap.data() || {} };
+            }
+          }
+        }
+      }catch(e){
+        console.warn("email_index lookup failed:", e);
+      }
+
+      try{
+        const q = await db.collection("users").where("email","==",emailKey).limit(10).get();
+        if (q.empty) return null;
+        const d = q.docs[0];
+        return { id:d.id, data:d.data() || {} };
+      }catch(e){
+        console.warn("users email query failed:", e);
+      }
+
+      return null;
     }
 
     function renderUserEditor(uid, u){
@@ -315,6 +412,9 @@
       const enabled = u.enabled === true;
       const schoolId = String(u.schoolId || "").trim();
       const orgGroup = String(u.orgGroup || "").trim();
+      const name = String(u.name || "").trim();
+      const gender = String(u.gender || "").trim();
+      const birthday = String(u.birthday || "").trim();
 
       userBox.innerHTML = `
         <div class="item">
@@ -322,6 +422,26 @@
           <div class="small" style="margin-top:6px;">
             uid：<span class="mono">${esc(uid)}</span><br>
             email：<span class="mono">${esc(u.email || "-")}</span>
+          </div>
+
+          <div class="grid3" style="margin-top:12px;">
+            <div>
+              <label>姓名</label>
+              <input id="uName" type="text" value="${esc(name)}" />
+            </div>
+            <div>
+              <label>性別</label>
+              <select id="uGender">
+                <option value="" ${!gender ? "selected" : ""}>未填</option>
+                <option value="男" ${gender==="男" ? "selected" : ""}>男</option>
+                <option value="女" ${gender==="女" ? "selected" : ""}>女</option>
+                <option value="其他" ${gender==="其他" ? "selected" : ""}>其他</option>
+              </select>
+            </div>
+            <div>
+              <label>生日</label>
+              <input id="uBirthday" type="date" value="${esc(birthday)}" />
+            </div>
           </div>
 
           <div class="grid" style="margin-top:12px;">
@@ -342,7 +462,7 @@
                 <option value="org_admin" ${role==="org_admin"?"selected":""}>org_admin</option>
                 <option value="org_staff" ${role==="org_staff"?"selected":""}>org_staff</option>
               </select>
-              <div class="small">※ 建議只給 platform_super 調整平台角色</div>
+              <div class="small">平台角色建議只由 platform_super 調整</div>
             </div>
           </div>
 
@@ -370,6 +490,10 @@
           alert("只有 platform_super 可儲存修改");
           return;
         }
+
+        const newName = String(document.getElementById("uName").value || "").trim();
+        const newGender = String(document.getElementById("uGender").value || "").trim();
+        const newBirthday = String(document.getElementById("uBirthday").value || "").trim();
         const newEnabled = document.getElementById("uEnabled").value === "true";
         const newRole = document.getElementById("uRole").value;
         const newSchoolId = String(document.getElementById("uSchoolId").value || "").trim();
@@ -380,6 +504,9 @@
 
         try{
           await db.collection("users").doc(uid).set({
+            name: newName,
+            gender: newGender,
+            birthday: newBirthday,
             enabled: newEnabled,
             role: newRole,
             schoolId: newSchoolId,
@@ -387,23 +514,27 @@
             updatedAt: new Date()
           }, { merge:true });
 
-          msg.innerHTML = `<span class="ok">✅ 已儲存</span>`;
+          msg.innerHTML = `<span class="ok">已儲存</span>`;
         }catch(e){
           console.error(e);
-          msg.innerHTML = `<span class="warn">儲存失敗：</span> ${esc(e.message || e)}`;
+          msg.innerHTML = `<span class="warn">儲存失敗：</span>${esc(e.message || e)}`;
         }
       };
     }
 
     searchBtn.onclick = async () => {
       const email = String(emailQ.value || "").trim();
-      if (!email) return alert("請輸入 email");
+      if (!email) {
+        alert("請輸入 email");
+        return;
+      }
+
       userBox.innerHTML = `<div class="small">查詢中…</div>`;
 
       try{
         const res = await findUserByEmail(email);
         if (!res){
-          userBox.innerHTML = `<div class="item"><span class="warn">找不到此 email 的 users 文件</span></div>`;
+          userBox.innerHTML = `<div class="item"><span class="warn">找不到此 email 對應的 users 文件</span></div>`;
           return;
         }
         renderUserEditor(res.id, res.data);
@@ -417,6 +548,7 @@
 
     firebase.auth().onAuthStateChanged(async (user) => {
       currentUser = user || null;
+
       if (!user){
         showGate("人事派發與審核", "請先使用 Email / 密碼登入後台。", true);
         return;
@@ -433,7 +565,6 @@
         whoEl.textContent = user.email || "-";
         roleText.textContent = currentRole || "-";
 
-        // ✅ 只有 platform_super / platform_admin 可進
         if (!["platform_super","platform_admin"].includes(currentRole)){
           showGate("權限不足", "此頁僅限平台管理員使用。", false);
           return;
@@ -443,7 +574,6 @@
         app.style.display = "block";
 
         await loadRequests();
-
       }catch(e){
         console.error(e);
         showGate("發生錯誤", "無法讀取權限資料，請查看 Console。", false);
