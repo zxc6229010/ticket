@@ -18,6 +18,14 @@
       --shadow-soft:0 10px 24px rgba(0,0,0,.045);
       --danger:#b91c1c;
       --danger-bg:#fff1f2;
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
       --max:1100px;
     }
 
@@ -92,6 +100,7 @@
       color:var(--muted);
       font-size:15px;
       line-height:1.9;
+      white-space:pre-wrap;
     }
 
     .hero-actions{
@@ -342,6 +351,7 @@
       font-size:14px;
       line-height:1.85;
       word-break:break-word;
+      white-space:pre-wrap;
     }
 
     .badges{
@@ -363,6 +373,34 @@
       font-size:12px;
       font-weight:800;
       box-shadow:var(--shadow-soft);
+    }
+
+    .badge-green{
+      background:var(--green-bg);
+      color:var(--green);
+      border-color:rgba(22,101,52,.12);
+      box-shadow:none;
+    }
+
+    .badge-orange{
+      background:var(--orange-bg);
+      color:var(--orange);
+      border-color:rgba(194,65,12,.12);
+      box-shadow:none;
+    }
+
+    .badge-gray{
+      background:var(--gray-bg);
+      color:var(--gray);
+      border-color:rgba(107,114,128,.12);
+      box-shadow:none;
+    }
+
+    .badge-blue{
+      background:var(--blue-bg);
+      color:var(--blue);
+      border-color:rgba(29,78,216,.12);
+      box-shadow:none;
     }
 
     .right-actions{
@@ -387,6 +425,18 @@
       margin-top:8px;
     }
 
+    .helper-note{
+      margin-top:12px;
+      padding:12px 14px;
+      border:1px solid rgba(29,78,216,.12);
+      border-radius:16px;
+      background:var(--blue-bg);
+      color:var(--blue);
+      font-size:13px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
     .gate-box{
       max-width:420px;
       margin:72px auto 0;
@@ -409,6 +459,7 @@
       color:var(--muted);
       font-size:14px;
       line-height:1.85;
+      white-space:pre-wrap;
     }
 
     .form-stack{
@@ -471,7 +522,8 @@
         <div class="hero-top">
           <div>
             <h1 class="hero-title">特約校園管理</h1>
-            <div class="hero-sub">管理校園與驗證方式。</div>
+            <div class="hero-sub">管理校園啟用狀態、驗證開放狀態與可用驗證方式。
+名單匯入已改由活動管理，不在此頁處理。</div>
             <div class="hero-actions" style="margin-top:16px;">
               <span class="pill mono" id="who">-</span>
             </div>
@@ -523,9 +575,12 @@
               <div class="form-box">
                 <div class="switch">
                   <input id="verificationEnabled" type="checkbox" checked />
-                  <span>開啟</span>
+                  <span>開放校園驗證</span>
                 </div>
               </div>
+
+              <div class="helper-note">新增校園時會預設為「校園啟用」。
+只有在「校園啟用」且「開放校園驗證」同時成立時，前台才會真的顯示可驗證。</div>
             </div>
           </div>
         </div>
@@ -554,6 +609,7 @@
     }
 
     const db = firebase.firestore();
+    const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
 
     const loginGate = document.getElementById("loginGate");
     const adminApp = document.getElementById("adminApp");
@@ -596,6 +652,23 @@
 
     function domainsToText(arr) {
       return Array.isArray(arr) ? arr.join("\n") : "";
+    }
+
+    function buildMethodLabels(methods) {
+      if (!Array.isArray(methods) || !methods.length) return ["未設定"];
+      return methods.map(method => {
+        if (method === "student_id") return "學號";
+        if (method === "google") return "Google";
+        return method;
+      });
+    }
+
+    function getActualVerificationOpen(school) {
+      return school.enabled === true && school.verificationEnabled === true;
+    }
+
+    function getSchoolStatusText(enabled) {
+      return enabled ? "啟用中" : "已停用";
     }
 
     async function doLogout() {
@@ -699,6 +772,7 @@
           const enabled = school.enabled === true;
           const methods = Array.isArray(school.authMethods) ? school.authMethods : [];
           const verificationEnabled = school.verificationEnabled === true;
+          const actualVerificationOpen = getActualVerificationOpen(school);
           const allowedEmailDomains = Array.isArray(school.allowedEmailDomains) ? school.allowedEmailDomains : [];
           const fallback = String(name).slice(0, 1);
 
@@ -720,24 +794,34 @@
                   <div style="min-width:0;">
                     <h3 class="item-name">${esc(name)}</h3>
                     <div class="item-meta">
-                      ${enabled ? "啟用中" : "已停用"}
+                      校園狀態：${esc(getSchoolStatusText(enabled))}
                     </div>
 
                     <div class="badges">
-                      ${
-                        methods.length
-                          ? methods.map(method => `<span class="badge">${esc(method === "student_id" ? "學號" : method === "google" ? "Google" : method)}</span>`).join("")
-                          : `<span class="badge">未設定</span>`
-                      }
-                      <span class="badge">${verificationEnabled ? "驗證開啟" : "驗證關閉"}</span>
+                      ${buildMethodLabels(methods).map(label => `<span class="badge">${esc(label)}</span>`).join("")}
+                      <span class="badge ${enabled ? "badge-green" : "badge-gray"}">${enabled ? "校園啟用" : "校園停用"}</span>
+                      <span class="badge ${verificationEnabled ? "badge-blue" : "badge-gray"}">${verificationEnabled ? "已勾選開放驗證" : "未勾選開放驗證"}</span>
+                      <span class="badge ${actualVerificationOpen ? "badge-green" : "badge-orange"}">${actualVerificationOpen ? "實際可驗證" : "實際不可驗證"}</span>
                     </div>
 
                     ${
                       allowedEmailDomains.length
                         ? `
                           <div class="item-meta" style="margin-top:10px;">
-                            ${esc(allowedEmailDomains.join(", "))}
+                            信箱後綴：${esc(allowedEmailDomains.join(", "))}
                           </div>
+                        `
+                        : `
+                          <div class="item-meta" style="margin-top:10px;">
+                            尚未設定信箱後綴
+                          </div>
+                        `
+                    }
+
+                    ${
+                      !enabled && verificationEnabled
+                        ? `
+                          <div class="helper-note">目前此校園雖然勾選了「開放驗證」，但因為校園本身是停用狀態，所以前台仍視為不可驗證。</div>
                         `
                         : ``
                     }
@@ -771,10 +855,6 @@
                   >
                     移除
                   </button>
-
-                  <a class="btn btn-sm" href="admin-studentslist-import.html?schoolId=${encodeURIComponent(id)}">
-                    匯入名單
-                  </a>
                 </div>
               </div>
 
@@ -808,9 +888,15 @@
                     <div class="form-box">
                       <div class="switch">
                         <input type="checkbox" id="editVerification-${escAttr(id)}" ${verificationEnabled ? "checked" : ""} />
-                        <span>開啟</span>
+                        <span>開放校園驗證</span>
                       </div>
                     </div>
+
+                    ${
+                      !enabled
+                        ? `<div class="helper-note">這個校園目前是停用狀態。即使這裡勾選「開放校園驗證」，前台仍不會開放驗證，直到你重新啟用校園。</div>`
+                        : `<div class="helper-note">只有在校園啟用時，這個勾選才會真正影響前台是否可驗證。</div>`
+                    }
 
                     <div class="form-actions">
                       <button class="btn btn-sm" type="button" onclick="toggleEdit('${escAttr(id)}')">取消</button>
@@ -862,8 +948,10 @@
           authMethods: methods,
           verificationEnabled,
           allowedEmailDomains,
-          createdAt: new Date(),
-          createdBy: currentUser ? currentUser.uid : ""
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          createdBy: currentUser ? currentUser.uid : "",
+          updatedBy: currentUser ? currentUser.uid : ""
         });
 
         nameEl.value = "";
@@ -889,12 +977,17 @@
       if (!canEdit()) return;
 
       try {
-        await db.collection("partnerSchools").doc(id).update({
+        const payload = {
           enabled: !enabledNow,
-          updatedAt: new Date(),
+          updatedAt: serverTimestamp(),
           updatedBy: currentUser ? currentUser.uid : ""
-        });
+        };
 
+        if (enabledNow === true) {
+          payload.verificationEnabled = false;
+        }
+
+        await db.collection("partnerSchools").doc(id).update(payload);
         await loadList();
       } catch (e) {
         console.error(e);
@@ -939,7 +1032,7 @@
           authMethods: methods,
           verificationEnabled,
           allowedEmailDomains,
-          updatedAt: new Date(),
+          updatedAt: serverTimestamp(),
           updatedBy: currentUser ? currentUser.uid : ""
         });
 

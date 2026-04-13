@@ -67,12 +67,14 @@
       color:var(--muted);
       font-size:14px;
       line-height:1.7;
+      white-space:pre-wrap;
     }
 
     .small{
       color:var(--muted);
       font-size:12px;
       line-height:1.7;
+      white-space:pre-wrap;
     }
 
     .row{
@@ -89,14 +91,14 @@
       gap:14px;
     }
 
-    .grid3{
+    .grid4{
       display:grid;
-      grid-template-columns:1.2fr .8fr .8fr;
+      grid-template-columns:1.1fr .9fr .9fr .8fr;
       gap:14px;
     }
 
     @media (max-width:900px){
-      .grid2,.grid3{ grid-template-columns:1fr; }
+      .grid2,.grid4{ grid-template-columns:1fr; }
     }
 
     .btn{
@@ -232,6 +234,7 @@
       font-size:13px;
       line-height:1.8;
       word-break:break-word;
+      white-space:pre-wrap;
     }
 
     .badges{
@@ -283,6 +286,7 @@
       font-weight:900;
       line-height:1.7;
       word-break:break-word;
+      white-space:pre-wrap;
     }
 
     .ticketBox{
@@ -310,6 +314,7 @@
       color:var(--muted);
       font-size:14px;
       line-height:1.8;
+      white-space:pre-wrap;
     }
 
     .page{
@@ -339,10 +344,8 @@
         <div class="row">
           <div>
             <h1>活動訂單管理</h1>
-            <div class="sub">
-              可查詢活動訂單、查看對應票券、修改訂單狀態、填寫後台備註。<br>
-              此頁讀取的是 <span class="mono">events/{eventId}/orders</span>。
-            </div>
+            <div class="sub">可查詢活動訂單、查看對應票券、修改訂單狀態、填寫後台備註。
+此頁會先讀取你可管理的活動，再分別讀取各活動底下的訂單，避免 collectionGroup 權限問題。</div>
             <div class="sub" style="margin-top:8px;">
               登入：<span id="who" class="mono">-</span>｜
               角色：<span id="myRole" class="mono">-</span>
@@ -357,10 +360,17 @@
       </div>
 
       <div class="card soft">
-        <div class="grid3">
+        <div class="grid4">
+          <div>
+            <label style="margin-top:0;">活動篩選</label>
+            <select id="eventFilter">
+              <option value="all">全部活動</option>
+            </select>
+          </div>
+
           <div>
             <label style="margin-top:0;">搜尋</label>
-            <input type="text" id="searchInput" placeholder="搜尋 訂單ID / email / uid / eventId / 活動名稱 / 票種 / 座位" />
+            <input type="text" id="searchInput" placeholder="搜尋 訂單ID / email / uid / 活動名稱 / 票種 / 座位" />
           </div>
 
           <div>
@@ -369,6 +379,8 @@
               <option value="all">全部狀態</option>
               <option value="registered">已建立</option>
               <option value="pending">待處理</option>
+              <option value="pending_holder_info">待填資料</option>
+              <option value="ready_for_checkout">可進下一步</option>
               <option value="paid">已付款</option>
               <option value="processing">處理中</option>
               <option value="completed">已完成</option>
@@ -436,6 +448,7 @@
     const myRoleEl = document.getElementById("myRole");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    const eventFilter = document.getElementById("eventFilter");
     const searchInput = document.getElementById("searchInput");
     const statusFilter = document.getElementById("statusFilter");
     const reloadBtn = document.getElementById("reloadBtn");
@@ -445,6 +458,7 @@
     let currentUser = null;
     let myRole = "";
     let myUserDoc = null;
+    let eventOptions = [];
     let orderCache = [];
     let ticketCacheMap = new Map();
 
@@ -488,7 +502,7 @@
 
       gate.innerHTML = `
         <h1 style="margin:0 0 6px; font-size:22px;">${esc(title)}</h1>
-        <div class="sub">${msg}</div>
+        <div class="sub">${esc(msg)}</div>
         <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
           ${showLogin ? `<button class="btn" id="loginBtn">使用 Email 登入</button>` : ``}
           ${!showLogin ? `<button class="btn" id="logoutGateBtn">登出</button>` : ``}
@@ -535,25 +549,44 @@
       return ["platform_super","platform_admin"].includes(role);
     }
 
-    function orderInMyScope(order){
+    function canManageEvent(eventData){
+      if (!eventData) return false;
       if (isPlatform(myRole)) return true;
 
       const mySchoolId = norm(myUserDoc?.schoolId || myUserDoc?.orgSchoolId || "");
       const myOrgId = norm(myUserDoc?.orgId || "");
 
-      const orderSchoolId = norm(order.ownerSchoolId || order.schoolId || order.verifiedSchoolId || "");
-      const orderOrgId = norm(order.orgId || order.ownerOrgId || "");
+      const eventSchoolId = norm(eventData.ownerSchoolId || eventData.schoolId || "");
+      const eventOrgId = norm(eventData.ownerOrgId || eventData.orgId || "");
 
-      if (mySchoolId && orderSchoolId && mySchoolId === orderSchoolId) return true;
-      if (myOrgId && orderOrgId && myOrgId === orderOrgId) return true;
+      if (mySchoolId && eventSchoolId && mySchoolId === eventSchoolId) return true;
+      if (myOrgId && eventOrgId && myOrgId === eventOrgId) return true;
 
       return false;
     }
 
+    async function loadManageableEvents(){
+      const snap = await db.collection("events").get();
+      const rows = snap.docs
+        .map(doc => ({ id: doc.id, ...(doc.data() || {}) }))
+        .filter(canManageEvent)
+        .sort((a, b) => {
+          const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+
+      eventOptions = rows;
+
+      eventFilter.innerHTML = `<option value="all">全部活動</option>` + rows.map(event => `
+        <option value="${esc(event.id)}">${esc(event.title || event.id)}</option>
+      `).join("");
+    }
+
     function getStatusClass(status){
       status = lower(status);
-      if (["paid","completed"].includes(status)) return "ok";
-      if (["pending","processing","registered"].includes(status)) return "orange";
+      if (["paid","completed","ready_for_checkout"].includes(status)) return "ok";
+      if (["pending","processing","registered","pending_holder_info"].includes(status)) return "orange";
       if (["cancelled","refunded","void"].includes(status)) return "warn";
       return "blue";
     }
@@ -562,6 +595,8 @@
       status = lower(status);
       if (status === "registered") return "已建立";
       if (status === "pending") return "待處理";
+      if (status === "pending_holder_info") return "待填資料";
+      if (status === "ready_for_checkout") return "可進下一步";
       if (status === "processing") return "處理中";
       if (status === "paid") return "已付款";
       if (status === "completed") return "已完成";
@@ -572,16 +607,21 @@
     }
 
     function getOrderSearchText(order){
-      const inlineTickets = Array.isArray(order.tickets) ? order.tickets : [];
+      const itemSummary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
+      const holderAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
       const seatLabels = Array.isArray(order.seatLabels) ? order.seatLabels : [];
       const sectionIds = Array.isArray(order.sectionIds) ? order.sectionIds : [];
+      const participantEmails = Array.isArray(order.participantEmails) ? order.participantEmails : [];
+      const inlineTickets = Array.isArray(order.tickets) ? order.tickets : [];
 
       return [
         order.id,
         order.eventId,
         order.eventTitle,
         order.email,
+        order.buyerEmail,
         order.uid,
+        order.buyerUid,
         order.ticketTypeName,
         order.paymentStatus,
         order.status,
@@ -589,24 +629,35 @@
         order.verifiedSchoolId,
         order.matchedRole,
         order.note,
+        order.adminNote,
         ...seatLabels,
         ...sectionIds,
-        ...inlineTickets.map(t => t.ticketId),
-        ...inlineTickets.map(t => t.seatLabel),
-        ...inlineTickets.map(t => t.ticketTypeName)
+        ...participantEmails,
+        ...itemSummary.map(item => `${item.ticketTypeName || ""} ${item.ticketTypeId || ""}`),
+        ...holderAssignments.map(item => `${item.email || ""} ${item.name || ""} ${item.ticketTypeName || ""}`),
+        ...inlineTickets.map(t => t.ticketId || ""),
+        ...inlineTickets.map(t => t.seatLabel || ""),
+        ...inlineTickets.map(t => t.ticketTypeName || "")
       ].map(lower).join(" ");
     }
 
     function renderSummary(){
       const filtered = getFilteredOrders();
-      summaryText.textContent = `目前顯示 ${filtered.length} 筆訂單，總資料 ${orderCache.length} 筆。`;
+      const selectedEventId = eventFilter.value;
+      const selectedEventText = selectedEventId === "all"
+        ? "全部活動"
+        : (eventOptions.find(e => e.id === selectedEventId)?.title || selectedEventId);
+
+      summaryText.textContent = `目前篩選活動：${selectedEventText}｜顯示 ${filtered.length} 筆訂單｜已載入總資料 ${orderCache.length} 筆。`;
     }
 
     function getFilteredOrders(){
       const q = lower(searchInput.value);
       const sf = statusFilter.value;
+      const ef = eventFilter.value;
 
       return orderCache.filter(order => {
+        if (ef !== "all" && norm(order.eventId) !== ef) return false;
         if (sf !== "all" && lower(order.status) !== sf) return false;
         if (!q) return true;
         return getOrderSearchText(order).includes(q);
@@ -675,6 +726,8 @@
         const sectionIds = Array.isArray(order.sectionIds) ? order.sectionIds : [];
         const inlineTickets = Array.isArray(order.tickets) ? order.tickets : [];
         const notes = norm(order.adminNote || order.note || "");
+        const itemSummary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
+        const holderAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
 
         return `
           <div class="item">
@@ -688,18 +741,20 @@
                 <div class="badges">
                   <span class="pill ${statusClass}">${esc(statusText)}</span>
                   <span class="pill">付款：${esc(order.paymentStatus || "-")}</span>
-                  <span class="pill">張數：${esc(order.quantity || 0)}</span>
+                  <span class="pill">張數：${esc(order.totalQuantity ?? order.quantity ?? 0)}</span>
                   <span class="pill">金額：${esc(formatPrice(order.totalAmount ?? order.total ?? 0))}</span>
                 </div>
 
                 <div class="meta">
-                  email：<span class="mono">${esc(order.email || "-")}</span><br>
-                  uid：<span class="mono">${esc(order.uid || "-")}</span><br>
-                  eventId：<span class="mono">${esc(order.eventId || "-")}</span><br>
-                  建立時間：<span class="mono">${esc(tsToText(order.createdAt))}</span><br>
-                  票種：<span class="mono">${esc(order.ticketTypeName || "-")}</span><br>
-                  座位：<span class="mono">${esc(seatLabels.length ? seatLabels.join("、") : "-")}</span><br>
-                  區域：<span class="mono">${esc(sectionIds.length ? sectionIds.join("、") : "-")}</span>
+                  eventId：<span class="mono">${esc(order.eventId || "-")}</span>
+                  ${order.buyerEmail ? `\n主購 Email：${esc(order.buyerEmail)}` : ""}
+                  ${order.email ? `\nEmail：${esc(order.email)}` : ""}
+                  ${order.buyerUid ? `\n主購 UID：${esc(order.buyerUid)}` : ""}
+                  ${order.uid ? `\nUID：${esc(order.uid)}` : ""}
+                  \n建立時間：<span class="mono">${esc(tsToText(order.createdAt))}</span>
+                  ${itemSummary.length ? `\n票種摘要：${esc(itemSummary.map(item => `${item.ticketTypeName || item.ticketTypeId || "票種"} × ${item.quantity || 0}`).join("、"))}` : ""}
+                  \n座位：<span class="mono">${esc(seatLabels.length ? seatLabels.join("、") : "-")}</span>
+                  \n區域：<span class="mono">${esc(sectionIds.length ? sectionIds.join("、") : "-")}</span>
                 </div>
               </div>
 
@@ -721,17 +776,14 @@
                     <div class="k">活動名稱</div>
                     <div class="v">${esc(order.eventTitle || "-")}</div>
 
-                    <div class="k">uid</div>
-                    <div class="v mono">${esc(order.uid || "-")}</div>
+                    <div class="k">主購 UID</div>
+                    <div class="v mono">${esc(order.buyerUid || order.uid || "-")}</div>
 
-                    <div class="k">email</div>
-                    <div class="v mono">${esc(order.email || "-")}</div>
+                    <div class="k">主購 Email</div>
+                    <div class="v mono">${esc(order.buyerEmail || order.email || "-")}</div>
 
-                    <div class="k">票種</div>
-                    <div class="v">${esc(order.ticketTypeName || "-")}</div>
-
-                    <div class="k">張數</div>
-                    <div class="v">${esc(order.quantity || 0)}</div>
+                    <div class="k">總張數</div>
+                    <div class="v">${esc(order.totalQuantity ?? order.quantity ?? 0)}</div>
 
                     <div class="k">總金額</div>
                     <div class="v">${esc(formatPrice(order.totalAmount ?? order.total ?? 0))}</div>
@@ -753,6 +805,9 @@
 
                     <div class="k">更新時間</div>
                     <div class="v">${esc(tsToText(order.updatedAt))}</div>
+
+                    <div class="k">持票人資料</div>
+                    <div class="v">${holderAssignments.length ? esc(holderAssignments.map(item => `${item.name || "-"}｜${item.email || "-"}｜${item.ticketTypeName || "-"}`).join("\n")) : "-"}</div>
                   </div>
 
                   <div class="ticketBox" id="ticketBox-${esc(order.id)}">
@@ -774,6 +829,8 @@
                   <select id="statusSel-${esc(order.id)}">
                     <option value="registered" ${lower(order.status)==="registered" ? "selected" : ""}>已建立</option>
                     <option value="pending" ${lower(order.status)==="pending" ? "selected" : ""}>待處理</option>
+                    <option value="pending_holder_info" ${lower(order.status)==="pending_holder_info" ? "selected" : ""}>待填資料</option>
+                    <option value="ready_for_checkout" ${lower(order.status)==="ready_for_checkout" ? "selected" : ""}>可進下一步</option>
                     <option value="processing" ${lower(order.status)==="processing" ? "selected" : ""}>處理中</option>
                     <option value="paid" ${lower(order.status)==="paid" ? "selected" : ""}>已付款</option>
                     <option value="completed" ${lower(order.status)==="completed" ? "selected" : ""}>已完成</option>
@@ -829,7 +886,8 @@
               </div>
             `;
 
-            box.querySelector("[data-load-tickets]").onclick = btn.onclick;
+            const newBtn = box.querySelector("[data-load-tickets]");
+            if (newBtn) newBtn.onclick = btn.onclick;
           }catch(e){
             console.error(e);
             alert("票券讀取失敗");
@@ -848,35 +906,49 @@
     async function loadOrders(){
       orderList.innerHTML = `<div class="card empty">讀取中…</div>`;
       reloadBtn.disabled = true;
+      eventFilter.disabled = true;
 
       try{
-        const snap = await db.collectionGroup("orders").get();
-        let rows = snap.docs.map(doc => {
-          const data = doc.data() || {};
-          const parentEventRef = doc.ref.parent.parent;
-          return {
-            id: doc.id,
-            eventId: data.eventId || (parentEventRef ? parentEventRef.id : ""),
-            ...data
-          };
-        });
+        const targetEventId = eventFilter.value || "all";
+        const targetEvents = targetEventId === "all"
+          ? eventOptions
+          : eventOptions.filter(event => event.id === targetEventId);
 
-        rows = rows.filter(orderInMyScope);
+        const allRows = [];
 
-        rows.sort((a, b) => {
+        for (const event of targetEvents) {
+          try {
+            const snap = await db.collection("events").doc(event.id).collection("orders").get();
+
+            snap.forEach(doc => {
+              const data = doc.data() || {};
+              allRows.push({
+                id: doc.id,
+                eventId: data.eventId || event.id,
+                eventTitle: data.eventTitle || event.title || "",
+                ...data
+              });
+            });
+          } catch (err) {
+            console.error("讀取活動訂單失敗", event.id, err);
+          }
+        }
+
+        orderCache = allRows.sort((a, b) => {
           const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
           return tb - ta;
         });
 
-        orderCache = rows;
         ticketCacheMap = new Map();
         renderOrders();
       }catch(e){
         console.error(e);
-        orderList.innerHTML = `<div class="card empty">訂單讀取失敗，請查看 Console。</div>`;
+        orderList.innerHTML = `<div class="card empty">訂單讀取失敗，請查看 Console。
+若仍失敗，代表該活動底下 orders 仍被 Firestore rules 擋住。</div>`;
       }finally{
         reloadBtn.disabled = false;
+        eventFilter.disabled = false;
       }
     }
 
@@ -913,6 +985,7 @@
 
     searchInput.oninput = renderOrders;
     statusFilter.onchange = renderOrders;
+    eventFilter.onchange = loadOrders;
     reloadBtn.onclick = loadOrders;
 
     firebase.auth().onAuthStateChanged(async (user) => {
@@ -949,6 +1022,7 @@
         gate.style.display = "none";
         app.style.display = "block";
 
+        await loadManageableEvents();
         await loadOrders();
       }catch(e){
         console.error(e);

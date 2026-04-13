@@ -304,8 +304,9 @@
         <h1>服務中心</h1>
         <div class="sub">僅限被指派為本活動服務中心 / 活動管理員的人員使用。</div>
       </div>
-      <div class="row" style="min-width:220px; flex:0 0 auto;">
-        <button class="btn-secondary" id="logoutBtn">登出</button>
+      <div class="row" style="min-width:320px; flex:0 0 auto;">
+        <button class="btn-secondary" id="backDashboardBtn" type="button">回主選單</button>
+        <button class="btn-secondary" id="logoutBtn" type="button">登出</button>
       </div>
     </div>
   </div>
@@ -315,7 +316,7 @@
     <div class="sub">請使用後台帳號登入。</div>
     <input id="loginEmail" type="email" placeholder="輸入 Email" autocomplete="username" />
     <input id="loginPassword" type="password" placeholder="輸入密碼" autocomplete="current-password" />
-    <button id="loginBtn">登入</button>
+    <button id="loginBtn" type="button">登入</button>
     <div id="loginErr" class="empty" style="color:#dc2626; display:none;"></div>
   </div>
 
@@ -351,8 +352,8 @@
       <div class="sub">可輸入或掃描 ticketId、票券文件 ID、email、姓名。</div>
       <input id="query" placeholder="請掃描條碼或輸入 ticketId / 文件ID / email / 姓名">
       <div class="row">
-        <button id="searchBtn">查詢</button>
-        <button class="btn-secondary" id="clearBtn">清空</button>
+        <button id="searchBtn" type="button">查詢</button>
+        <button class="btn-secondary" id="clearBtn" type="button">清空</button>
       </div>
       <div id="searchResults" class="empty">尚未查詢</div>
     </div>
@@ -411,6 +412,7 @@ const loginPassword = document.getElementById("loginPassword");
 const loginBtn = document.getElementById("loginBtn");
 const loginErr = document.getElementById("loginErr");
 const logoutBtn = document.getElementById("logoutBtn");
+const backDashboardBtn = document.getElementById("backDashboardBtn");
 
 const currentEventTitleEl = document.getElementById("currentEventTitle");
 const currentEventIdEl = document.getElementById("currentEventId");
@@ -547,6 +549,10 @@ loginPassword.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(
 
 logoutBtn.onclick = async () => {
   try { await auth.signOut(); } catch (_) {}
+};
+
+backDashboardBtn.onclick = () => {
+  location.href = "dashboard.html";
 };
 
 async function getMyServiceAssignments(uid){
@@ -1070,7 +1076,6 @@ auth.onAuthStateChanged(async user => {
 
       const ts = getEventTimeState(currentEventData);
       if (!ts.ok) {
-        // 服務中心頁可看，但會告知目前不可操作
         searchResultsDiv.innerHTML = `<div class="empty">${esc(ts.reason)}</div>`;
         resultDiv.innerHTML = `<div class="empty">${esc(ts.reason)}</div>`;
       }

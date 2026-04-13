@@ -12,11 +12,8 @@
       --text:#1d1d1f;
       --muted:#6e6e73;
       --line:rgba(0,0,0,.08);
-      --line-strong:rgba(0,0,0,.12);
       --shadow:0 16px 40px rgba(0,0,0,.06);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
-      --black:#111111;
-
       --green:#166534;
       --green-bg:#dcfce7;
       --red:#b91c1c;
@@ -27,10 +24,6 @@
       --blue-bg:#dbeafe;
       --gray:#6b7280;
       --gray-bg:#f3f4f6;
-
-      --radius-xl:34px;
-      --radius-lg:28px;
-      --radius-md:20px;
       --max:1280px;
     }
 
@@ -49,9 +42,7 @@
       text-decoration:none;
     }
 
-    .shell{
-      min-height:100vh;
-    }
+    .shell{ min-height:100vh; }
 
     .nav-wrap{
       position:sticky;
@@ -110,9 +101,7 @@
       transition:color .15s ease;
     }
 
-    .nav-link:hover{
-      color:var(--text);
-    }
+    .nav-link:hover{ color:var(--text); }
 
     .nav-actions{
       display:flex;
@@ -130,7 +119,7 @@
       align-items:center;
       justify-content:center;
       box-shadow:var(--shadow-soft);
-      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease;
       cursor:pointer;
     }
 
@@ -164,7 +153,7 @@
       font-size:14px;
       font-weight:700;
       cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
     }
 
     .btn:hover{
@@ -172,8 +161,10 @@
       box-shadow:0 10px 24px rgba(0,0,0,.06);
     }
 
-    .btn:active{
-      transform:translateY(0) scale(.98);
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
       box-shadow:none;
     }
 
@@ -511,6 +502,7 @@
       border:1px solid rgba(0,0,0,.06);
       border-radius:32px;
       box-shadow:var(--shadow);
+      white-space:pre-wrap;
     }
 
     .mono{
@@ -565,9 +557,7 @@
         align-items:flex-start;
       }
 
-      .nav-links{
-        display:none;
-      }
+      .nav-links{ display:none; }
 
       .page{
         padding:22px 16px 72px;
@@ -620,8 +610,8 @@
       <div class="hero">
         <h1 class="hero-title">我的訂單</h1>
         <div class="hero-sub">
-          這裡會顯示你建立過的全部訂單，以及別人替你一起購買後分享給你的訂單。
-          一筆訂單可能對應多張票券，也可能還在等待填寫持票人資料。
+這裡會顯示你建立過的全部訂單，以及別人替你一起購買後分享給你的訂單。
+一筆訂單可能對應多張票券，也可能還在等待填寫持票人資料。
         </div>
         <div class="hero-meta">
           <span class="pill" id="heroUserText">登入狀態：讀取中…</span>
@@ -657,10 +647,10 @@
     import {
       getFirestore,
       collection,
+      collectionGroup,
       getDocs,
       query,
-      where,
-      collectionGroup
+      where
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -694,19 +684,19 @@
       }[m]));
     }
 
-    function lower(v){
-      return String(v ?? "").trim().toLowerCase();
-    }
-
     function norm(v){
       return String(v ?? "").trim();
+    }
+
+    function lower(v){
+      return norm(v).toLowerCase();
     }
 
     function toDate(input){
       if (!input) return null;
       if (typeof input?.toDate === "function") return input.toDate();
       const d = new Date(input);
-      return isNaN(d.getTime()) ? null : d;
+      return Number.isNaN(d.getTime()) ? null : d;
     }
 
     function formatDateTime(input){
@@ -728,24 +718,38 @@
       return "NT$ " + n.toLocaleString("zh-Hant");
     }
 
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function goLogin(){
+      const redirect = encodeURIComponent(location.href);
+      location.href = `login.html?redirect=${redirect}`;
+    }
+
     function isExpired(order){
       const status = lower(order.status);
       if (status === "expired") return true;
+
       const expiresAt = toDate(order.expiresAt);
-      return !!(
-        expiresAt &&
+      if (!expiresAt) return false;
+
+      return (
         Date.now() > expiresAt.getTime() &&
         !["paid","completed","registered"].includes(status)
       );
     }
 
-    function getStatusClass(status){
-      status = lower(status);
-
-      if (["registered","paid","completed","ready_for_checkout"].includes(status)) return "status-ok";
-      if (["pending","processing","pending_holder_info"].includes(status)) return "status-pending";
-      if (["cancelled","void","refunded","expired"].includes(status)) return "status-cancel";
-      return "status-gray";
+    function getRealStatus(order){
+      return isExpired(order) ? "expired" : lower(order.status || "");
     }
 
     function getStatusText(status){
@@ -765,11 +769,30 @@
       return status || "-";
     }
 
+    function getStatusClass(status){
+      status = lower(status);
+
+      if (["registered","paid","completed","ready_for_checkout"].includes(status)) return "status-ok";
+      if (["pending","processing","pending_holder_info"].includes(status)) return "status-pending";
+      if (["cancelled","void","refunded","expired"].includes(status)) return "status-cancel";
+      return "status-gray";
+    }
+
+    function sortOrders(list){
+      return list.slice().sort((a, b) => {
+        const aExpired = isExpired(a) ? 1 : 0;
+        const bExpired = isExpired(b) ? 1 : 0;
+        if (aExpired !== bExpired) return aExpired - bExpired;
+
+        const ta = toDate(a.createdAt)?.getTime() || 0;
+        const tb = toDate(b.createdAt)?.getTime() || 0;
+        return tb - ta;
+      });
+    }
+
     function getRoleLabel(order){
       const buyerUid = norm(order.buyerUid || order.uid || "");
-      if (currentUser && buyerUid === currentUser.uid) {
-        return "主購者";
-      }
+      if (currentUser && buyerUid === currentUser.uid) return "主購者";
       return "同行持票人";
     }
 
@@ -786,30 +809,6 @@
       return url.pathname + url.search;
     }
 
-    function updateAccountLinks(user){
-      if (user) {
-        accountBtn.href = "member.html";
-        accountBtn.title = user.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        accountBtn.href = "login.html";
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-    }
-
-    function sortOrders(list){
-      return list.slice().sort((a, b) => {
-        const aExpired = isExpired(a) ? 1 : 0;
-        const bExpired = isExpired(b) ? 1 : 0;
-        if (aExpired !== bExpired) return aExpired - bExpired;
-
-        const ta = toDate(a.createdAt)?.getTime() || 0;
-        const tb = toDate(b.createdAt)?.getTime() || 0;
-        return tb - ta;
-      });
-    }
-
     async function loadBuyerOrders(uid){
       const eventsSnap = await getDocs(collection(db, "events"));
       const allOrders = [];
@@ -822,8 +821,8 @@
           query(collection(db, "events", eventId, "orders"), where("uid", "==", uid))
         ];
 
-        for (const q of tries){
-          const snap = await getDocs(q);
+        for (const qRef of tries){
+          const snap = await getDocs(qRef);
           snap.forEach(docSnap => {
             allOrders.push({
               id: docSnap.id,
@@ -839,12 +838,12 @@
 
     async function loadSharedOrdersByParticipant(uid){
       try{
-        const q = query(
+        const qRef = query(
           collectionGroup(db, "orders"),
           where("participantUids", "array-contains", uid)
         );
 
-        const snap = await getDocs(q);
+        const snap = await getDocs(qRef);
         const rows = [];
 
         snap.forEach(docSnap => {
@@ -869,7 +868,7 @@
         const rows = [];
         snap.forEach(docSnap => {
           rows.push({
-            id: docSnap.data()?.id || docSnap.id,
+            id: docSnap.id,
             ...(docSnap.data() || {}),
             __fromMirror__: true
           });
@@ -893,7 +892,7 @@
       [...buyerOrders, ...participantOrders, ...mirrorOrders].forEach(order => {
         const eventId = norm(order.eventId || "");
         const orderId = norm(order.id || "");
-        if (!eventId || !orderId) return;
+        if (!eventId && !orderId) return;
 
         const key = `${eventId}__${orderId}`;
         const prev = mergedMap.get(key) || {};
@@ -908,23 +907,25 @@
         const seatLabels = Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
         const sectionIds = Array.isArray(o.sectionIds) ? o.sectionIds.filter(Boolean) : [];
         const participantEmails = Array.isArray(o.participantEmails) ? o.participantEmails.filter(Boolean) : [];
-        const participantCount = Array.isArray(o.participantUids)
-          ? o.participantUids.length
-          : Array.isArray(o.sharedOrderRefs)
-          ? o.sharedOrderRefs.length
-          : 0;
-
+        const participantUids = Array.isArray(o.participantUids) ? o.participantUids.filter(Boolean) : [];
+        const participantCount = participantUids.length || participantEmails.length || 0;
         const roleLabel = getRoleLabel(o);
-        const expired = isExpired(o);
+        const realStatus = getRealStatus(o);
+        const statusText = getStatusText(realStatus);
+        const statusClass = getStatusClass(realStatus);
 
-        const statusText = expired ? "已逾期" : getStatusText(o.status);
-        const statusClass = expired ? "status-cancel" : getStatusClass(o.status);
-
-        const isBuyer = currentUser && norm(o.buyerUid || o.uid) === currentUser.uid;
         const canFillNow =
-          isBuyer &&
-          !expired &&
+          realStatus !== "expired" &&
           ["pending_holder_info","ready_for_checkout"].includes(lower(o.status || ""));
+
+        const itemSummaryText =
+          Array.isArray(o.itemSummary) && o.itemSummary.length
+            ? o.itemSummary.map(item => {
+                const name = item.ticketTypeName || item.ticketTypeId || "票種";
+                const qty = item.quantity || 0;
+                return `${name} × ${qty}`;
+              }).join("、")
+            : (o.ticketTypeName || "-");
 
         return `
           <div class="order-card">
@@ -956,13 +957,7 @@
                   </div>
                   <div class="kv">
                     <div class="k">票種摘要</div>
-                    <div class="v">
-                      ${
-                        Array.isArray(o.itemSummary) && o.itemSummary.length
-                          ? esc(o.itemSummary.map(item => `${item.ticketTypeName || item.ticketTypeId || "票種"} × ${item.quantity || 0}`).join("、"))
-                          : esc(o.ticketTypeName || "-")
-                      }
-                    </div>
+                    <div class="v">${esc(itemSummaryText)}</div>
                   </div>
                   <div class="kv">
                     <div class="k">總張數</div>
@@ -973,7 +968,7 @@
                     <div class="v">${esc(formatPrice(o.totalAmount))}</div>
                   </div>
                   <div class="kv">
-                    <div class="k">付款</div>
+                    <div class="k">付款狀態</div>
                     <div class="v">${esc(o.paymentStatus || "-")}</div>
                   </div>
                   <div class="kv">
@@ -991,7 +986,7 @@
 
                   <div class="kv">
                     <div class="k">共享人數</div>
-                    <div class="v">${esc(participantCount || 0)}</div>
+                    <div class="v">${esc(participantCount)}</div>
                   </div>
                   <div class="kv">
                     <div class="k">共享對象</div>
@@ -1033,7 +1028,7 @@
 
               <div class="notice">
                 ${
-                  expired
+                  realStatus === "expired"
                     ? "這筆訂單已超過填寫期限，因此已失效。若仍想購買，請重新回到活動頁下單。"
                     : lower(o.status) === "pending_holder_info"
                     ? "此訂單已成立，但尚未完成所有持票人資料填寫。請在期限內完成，訂單才會正式成立。"
@@ -1043,8 +1038,12 @@
                     ? "此訂單已建立完成。若票券已同步建立，可前往「我的票券」查看。"
                     : lower(o.status) === "paid"
                     ? "此訂單已完成付款，可前往「我的票券」查看可入場票券。"
+                    : lower(o.status) === "completed"
+                    ? "此訂單已完成全部流程。"
                     : lower(o.status) === "cancelled"
                     ? "此訂單已取消。若有疑問，請聯絡主辦單位。"
+                    : lower(o.status) === "refunded"
+                    ? "此訂單已退款。"
                     : "此訂單狀態請以系統顯示為準。"
                 }
               </div>
@@ -1070,7 +1069,7 @@
       app.innerHTML = `
         <div class="toolbar">
           <div class="toolbar-left">
-            <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID" />
+            <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID / 主購者 Email" />
           </div>
 
           <div class="toolbar-right">
@@ -1083,6 +1082,7 @@
               <option value="completed">已完成</option>
               <option value="expired">已逾期</option>
               <option value="cancelled">已取消</option>
+              <option value="refunded">已退款</option>
             </select>
           </div>
         </div>
@@ -1099,7 +1099,7 @@
         const f = statusFilter.value;
 
         const filtered = orders.filter(o => {
-          const realStatus = isExpired(o) ? "expired" : lower(o.status);
+          const realStatus = getRealStatus(o);
 
           if (f !== "all" && realStatus !== f) return false;
 
@@ -1128,13 +1128,7 @@
 
       searchInput.addEventListener("input", paint);
       statusFilter.addEventListener("change", paint);
-
       paint();
-    }
-
-    function goLogin(){
-      const redirect = encodeURIComponent(location.href);
-      location.href = `login.html?redirect=${redirect}`;
     }
 
     onAuthStateChanged(auth, async user => {

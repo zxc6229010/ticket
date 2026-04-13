@@ -69,12 +69,14 @@
       color:var(--muted);
       line-height:1.6;
       font-size:14px;
+      white-space:pre-wrap;
     }
 
     .small{
       font-size:13px;
       color:var(--muted);
       line-height:1.6;
+      white-space:pre-wrap;
     }
 
     label{
@@ -226,37 +228,7 @@
       border:1px solid var(--line);
       border-radius:14px;
       background:#fff;
-    }
-
-    .tableWrap{
-      overflow:auto;
-      border:1px solid var(--line);
-      border-radius:14px;
-      background:#fff;
-      margin-top:12px;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:900px;
-    }
-
-    th, td{
-      padding:10px 12px;
-      border-bottom:1px solid var(--line);
-      text-align:left;
-      font-size:14px;
-      vertical-align:top;
-    }
-
-    th{
-      background:#fafafa;
-      font-weight:900;
-    }
-
-    tr:last-child td{
-      border-bottom:none;
+      white-space:pre-wrap;
     }
 
     .list{
@@ -363,6 +335,7 @@
             <div class="box">
               <div>名單狀態：<span id="allowedEnabledText" class="mono">-</span></div>
               <div style="margin-top:8px;">識別欄位：<span id="matchFieldsText" class="mono">-</span></div>
+              <div style="margin-top:8px;">標題欄位：<span id="titleFieldsText" class="mono">-</span></div>
             </div>
           </div>
         </div>
@@ -384,10 +357,10 @@
       </div>
 
       <div class="section" id="configSection">
-        <h2>步驟 2｜設定識別欄位</h2>
+        <h2>步驟 2｜設定識別欄位與標題欄位</h2>
         <div class="sub">
           系統會用你勾選的欄位組合成唯一識別值。<br>
-          建議至少勾選 email 或 studentId 作為識別依據。
+          你也可以勾選清單標題要顯示哪些欄位，例如：學號＋姓名。
         </div>
 
         <div class="grid" style="margin-top:12px;">
@@ -396,6 +369,13 @@
             <div class="box" id="matchFieldsBox"></div>
           </div>
 
+          <div>
+            <div class="small" style="margin-bottom:8px;">標題顯示欄位</div>
+            <div class="box" id="titleFieldsBox"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px;">
           <div>
             <div class="small" style="margin-bottom:8px;">常見欄位</div>
             <div class="box">
@@ -408,6 +388,11 @@
                 <span class="pill">canRegister</span>
               </div>
             </div>
+          </div>
+
+          <div>
+            <div class="small" style="margin-bottom:8px;">標題預覽</div>
+            <div class="box" id="titlePreviewBox">尚未設定</div>
           </div>
         </div>
 
@@ -504,12 +489,15 @@
     const eventMeta = document.getElementById("eventMeta");
     const allowedEnabledText = document.getElementById("allowedEnabledText");
     const matchFieldsText = document.getElementById("matchFieldsText");
+    const titleFieldsText = document.getElementById("titleFieldsText");
 
     const fileEl = document.getElementById("file");
     const parseBtn = document.getElementById("parseBtn");
     const fileInfo = document.getElementById("fileInfo");
 
     const matchFieldsBox = document.getElementById("matchFieldsBox");
+    const titleFieldsBox = document.getElementById("titleFieldsBox");
+    const titlePreviewBox = document.getElementById("titlePreviewBox");
     const configHint = document.getElementById("configHint");
 
     const importBtn = document.getElementById("importBtn");
@@ -541,6 +529,8 @@
       "id",
       "matchKey",
       "matchFields",
+      "titleFields",
+      "titleText",
       "createdAt",
       "updatedAt"
     ]);
@@ -664,21 +654,12 @@
     }
 
     function renderEventNotice(){
-      if (currentRole === "platform_super") {
+      if (isPlatformRole(currentRole)) {
         eventNotice.style.display = "block";
-        eventNotice.innerHTML = `
-          <div class="ok">你可管理所有活動名單</div>
-        `;
-      } else if (isPlatformRole(currentRole)) {
-        eventNotice.style.display = "block";
-        eventNotice.innerHTML = `
-          <div class="ok">你可管理所有活動名單</div>
-        `;
+        eventNotice.innerHTML = `<div class="ok">你可管理所有活動名單</div>`;
       } else {
         eventNotice.style.display = "block";
-        eventNotice.innerHTML = `
-          <div class="ok">你可管理自己範圍內的活動名單</div>
-        `;
+        eventNotice.innerHTML = `<div class="ok">你可管理自己範圍內的活動名單</div>`;
       }
     }
 
@@ -689,6 +670,8 @@
 
       fileInfo.textContent = "";
       matchFieldsBox.innerHTML = "";
+      titleFieldsBox.innerHTML = "";
+      titlePreviewBox.textContent = "尚未設定";
       importBtn.disabled = true;
       setLog("");
       resetProgress();
@@ -700,6 +683,7 @@
         eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
         allowedEnabledText.textContent = "-";
         matchFieldsText.textContent = "-";
+        titleFieldsText.textContent = "-";
         return;
       }
 
@@ -708,30 +692,34 @@
         eventMeta.innerHTML = `<span class="warn">找不到活動</span>`;
         allowedEnabledText.textContent = "-";
         matchFieldsText.textContent = "-";
+        titleFieldsText.textContent = "-";
         return;
       }
 
       eventDoc = doc.data() || {};
 
       const title = eventDoc.title || "(未命名)";
-      const enabled = eventDoc.allowedUsersEnabled !== false;
+      const enabled = eventDoc.allowedUsersEnabled === true;
       const existingMatchFields = Array.isArray(eventDoc.allowedUserMatchFields) ? eventDoc.allowedUserMatchFields : [];
+      const existingTitleFields = Array.isArray(eventDoc.allowedUserTitleFields) ? eventDoc.allowedUserTitleFields : [];
 
-      eventMeta.innerHTML = `
-        活動：<b>${esc(title)}</b>
-      `;
-
+      eventMeta.innerHTML = `活動：<b>${esc(title)}</b>`;
       allowedEnabledText.textContent = enabled ? "已啟用" : "未啟用";
       matchFieldsText.textContent = existingMatchFields.length ? existingMatchFields.join("｜") : "-";
+      titleFieldsText.textContent = existingTitleFields.length ? existingTitleFields.join("｜") : "-";
 
-      configHint.innerHTML = `
-        <span class="ok">此活動的名單會獨立管理。</span>
-      `;
+      configHint.innerHTML = `<span class="ok">此活動的名單會獨立管理。</span>`;
 
       if (existingMatchFields.length) {
         matchFieldsBox.innerHTML = existingMatchFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ");
       } else {
         matchFieldsBox.innerHTML = `<span class="small">讀取檔案後可設定</span>`;
+      }
+
+      if (existingTitleFields.length) {
+        titleFieldsBox.innerHTML = existingTitleFields.map(item => `<span class="pill">${esc(item)}</span>`).join(" ");
+      } else {
+        titleFieldsBox.innerHTML = `<span class="small">讀取檔案後可設定</span>`;
       }
 
       await loadAllowedUsers();
@@ -823,14 +811,40 @@
       return checks.filter(item => item.checked).map(item => norm(item.dataset.col));
     }
 
+    function buildTitleText(row, titleFields){
+      const values = titleFields
+        .map(field => norm(row[field]))
+        .filter(Boolean);
+      return values.join("｜");
+    }
+
+    function updateTitlePreview(){
+      if (!parsed || !parsed.rows.length) {
+        titlePreviewBox.textContent = "尚未設定";
+        return;
+      }
+
+      const titleFields = readChecks(titleFieldsBox);
+      if (!titleFields.length) {
+        titlePreviewBox.textContent = "尚未勾選標題欄位";
+        return;
+      }
+
+      const sampleRow = parsed.rows[0] || {};
+      const preview = buildTitleText(sampleRow, titleFields);
+      titlePreviewBox.textContent = preview || "此筆資料目前組不出標題";
+    }
+
     function updateImportBtn(){
       if (!eventId || !parsed) {
         importBtn.disabled = true;
+        updateTitlePreview();
         return;
       }
 
       const matchFields = readChecks(matchFieldsBox);
       importBtn.disabled = matchFields.length === 0;
+      updateTitlePreview();
     }
 
     parseBtn.onclick = async () => {
@@ -883,8 +897,17 @@
           currentMatchFields.add(data.headers[0]);
         }
 
+        const currentTitleFields = Array.isArray(eventDoc.allowedUserTitleFields) && eventDoc.allowedUserTitleFields.length
+          ? new Set(eventDoc.allowedUserTitleFields)
+          : new Set(
+              data.headers.filter(h => ["studentId","name","email"].includes(norm(h))).slice(0, 2)
+            );
+
         buildChecks(matchFieldsBox, data.headers, currentMatchFields);
+        buildChecks(titleFieldsBox, data.headers, currentTitleFields);
+
         matchFieldsBox.onchange = updateImportBtn;
+        titleFieldsBox.onchange = updateImportBtn;
 
         updateImportBtn();
       } catch (e) {
@@ -892,6 +915,7 @@
         fileInfo.innerHTML = `<span class="warn">讀取失敗：${esc(e.message || e)}</span>`;
         parsed = null;
         importBtn.disabled = true;
+        titlePreviewBox.textContent = "尚未設定";
       }
     };
 
@@ -905,6 +929,7 @@
       const rows = parsed.rows;
       const headers = parsed.headers;
       const matchFields = readChecks(matchFieldsBox);
+      const titleFields = readChecks(titleFieldsBox);
 
       if (!matchFields.length) {
         alert("請至少勾選 1 個識別欄位");
@@ -931,7 +956,9 @@
         await eventRef.set({
           allowedUserMatchFields: matchFields,
           allowedUserImportColumns: headers,
+          allowedUserTitleFields: titleFields,
           allowedUsersEnabled: true,
+          audienceMode: "restricted",
           allowedUsersConfiguredAt: new Date()
         }, { merge: true });
 
@@ -984,9 +1011,13 @@
           }
 
           const docRef = allowedRef.doc(matchKey);
+          const titleText = buildTitleText(row, titleFields);
+
           const payload = {
             matchKey,
             matchFields,
+            titleFields,
+            titleText,
             createdAt: new Date(),
             updatedAt: new Date()
           };
@@ -1076,7 +1107,7 @@
       if (!q) return true;
 
       const fields = Object.entries(item)
-        .filter(([key]) => !["createdAt", "updatedAt", "matchFields", "matchKey"].includes(key))
+        .filter(([key]) => !["createdAt", "updatedAt", "matchFields", "matchKey", "titleFields"].includes(key))
         .map(([, value]) => norm(value).toLowerCase());
 
       return fields.some(v => v.includes(q));
@@ -1095,6 +1126,11 @@
       return norm(value) || "-";
     }
 
+    function getRecordTitle(item){
+      if (norm(item.titleText)) return norm(item.titleText);
+      return item.name || item.email || item.studentId || "(未命名)";
+    }
+
     function renderAllowedList(){
       const rows = allowedCache.filter(recordMatches);
       allowedCount.textContent = rows.length;
@@ -1105,7 +1141,7 @@
       }
 
       allowedList.innerHTML = rows.map(item => {
-        const titleText = item.name || item.email || item.studentId || "(未命名)";
+        const titleText = getRecordTitle(item);
         const displayFields = getDisplayFields(item);
 
         return `
@@ -1121,6 +1157,10 @@
                         ? `<span class="pill warn">不可報名</span>`
                         : ``
                   }
+                </div>
+
+                <div class="itemMeta">
+                  識別值：<span class="mono">${esc(item.matchKey || "-")}</span>
                 </div>
 
                 <div class="record-grid">
@@ -1195,7 +1235,8 @@
       clearAllowedBtn.disabled = true;
 
       try {
-        const ref = db.collection("events").doc(eventId).collection("allowedUsers");
+        const eventRef = db.collection("events").doc(eventId);
+        const ref = eventRef.collection("allowedUsers");
         const snap = await ref.get();
 
         if (snap.empty) {
@@ -1223,7 +1264,14 @@
           await batch.commit();
         }
 
-        await loadAllowedUsers();
+        await eventRef.set({
+          allowedUsersEnabled: false,
+          allowedUserMatchFields: [],
+          allowedUserTitleFields: [],
+          allowedUsersConfiguredAt: new Date()
+        }, { merge: true });
+
+        await loadEvent(eventId);
         alert(`已清空 ${processed} 筆名單資料`);
       } catch (e) {
         console.error(e);
