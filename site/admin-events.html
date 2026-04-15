@@ -65,6 +65,12 @@
       font-weight:900;
     }
 
+    h3{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+    }
+
     .sub{
       margin-top:6px;
       color:var(--muted);
@@ -294,7 +300,9 @@
       font-weight:900;
     }
 
-    .inviteItem{
+    .promoItem,
+    .gateItem,
+    .ticketItem{
       border:1px dashed var(--line);
       border-radius:14px;
       padding:12px;
@@ -302,7 +310,9 @@
       margin-top:10px;
     }
 
-    .inviteTop{
+    .promoTop,
+    .gateTop,
+    .ticketTop{
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -320,23 +330,6 @@
 
     .hidden{
       display:none !important;
-    }
-
-    .gateItem{
-      border:1px dashed var(--line);
-      border-radius:14px;
-      padding:12px;
-      background:#fff;
-      margin-top:10px;
-    }
-
-    .gateTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
     }
 
     .inline-editor-host{
@@ -418,6 +411,27 @@
       object-fit:cover;
       display:block;
     }
+
+    .codeBindList{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .checkLine{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      min-height:36px;
+    }
+
+    .checkLine input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      margin:0;
+      flex:0 0 auto;
+    }
   </style>
 </head>
 
@@ -430,7 +444,7 @@
         <div class="header">
           <div>
             <h1>活動管理</h1>
-            <div class="sub">建立活動與調整活動內容。</div>
+            <div class="sub">建立活動、票種、公關代碼與出入口設定。</div>
             <div class="sub small">
               登入：<span id="who" class="mono">-</span>｜
               身分：<span id="roleText" class="mono">-</span>
@@ -575,12 +589,12 @@
 
         <div class="divider"></div>
 
-        <h2>邀請碼</h2>
+        <h2>公關代碼</h2>
 
         <div class="box" style="margin-top:12px;">
           <div class="switchRow">
-            <span class="pill">邀請碼功能</span>
-            <select id="inviteCodeEnabled" style="max-width:220px;">
+            <span class="pill">公關代碼功能</span>
+            <select id="promoCodeEnabled" style="max-width:220px;">
               <option value="false">關閉</option>
               <option value="true">開啟</option>
             </select>
@@ -589,15 +603,25 @@
 
         <div style="margin-top:12px;">
           <div class="row" style="justify-content:space-between;">
-            <label style="margin:0;">邀請碼清單</label>
-            <button class="btn btn-sm" id="addInviteBtn" type="button">＋新增邀請碼</button>
+            <label style="margin:0;">公關代碼清單</label>
+            <button class="btn btn-sm" id="addPromoBtn" type="button">＋新增公關代碼</button>
           </div>
-          <div id="inviteList"></div>
+          <div id="promoList"></div>
         </div>
 
-        <div class="box" id="inviteUsageBox" style="margin-top:12px; display:none;">
-          <div style="font-weight:900; margin-bottom:8px;">使用紀錄</div>
-          <div id="inviteUsageList" class="small">尚無資料</div>
+        <div class="divider"></div>
+
+        <h2>票種設定</h2>
+        <div class="sub" style="margin-top:8px;">
+          可設定一般票、公關票、不同價格、不同限制，以及哪些公關代碼可以買哪種票。
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="row" style="justify-content:space-between;">
+            <label style="margin:0;">票種清單</label>
+            <button class="btn btn-sm" id="addTicketBtn" type="button">＋新增票種</button>
+          </div>
+          <div id="ticketList"></div>
         </div>
 
         <div class="divider"></div>
@@ -700,11 +724,12 @@
     const eventStartAtEl = document.getElementById("eventStartAt");
     const eventEndAtEl = document.getElementById("eventEndAt");
 
-    const inviteCodeEnabledEl = document.getElementById("inviteCodeEnabled");
-    const addInviteBtn = document.getElementById("addInviteBtn");
-    const inviteList = document.getElementById("inviteList");
-    const inviteUsageBox = document.getElementById("inviteUsageBox");
-    const inviteUsageList = document.getElementById("inviteUsageList");
+    const promoCodeEnabledEl = document.getElementById("promoCodeEnabled");
+    const addPromoBtn = document.getElementById("addPromoBtn");
+    const promoList = document.getElementById("promoList");
+
+    const addTicketBtn = document.getElementById("addTicketBtn");
+    const ticketList = document.getElementById("ticketList");
 
     const addGateBtn = document.getElementById("addGateBtn");
     const gateAssignList = document.getElementById("gateAssignList");
@@ -722,14 +747,16 @@
     let mySchoolId = "";
     let myOrgId = "";
     let editingId = "";
-    let inviteCodesState = [];
-    let gateAssignmentsState = [];
     let currentView = "create";
 
     let schoolNameMap = {};
     let orgNameMap = {};
     let existingCoverImage = "";
     let selectedCoverFile = null;
+
+    let promoCodesState = [];
+    let ticketTypesState = [];
+    let gateAssignmentsState = [];
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -953,7 +980,7 @@
       await loadEvents();
     };
 
-    function randomInviteCode(length = 8){
+    function randomPromoCode(length = 8){
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let out = "";
       for (let i = 0; i < length; i++){
@@ -962,11 +989,12 @@
       return out;
     }
 
-    function normalizeInviteItem(x){
+    function normalizePromoItem(x){
       const mode = norm(x.mode) === "random" ? "random" : "manual";
       const randomLength = Math.max(4, Math.min(20, Number(x.randomLength || 8) || 8));
 
       return {
+        id: norm(x.id || `promo_${Date.now()}_${Math.random().toString(36).slice(2,7)}`),
         code: norm(x.code || ""),
         note: norm(x.note || ""),
         enabled: x.enabled === true,
@@ -977,30 +1005,44 @@
       };
     }
 
-    function renderInviteCodes(){
-      if (!inviteCodesState.length){
-        inviteList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有邀請碼。</div>`;
+    function normalizeTicketTypeItem(x){
+      return {
+        id: norm(x.id || `ticket_${Date.now()}_${Math.random().toString(36).slice(2,7)}`),
+        name: norm(x.name || ""),
+        description: norm(x.description || ""),
+        price: Math.max(0, Number(x.price || 0) || 0),
+        maxPerOrder: Math.max(1, Number(x.maxPerOrder || 1) || 1),
+        enabled: x.enabled !== false,
+        visibility: norm(x.visibility || "public"),
+        requiresSeat: x.requiresSeat === true,
+        promoCodeIds: Array.isArray(x.promoCodeIds) ? x.promoCodeIds.map(v => norm(v)).filter(Boolean) : []
+      };
+    }
+
+    function renderPromoCodes(){
+      if (!promoCodesState.length){
+        promoList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有公關代碼。</div>`;
         return;
       }
 
-      inviteList.innerHTML = inviteCodesState.map((rawItem, idx) => {
-        const item = normalizeInviteItem(rawItem);
+      promoList.innerHTML = promoCodesState.map((rawItem, idx) => {
+        const item = normalizePromoItem(rawItem);
         const isRandom = item.mode === "random";
 
         return `
-          <div class="inviteItem">
-            <div class="inviteTop">
-              <div class="pill">邀請碼 ${idx + 1}</div>
+          <div class="promoItem">
+            <div class="promoTop">
+              <div class="pill">公關代碼 ${idx + 1}</div>
               <div class="row">
-                ${isRandom ? `<button class="btn btn-sm" type="button" onclick="regenerateInviteCode(${idx})">重新產生</button>` : ``}
-                <button class="btn btn-sm btn-danger" type="button" onclick="removeInviteCode(${idx})">刪除</button>
+                ${isRandom ? `<button class="btn btn-sm" type="button" onclick="regeneratePromoCode(${idx})">重新產生</button>` : ``}
+                <button class="btn btn-sm btn-danger" type="button" onclick="removePromoCode(${idx})">刪除</button>
               </div>
             </div>
 
             <div class="grid">
               <div>
                 <label style="margin-top:0;">模式</label>
-                <select onchange="updateInviteCode(${idx}, 'mode', this.value)">
+                <select onchange="updatePromoCode(${idx}, 'mode', this.value)">
                   <option value="manual" ${item.mode === "manual" ? "selected" : ""}>手動輸入</option>
                   <option value="random" ${item.mode === "random" ? "selected" : ""}>隨機產生</option>
                 </select>
@@ -1008,7 +1050,7 @@
 
               <div>
                 <label style="margin-top:0;">狀態</label>
-                <select onchange="updateInviteCode(${idx}, 'enabled', this.value)">
+                <select onchange="updatePromoCode(${idx}, 'enabled', this.value)">
                   <option value="true" ${item.enabled === true ? "selected" : ""}>啟用</option>
                   <option value="false" ${item.enabled === true ? "" : "selected"}>停用</option>
                 </select>
@@ -1017,13 +1059,13 @@
 
             <div class="grid">
               <div>
-                <label>邀請碼</label>
+                <label>代碼</label>
                 <input
                   type="text"
                   value="${esc(item.code)}"
                   ${isRandom ? "readonly" : ""}
-                  oninput="updateInviteCode(${idx}, 'code', this.value)"
-                  placeholder="${isRandom ? "隨機產生" : "請輸入邀請碼"}"
+                  oninput="updatePromoCode(${idx}, 'code', this.value)"
+                  placeholder="${isRandom ? "隨機產生" : "請輸入公關代碼"}"
                 />
               </div>
 
@@ -1031,8 +1073,8 @@
                 <label>${isRandom ? "亂數長度" : "可用次數"}</label>
                 ${
                   isRandom
-                    ? `<input type="number" min="4" max="20" value="${item.randomLength}" onchange="updateInviteCode(${idx}, 'randomLength', this.value)" />`
-                    : `<input type="number" min="0" value="${item.maxUses}" onchange="updateInviteCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
+                    ? `<input type="number" min="4" max="20" value="${item.randomLength}" onchange="updatePromoCode(${idx}, 'randomLength', this.value)" />`
+                    : `<input type="number" min="0" value="${item.maxUses}" onchange="updatePromoCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
                 }
               </div>
             </div>
@@ -1042,7 +1084,7 @@
                 <label>${isRandom ? "可用次數" : "已使用次數"}</label>
                 ${
                   isRandom
-                    ? `<input type="number" min="0" value="${item.maxUses}" onchange="updateInviteCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
+                    ? `<input type="number" min="0" value="${item.maxUses}" onchange="updatePromoCode(${idx}, 'maxUses', this.value)" placeholder="0 代表不限次數" />`
                     : `<div class="box small" style="display:flex;align-items:center;min-height:48px;">${item.usedCount}</div>`
                 }
               </div>
@@ -1052,15 +1094,146 @@
                 ${
                   isRandom
                     ? `<div class="box small" style="display:flex;align-items:center;min-height:48px;">${item.usedCount}</div>`
-                    : `<input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="備註" />`
+                    : `<input type="text" value="${esc(item.note)}" oninput="updatePromoCode(${idx}, 'note', this.value)" placeholder="備註" />`
                 }
               </div>
             </div>
 
             ${isRandom ? `
               <label>備註</label>
-              <input type="text" value="${esc(item.note)}" oninput="updateInviteCode(${idx}, 'note', this.value)" placeholder="備註" />
+              <input type="text" value="${esc(item.note)}" oninput="updatePromoCode(${idx}, 'note', this.value)" placeholder="備註" />
             ` : ``}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTicketTypes(){
+      if (!ticketTypesState.length){
+        ticketList.innerHTML = `<div class="small" style="margin-top:8px;">目前沒有票種。</div>`;
+        return;
+      }
+
+      ticketList.innerHTML = ticketTypesState.map((rawItem, idx) => {
+        const item = normalizeTicketTypeItem(rawItem);
+
+        return `
+          <div class="ticketItem">
+            <div class="ticketTop">
+              <div class="pill">票種 ${idx + 1}</div>
+              <div class="row">
+                <button class="btn btn-sm btn-danger" type="button" onclick="removeTicketType(${idx})">刪除</button>
+              </div>
+            </div>
+
+            <div class="grid">
+              <div>
+                <label style="margin-top:0;">票種名稱</label>
+                <input
+                  type="text"
+                  value="${esc(item.name)}"
+                  oninput="updateTicketType(${idx}, 'name', this.value)"
+                  placeholder="例如：一般票 / VIP票 / 公關票"
+                />
+              </div>
+
+              <div>
+                <label style="margin-top:0;">票種 ID</label>
+                <input
+                  type="text"
+                  value="${esc(item.id)}"
+                  oninput="updateTicketType(${idx}, 'id', this.value)"
+                  placeholder="例如：general / vip / pr"
+                />
+              </div>
+            </div>
+
+            <label>票種說明</label>
+            <textarea
+              oninput="updateTicketType(${idx}, 'description', this.value)"
+              placeholder="例如：可自由入場、附贈周邊..."
+            >${esc(item.description)}</textarea>
+
+            <div class="grid3">
+              <div>
+                <label>票價</label>
+                <input
+                  type="number"
+                  min="0"
+                  value="${item.price}"
+                  onchange="updateTicketType(${idx}, 'price', this.value)"
+                  placeholder="例如：500"
+                />
+              </div>
+
+              <div>
+                <label>單筆上限</label>
+                <input
+                  type="number"
+                  min="1"
+                  value="${item.maxPerOrder}"
+                  onchange="updateTicketType(${idx}, 'maxPerOrder', this.value)"
+                />
+              </div>
+
+              <div>
+                <label>狀態</label>
+                <select onchange="updateTicketType(${idx}, 'enabled', this.value)">
+                  <option value="true" ${item.enabled ? "selected" : ""}>啟用</option>
+                  <option value="false" ${item.enabled ? "" : "selected"}>停用</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid3">
+              <div>
+                <label>票種可見性</label>
+                <select onchange="updateTicketType(${idx}, 'visibility', this.value)">
+                  <option value="public" ${item.visibility === "public" ? "selected" : ""}>公開票</option>
+                  <option value="promo" ${item.visibility === "promo" ? "selected" : ""}>公關代碼限定</option>
+                </select>
+              </div>
+
+              <div>
+                <label>是否需要選位</label>
+                <select onchange="updateTicketType(${idx}, 'requiresSeat', this.value)">
+                  <option value="false" ${item.requiresSeat ? "" : "selected"}>否</option>
+                  <option value="true" ${item.requiresSeat ? "selected" : ""}>是</option>
+                </select>
+              </div>
+
+              <div>
+                <label>快速說明</label>
+                <div class="box small" style="min-height:48px;display:flex;align-items:center;">
+                  ${item.visibility === "promo" ? "此票需搭配公關代碼購買" : "此票可直接公開販售"}
+                </div>
+              </div>
+            </div>
+
+            <label>可使用的公關代碼</label>
+            <div class="box">
+              ${
+                promoCodesState.length
+                  ? `<div class="codeBindList">
+                      ${promoCodesState.map((codeItem, codeIdx) => {
+                        const normalized = normalizePromoItem(codeItem);
+                        const checked = item.promoCodeIds.includes(normalized.id);
+                        return `
+                          <label class="checkLine">
+                            <input
+                              type="checkbox"
+                              ${checked ? "checked" : ""}
+                              onchange="toggleTicketPromoBind(${idx}, '${esc(normalized.id)}', this.checked)"
+                            />
+                            <span class="pill">${esc(normalized.code || `代碼 ${codeIdx + 1}`)}</span>
+                            <span class="small">${esc(normalized.note || "")}</span>
+                          </label>
+                        `;
+                      }).join("")}
+                    </div>`
+                  : `<div class="small">目前還沒有公關代碼，請先新增公關代碼。</div>`
+              }
+            </div>
           </div>
         `;
       }).join("");
@@ -1087,7 +1260,7 @@
               type="text"
               value="${esc(item.name || "")}"
               oninput="updateGateAssign(${idx}, 'name', this.value)"
-              placeholder="例如：A入口"
+              placeholder="例如：A入口 / 北側入口 / 2F驗票口"
             />
           </div>
         </div>
@@ -1102,42 +1275,121 @@
         .filter(item => item.name);
     }
 
-    window.updateInviteCode = (idx, key, value) => {
-      if (!inviteCodesState[idx]) return;
+    function buildPromoCodesPayload(){
+      const cleaned = promoCodesState
+        .map(normalizePromoItem)
+        .filter(item => item.code);
+
+      const unique = [];
+      const seenId = new Set();
+      const seenCode = new Set();
+
+      for (const item of cleaned) {
+        const idKey = item.id.toLowerCase();
+        const codeKey = item.code.toLowerCase();
+        if (seenId.has(idKey) || seenCode.has(codeKey)) continue;
+        seenId.add(idKey);
+        seenCode.add(codeKey);
+        unique.push(item);
+      }
+
+      return unique;
+    }
+
+    function buildTicketTypesPayload(){
+      const promoIds = new Set(buildPromoCodesPayload().map(item => item.id));
+
+      return ticketTypesState
+        .map(normalizeTicketTypeItem)
+        .filter(item => item.name && item.id)
+        .map(item => ({
+          ...item,
+          promoCodeIds: item.promoCodeIds.filter(id => promoIds.has(id))
+        }));
+    }
+
+    window.updatePromoCode = (idx, key, value) => {
+      if (!promoCodesState[idx]) return;
 
       if (key === "enabled") {
-        inviteCodesState[idx][key] = value === "true";
+        promoCodesState[idx][key] = value === "true";
       } else if (key === "maxUses" || key === "usedCount" || key === "randomLength") {
-        inviteCodesState[idx][key] = Number(value || 0);
+        promoCodesState[idx][key] = Number(value || 0);
       } else if (key === "mode") {
-        inviteCodesState[idx].mode = value === "random" ? "random" : "manual";
-        if (inviteCodesState[idx].mode === "random") {
-          const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
-          inviteCodesState[idx].randomLength = len;
-          inviteCodesState[idx].code = randomInviteCode(len);
+        promoCodesState[idx].mode = value === "random" ? "random" : "manual";
+        if (promoCodesState[idx].mode === "random") {
+          const len = Math.max(4, Math.min(20, Number(promoCodesState[idx].randomLength || 8) || 8));
+          promoCodesState[idx].randomLength = len;
+          promoCodesState[idx].code = randomPromoCode(len);
         }
-        renderInviteCodes();
+        renderPromoCodes();
+        renderTicketTypes();
         return;
       } else {
-        inviteCodesState[idx][key] = value;
+        promoCodesState[idx][key] = value;
       }
 
       if (key === "randomLength") {
-        const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
-        inviteCodesState[idx].randomLength = len;
+        const len = Math.max(4, Math.min(20, Number(promoCodesState[idx].randomLength || 8) || 8));
+        promoCodesState[idx].randomLength = len;
       }
     };
 
-    window.removeInviteCode = idx => {
-      inviteCodesState.splice(idx, 1);
-      renderInviteCodes();
+    window.removePromoCode = idx => {
+      const removed = promoCodesState[idx];
+      promoCodesState.splice(idx, 1);
+
+      if (removed?.id) {
+        ticketTypesState = ticketTypesState.map(ticket => {
+          const item = normalizeTicketTypeItem(ticket);
+          item.promoCodeIds = item.promoCodeIds.filter(id => id !== removed.id);
+          return item;
+        });
+      }
+
+      renderPromoCodes();
+      renderTicketTypes();
     };
 
-    window.regenerateInviteCode = idx => {
-      if (!inviteCodesState[idx]) return;
-      const len = Math.max(4, Math.min(20, Number(inviteCodesState[idx].randomLength || 8) || 8));
-      inviteCodesState[idx].code = randomInviteCode(len);
-      renderInviteCodes();
+    window.regeneratePromoCode = idx => {
+      if (!promoCodesState[idx]) return;
+      const len = Math.max(4, Math.min(20, Number(promoCodesState[idx].randomLength || 8) || 8));
+      promoCodesState[idx].code = randomPromoCode(len);
+      renderPromoCodes();
+    };
+
+    window.updateTicketType = (idx, key, value) => {
+      if (!ticketTypesState[idx]) return;
+
+      if (key === "enabled" || key === "requiresSeat") {
+        ticketTypesState[idx][key] = value === "true";
+      } else if (key === "price" || key === "maxPerOrder") {
+        ticketTypesState[idx][key] = Number(value || 0);
+      } else {
+        ticketTypesState[idx][key] = value;
+      }
+
+      if (key === "visibility" && value !== "promo") {
+        ticketTypesState[idx].promoCodeIds = [];
+      }
+
+      renderTicketTypes();
+    };
+
+    window.removeTicketType = idx => {
+      ticketTypesState.splice(idx, 1);
+      renderTicketTypes();
+    };
+
+    window.toggleTicketPromoBind = (ticketIdx, promoId, checked) => {
+      const item = normalizeTicketTypeItem(ticketTypesState[ticketIdx] || {});
+      const set = new Set(item.promoCodeIds || []);
+
+      if (checked) set.add(promoId);
+      else set.delete(promoId);
+
+      item.promoCodeIds = [...set];
+      ticketTypesState[ticketIdx] = item;
     };
 
     window.updateGateAssign = (idx, key, value) => {
@@ -1150,8 +1402,9 @@
       renderGateAssignments();
     };
 
-    addInviteBtn.onclick = () => {
-      inviteCodesState.push({
+    addPromoBtn.onclick = () => {
+      promoCodesState.push({
+        id: `promo_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
         code: "",
         note: "",
         enabled: true,
@@ -1160,7 +1413,23 @@
         maxUses: 0,
         usedCount: 0
       });
-      renderInviteCodes();
+      renderPromoCodes();
+      renderTicketTypes();
+    };
+
+    addTicketBtn.onclick = () => {
+      ticketTypesState.push({
+        id: `ticket_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+        name: "",
+        description: "",
+        price: 0,
+        maxPerOrder: 1,
+        enabled: true,
+        visibility: "public",
+        requiresSeat: false,
+        promoCodeIds: []
+      });
+      renderTicketTypes();
     };
 
     addGateBtn.onclick = () => {
@@ -1231,53 +1500,10 @@
       refreshOwnerSelectState();
     }
 
-    async function loadInviteUsage(eventId){
-      if (!inviteUsageBox || !inviteUsageList) return;
-      if (!eventId) {
-        inviteUsageBox.style.display = "none";
-        inviteUsageList.innerHTML = "尚無資料";
-        return;
-      }
-
-      inviteUsageBox.style.display = "block";
-      inviteUsageList.innerHTML = "載入中…";
-
-      try {
-        const snap = await db.collection("events").doc(eventId).collection("registrations").get();
-        const rows = [];
-
-        snap.forEach(doc => {
-          const r = doc.data() || {};
-          if (!norm(r.inviteCode)) return;
-
-          rows.push({
-            inviteCode: norm(r.inviteCode),
-            email: norm(r.userEmail || r.email || ""),
-            createdAt: r.createdAt
-          });
-        });
-
-        if (!rows.length) {
-          inviteUsageList.innerHTML = "目前沒有使用資料。";
-          return;
-        }
-
-        rows.sort((a, b) => {
-          const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-          const tb = b.createdAt?.toDate ? b.data().createdAt.toDate().getTime() : 0;
-          return tb - ta;
-        });
-
-        inviteUsageList.innerHTML = rows.map(row => `
-          <div style="padding:10px 0; border-top:1px solid var(--line);">
-            <div><span class="pill">${esc(row.inviteCode)}</span></div>
-            <div style="margin-top:6px;">${esc(row.email || "-")}</div>
-          </div>
-        `).join("");
-      } catch (err) {
-        console.error(err);
-        inviteUsageList.innerHTML = `讀取失敗`;
-      }
+    function getScopeOwnerSchoolId(){
+      return publishScopeEl.value === "platform"
+        ? "__global__"
+        : norm(ownerSchoolSel.value);
     }
 
     function resetEditor(){
@@ -1303,15 +1529,15 @@
       eventStartAtEl.value = "";
       eventEndAtEl.value = "";
 
-      inviteCodeEnabledEl.value = "false";
-      inviteCodesState = [];
+      promoCodeEnabledEl.value = "false";
+      promoCodesState = [];
+      ticketTypesState = [];
       gateAssignmentsState = [];
-      renderInviteCodes();
+
+      renderPromoCodes();
+      renderTicketTypes();
       renderGateAssignments();
       renderCoverPreview("");
-
-      if (inviteUsageBox) inviteUsageBox.style.display = "none";
-      if (inviteUsageList) inviteUsageList.innerHTML = "尚無資料";
 
       setEditorMessage("");
       refreshApprovalStatusState();
@@ -1323,30 +1549,6 @@
       } else {
         moveEditorHome(true);
       }
-    }
-
-    function buildInviteCodesPayload(){
-      const cleaned = inviteCodesState
-        .map(normalizeInviteItem)
-        .filter(item => item.code);
-
-      const unique = [];
-      const seen = new Set();
-
-      for (const item of cleaned) {
-        const key = item.code.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        unique.push(item);
-      }
-
-      return unique;
-    }
-
-    function getScopeOwnerSchoolId(){
-      return publishScopeEl.value === "platform"
-        ? "__global__"
-        : norm(ownerSchoolSel.value);
     }
 
     async function loadEvents(){
@@ -1391,8 +1593,9 @@
         const saleStart = toInputDateTime(e.saleStartAt);
         const saleEnd = toInputDateTime(e.saleEndAt);
         const eventStart = toInputDateTime(e.eventStartAt);
-        const inviteEnabled = e.inviteCodeEnabled === true;
-        const inviteCount = Array.isArray(e.inviteCodes) ? e.inviteCodes.length : 0;
+        const promoEnabled = e.promoCodeEnabled === true;
+        const promoCount = Array.isArray(e.promoCodes) ? e.promoCodes.length : 0;
+        const ticketCount = Array.isArray(e.ticketTypes) ? e.ticketTypes.length : 0;
         const gateCount = Array.isArray(e.gates) ? e.gates.length : 0;
         const coverImage = norm(e.coverImage || "");
 
@@ -1412,8 +1615,9 @@
                   圖片：<span class="mono">${coverImage ? "已設定" : "未設定"}</span><br>
                   開放時間：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
                   活動時間：<span class="mono">${esc(eventStart || "-")}</span><br>
-                  邀請碼：<span class="mono">${inviteEnabled ? "開啟" : "關閉"}</span>｜
-                  數量：<span class="mono">${inviteCount}</span><br>
+                  公關代碼：<span class="mono">${promoEnabled ? "開啟" : "關閉"}</span>｜
+                  數量：<span class="mono">${promoCount}</span><br>
+                  票種數量：<span class="mono">${ticketCount}</span>｜
                   出入口數量：<span class="mono">${gateCount}</span>
                 </div>
 
@@ -1482,11 +1686,16 @@
         eventStartAtEl.value = toInputDateTime(e.eventStartAt);
         eventEndAtEl.value = toInputDateTime(e.eventEndAt);
 
-        inviteCodeEnabledEl.value = e.inviteCodeEnabled === true ? "true" : "false";
-        inviteCodesState = Array.isArray(e.inviteCodes)
-          ? e.inviteCodes.map(item => normalizeInviteItem(item))
+        promoCodeEnabledEl.value = e.promoCodeEnabled === true ? "true" : "false";
+        promoCodesState = Array.isArray(e.promoCodes)
+          ? e.promoCodes.map(item => normalizePromoItem(item))
           : [];
-        renderInviteCodes();
+        renderPromoCodes();
+
+        ticketTypesState = Array.isArray(e.ticketTypes)
+          ? e.ticketTypes.map(item => normalizeTicketTypeItem(item))
+          : [];
+        renderTicketTypes();
 
         gateAssignmentsState = Array.isArray(e.gates)
           ? e.gates.map(item => ({
@@ -1496,7 +1705,6 @@
         renderGateAssignments();
 
         renderCoverPreview(existingCoverImage);
-        await loadInviteUsage(eventId);
 
         const owner = String(e.ownerSchoolId || "");
         publishScopeEl.value = owner === "__global__" ? "platform" : "school";
@@ -1552,7 +1760,8 @@
         const title = norm(titleEl.value);
         const ownerSchoolId = getScopeOwnerSchoolId();
         const publishScope = publishScopeEl.value;
-        const inviteCodes = buildInviteCodesPayload();
+        const promoCodes = buildPromoCodesPayload();
+        const ticketTypes = buildTicketTypesPayload();
         const gates = buildGateAssignmentsPayload();
 
         if (!title) throw new Error("請輸入活動名稱");
@@ -1564,6 +1773,10 @@
 
         if (isOrgRole() && publishScope === "school" && ownerSchoolId !== mySchoolId) {
           throw new Error("目前只能建立自己的校園活動");
+        }
+
+        if (ticketTypes.some(item => item.visibility === "promo") && promoCodes.length === 0) {
+          throw new Error("你有設定公關限定票種，但目前沒有任何公關代碼");
         }
 
         let finalCoverImage = existingCoverImage;
@@ -1588,8 +1801,9 @@
           eventStartAt: parseInputDateTime(eventStartAtEl.value),
           eventEndAt: parseInputDateTime(eventEndAtEl.value),
 
-          inviteCodeEnabled: inviteCodeEnabledEl.value === "true",
-          inviteCodes,
+          promoCodeEnabled: promoCodeEnabledEl.value === "true",
+          promoCodes,
+          ticketTypes,
           gates,
 
           creatorRole: currentRole || "",
