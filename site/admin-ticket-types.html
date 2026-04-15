@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>後台｜票種管理</title>
+
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --text:#111;
+  --muted:rgba(17,17,17,.65);
+  --line:rgba(17,17,17,.1);
+  --shadow:0 14px 40px rgba(0,0,0,.08);
+}
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+}
+.wrap{ max-width:900px; margin:auto; padding:24px; }
+
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+
+h1{ margin:0 0 6px; font-size:22px; }
+.sub{ color:var(--muted); font-size:14px; }
+
+input, select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  margin-top:8px;
+}
+
+button{
+  padding:12px;
+  border:none;
+  border-radius:999px;
+  font-weight:900;
+  cursor:pointer;
+  background:#111;
+  color:#fff;
+}
+
+.btn-danger{ background:#dc2626; }
+.btn-secondary{ background:#fff; color:#111; border:1px solid #ddd; }
+
+.row{ display:flex; gap:10px; flex-wrap:wrap; }
+.row > *{ flex:1; }
+
+.item{
+  border:1px solid #eee;
+  border-radius:14px;
+  padding:12px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+  <h1>票種管理</h1>
+  <div class="sub">建立 / 編輯 / 停用票種</div>
+</div>
+
+<div class="card">
+  <h2>新增 / 編輯票種</h2>
+
+  <input id="eventId" placeholder="eventId">
+
+  <input id="typeId" placeholder="ticketTypeId（例如 vip）">
+
+  <input id="name" placeholder="票種名稱">
+
+  <input id="price" type="number" placeholder="價格">
+
+  <select id="seatType">
+    <option value="assigned">指定座位</option>
+    <option value="free">自由入場</option>
+  </select>
+
+  <input id="maxPerOrder" type="number" placeholder="每人最多購買">
+
+  <input id="totalQuantity" type="number" placeholder="總數量">
+
+  <div class="row">
+    <button onclick="save()">儲存</button>
+    <button class="btn-secondary" onclick="resetForm()">清空</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>票種列表</h2>
+  <button onclick="load()">重新載入</button>
+  <div id="list"></div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "你的",
+  authDomain: "你的",
+  projectId: "你的"
+});
+
+const db = firebase.firestore();
+
+let editingId = null;
+
+function getVal(id){
+  return document.getElementById(id).value.trim();
+}
+
+function resetForm(){
+  editingId = null;
+  ["typeId","name","price","maxPerOrder","totalQuantity"].forEach(id=>{
+    document.getElementById(id).value = "";
+  });
+}
+
+async function save(){
+  const eventId = getVal("eventId");
+  const id = getVal("typeId");
+
+  if(!eventId || !id) return alert("缺 eventId 或 ticketTypeId");
+
+  const data = {
+    id,
+    name: getVal("name"),
+    price: Number(getVal("price")||0),
+    seatType: getVal("seatType"),
+    maxPerOrder: Number(getVal("maxPerOrder")||0),
+    totalQuantity: Number(getVal("totalQuantity")||0),
+    enabled: true,
+    updatedAt: new Date()
+  };
+
+  if(!editingId){
+    data.createdAt = new Date();
+  }
+
+  await db.collection("events")
+    .doc(eventId)
+    .collection("ticketTypes")
+    .doc(id)
+    .set(data, { merge:true });
+
+  alert("已儲存");
+  load();
+  resetForm();
+}
+
+async function load(){
+  const eventId = getVal("eventId");
+  if(!eventId) return;
+
+  const list = document.getElementById("list");
+  list.innerHTML = "載入中...";
+
+  const snap = await db.collection("events")
+    .doc(eventId)
+    .collection("ticketTypes")
+    .get();
+
+  if(snap.empty){
+    list.innerHTML = "沒有資料";
+    return;
+  }
+
+  list.innerHTML = snap.docs.map(doc=>{
+    const d = doc.data();
+
+    return `
+      <div class="item">
+        <b>${d.name}</b>｜NT$ ${d.price}<br>
+        類型：${d.seatType}<br>
+        上限：${d.maxPerOrder}<br>
+        總量：${d.totalQuantity}<br>
+        狀態：${d.enabled ? "啟用" : "停用"}
+
+        <div class="row" style="margin-top:10px;">
+          <button onclick="edit('${doc.id}')">編輯</button>
+          <button onclick="toggle('${doc.id}', ${d.enabled})">
+            ${d.enabled ? "停用" : "啟用"}
+          </button>
+          <button class="btn-danger" onclick="del('${doc.id}')">刪除</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function edit(id){
+  const eventId = getVal("eventId");
+
+  const doc = await db.collection("events")
+    .doc(eventId)
+    .collection("ticketTypes")
+    .doc(id)
+    .get();
+
+  const d = doc.data();
+
+  editingId = id;
+
+  document.getElementById("typeId").value = d.id;
+  document.getElementById("name").value = d.name;
+  document.getElementById("price").value = d.price;
+  document.getElementById("seatType").value = d.seatType;
+  document.getElementById("maxPerOrder").value = d.maxPerOrder;
+  document.getElementById("totalQuantity").value = d.totalQuantity;
+}
+
+async function toggle(id, current){
+  const eventId = getVal("eventId");
+
+  await db.collection("events")
+    .doc(eventId)
+    .collection("ticketTypes")
+    .doc(id)
+    .update({
+      enabled: !current,
+      updatedAt: new Date()
+    });
+
+  load();
+}
+
+async function del(id){
+  if(!confirm("確定刪除？")) return;
+
+  const eventId = getVal("eventId");
+
+  await db.collection("events")
+    .doc(eventId)
+    .collection("ticketTypes")
+    .doc(id)
+    .delete();
+
+  load();
+}
+</script>
+</body>
+</html>
