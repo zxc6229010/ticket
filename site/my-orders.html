@@ -642,517 +642,574 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      collectionGroup,
-      getDocs,
-      query,
-      where
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore,
+    collection,
+    collectionGroup,
+    getDocs,
+    query,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e",
-      storageBucket: "concert-1ff7e.firebasestorage.app",
-      messagingSenderId: "704757384914",
-      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain: "concert-1ff7e.firebaseapp.com",
+    projectId: "concert-1ff7e",
+    storageBucket: "concert-1ff7e.firebasestorage.app",
+    messagingSenderId: "704757384914",
+    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+  };
 
-    const appFirebase = initializeApp(firebaseConfig);
-    const auth = getAuth(appFirebase);
-    const db = getFirestore(appFirebase);
+  const appFirebase = initializeApp(firebaseConfig);
+  const auth = getAuth(appFirebase);
+  const db = getFirestore(appFirebase);
 
-    const accountBtn = document.getElementById("accountBtn");
-    const app = document.getElementById("app");
-    const heroUserText = document.getElementById("heroUserText");
-    const heroCountText = document.getElementById("heroCountText");
+  const accountBtn = document.getElementById("accountBtn");
+  const app = document.getElementById("app");
+  const heroUserText = document.getElementById("heroUserText");
+  const heroCountText = document.getElementById("heroCountText");
 
-    let currentUser = null;
-    let orderCache = [];
+  let currentUser = null;
+  let orderCache = [];
 
-    function esc(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m]));
+  }
+
+  function norm(v){
+    return String(v ?? "").trim();
+  }
+
+  function lower(v){
+    return norm(v).toLowerCase();
+  }
+
+  function toDate(input){
+    if (!input) return null;
+    if (typeof input?.toDate === "function") return input.toDate();
+    const d = new Date(input);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDateTime(input){
+    const d = toDate(input);
+    if (!d) return "-";
+    return d.toLocaleString("zh-Hant", {
+      hour12:false,
+      year:"numeric",
+      month:"2-digit",
+      day:"2-digit",
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+  }
+
+  function formatPrice(v){
+    const n = Number(v || 0);
+    if (!n) return "免費";
+    return "NT$ " + n.toLocaleString("zh-Hant");
+  }
+
+  function updateAccountLinks(user){
+    if (user) {
+      accountBtn.href = "member.html";
+      accountBtn.title = user.email || "會員中心";
+      accountBtn.setAttribute("aria-label", "會員中心");
+    } else {
+      accountBtn.href = "login.html";
+      accountBtn.title = "登入 / 會員中心";
+      accountBtn.setAttribute("aria-label", "登入 / 會員中心");
     }
+  }
 
-    function norm(v){
-      return String(v ?? "").trim();
-    }
+  function goLogin(){
+    const redirect = encodeURIComponent(location.href);
+    location.href = `login.html?redirect=${redirect}`;
+  }
 
-    function lower(v){
-      return norm(v).toLowerCase();
-    }
+  function isExpired(order){
+    const status = lower(order.status);
+    if (status === "expired") return true;
 
-    function toDate(input){
-      if (!input) return null;
-      if (typeof input?.toDate === "function") return input.toDate();
-      const d = new Date(input);
-      return Number.isNaN(d.getTime()) ? null : d;
-    }
+    const expiresAt = toDate(order.expiresAt);
+    if (!expiresAt) return false;
 
-    function formatDateTime(input){
-      const d = toDate(input);
-      if (!d) return "-";
-      return d.toLocaleString("zh-Hant", {
-        hour12:false,
-        year:"numeric",
-        month:"2-digit",
-        day:"2-digit",
-        hour:"2-digit",
-        minute:"2-digit"
-      });
-    }
+    return (
+      Date.now() > expiresAt.getTime() &&
+      !["paid","completed","registered"].includes(status)
+    );
+  }
 
-    function formatPrice(v){
-      const n = Number(v || 0);
-      if (!n) return "免費";
-      return "NT$ " + n.toLocaleString("zh-Hant");
-    }
+  function getRealStatus(order){
+    return isExpired(order) ? "expired" : lower(order.status || "");
+  }
 
-    function updateAccountLinks(user){
-      if (user) {
-        accountBtn.href = "member.html";
-        accountBtn.title = user.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        accountBtn.href = "login.html";
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-    }
+  function getStatusText(status){
+    status = lower(status);
 
-    function goLogin(){
-      const redirect = encodeURIComponent(location.href);
-      location.href = `login.html?redirect=${redirect}`;
-    }
+    if (status === "pending_holder_info") return "待填持票人資料";
+    if (status === "ready_for_checkout") return "可進入下一步";
+    if (status === "registered") return "已建立";
+    if (status === "paid") return "已付款";
+    if (status === "completed") return "已完成";
+    if (status === "pending") return "待處理";
+    if (status === "processing") return "處理中";
+    if (status === "cancelled") return "已取消";
+    if (status === "void") return "已作廢";
+    if (status === "refunded") return "已退款";
+    if (status === "expired") return "已逾期";
+    return status || "-";
+  }
 
-    function isExpired(order){
-      const status = lower(order.status);
-      if (status === "expired") return true;
+  function getStatusClass(status){
+    status = lower(status);
 
-      const expiresAt = toDate(order.expiresAt);
-      if (!expiresAt) return false;
+    if (["registered","paid","completed","ready_for_checkout"].includes(status)) return "status-ok";
+    if (["pending","processing","pending_holder_info"].includes(status)) return "status-pending";
+    if (["cancelled","void","refunded","expired"].includes(status)) return "status-cancel";
+    return "status-gray";
+  }
 
-      return (
-        Date.now() > expiresAt.getTime() &&
-        !["paid","completed","registered"].includes(status)
-      );
-    }
+  function sortOrders(list){
+    return list.slice().sort((a, b) => {
+      const aExpired = isExpired(a) ? 1 : 0;
+      const bExpired = isExpired(b) ? 1 : 0;
+      if (aExpired !== bExpired) return aExpired - bExpired;
 
-    function getRealStatus(order){
-      return isExpired(order) ? "expired" : lower(order.status || "");
-    }
+      const ta = toDate(a.createdAt)?.getTime() || 0;
+      const tb = toDate(b.createdAt)?.getTime() || 0;
+      return tb - ta;
+    });
+  }
 
-    function getStatusText(status){
-      status = lower(status);
+  function getRoleLabel(order){
+    const buyerUid = norm(order.buyerUid || order.uid || "");
+    if (currentUser && buyerUid === currentUser.uid) return "主購者";
+    return "同行持票人";
+  }
 
-      if (status === "pending_holder_info") return "待填持票人資料";
-      if (status === "ready_for_checkout") return "可進入下一步";
-      if (status === "registered") return "已建立";
-      if (status === "paid") return "已付款";
-      if (status === "completed") return "已完成";
-      if (status === "pending") return "待處理";
-      if (status === "processing") return "處理中";
-      if (status === "cancelled") return "已取消";
-      if (status === "void") return "已作廢";
-      if (status === "refunded") return "已退款";
-      if (status === "expired") return "已逾期";
-      return status || "-";
-    }
+  function getOrderFillUrl(order){
+    const url = new URL("order-fill.html", location.href);
+    url.searchParams.set("id", order.eventId || "");
+    url.searchParams.set("orderId", order.id || "");
+    return url.pathname + url.search;
+  }
 
-    function getStatusClass(status){
-      status = lower(status);
+  function getEventUrl(order){
+    const url = new URL("ticket.html", location.href);
+    url.searchParams.set("id", order.eventId || "");
+    return url.pathname + url.search;
+  }
 
-      if (["registered","paid","completed","ready_for_checkout"].includes(status)) return "status-ok";
-      if (["pending","processing","pending_holder_info"].includes(status)) return "status-pending";
-      if (["cancelled","void","refunded","expired"].includes(status)) return "status-cancel";
-      return "status-gray";
-    }
+  function getHolderAssignments(order){
+    return Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
+  }
 
-    function sortOrders(list){
-      return list.slice().sort((a, b) => {
-        const aExpired = isExpired(a) ? 1 : 0;
-        const bExpired = isExpired(b) ? 1 : 0;
-        if (aExpired !== bExpired) return aExpired - bExpired;
+  function getBuyerTicketCount(order){
+    return getHolderAssignments(order).filter(item => item?.isBuyerTicket === true).length;
+  }
 
-        const ta = toDate(a.createdAt)?.getTime() || 0;
-        const tb = toDate(b.createdAt)?.getTime() || 0;
-        return tb - ta;
-      });
-    }
+  function getValidHolderCount(order){
+    return getHolderAssignments(order).filter(item => lower(item?.status) === "valid").length;
+  }
 
-    function getRoleLabel(order){
-      const buyerUid = norm(order.buyerUid || order.uid || "");
-      if (currentUser && buyerUid === currentUser.uid) return "主購者";
-      return "同行持票人";
-    }
+  function getTotalHolderCount(order){
+    const assignments = getHolderAssignments(order);
+    if (assignments.length) return assignments.length;
+    return Number(order.totalQuantity || order.quantity || 0);
+  }
 
-    function getOrderFillUrl(order){
-      const url = new URL("order-fill.html", location.href);
-      url.searchParams.set("id", order.eventId || "");
-      url.searchParams.set("orderId", order.id || "");
-      return url.pathname + url.search;
-    }
+  function getCreatedTicketCount(order){
+    return Number(order.ticketCount || order.createdTicketCount || 0);
+  }
 
-    function getEventUrl(order){
-      const url = new URL("ticket.html", location.href);
-      url.searchParams.set("id", order.eventId || "");
-      return url.pathname + url.search;
-    }
+  function getHolderSummaryText(order){
+    const assignments = getHolderAssignments(order);
+    if (!assignments.length) return "-";
 
-    async function loadBuyerOrders(uid){
-      const eventsSnap = await getDocs(collection(db, "events"));
-      const allOrders = [];
+    return assignments.map((item, index) => {
+      const label = item.isBuyerTicket ? `第 ${index + 1} 張（主購人票）` : `第 ${index + 1} 張`;
+      const email = norm(item.email || "-");
+      const status = lower(item.status) === "valid" ? "已通過" : "未完成";
+      return `${label}：${email}｜${status}`;
+    }).join("\n");
+  }
 
-      for (const ev of eventsSnap.docs){
-        const eventId = ev.id;
+  async function loadBuyerOrders(uid){
+    const eventsSnap = await getDocs(collection(db, "events"));
+    const allOrders = [];
 
-        const tries = [
-          query(collection(db, "events", eventId, "orders"), where("buyerUid", "==", uid)),
-          query(collection(db, "events", eventId, "orders"), where("uid", "==", uid))
-        ];
+    for (const ev of eventsSnap.docs){
+      const eventId = ev.id;
 
-        for (const qRef of tries){
-          const snap = await getDocs(qRef);
-          snap.forEach(docSnap => {
-            allOrders.push({
-              id: docSnap.id,
-              eventId,
-              ...(docSnap.data() || {})
-            });
-          });
-        }
-      }
+      const tries = [
+        query(collection(db, "events", eventId, "orders"), where("buyerUid", "==", uid)),
+        query(collection(db, "events", eventId, "orders"), where("uid", "==", uid))
+      ];
 
-      return allOrders;
-    }
-
-    async function loadSharedOrdersByParticipant(uid){
-      try{
-        const qRef = query(
-          collectionGroup(db, "orders"),
-          where("participantUids", "array-contains", uid)
-        );
-
+      for (const qRef of tries){
         const snap = await getDocs(qRef);
-        const rows = [];
-
         snap.forEach(docSnap => {
-          const parent = docSnap.ref.parent.parent;
-          rows.push({
+          allOrders.push({
             id: docSnap.id,
-            eventId: parent ? parent.id : "",
+            eventId,
             ...(docSnap.data() || {})
           });
         });
-
-        return rows;
-      }catch(err){
-        console.warn("participantUids 查詢失敗，可能尚未建立索引", err);
-        return [];
       }
     }
 
-    async function loadSharedOrdersMirror(uid){
-      try{
-        const snap = await getDocs(collection(db, "users", uid, "sharedOrders"));
-        const rows = [];
-        snap.forEach(docSnap => {
-          rows.push({
-            id: docSnap.id,
-            ...(docSnap.data() || {}),
-            __fromMirror__: true
-          });
+    return allOrders;
+  }
+
+  async function loadSharedOrdersByParticipant(uid){
+    try{
+      const qRef = query(
+        collectionGroup(db, "orders"),
+        where("participantUids", "array-contains", uid)
+      );
+
+      const snap = await getDocs(qRef);
+      const rows = [];
+
+      snap.forEach(docSnap => {
+        const parent = docSnap.ref.parent.parent;
+        rows.push({
+          id: docSnap.id,
+          eventId: parent ? parent.id : "",
+          ...(docSnap.data() || {})
         });
-        return rows;
-      }catch(err){
-        console.warn("sharedOrders mirror 讀取失敗", err);
-        return [];
-      }
-    }
-
-    async function loadOrders(uid){
-      const [buyerOrders, participantOrders, mirrorOrders] = await Promise.all([
-        loadBuyerOrders(uid),
-        loadSharedOrdersByParticipant(uid),
-        loadSharedOrdersMirror(uid)
-      ]);
-
-      const mergedMap = new Map();
-
-      [...buyerOrders, ...participantOrders, ...mirrorOrders].forEach(order => {
-        const eventId = norm(order.eventId || "");
-        const orderId = norm(order.id || "");
-        if (!eventId && !orderId) return;
-
-        const key = `${eventId}__${orderId}`;
-        const prev = mergedMap.get(key) || {};
-        mergedMap.set(key, { ...prev, ...order });
       });
 
-      return sortOrders([...mergedMap.values()]);
+      return rows;
+    }catch(err){
+      console.warn("participantUids 查詢失敗，可能尚未建立索引", err);
+      return [];
     }
+  }
 
-    function renderOrderList(orders){
-      const listHtml = orders.map(o => {
-        const seatLabels = Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
-        const sectionIds = Array.isArray(o.sectionIds) ? o.sectionIds.filter(Boolean) : [];
-        const participantEmails = Array.isArray(o.participantEmails) ? o.participantEmails.filter(Boolean) : [];
-        const participantUids = Array.isArray(o.participantUids) ? o.participantUids.filter(Boolean) : [];
-        const participantCount = participantUids.length || participantEmails.length || 0;
-        const roleLabel = getRoleLabel(o);
-        const realStatus = getRealStatus(o);
-        const statusText = getStatusText(realStatus);
-        const statusClass = getStatusClass(realStatus);
+  async function loadSharedOrdersMirror(uid){
+    try{
+      const snap = await getDocs(collection(db, "users", uid, "sharedOrders"));
+      const rows = [];
+      snap.forEach(docSnap => {
+        rows.push({
+          id: docSnap.id,
+          ...(docSnap.data() || {}),
+          __fromMirror__: true
+        });
+      });
+      return rows;
+    }catch(err){
+      console.warn("sharedOrders mirror 讀取失敗", err);
+      return [];
+    }
+  }
 
-        const canFillNow =
-          realStatus !== "expired" &&
-          ["pending_holder_info","ready_for_checkout"].includes(lower(o.status || ""));
+  async function loadOrders(uid){
+    const [buyerOrders, participantOrders, mirrorOrders] = await Promise.all([
+      loadBuyerOrders(uid),
+      loadSharedOrdersByParticipant(uid),
+      loadSharedOrdersMirror(uid)
+    ]);
 
-        const itemSummaryText =
-          Array.isArray(o.itemSummary) && o.itemSummary.length
-            ? o.itemSummary.map(item => {
-                const name = item.ticketTypeName || item.ticketTypeId || "票種";
-                const qty = item.quantity || 0;
-                return `${name} × ${qty}`;
-              }).join("、")
-            : (o.ticketTypeName || "-");
+    const mergedMap = new Map();
 
-        return `
-          <div class="order-card">
-            <div class="order-head">
-              <div class="order-head-top">
-                <div>
-                  <h2 class="order-title">${esc(o.eventTitle || "活動")}</h2>
-                  <div class="order-sub">
+    [...buyerOrders, ...participantOrders, ...mirrorOrders].forEach(order => {
+      const eventId = norm(order.eventId || "");
+      const orderId = norm(order.id || "");
+      if (!eventId && !orderId) return;
+
+      const key = `${eventId}__${orderId}`;
+      const prev = mergedMap.get(key) || {};
+      mergedMap.set(key, { ...prev, ...order });
+    });
+
+    return sortOrders([...mergedMap.values()]);
+  }
+
+  function renderOrderList(orders){
+    const listHtml = orders.map(o => {
+      const seatLabels = Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
+      const sectionIds = Array.isArray(o.sectionIds) ? o.sectionIds.filter(Boolean) : [];
+      const participantEmails = Array.isArray(o.participantEmails) ? o.participantEmails.filter(Boolean) : [];
+      const participantUids = Array.isArray(o.participantUids) ? o.participantUids.filter(Boolean) : [];
+      const participantCount = participantUids.length || participantEmails.length || 0;
+      const roleLabel = getRoleLabel(o);
+      const realStatus = getRealStatus(o);
+      const statusText = getStatusText(realStatus);
+      const statusClass = getStatusClass(realStatus);
+
+      const holderTotal = getTotalHolderCount(o);
+      const holderValid = getValidHolderCount(o);
+      const buyerTicketCount = getBuyerTicketCount(o);
+      const createdTicketCount = getCreatedTicketCount(o);
+      const holderSummaryText = getHolderSummaryText(o);
+
+      const canFillNow =
+        realStatus !== "expired" &&
+        ["pending_holder_info","ready_for_checkout"].includes(lower(o.status || ""));
+
+      const itemSummaryText =
+        Array.isArray(o.itemSummary) && o.itemSummary.length
+          ? o.itemSummary.map(item => {
+              const name = item.ticketTypeName || item.ticketTypeId || "票種";
+              const qty = item.quantity || 0;
+              return `${name} × ${qty}`;
+            }).join("、")
+          : (o.ticketTypeName || "-");
+
+      return `
+        <div class="order-card">
+          <div class="order-head">
+            <div class="order-head-top">
+              <div>
+                <h2 class="order-title">${esc(o.eventTitle || "活動")}</h2>
+                <div class="order-sub">
 訂單 ID：<span class="mono">${esc(o.id)}</span>
 活動 ID：<span class="mono">${esc(o.eventId || "-")}</span>
 你的角色：${esc(roleLabel)}
+                </div>
+              </div>
+
+              <span class="status ${statusClass}">
+                ${esc(statusText)}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-body">
+            <div class="order-grid">
+              <div class="info-box">
+                <div class="box-title">訂單資訊</div>
+
+                <div class="kv">
+                  <div class="k">主購者</div>
+                  <div class="v">${esc(o.buyerEmail || o.email || "-")}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">票種摘要</div>
+                  <div class="v">${esc(itemSummaryText)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">總張數</div>
+                  <div class="v">${esc(holderTotal || o.totalQuantity || o.quantity || 0)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">主購人票</div>
+                  <div class="v">${esc(buyerTicketCount || (holderTotal ? 1 : 0))}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">填寫進度</div>
+                  <div class="v">${esc(`${holderValid} / ${holderTotal}`)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">已建立票券</div>
+                  <div class="v">${esc(createdTicketCount)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">總金額</div>
+                  <div class="v">${esc(formatPrice(o.totalAmount))}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">付款狀態</div>
+                  <div class="v">${esc(o.paymentStatus || "-")}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">建立時間</div>
+                  <div class="v">${esc(formatDateTime(o.createdAt))}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">填寫期限</div>
+                  <div class="v">${esc(formatDateTime(o.expiresAt))}</div>
+                </div>
+              </div>
+
+              <div class="info-box">
+                <div class="box-title">共享 / 座位資訊</div>
+
+                <div class="kv">
+                  <div class="k">共享人數</div>
+                  <div class="v">${esc(participantCount)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">共享對象</div>
+                  <div class="v">${participantEmails.length ? esc(participantEmails.join("、")) : "-"}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">持票人摘要</div>
+                  <div class="v" style="white-space:pre-wrap;">${esc(holderSummaryText)}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">座位</div>
+                  <div class="v">
+                    ${
+                      seatLabels.length
+                        ? `<div class="seat-list">${seatLabels.map(seat => `<span class="seat-pill">${esc(seat)}</span>`).join("")}</div>`
+                        : "-"
+                    }
                   </div>
                 </div>
-
-                <span class="status ${statusClass}">
-                  ${esc(statusText)}
-                </span>
+                <div class="kv">
+                  <div class="k">區域</div>
+                  <div class="v">${sectionIds.length ? esc(sectionIds.join("、")) : "-"}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">校園驗證</div>
+                  <div class="v">${esc(o.verifiedSchoolName || o.verifiedSchoolId || "-")}</div>
+                </div>
+                <div class="kv">
+                  <div class="k">購買身份</div>
+                  <div class="v">${esc(o.matchedRole || "-")}</div>
+                </div>
               </div>
             </div>
 
-            <div class="order-body">
-              <div class="order-grid">
-                <div class="info-box">
-                  <div class="box-title">訂單資訊</div>
-
-                  <div class="kv">
-                    <div class="k">主購者</div>
-                    <div class="v">${esc(o.buyerEmail || o.email || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">票種摘要</div>
-                    <div class="v">${esc(itemSummaryText)}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">總張數</div>
-                    <div class="v">${esc(o.totalQuantity || o.quantity || 0)}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">總金額</div>
-                    <div class="v">${esc(formatPrice(o.totalAmount))}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">付款狀態</div>
-                    <div class="v">${esc(o.paymentStatus || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">建立時間</div>
-                    <div class="v">${esc(formatDateTime(o.createdAt))}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">填寫期限</div>
-                    <div class="v">${esc(formatDateTime(o.expiresAt))}</div>
-                  </div>
-                </div>
-
-                <div class="info-box">
-                  <div class="box-title">共享 / 座位資訊</div>
-
-                  <div class="kv">
-                    <div class="k">共享人數</div>
-                    <div class="v">${esc(participantCount)}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">共享對象</div>
-                    <div class="v">${participantEmails.length ? esc(participantEmails.join("、")) : "-"}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">座位</div>
-                    <div class="v">
-                      ${
-                        seatLabels.length
-                          ? `<div class="seat-list">${seatLabels.map(seat => `<span class="seat-pill">${esc(seat)}</span>`).join("")}</div>`
-                          : "-"
-                      }
-                    </div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">區域</div>
-                    <div class="v">${sectionIds.length ? esc(sectionIds.join("、")) : "-"}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">校園驗證</div>
-                    <div class="v">${esc(o.verifiedSchoolName || o.verifiedSchoolId || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">購買身份</div>
-                    <div class="v">${esc(o.matchedRole || "-")}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="order-actions">
-                ${
-                  canFillNow
-                    ? `<a class="btn btn-primary" href="${esc(getOrderFillUrl(o))}">繼續填資料</a>`
-                    : `<a class="btn btn-primary" href="my-tickets.html">查看票券</a>`
-                }
-                <a class="btn" href="${esc(getEventUrl(o))}">查看活動</a>
-              </div>
-
-              <div class="notice">
-                ${
-                  realStatus === "expired"
-                    ? "這筆訂單已超過填寫期限，因此已失效。若仍想購買，請重新回到活動頁下單。"
-                    : lower(o.status) === "pending_holder_info"
-                    ? "此訂單已成立，但尚未完成所有持票人資料填寫。請在期限內完成，訂單才會正式成立。"
-                    : lower(o.status) === "ready_for_checkout"
-                    ? "此訂單的持票人資料已完成，可以進入下一步付款或後續流程。"
-                    : lower(o.status) === "registered"
-                    ? "此訂單已建立完成。若票券已同步建立，可前往「我的票券」查看。"
-                    : lower(o.status) === "paid"
-                    ? "此訂單已完成付款，可前往「我的票券」查看可入場票券。"
-                    : lower(o.status) === "completed"
-                    ? "此訂單已完成全部流程。"
-                    : lower(o.status) === "cancelled"
-                    ? "此訂單已取消。若有疑問，請聯絡主辦單位。"
-                    : lower(o.status) === "refunded"
-                    ? "此訂單已退款。"
-                    : "此訂單狀態請以系統顯示為準。"
-                }
-              </div>
+            <div class="order-actions">
+              ${
+                canFillNow
+                  ? `<a class="btn btn-primary" href="${esc(getOrderFillUrl(o))}">繼續填資料</a>`
+                  : `<a class="btn btn-primary" href="my-tickets.html">查看票券</a>`
+              }
+              <a class="btn" href="${esc(getEventUrl(o))}">查看活動</a>
             </div>
-          </div>
-        `;
-      }).join("");
 
-      return `<div class="list">${listHtml}</div>`;
-    }
-
-    function render(orders){
-      if (!orders.length){
-        heroCountText.textContent = "訂單數量：0";
-        app.className = "empty";
-        app.innerHTML = "目前沒有任何訂單";
-        return;
-      }
-
-      heroCountText.textContent = `訂單數量：${orders.length}`;
-
-      app.className = "";
-      app.innerHTML = `
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID / 主購者 Email" />
-          </div>
-
-          <div class="toolbar-right">
-            <select id="statusFilter" class="select">
-              <option value="all">全部狀態</option>
-              <option value="pending_holder_info">待填資料</option>
-              <option value="ready_for_checkout">可進下一步</option>
-              <option value="registered">已建立</option>
-              <option value="paid">已付款</option>
-              <option value="completed">已完成</option>
-              <option value="expired">已逾期</option>
-              <option value="cancelled">已取消</option>
-              <option value="refunded">已退款</option>
-            </select>
+            <div class="notice">
+              ${
+                realStatus === "expired"
+                  ? "這筆訂單已超過填寫期限，因此已失效。若仍想購買，請重新回到活動頁下單。"
+                  : lower(o.status) === "pending_holder_info"
+                  ? "此訂單已成立，但尚未完成所有持票人資料填寫。第一張票固定為主購人票，請在期限內完成其餘持票人資料。"
+                  : lower(o.status) === "ready_for_checkout"
+                  ? "此訂單的持票人資料已完成，可以進入下一步付款或後續流程。"
+                  : lower(o.status) === "registered"
+                  ? "此訂單已建立完成。若票券已同步建立，可前往「我的票券」查看。"
+                  : lower(o.status) === "paid"
+                  ? "此訂單已完成付款，可前往「我的票券」查看可入場票券。"
+                  : lower(o.status) === "completed"
+                  ? "此訂單已完成全部流程。"
+                  : lower(o.status) === "cancelled"
+                  ? "此訂單已取消。若有疑問，請聯絡主辦單位。"
+                  : lower(o.status) === "refunded"
+                  ? "此訂單已退款。"
+                  : "此訂單狀態請以系統顯示為準。"
+              }
+            </div>
           </div>
         </div>
-
-        <div id="orderListWrap"></div>
       `;
+    }).join("");
 
-      const searchInput = document.getElementById("searchInput");
-      const statusFilter = document.getElementById("statusFilter");
-      const orderListWrap = document.getElementById("orderListWrap");
+    return `<div class="list">${listHtml}</div>`;
+  }
 
-      function paint(){
-        const q = lower(searchInput.value);
-        const f = statusFilter.value;
-
-        const filtered = orders.filter(o => {
-          const realStatus = getRealStatus(o);
-
-          if (f !== "all" && realStatus !== f) return false;
-
-          if (!q) return true;
-
-          const hay = [
-            o.eventTitle,
-            o.ticketTypeName,
-            o.id,
-            o.buyerEmail,
-            ...(Array.isArray(o.seatLabels) ? o.seatLabels : []),
-            ...(Array.isArray(o.participantEmails) ? o.participantEmails : []),
-            ...(Array.isArray(o.itemSummary) ? o.itemSummary.map(x => `${x.ticketTypeName || ""} ${x.ticketTypeId || ""}`) : [])
-          ].map(lower).join(" ");
-
-          return hay.includes(q);
-        });
-
-        if (!filtered.length) {
-          orderListWrap.innerHTML = `<div class="empty">找不到符合條件的訂單。</div>`;
-          return;
-        }
-
-        orderListWrap.innerHTML = renderOrderList(filtered);
-      }
-
-      searchInput.addEventListener("input", paint);
-      statusFilter.addEventListener("change", paint);
-      paint();
+  function render(orders){
+    if (!orders.length){
+      heroCountText.textContent = "訂單數量：0";
+      app.className = "empty";
+      app.innerHTML = "目前沒有任何訂單";
+      return;
     }
 
-    onAuthStateChanged(auth, async user => {
-      currentUser = user || null;
-      updateAccountLinks(currentUser);
+    heroCountText.textContent = `訂單數量：${orders.length}`;
 
-      if (!user){
-        goLogin();
+    app.className = "";
+    app.innerHTML = `
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID / 主購者 Email" />
+        </div>
+
+        <div class="toolbar-right">
+          <select id="statusFilter" class="select">
+            <option value="all">全部狀態</option>
+            <option value="pending_holder_info">待填資料</option>
+            <option value="ready_for_checkout">可進下一步</option>
+            <option value="registered">已建立</option>
+            <option value="paid">已付款</option>
+            <option value="completed">已完成</option>
+            <option value="expired">已逾期</option>
+            <option value="cancelled">已取消</option>
+            <option value="refunded">已退款</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="orderListWrap"></div>
+    `;
+
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const orderListWrap = document.getElementById("orderListWrap");
+
+    function paint(){
+      const q = lower(searchInput.value);
+      const f = statusFilter.value;
+
+      const filtered = orders.filter(o => {
+        const realStatus = getRealStatus(o);
+
+        if (f !== "all" && realStatus !== f) return false;
+
+        if (!q) return true;
+
+        const hay = [
+          o.eventTitle,
+          o.ticketTypeName,
+          o.id,
+          o.buyerEmail,
+          ...(Array.isArray(o.seatLabels) ? o.seatLabels : []),
+          ...(Array.isArray(o.participantEmails) ? o.participantEmails : []),
+          ...(Array.isArray(o.itemSummary) ? o.itemSummary.map(x => `${x.ticketTypeName || ""} ${x.ticketTypeId || ""}`) : []),
+          ...(Array.isArray(o.holderAssignments) ? o.holderAssignments.map(x => `${x.email || ""} ${x.name || ""}`) : [])
+        ].map(lower).join(" ");
+
+        return hay.includes(q);
+      });
+
+      if (!filtered.length) {
+        orderListWrap.innerHTML = `<div class="empty">找不到符合條件的訂單。</div>`;
         return;
       }
 
-      heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
-      app.className = "loading";
-      app.innerHTML = "載入中…";
+      orderListWrap.innerHTML = renderOrderList(filtered);
+    }
 
-      try{
-        orderCache = await loadOrders(user.uid);
-        render(orderCache);
-      }catch(err){
-        console.error(err);
-        app.className = "empty";
-        app.innerHTML = "訂單載入失敗，請稍後再試。";
-      }
-    });
-  </script>
+    searchInput.addEventListener("input", paint);
+    statusFilter.addEventListener("change", paint);
+    paint();
+  }
+
+  onAuthStateChanged(auth, async user => {
+    currentUser = user || null;
+    updateAccountLinks(currentUser);
+
+    if (!user){
+      goLogin();
+      return;
+    }
+
+    heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
+    app.className = "loading";
+    app.innerHTML = "載入中…";
+
+    try{
+      orderCache = await loadOrders(user.uid);
+      render(orderCache);
+    }catch(err){
+      console.error(err);
+      app.className = "empty";
+      app.innerHTML = "訂單載入失敗，請稍後再試。";
+    }
+  });
+</script>
 </body>
 </html>
