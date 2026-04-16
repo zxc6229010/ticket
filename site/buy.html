@@ -370,29 +370,6 @@
       line-height:1.8;
     }
 
-    .promo-box{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:32px;
-      box-shadow:var(--shadow);
-      padding:20px;
-      margin-bottom:16px;
-    }
-
-    .promo-grid{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      gap:10px;
-      align-items:end;
-      margin-top:14px;
-    }
-
-    @media (max-width:680px){
-      .promo-grid{
-        grid-template-columns:1fr;
-      }
-    }
-
     .side-card{
       background:#fff;
       border:1px solid rgba(0,0,0,.06);
@@ -684,9 +661,11 @@
       doc,
       getDoc,
       collection,
-      addDoc,
       serverTimestamp,
-      Timestamp
+      Timestamp,
+      runTransaction,
+      increment,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -712,8 +691,13 @@
     let currentUser = null;
     let currentEvent = null;
     let quantityMap = {};
-    let appliedPromo = null;
-    let promoInputValue = "";
+    let promoState = {
+      code: "",
+      applied: false,
+      loading: false,
+      data: null,
+      error: ""
+    };
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, (m) => ({
@@ -791,8 +775,21 @@
       );
     }
 
-    function getTicketTypes(event){
+    function getRawTicketTypes(event){
       const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      if (!raw.length) {
+        return [{
+          id:"general",
+          name:"一般報名",
+          price:0,
+          description:"此活動目前未細分票種。",
+          enabled:true,
+          maxPerOrder:6,
+          visibility:"public",
+          seatType:"free"
+        }];
+      }
+
       return raw
         .map((item, index) => ({
           id: norm(item.id || `ticket_${index + 1}`),
@@ -800,55 +797,22 @@
           price: Number(item.price || 0),
           description: norm(item.description || ""),
           enabled: item.enabled !== false,
-          maxPerOrder: Math.max(0, Number(item.maxPerOrder || 1) || 1),
-          visibility: norm(item.visibility || "public"),
-          requiresSeat: item.requiresSeat === true,
-          promoCodeIds: Array.isArray(item.promoCodeIds)
-            ? item.promoCodeIds.map(v => norm(v)).filter(Boolean)
-            : []
+          maxPerOrder: Math.max(0, Number(item.maxPerOrder || item.maxPerUser || 6) || 6),
+          visibility: lower(item.visibility || item.type || "public"),
+          seatType: lower(item.seatType || "free")
         }))
         .filter(item => item.enabled !== false);
     }
 
-    function getPromoCodes(event){
-      const raw = Array.isArray(event.promoCodes) ? event.promoCodes : [];
-      return raw
-        .map((item, index) => ({
-          id: norm(item.id || `promo_${index + 1}`),
-          code: norm(item.code || ""),
-          note: norm(item.note || ""),
-          enabled: item.enabled === true,
-          maxUses: Math.max(0, Number(item.maxUses || 0) || 0),
-          usedCount: Math.max(0, Number(item.usedCount || 0) || 0)
-        }))
-        .filter(item => item.code);
-    }
+    function getVisibleTicketTypes(event){
+      const raw = getRawTicketTypes(event);
+      const promoTicketTypeId = promoState?.data?.ticketTypeId || "";
 
-    function findPromoByCode(code){
-      const promoCodes = getPromoCodes(currentEvent);
-      const keyword = lower(code);
-      if (!keyword) return null;
+      return raw.filter(type => {
+        const visibility = lower(type.visibility || "public");
 
-      return promoCodes.find(item => lower(item.code) === keyword) || null;
-    }
-
-    function promoIsAvailable(promo){
-      if (!promo) return false;
-      if (promo.enabled !== true) return false;
-      if (Number(promo.maxUses || 0) > 0 && Number(promo.usedCount || 0) >= Number(promo.maxUses || 0)) {
-        return false;
-      }
-      return true;
-    }
-
-    function getVisibleTicketTypes(){
-      const types = getTicketTypes(currentEvent);
-
-      return types.filter(type => {
-        if (type.visibility === "promo") {
-          if (!appliedPromo) return false;
-          if (!type.promoCodeIds.length) return false;
-          return type.promoCodeIds.includes(appliedPromo.id);
+        if (visibility === "pr") {
+          return promoState.applied && promoTicketTypeId === type.id;
         }
         return true;
       });
@@ -857,6 +821,36 @@
     async function getEventById(id){
       const snap = await getDoc(doc(db, "events", id));
       return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+    }
+
+    async function getPromoCodeData(eventId, code){
+      const cleanCode = norm(code);
+      if (!cleanCode) throw new Error("請輸入公關代碼");
+
+      const ref = doc(db, "events", eventId, "promoCodes", cleanCode);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        throw new Error("查無此公關代碼");
+      }
+
+      const data = snap.data() || {};
+      const enabled = data.enabled === true;
+      const maxUse = Number(data.maxUse || 0);
+      const usedCount = Number(data.usedCount || 0);
+
+      if (!enabled) {
+        throw new Error("此公關代碼未啟用");
+      }
+
+      if (maxUse > 0 && usedCount >= maxUse) {
+        throw new Error("此公關代碼已達使用上限");
+      }
+
+      return {
+        id: snap.id,
+        ...data
+      };
     }
 
     function updateAccountLinks(user){
@@ -882,8 +876,8 @@
     }
 
     function getSelectedItems(){
-      const visibleTypes = getVisibleTicketTypes();
-      return visibleTypes
+      const types = getVisibleTicketTypes(currentEvent);
+      return types
         .map(type => {
           const quantity = Number(quantityMap[type.id] || 0);
           return {
@@ -893,7 +887,7 @@
             quantity,
             subtotal: Number(type.price || 0) * quantity,
             visibility: type.visibility || "public",
-            requiresSeat: type.requiresSeat === true
+            seatType: type.seatType || "free"
           };
         })
         .filter(item => item.quantity > 0);
@@ -936,16 +930,34 @@
         };
       }
 
-      if (appliedPromo) {
+      return {
+        className: "ok",
+        text: "建立訂單後，系統會先保留這批票。\n至少會有 1 張票自動帶入主購人資料，其餘票券再於下一步填寫持票人資訊。"
+      };
+    }
+
+    function getPromoNotice(){
+      if (promoState.loading) {
+        return { className:"info", text:"公關代碼驗證中…" };
+      }
+
+      if (promoState.applied && promoState.data) {
         return {
-          className: "ok",
-          text: `目前已套用公關代碼：${appliedPromo.code}\n建立訂單後，系統會記錄此次公關代碼使用資訊。`
+          className:"ok",
+          text:`已套用公關代碼：${promoState.data.code || promoState.data.id}\n對應票種：${promoState.data.ticketTypeName || promoState.data.ticketTypeId || "-"}`
+        };
+      }
+
+      if (promoState.error) {
+        return {
+          className:"warn",
+          text:promoState.error
         };
       }
 
       return {
-        className: "ok",
-        text: "建立訂單後，系統會先保留這批票。\n你需要在期限內完成每張票的持票人資料填寫，訂單才會正式完成。"
+        className:"info",
+        text:"若你有公關代碼，可在此輸入。\n套用後只會顯示該代碼對應的票種。"
       };
     }
 
@@ -972,9 +984,11 @@
     }
 
     function renderTicketCard(type){
-      const max = Math.max(0, Number(type.maxPerOrder || 1) || 1);
+      const max = Math.max(0, Number(type.maxPerOrder || 6) || 6);
       const currentQty = Number(quantityMap[type.id] || 0);
       const options = Array.from({ length: max + 1 }, (_, i) => i);
+
+      const promoLocked = promoState.applied && promoState.data && promoState.data.ticketTypeId === type.id;
 
       return `
         <div class="ticket-card">
@@ -993,8 +1007,9 @@
             <div class="meta-pills">
               <span class="meta-pill">票種代碼：${esc(type.id)}</span>
               <span class="meta-pill">單筆上限：${esc(max)} 張</span>
-              <span class="meta-pill">${esc(type.visibility === "promo" ? "公關限定票" : "公開票")}</span>
-              <span class="meta-pill">${esc(type.requiresSeat ? "需選位" : "不需選位")}</span>
+              <span class="meta-pill">${esc(type.visibility === "pr" ? "公關票" : "一般票")}</span>
+              <span class="meta-pill">${esc(type.seatType === "assigned" ? "指定座位" : "自由座")}</span>
+              ${promoLocked ? `<span class="meta-pill">已由公關代碼解鎖</span>` : ``}
             </div>
           </div>
 
@@ -1004,7 +1019,6 @@
                 <div class="hint">
                   若要幫朋友一起購買，可以先把多張票放進同一筆訂單，
                   下一步再逐張填寫持票人資料。
-                  ${type.requiresSeat ? "\n此票種後續需要進入選位流程。" : ""}
                 </div>
               </div>
 
@@ -1022,73 +1036,19 @@
       `;
     }
 
-    function renderPromoSection(){
-      const promoEnabled = currentEvent.promoCodeEnabled === true;
-      const promoCodes = getPromoCodes(currentEvent);
-      const hasPromoTicket = getTicketTypes(currentEvent).some(t => t.visibility === "promo");
-
-      if (!promoEnabled || !hasPromoTicket) return "";
-
-      return `
-        <section class="promo-box">
-          <h2 class="side-title" style="font-size:24px;">公關代碼</h2>
-          <div class="side-sub">
-            若你持有公關代碼，請先輸入代碼。
-            套用成功後，才會顯示對應可購買的公關票種。
-          </div>
-
-          <div class="promo-grid">
-            <div class="field">
-              <label class="label" for="promoCodeInput">輸入公關代碼</label>
-              <input
-                class="input"
-                id="promoCodeInput"
-                type="text"
-                value="${esc(promoInputValue)}"
-                placeholder="例如：PR2025A"
-              />
-            </div>
-
-            <button class="btn" id="applyPromoBtn">套用代碼</button>
-          </div>
-
-          <div class="action-stack" style="margin-top:10px;">
-            <button class="btn" id="clearPromoBtn" ${appliedPromo ? "" : "disabled"}>清除公關代碼</button>
-          </div>
-
-          <div class="notice ${
-            appliedPromo
-              ? "ok"
-              : promoCodes.length
-                ? "info"
-                : "warn"
-          }">
-            ${
-              appliedPromo
-                ? `目前已套用公關代碼：${appliedPromo.code}${appliedPromo.note ? `\n備註：${appliedPromo.note}` : ""}`
-                : promoCodes.length
-                  ? "尚未套用公關代碼。若你只有公關票資格，請先輸入代碼。"
-                  : "此活動目前沒有可使用的公關代碼。"
-            }
-          </div>
-        </section>
-      `;
-    }
-
     function renderPage(){
       const status = getEventStatus(currentEvent);
       const desc = getEventDescription(currentEvent) || "請先選擇你要的票種與張數。";
       const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
       const saleStartText = formatDateTime(currentEvent.saleStartAt);
       const saleEndText = formatDateTime(currentEvent.saleEndAt);
-
-      const visibleTicketTypes = getVisibleTicketTypes();
+      const ticketTypes = getVisibleTicketTypes(currentEvent);
       const selectedItems = getSelectedItems();
       const totalQty = getTotalQuantity();
       const totalAmount = getTotalAmount();
       const canOrder = canCreateOrder(currentEvent);
       const notice = getSummaryNotice();
-      const promoSectionHtml = renderPromoSection();
+      const promoNotice = getPromoNotice();
 
       backLink.href = `ticket.html?id=${encodeURIComponent(currentEvent.id)}`;
 
@@ -1105,18 +1065,14 @@ ${esc(desc)}
             <span class="pill">地點：${esc(venue)}</span>
             <span class="pill">開賣：${esc(saleStartText)}</span>
             <span class="pill">截止：${esc(saleEndText)}</span>
-            ${appliedPromo ? `<span class="pill">已套用公關代碼：${esc(appliedPromo.code)}</span>` : ``}
           </div>
         </section>
 
-        ${promoSectionHtml}
-
         <div class="layout">
           <section class="ticket-list">
-            ${
-              visibleTicketTypes.length
-                ? visibleTicketTypes.map(type => renderTicketCard(type)).join("")
-                : `<div class="empty">目前沒有可顯示的票種。${currentEvent.promoCodeEnabled === true ? "若你持有公關代碼，請先輸入並套用。" : ""}</div>`
+            ${ticketTypes.length
+              ? ticketTypes.map(type => renderTicketCard(type)).join("")
+              : `<div class="empty">目前沒有可選擇的票種。若你持有公關代碼，請先於右側輸入並套用。</div>`
             }
           </section>
 
@@ -1125,6 +1081,26 @@ ${esc(desc)}
             <div class="side-sub">
               先選票種與張數，再建立訂單。
               建立後會進入持票人資料填寫頁面。
+            </div>
+
+            <div class="field" style="margin-top:16px;">
+              <label class="label" for="promoCodeInput">公關代碼</label>
+              <input
+                id="promoCodeInput"
+                class="input"
+                type="text"
+                placeholder="請輸入公關代碼"
+                value="${esc(promoState.code || "")}"
+              />
+            </div>
+
+            <div class="action-stack" style="margin-top:10px;">
+              <button class="btn" id="applyPromoBtn" ${promoState.loading ? "disabled" : ""}>套用公關代碼</button>
+              <button class="btn" id="clearPromoBtn" ${promoState.applied ? "" : "disabled"}>清除公關代碼</button>
+            </div>
+
+            <div class="notice ${promoNotice.className}">
+              ${esc(promoNotice.text)}
             </div>
 
             <div class="summary">
@@ -1145,8 +1121,8 @@ ${esc(desc)}
                 <strong>${esc(formatPrice(totalAmount))}</strong>
               </div>
               <div class="summary-row">
-                <span>公關代碼</span>
-                <strong>${esc(appliedPromo ? appliedPromo.code : "未使用")}</strong>
+                <span>主購人票</span>
+                <strong>${totalQty > 0 ? "至少 1 張" : "尚未建立"}</strong>
               </div>
             </div>
 
@@ -1168,39 +1144,6 @@ ${esc(desc)}
         </div>
       `;
 
-      const promoCodeInput = document.getElementById("promoCodeInput");
-      const applyPromoBtn = document.getElementById("applyPromoBtn");
-      const clearPromoBtn = document.getElementById("clearPromoBtn");
-
-      if (promoCodeInput) {
-        promoCodeInput.addEventListener("input", e => {
-          promoInputValue = e.target.value || "";
-        });
-        promoCodeInput.addEventListener("keydown", e => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            applyPromoCode();
-          }
-        });
-      }
-
-      if (applyPromoBtn) {
-        applyPromoBtn.onclick = applyPromoCode;
-      }
-
-      if (clearPromoBtn) {
-        clearPromoBtn.onclick = () => {
-          appliedPromo = null;
-          promoInputValue = "";
-          const visibleTypes = getVisibleTicketTypes();
-          const visibleIds = new Set(visibleTypes.map(t => t.id));
-          Object.keys(quantityMap).forEach(id => {
-            if (!visibleIds.has(id)) quantityMap[id] = 0;
-          });
-          renderPage();
-        };
-      }
-
       document.querySelectorAll("[data-ticket-id]").forEach(select => {
         select.addEventListener("change", e => {
           const ticketId = e.target.dataset.ticketId || "";
@@ -1209,31 +1152,95 @@ ${esc(desc)}
         });
       });
 
+      const promoCodeInput = document.getElementById("promoCodeInput");
+      const applyPromoBtn = document.getElementById("applyPromoBtn");
+      const clearPromoBtn = document.getElementById("clearPromoBtn");
       const createOrderBtn = document.getElementById("createOrderBtn");
+
+      if (applyPromoBtn) {
+        applyPromoBtn.onclick = applyPromoCode;
+      }
+
+      if (clearPromoBtn) {
+        clearPromoBtn.onclick = clearPromoCode;
+      }
+
+      if (promoCodeInput) {
+        promoCodeInput.addEventListener("input", e => {
+          promoState.code = e.target.value || "";
+        });
+
+        promoCodeInput.addEventListener("keydown", e => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            applyPromoCode();
+          }
+        });
+      }
+
       if (createOrderBtn) {
         createOrderBtn.onclick = createOrder;
       }
     }
 
-    function applyPromoCode(){
-      const code = lower(promoInputValue);
-      if (!code) {
-        alert("請先輸入公關代碼。");
-        return;
-      }
+    async function applyPromoCode(){
+      if (!currentEvent) return;
 
-      const found = findPromoByCode(code);
-      if (!found) {
-        alert("找不到這組公關代碼。");
-        return;
-      }
+      const input = document.getElementById("promoCodeInput");
+      const code = norm(input?.value || promoState.code || "");
 
-      if (!promoIsAvailable(found)) {
-        alert("這組公關代碼目前不可使用。");
-        return;
-      }
+      promoState.loading = true;
+      promoState.error = "";
+      promoState.code = code;
+      renderPage();
 
-      appliedPromo = found;
+      try {
+        const promoData = await getPromoCodeData(currentEvent.id, code);
+        const allTypes = getRawTicketTypes(currentEvent);
+        const matchedType = allTypes.find(item => item.id === promoData.ticketTypeId);
+
+        if (!matchedType) {
+          throw new Error("此公關代碼對應的票種不存在");
+        }
+
+        promoState.applied = true;
+        promoState.data = promoData;
+        promoState.error = "";
+
+        const newMap = {};
+        allTypes.forEach(type => {
+          newMap[type.id] = 0;
+        });
+        quantityMap = newMap;
+
+        renderPage();
+      } catch (err) {
+        console.error(err);
+        promoState.applied = false;
+        promoState.data = null;
+        promoState.error = err?.message || "公關代碼驗證失敗";
+        renderPage();
+      } finally {
+        promoState.loading = false;
+        renderPage();
+      }
+    }
+
+    function clearPromoCode(){
+      promoState = {
+        code: "",
+        applied: false,
+        loading: false,
+        data: null,
+        error: ""
+      };
+
+      const allTypes = getRawTicketTypes(currentEvent);
+      const newMap = {};
+      allTypes.forEach(type => {
+        newMap[type.id] = 0;
+      });
+      quantityMap = newMap;
       renderPage();
     }
 
@@ -1259,6 +1266,15 @@ ${esc(desc)}
         return;
       }
 
+      if (promoState.applied && promoState.data) {
+        const allowedTypeId = promoState.data.ticketTypeId;
+        const wrongSelection = selectedItems.some(item => item.ticketTypeId !== allowedTypeId);
+        if (wrongSelection) {
+          alert("目前公關代碼只允許購買指定票種。");
+          return;
+        }
+      }
+
       const btn = document.getElementById("createOrderBtn");
       const oldText = btn ? btn.textContent : "";
       if (btn) {
@@ -1270,78 +1286,123 @@ ${esc(desc)}
         const expiresAtDate = getExpiresAtDate();
         const expiresAt = Timestamp.fromDate(expiresAtDate);
 
-        const holderAssignments = [];
+        const buyerEmail = lower(currentUser.email || "");
         let holderIndex = 0;
-        let buyerMarked = false;
+        let buyerAssigned = false;
+        const holderAssignments = [];
 
         selectedItems.forEach(item => {
           for (let i = 0; i < item.quantity; i++) {
-            const isBuyerTicket = !buyerMarked;
+            const isBuyerTicket = !buyerAssigned;
+
             holderAssignments.push({
               holderIndex,
               ticketTypeId: item.ticketTypeId,
               ticketTypeName: item.ticketTypeName,
               price: Number(item.unitPrice || 0),
-              requiresSeat: item.requiresSeat === true,
+              seatType: item.seatType || "free",
 
-              isPrimaryBuyerTicket: isBuyerTicket,
+              isBuyerTicket,
 
-              email: isBuyerTicket ? lower(currentUser.email || "") : "",
+              email: isBuyerTicket ? buyerEmail : "",
               name: "",
               uid: isBuyerTicket ? currentUser.uid : "",
               verifiedSchoolId: "",
               verifiedSchoolName: "",
               verifyMethod: "",
 
-              status: "",
-              message: ""
+              status: isBuyerTicket ? "buyer_prefilled" : "",
+              message: isBuyerTicket ? "此票已自動帶入主購人資料" : ""
             });
+
+            if (isBuyerTicket) {
+              buyerAssigned = true;
+            }
+
             holderIndex += 1;
-            if (isBuyerTicket) buyerMarked = true;
           }
         });
 
-        const orderPayload = {
-          uid: currentUser.uid,
-          buyerUid: currentUser.uid,
-          buyerEmail: lower(currentUser.email || ""),
-          eventId: currentEvent.id,
-          eventTitle: currentEvent.title || "",
+        const orderRef = doc(collection(db, "events", currentEvent.id, "orders"));
+        const promoRef = promoState.applied && promoState.data
+          ? doc(db, "events", currentEvent.id, "promoCodes", promoState.data.id || promoState.data.code)
+          : null;
 
-          status: "pending_holder_info",
-          paymentStatus: "unpaid",
-          fillStatus: "pending",
+        await runTransaction(db, async (tx) => {
+          let promoPayload = null;
 
-          totalQuantity: totalQty,
-          totalAmount,
+          if (promoRef) {
+            const promoSnap = await tx.get(promoRef);
 
-          selectedPromoCode: appliedPromo ? appliedPromo.code : "",
-          selectedPromoCodeId: appliedPromo ? appliedPromo.id : "",
-          selectedPromoCodeNote: appliedPromo ? (appliedPromo.note || "") : "",
+            if (!promoSnap.exists()) {
+              throw new Error("公關代碼不存在或已失效");
+            }
 
-          itemSummary: selectedItems,
-          holderAssignments,
+            promoPayload = promoSnap.data() || {};
 
-          participantEmails: [],
-          participantUids: [],
-          sharedOrderRefs: [],
+            if (promoPayload.enabled !== true) {
+              throw new Error("此公關代碼未啟用");
+            }
 
-          seatSelectionMode: "pending",
-          fillDeadlineMinutes: 10,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          expiresAt
-        };
+            const maxUse = Number(promoPayload.maxUse || 0);
+            const usedCount = Number(promoPayload.usedCount || 0);
 
-        const ref = await addDoc(
-          collection(db, "events", currentEvent.id, "orders"),
-          orderPayload
-        );
+            if (maxUse > 0 && usedCount >= maxUse) {
+              throw new Error("此公關代碼已達使用上限");
+            }
 
-        location.href = `order-fill.html?id=${encodeURIComponent(currentEvent.id)}&orderId=${encodeURIComponent(ref.id)}`;
+            const promoTypeId = norm(promoPayload.ticketTypeId || "");
+            const bad = selectedItems.some(item => item.ticketTypeId !== promoTypeId);
+            if (bad) {
+              throw new Error("公關代碼與目前所選票種不一致");
+            }
+          }
+
+          const orderPayload = {
+            uid: currentUser.uid,
+            buyerUid: currentUser.uid,
+            buyerEmail,
+            eventId: currentEvent.id,
+            eventTitle: currentEvent.title || "",
+
+            status: "pending_holder_info",
+            paymentStatus: "unpaid",
+            fillStatus: "pending",
+
+            totalQuantity: totalQty,
+            totalAmount,
+
+            itemSummary: selectedItems,
+            holderAssignments,
+
+            participantEmails: buyerEmail ? [buyerEmail] : [],
+            participantUids: [currentUser.uid],
+            sharedOrderRefs: [],
+
+            fillDeadlineMinutes: 10,
+            promoCode: promoPayload?.code || "",
+            promoTicketTypeId: promoPayload?.ticketTypeId || "",
+            promoTicketTypeName: promoPayload?.ticketTypeName || "",
+
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            expiresAt
+          };
+
+          tx.set(orderRef, orderPayload);
+
+          if (promoRef) {
+            tx.update(promoRef, {
+              usedCount: increment(1),
+              updatedAt: serverTimestamp()
+            });
+          }
+        });
+
+        location.href = `order-fill.html?id=${encodeURIComponent(currentEvent.id)}&orderId=${encodeURIComponent(orderRef.id)}`;
       } catch (err) {
         console.error(err);
-        alert("建立訂單失敗，請稍後再試。");
+        alert(err?.message || "建立訂單失敗，請稍後再試。");
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -1365,14 +1426,11 @@ ${esc(desc)}
         return;
       }
 
-      const ticketTypes = getTicketTypes(currentEvent);
+      const ticketTypes = getRawTicketTypes(currentEvent);
       quantityMap = {};
       ticketTypes.forEach(type => {
         quantityMap[type.id] = 0;
       });
-
-      appliedPromo = null;
-      promoInputValue = "";
 
       renderPage();
     }
