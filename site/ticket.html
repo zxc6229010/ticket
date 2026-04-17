@@ -650,7 +650,7 @@
 
     function formatDateTime(input){
       const d = toDate(input);
-      if (!d) return "日期未定";
+      if (!d) return "";
       return d.toLocaleString("zh-Hant", {
         year:"numeric",
         month:"long",
@@ -659,6 +659,12 @@
         minute:"2-digit",
         hour12:false
       });
+    }
+
+    function buildDateRangeText(startInput, endInput){
+      const startText = formatDateTime(startInput);
+      const endText = formatDateTime(endInput);
+      return [startText, endText].filter(Boolean).join("\n") || "-";
     }
 
     function getEventStatus(event){
@@ -733,7 +739,7 @@
     function buildLoginRedirectUrl(targetPath){
       const loginUrl = new URL("login.html", location.href);
       loginUrl.searchParams.set("redirect", targetPath);
-      return loginUrl.pathname + loginUrl.search;
+      return loginUrl.pathname + url.search;
     }
 
     function updateAccountLinks(user){
@@ -754,10 +760,8 @@
       const desc = getEventDescription(currentEvent) || "探索活動資訊與入場方式。";
       const detailText = getEventDetailText(currentEvent);
       const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
-      const eventStartText = formatDateTime(currentEvent.eventStartAt);
-      const eventEndText = formatDateTime(currentEvent.eventEndAt);
-      const saleStartText = formatDateTime(currentEvent.saleStartAt);
-      const saleEndText = formatDateTime(currentEvent.saleEndAt);
+      const eventTimeText = buildDateRangeText(currentEvent.eventStartAt, currentEvent.eventEndAt);
+      const saleTimeText = buildDateRangeText(currentEvent.saleStartAt, currentEvent.saleEndAt);
       const ticketTypes = getTicketTypes(currentEvent);
       const canBuy = status.key === "selling";
 
@@ -785,7 +789,7 @@
             <div class="meta-grid">
               <div class="meta-card">
                 <div class="meta-label">活動時間</div>
-                <div class="meta-value">${esc(eventStartText)}\n${esc(eventEndText)}</div>
+                <div class="meta-value">${esc(eventTimeText)}</div>
               </div>
 
               <div class="meta-card">
@@ -795,7 +799,7 @@
 
               <div class="meta-card">
                 <div class="meta-label">開賣時間</div>
-                <div class="meta-value">${esc(saleStartText)}\n${esc(saleEndText)}</div>
+                <div class="meta-value">${esc(saleTimeText)}</div>
               </div>
 
               <div class="meta-card">
@@ -853,7 +857,9 @@
           const buyUrl = buildBuyUrl();
 
           if (!currentUser) {
-            location.href = buildLoginRedirectUrl(buyUrl);
+            const loginUrl = new URL("login.html", location.href);
+            loginUrl.searchParams.set("redirect", buyUrl);
+            location.href = loginUrl.pathname + loginUrl.search;
             return;
           }
 
