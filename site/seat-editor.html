@@ -2,20 +2,19 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8" />
-  <title>後台｜座位編輯器</title>
+  <title>Passium｜後台｜座位編輯器</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
       --bg:#f6f7fb;
-      --card:#fff;
+      --card:#ffffff;
       --text:#111827;
       --muted:#6b7280;
       --line:rgba(17,24,39,.10);
       --line-strong:rgba(17,24,39,.16);
       --shadow:0 16px 40px rgba(0,0,0,.08);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
-      --black:#111;
 
       --green:#166534;
       --green-bg:#dcfce7;
@@ -50,7 +49,7 @@
       --radius-xl:34px;
       --radius-lg:28px;
       --radius-md:20px;
-      --max:1680px;
+      --max:1720px;
     }
 
     *{ box-sizing:border-box; }
@@ -129,46 +128,9 @@
     .page{
       max-width:var(--max);
       margin:0 auto;
-      padding:22px 16px 60px;
+      padding:20px 16px 60px;
     }
 
-    /* Gate overlay */
-    .gate{
-      position:fixed;
-      inset:0;
-      background:var(--bg);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      padding:24px;
-    }
-
-    .gate-card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:32px;
-      box-shadow:var(--shadow);
-      padding:36px 32px;
-      width:min(460px,100%);
-      text-align:center;
-    }
-
-    .gate-card h1{
-      margin:0 0 10px;
-      font-size:26px;
-      font-weight:800;
-      letter-spacing:-.03em;
-    }
-
-    .gate-card .sub{
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.8;
-      margin-bottom:20px;
-    }
-
-    /* Btn */
     .btn{
       display:inline-flex;
       align-items:center;
@@ -185,16 +147,47 @@
       transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
       white-space:nowrap;
       text-decoration:none;
+      font-family:inherit;
     }
 
-    .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.07); }
-    .btn:active{ transform:scale(.98); box-shadow:none; }
-    .btn[disabled]{ opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 8px 20px rgba(0,0,0,.07);
+    }
 
-    .btn-primary{ background:#111; color:#fff; border-color:#111; }
-    .btn-blue{ color:var(--blue); border-color:rgba(29,78,216,.22); }
-    .btn-danger{ color:var(--red); border-color:rgba(185,28,28,.20); }
-    .btn-sm{ min-height:34px; padding:7px 13px; font-size:12px; }
+    .btn:active{
+      transform:scale(.98);
+      box-shadow:none;
+    }
+
+    .btn[disabled]{
+      opacity:.5;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn-blue{
+      color:var(--blue);
+      border-color:rgba(29,78,216,.22);
+    }
+
+    .btn-danger{
+      color:var(--red);
+      border-color:rgba(185,28,28,.20);
+    }
+
+    .btn-sm{
+      min-height:34px;
+      padding:7px 13px;
+      font-size:12px;
+    }
 
     .row{
       display:flex;
@@ -203,7 +196,6 @@
       align-items:center;
     }
 
-    /* Cards */
     .card{
       background:#fff;
       border:1px solid rgba(0,0,0,.07);
@@ -218,11 +210,46 @@
       background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
 
-    .card-body{ padding:18px 20px 20px; }
+    .card-body{
+      padding:18px 20px 20px;
+    }
 
-    h1{ margin:0; font-size:22px; font-weight:800; letter-spacing:-.03em; }
-    h2{ margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
-    h3{ margin:0; font-size:15px; font-weight:800; }
+    h1{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    h2{
+      margin:0;
+      font-size:18px;
+      font-weight:800;
+      letter-spacing:-.02em;
+    }
+
+    h3{
+      margin:0;
+      font-size:15px;
+      font-weight:800;
+    }
+
+    .page-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .page-sub{
+      margin-top:8px;
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.9;
+      max-width:900px;
+    }
 
     .sub{
       margin-top:6px;
@@ -237,7 +264,9 @@
       line-height:1.75;
     }
 
-    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
 
     label{
       display:block;
@@ -261,50 +290,135 @@
       font-family:inherit;
     }
 
-    .input:focus, select:focus{ border-color:#111827; box-shadow:0 0 0 3px rgba(17,24,39,.06); }
-
-    .input-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    @media (max-width:480px){ .input-row{ grid-template-columns:1fr; } }
-
-    .checkbox-row{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin:10px 0;
-      font-size:13px;
-      font-weight:700;
+    .input:focus, select:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 3px rgba(17,24,39,.06);
     }
 
-    /* Status notice boxes */
+    .input-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .input-row-3{
+      display:grid;
+      grid-template-columns:1.2fr .8fr .8fr;
+      gap:10px;
+    }
+
+    @media (max-width:760px){
+      .input-row,
+      .input-row-3{
+        grid-template-columns:1fr;
+      }
+    }
+
     .notice{
       border-radius:18px;
       padding:12px 14px;
       font-size:13px;
       line-height:1.85;
       margin:10px 0;
+      white-space:pre-wrap;
+      word-break:break-word;
     }
 
-    .notice.ok{ background:var(--green-bg); color:var(--green); border:1px solid rgba(22,101,52,.12); }
-    .notice.warn{ background:var(--red-bg); color:var(--red); border:1px solid rgba(185,28,28,.12); }
-    .notice.info{ background:var(--blue-bg); color:var(--blue); border:1px solid rgba(29,78,216,.12); }
-    .notice.orange{ background:var(--orange-bg); color:var(--orange); border:1px solid rgba(194,65,12,.12); }
+    .notice.ok{
+      background:var(--green-bg);
+      color:var(--green);
+      border:1px solid rgba(22,101,52,.12);
+    }
 
-    .notice strong{ font-weight:800; }
+    .notice.warn{
+      background:var(--red-bg);
+      color:var(--red);
+      border:1px solid rgba(185,28,28,.12);
+    }
 
-    /* Layout grid */
+    .notice.info{
+      background:var(--blue-bg);
+      color:var(--blue);
+      border:1px solid rgba(29,78,216,.12);
+    }
+
+    .notice.orange{
+      background:var(--orange-bg);
+      color:var(--orange);
+      border:1px solid rgba(194,65,12,.12);
+    }
+
+    .notice strong{
+      font-weight:800;
+    }
+
+    .top-layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 420px;
+      gap:16px;
+      margin-bottom:16px;
+      align-items:start;
+    }
+
+    @media (max-width:1200px){
+      .top-layout{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    @media (max-width:620px){
+      .meta-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .meta-box{
+      border:1px solid var(--line);
+      background:#fbfbfc;
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .meta-label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:5px;
+    }
+
+    .meta-value{
+      font-size:14px;
+      line-height:1.8;
+      font-weight:700;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
     .editor-layout{
       display:grid;
-      grid-template-columns:minmax(0,1fr) 320px;
+      grid-template-columns:minmax(0,1fr) 340px;
       gap:16px;
       align-items:start;
       margin-top:16px;
     }
 
-    @media (max-width:1100px){
-      .editor-layout{ grid-template-columns:1fr; }
+    @media (max-width:1160px){
+      .editor-layout{
+        grid-template-columns:1fr;
+      }
     }
 
-    .editor-left{ display:grid; gap:16px; }
+    .editor-left{
+      display:grid;
+      gap:16px;
+    }
 
     .editor-right{
       display:grid;
@@ -313,11 +427,12 @@
       top:74px;
     }
 
-    @media (max-width:1100px){
-      .editor-right{ position:static; }
+    @media (max-width:1160px){
+      .editor-right{
+        position:static;
+      }
     }
 
-    /* Toolbar */
     .toolbar{
       display:flex;
       align-items:center;
@@ -342,7 +457,6 @@
       margin:0 2px;
     }
 
-    /* Tool mode buttons */
     .tool-btn{
       display:inline-flex;
       align-items:center;
@@ -358,12 +472,20 @@
       cursor:pointer;
       transition:all .12s;
       white-space:nowrap;
+      font-family:inherit;
     }
 
-    .tool-btn:hover{ border-color:#111827; color:#111827; }
-    .tool-btn.active{ background:#111827; color:#fff; border-color:#111827; }
+    .tool-btn:hover{
+      border-color:#111827;
+      color:#111827;
+    }
 
-    /* Stage canvas wrapper */
+    .tool-btn.active{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
+
     .canvas-wrap{
       position:relative;
       overflow:auto;
@@ -380,8 +502,6 @@
 
     .canvas-wrap.mode-move{ cursor:move; }
     .canvas-wrap.mode-select{ cursor:default; }
-    .canvas-wrap.mode-pan{ cursor:grab; }
-    .canvas-wrap.mode-pan.panning{ cursor:grabbing; }
 
     .stage-shell{
       width:max-content;
@@ -434,8 +554,8 @@
       border-radius:26px;
     }
 
-    /* Seat elements */
     .seat{
+      --rot:0deg;
       position:absolute;
       width:20px;
       height:20px;
@@ -445,11 +565,12 @@
       box-shadow:0 2px 5px rgba(0,0,0,.09);
       cursor:pointer;
       transform-origin:center center;
-      transition:transform .1s ease, box-shadow .1s ease, background .1s ease;
+      transform:rotate(var(--rot));
+      transition:box-shadow .1s ease, background .1s ease, transform .1s ease;
     }
 
     .seat:hover{
-      transform:scale(1.14);
+      transform:rotate(var(--rot)) scale(1.14);
       z-index:10;
       box-shadow:0 4px 12px rgba(0,0,0,.13);
     }
@@ -471,7 +592,7 @@
     .seat.disabled{
       background:var(--seat-disabled);
       border-color:var(--seat-disabled-border);
-      opacity:.8;
+      opacity:.85;
     }
 
     .seat.sold{
@@ -504,7 +625,6 @@
       z-index:2;
     }
 
-    /* Selection box */
     .sel-box{
       position:absolute;
       border:1.5px solid rgba(29,78,216,.5);
@@ -515,7 +635,6 @@
       display:none;
     }
 
-    /* Legend row */
     .legend{
       display:flex;
       gap:12px;
@@ -541,13 +660,6 @@
       flex-shrink:0;
     }
 
-    /* Stats row */
-    .stat-row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
     .stat-pill{
       padding:6px 11px;
       border-radius:999px;
@@ -558,18 +670,6 @@
       color:#374151;
     }
 
-    /* Property panel */
-    .prop-section{
-      margin-top:4px;
-    }
-
-    .prop-divider{
-      height:1px;
-      background:var(--line);
-      margin:14px 0;
-    }
-
-    /* Tab nav */
     .tab-nav{
       display:flex;
       gap:4px;
@@ -602,20 +702,6 @@
     .tab-pane{ display:none; }
     .tab-pane.active{ display:block; }
 
-    /* Pill */
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:5px 10px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      background:#fff;
-      font-size:11px;
-      font-weight:800;
-      box-shadow:var(--shadow-soft);
-    }
-
-    /* Modal */
     .modal-back{
       position:fixed;
       inset:0;
@@ -659,7 +745,9 @@
       line-height:1.8;
     }
 
-    .modal-body{ padding:18px 20px 20px; }
+    .modal-body{
+      padding:18px 20px 20px;
+    }
 
     .modal-actions{
       display:flex;
@@ -669,7 +757,6 @@
       margin-top:14px;
     }
 
-    /* Floor tabs */
     .floor-tabs{
       display:flex;
       gap:6px;
@@ -689,10 +776,19 @@
       cursor:pointer;
       transition:all .12s;
       color:var(--muted);
+      font-family:inherit;
     }
 
-    .floor-tab:hover{ border-color:#111827; color:#111827; }
-    .floor-tab.active{ background:#111827; color:#fff; border-color:#111827; }
+    .floor-tab:hover{
+      border-color:#111827;
+      color:#111827;
+    }
+
+    .floor-tab.active{
+      background:#111827;
+      color:#fff;
+      border-color:#111827;
+    }
 
     .floor-tab-add{
       padding:7px 12px;
@@ -704,15 +800,76 @@
       cursor:pointer;
       color:var(--muted);
       transition:all .12s;
+      font-family:inherit;
     }
 
-    .floor-tab-add:hover{ border-color:var(--blue); color:var(--blue); }
+    .floor-tab-add:hover{
+      border-color:var(--blue);
+      color:var(--blue);
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .gate{
+      position:fixed;
+      inset:0;
+      background:var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:24px;
+    }
+
+    .gate-card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      padding:36px 32px;
+      width:min(460px,100%);
+      text-align:center;
+    }
+
+    .gate-card h1{
+      margin:0 0 10px;
+      font-size:26px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .gate-card .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      margin-bottom:20px;
+    }
 
     @media (max-width:860px){
-      .nav{ min-height:auto; padding-top:12px; padding-bottom:12px; }
-      .page{ padding:16px 14px 60px; }
-      .editor-layout{ grid-template-columns:1fr; }
-      .canvas-wrap{ min-height:520px; }
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+      }
+
+      .page{
+        padding:16px 14px 60px;
+      }
+
+      .editor-layout{
+        grid-template-columns:1fr;
+      }
+
+      .canvas-wrap{
+        min-height:520px;
+      }
+
+      .stage-sign{
+        min-width:260px;
+        max-width:90%;
+      }
     }
   </style>
 </head>
@@ -720,86 +877,129 @@
   <div class="shell">
     <div class="nav-wrap">
       <div class="nav">
-        <a class="brand" href="index.html">
+        <a class="brand" href="admin.html">
           <span class="brand-mark">P</span>
-          <span>Passium</span>
+          <span>Passium Admin</span>
         </a>
         <div class="nav-right">
           <span class="who-pill" id="whoText">未登入</span>
-          <button class="btn btn-sm" id="logoutBtn" style="display:none">登出</button>
+          <span class="who-pill hidden" id="roleText">—</span>
+          <button class="btn btn-sm hidden" id="logoutBtn">登出</button>
         </div>
       </div>
     </div>
 
-    <!-- Gate -->
     <div class="gate" id="gate">
       <div class="gate-card">
         <h1>座位編輯器</h1>
-        <div class="sub">請先以後台帳號登入</div>
+        <div class="sub">請先使用後台帳號登入</div>
         <div style="margin-top:18px;display:grid;gap:10px;">
           <input class="input" id="gateEmail" type="email" placeholder="Email">
           <input class="input" id="gatePass" type="password" placeholder="密碼">
           <button class="btn btn-primary" id="gateLoginBtn">登入</button>
-          <div class="notice warn" id="gateErr" style="display:none;margin:0;"></div>
+          <div class="notice warn hidden" id="gateErr" style="margin:0;"></div>
         </div>
       </div>
     </div>
 
-    <main class="page" id="appWrap" style="display:none">
+    <main class="page hidden" id="appWrap">
+      <div class="page-head">
+        <div>
+          <h1>座位編輯器</h1>
+          <div class="page-sub">用活動下拉選取、上傳座位圖、編輯座位與樓層後，直接儲存到 Firestore 的 <span class="mono">events/{eventId}/seats</span>。</div>
+        </div>
+        <div class="row">
+          <button class="btn btn-sm" id="reloadEventsBtn">重新載入活動</button>
+          <button class="btn btn-sm" id="saveSaveBtn">💾 儲存全部座位</button>
+          <button class="btn btn-sm btn-danger" id="clearAllBtn">清空本層</button>
+        </div>
+      </div>
 
-      <!-- Top selectors -->
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-head">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-            <div>
-              <h1>座位編輯器</h1>
-              <div class="sub">建立座位圖、設定區域與票種限制，並儲存至 Firestore。</div>
+      <div class="top-layout">
+        <div class="card">
+          <div class="card-head">
+            <h2>活動與背景圖</h2>
+            <div class="sub">先選活動，再載入或建立座位圖</div>
+          </div>
+          <div class="card-body">
+            <div class="input-row-3">
+              <div>
+                <label>選擇活動</label>
+                <select id="eventSelect" class="input">
+                  <option value="">請先載入活動清單</option>
+                </select>
+              </div>
+              <div>
+                <label>操作</label>
+                <button class="btn btn-blue" id="loadEventBtn" style="width:100%;">載入活動座位</button>
+              </div>
+              <div>
+                <label>清單</label>
+                <button class="btn" id="refreshOneBtn" style="width:100%;">重新整理</button>
+              </div>
             </div>
-            <div class="row">
-              <button class="btn btn-sm" id="saveSaveBtn">💾 儲存全部座位</button>
-              <button class="btn btn-sm btn-danger" id="clearAllBtn">清空本層</button>
+
+            <div class="input-row" style="margin-top:8px;">
+              <div>
+                <label>上傳座位圖背景</label>
+                <input type="file" class="input" id="bgFileInput" accept="image/*">
+              </div>
+              <div>
+                <label>背景操作</label>
+                <div class="row">
+                  <button class="btn btn-sm" id="clearBgBtn">清除背景</button>
+                  <button class="btn btn-sm btn-blue" id="useDetectBtn">用這張圖偵測</button>
+                </div>
+              </div>
             </div>
+
+            <div id="loadMsg" class="small" style="margin-top:10px;"></div>
+            <div id="dirtyMsg" class="notice orange hidden">目前有尚未儲存的變更。</div>
           </div>
         </div>
 
-        <div class="card-body">
-          <div class="input-row">
-            <div>
-              <label>活動 ID</label>
-              <input class="input" id="eventIdInput" placeholder="Firestore 中的 eventId">
-            </div>
-            <div>
-              <label>座位圖背景圖 URL（選填）</label>
-              <input class="input" id="bgImageInput" placeholder="https://...">
-            </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>目前活動資訊</h2>
+            <div class="sub">載入後會顯示標題與基本資料</div>
           </div>
-          <div style="margin-top:10px;">
-            <div class="row">
-              <button class="btn btn-sm btn-blue" id="loadEventBtn">載入活動座位</button>
-              <button class="btn btn-sm" id="loadImageBtn">套用背景圖</button>
-              <div id="loadMsg" class="small" style="flex:1;"></div>
+          <div class="card-body">
+            <div class="meta-grid">
+              <div class="meta-box">
+                <div class="meta-label">活動名稱</div>
+                <div class="meta-value" id="metaEventTitle">—</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">活動 ID</div>
+                <div class="meta-value mono" id="metaEventId">—</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">已公開</div>
+                <div class="meta-value" id="metaEventPublished">—</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">票種數量</div>
+                <div class="meta-value" id="metaEventTicketTypes">—</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="editor-layout">
-        <!-- Left: stage canvas -->
         <div class="editor-left">
           <div class="card">
-            <!-- Floor tabs -->
             <div class="floor-tabs" id="floorTabs">
               <button class="floor-tab-add" id="addFloorBtn">＋ 新增樓層</button>
             </div>
 
-            <!-- Canvas toolbar -->
             <div class="toolbar">
               <span class="toolbar-title" id="floorLabel">1F</span>
               <div class="sep"></div>
-              <button class="tool-btn active" id="toolAdd" data-tool="add">＋ 新增座位</button>
-              <button class="tool-btn" id="toolMove" data-tool="move">✥ 移動</button>
-              <button class="tool-btn" id="toolSelect" data-tool="select">☐ 框選</button>
-              <button class="tool-btn" id="toolDelete" data-tool="delete">✕ 刪除</button>
+              <button class="tool-btn active" data-tool="add">＋ 新增座位</button>
+              <button class="tool-btn" data-tool="move">✥ 移動</button>
+              <button class="tool-btn" data-tool="select">☐ 框選</button>
+              <button class="tool-btn" data-tool="delete">✕ 刪除</button>
               <div class="sep"></div>
               <button class="btn btn-sm btn-blue" id="generateGridBtn">⊞ 批量生成</button>
               <button class="btn btn-sm" id="detectBtn">🔍 圖片偵測</button>
@@ -810,20 +1010,18 @@
               <button class="btn btn-sm" id="zoomFitBtn">⊡</button>
             </div>
 
-            <!-- Stage -->
             <div class="canvas-wrap mode-add" id="canvasWrap">
-              <div class="stage-shell">
+              <div class="stage-shell" id="stageShell">
                 <div class="stage-top">
                   <div class="stage-sign">STAGE</div>
                 </div>
                 <div class="stage" id="stage">
-                  <img class="seatmap-image" id="bgImg" src="" alt="" style="display:none;">
+                  <img class="seatmap-image hidden" id="bgImg" src="" alt="">
                   <div class="sel-box" id="selBox"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Legend -->
             <div class="legend">
               <div class="legend-item"><span class="legend-dot" style="background:#fff;border:1.5px solid #111827;"></span>可用</div>
               <div class="legend-item"><span class="legend-dot" style="background:#111827;border:1.5px solid #111827;"></span>已選</div>
@@ -833,7 +1031,6 @@
               <div class="legend-item"><span class="legend-dot" style="background:#fef9c3;border:1.5px solid #d97706;"></span>偵測候選</div>
             </div>
 
-            <!-- Stats -->
             <div style="padding:12px 18px;border-top:1px solid var(--line);background:#fafafa;display:flex;gap:8px;flex-wrap:wrap;">
               <span class="stat-pill" id="statTotal">總計 0</span>
               <span class="stat-pill" id="statAvail">可用 0</span>
@@ -844,19 +1041,16 @@
           </div>
         </div>
 
-        <!-- Right: properties -->
         <div class="editor-right">
-
-          <!-- Single seat -->
           <div class="card" id="panelSingle">
             <div class="card-head">
               <h2>座位屬性</h2>
-              <div class="sub">點選座位後編輯其屬性</div>
+              <div class="sub">點選一個座位後可在這裡修改</div>
             </div>
             <div class="card-body">
-              <div id="noSelMsg" class="small" style="padding:8px 0;">尚未選取任何座位。點選舞台上的座位即可編輯。</div>
+              <div id="noSelMsg" class="small" style="padding:8px 0;">尚未選取任何座位。</div>
 
-              <div id="singleProp" style="display:none;">
+              <div id="singleProp" class="hidden">
                 <div class="input-row">
                   <div>
                     <label>標籤 / 顯示名稱</label>
@@ -867,16 +1061,18 @@
                     <input class="input" id="propSeatNumber" placeholder="1">
                   </div>
                 </div>
+
                 <div class="input-row">
                   <div>
                     <label>排</label>
                     <input class="input" id="propRow" placeholder="A">
                   </div>
                   <div>
-                    <label>票價（NT$，留空繼承票種）</label>
+                    <label>票價（NT$）</label>
                     <input class="input" id="propPrice" type="number" placeholder="0">
                   </div>
                 </div>
+
                 <div>
                   <label>區域 ID</label>
                   <select id="propSection" class="input">
@@ -888,6 +1084,7 @@
                     <option value="d">D 區</option>
                   </select>
                 </div>
+
                 <div>
                   <label>狀態</label>
                   <select id="propStatus" class="input">
@@ -896,6 +1093,7 @@
                     <option value="sold">已售出</option>
                   </select>
                 </div>
+
                 <div class="input-row">
                   <div>
                     <label>X 座標</label>
@@ -906,28 +1104,32 @@
                     <input class="input" id="propY" type="number">
                   </div>
                 </div>
+
                 <div>
                   <label>旋轉角度</label>
                   <input class="input" id="propRotation" type="number" value="0" placeholder="0">
                 </div>
 
-                <div class="prop-divider"></div>
+                <div style="height:1px;background:var(--line);margin:14px 0;"></div>
+
                 <h3>存取限制（選填）</h3>
                 <div class="sub" style="margin-top:4px;margin-bottom:8px;">逗號分隔，留空代表不限</div>
+
                 <div>
-                  <label>允許角色 (allowedRoles)</label>
+                  <label>允許角色</label>
                   <input class="input" id="propRoles" placeholder="vip, general">
                 </div>
                 <div>
-                  <label>允許標籤 (allowedTags)</label>
+                  <label>允許標籤</label>
                   <input class="input" id="propTags" placeholder="invite, campus_a">
                 </div>
                 <div>
-                  <label>允許票種 ID (allowedTicketTypes)</label>
+                  <label>允許票種 ID</label>
                   <input class="input" id="propTicketTypes" placeholder="vip_ticket, general">
                 </div>
 
-                <div class="prop-divider"></div>
+                <div style="height:1px;background:var(--line);margin:14px 0;"></div>
+
                 <div class="row">
                   <button class="btn btn-sm btn-primary" id="applyPropBtn">套用</button>
                   <button class="btn btn-sm btn-danger" id="deleteSeatBtn">刪除此座位</button>
@@ -936,7 +1138,6 @@
             </div>
           </div>
 
-          <!-- Batch -->
           <div class="card">
             <div class="card-head">
               <h2>批次操作</h2>
@@ -948,7 +1149,6 @@
                 <button class="tab-nav-btn" data-batch-tab="batch-edit">批次修改</button>
               </div>
 
-              <!-- Generate tab -->
               <div class="tab-pane active" id="batch-generate">
                 <div class="input-row">
                   <div>
@@ -1007,9 +1207,9 @@
                 </div>
               </div>
 
-              <!-- Batch edit tab -->
               <div class="tab-pane" id="batch-edit">
                 <div class="notice info" id="batchSelCount">尚未框選任何座位</div>
+
                 <div>
                   <label>區域 ID</label>
                   <select class="input" id="batchSection">
@@ -1021,6 +1221,7 @@
                     <option value="d">D 區</option>
                   </select>
                 </div>
+
                 <div>
                   <label>狀態</label>
                   <select class="input" id="batchStatus">
@@ -1029,10 +1230,12 @@
                     <option value="disabled">停用</option>
                   </select>
                 </div>
+
                 <div>
                   <label>票價（NT$，留空不修改）</label>
                   <input class="input" id="batchPrice" type="number" placeholder="">
                 </div>
+
                 <div style="margin-top:12px;display:grid;gap:8px;">
                   <button class="btn btn-sm btn-primary" id="applyBatchBtn">套用至已選</button>
                   <button class="btn btn-sm btn-danger" id="deleteMultiBtn">刪除已選座位</button>
@@ -1041,18 +1244,13 @@
             </div>
           </div>
 
-          <!-- Image detect -->
           <div class="card">
             <div class="card-head">
               <h2>圖片偵測</h2>
-              <div class="sub">從背景圖自動偵測座位位置</div>
+              <div class="sub">使用已上傳的背景圖自動偵測座位</div>
             </div>
             <div class="card-body">
-              <div>
-                <label>上傳圖片偵測</label>
-                <input type="file" class="input" id="detectFileInput" accept="image/*">
-              </div>
-              <div class="input-row" style="margin-top:8px;">
+              <div class="input-row">
                 <div>
                   <label>亮度閾值</label>
                   <input class="input" id="detectThresh" type="number" value="205" min="50" max="254">
@@ -1065,6 +1263,7 @@
                   </select>
                 </div>
               </div>
+
               <div class="input-row">
                 <div>
                   <label>最小像素面積</label>
@@ -1075,20 +1274,19 @@
                   <input class="input" id="detectMaxArea" type="number" value="400">
                 </div>
               </div>
+
               <div style="margin-top:12px;">
                 <button class="btn btn-sm btn-primary" id="doDetectBtn" style="width:100%;">開始偵測</button>
               </div>
+
               <div id="detectMsg" class="small" style="margin-top:8px;"></div>
             </div>
           </div>
-
         </div>
       </div>
-
     </main>
   </div>
 
-  <!-- Grid generate modal -->
   <div class="modal-back" id="modalGrid">
     <div class="modal">
       <div class="modal-head">
@@ -1096,7 +1294,7 @@
         <div class="modal-sub" id="modalGridSub">—</div>
       </div>
       <div class="modal-body">
-        <div class="notice warn">此操作會在目前舞台新增座位，不會刪除現有座位。</div>
+        <div class="notice warn">此操作會在目前樓層新增座位，不會刪除現有座位。</div>
         <div class="modal-actions">
           <button class="btn btn-sm" id="modalGridCancel">取消</button>
           <button class="btn btn-sm btn-primary" id="modalGridConfirm">確認生成</button>
@@ -1105,7 +1303,6 @@
     </div>
   </div>
 
-  <!-- Save modal -->
   <div class="modal-back" id="modalSave">
     <div class="modal">
       <div class="modal-head">
@@ -1121,12 +1318,11 @@
     </div>
   </div>
 
-  <!-- Add floor modal -->
   <div class="modal-back" id="modalFloor">
     <div class="modal">
       <div class="modal-head">
         <h3 class="modal-title">新增樓層</h3>
-        <div class="modal-sub">設定樓層名稱（例如 1F、2F、VIP）</div>
+        <div class="modal-sub">例如 1F、2F、VIP</div>
       </div>
       <div class="modal-body">
         <input class="input" id="floorNameInput" placeholder="1F">
@@ -1138,31 +1334,55 @@
     </div>
   </div>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e",
-      storageBucket: "concert-1ff7e.firebasestorage.app",
-      messagingSenderId: "704757384994",
-      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-    });
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
+    }
 
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // ====================================================
-    // STATE
-    // ====================================================
+    const whoText = document.getElementById("whoText");
+    const roleText = document.getElementById("roleText");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const gate = document.getElementById("gate");
+    const gateErr = document.getElementById("gateErr");
+    const appWrap = document.getElementById("appWrap");
+
+    const eventSelect = document.getElementById("eventSelect");
+    const loadMsg = document.getElementById("loadMsg");
+    const dirtyMsg = document.getElementById("dirtyMsg");
+
+    const metaEventTitle = document.getElementById("metaEventTitle");
+    const metaEventId = document.getElementById("metaEventId");
+    const metaEventPublished = document.getElementById("metaEventPublished");
+    const metaEventTicketTypes = document.getElementById("metaEventTicketTypes");
+
+    const stage = document.getElementById("stage");
+    const stageShell = document.getElementById("stageShell");
+    const canvasWrap = document.getElementById("canvasWrap");
+    const selBox = document.getElementById("selBox");
+    const bgImg = document.getElementById("bgImg");
+
     let currentUser = null;
+    let currentUserDoc = null;
     let currentRole = "";
 
-    // floors: [{ id, name, seatMap: Map<seatId, seat> }]
+    let eventList = [];
+    let currentEvent = null;
+    let currentEventId = "";
+
     let floors = [{ id: "1F", name: "1F", seatMap: new Map() }];
     let activeFloorIdx = 0;
 
@@ -1172,21 +1392,27 @@
     let multiSelectedIds = new Set();
     let detectedSeatIds = new Set();
 
-    // Selection box drag
     let isSelDragging = false;
     let selStart = { x:0, y:0 };
 
-    // Seat drag (move)
     let isSeatDragging = false;
     let dragSeatId = "";
     let dragOffX = 0;
     let dragOffY = 0;
-    let dragMoved = false;
 
-    // ====================================================
-    // HELPERS
-    // ====================================================
-    function esc(v){ return String(v ?? "").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
+    let detectImageData = null;
+    let hasUnsavedChanges = false;
+
+    function esc(v){
+      return String(v ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
     function norm(v){ return String(v ?? "").trim(); }
     function lower(v){ return norm(v).toLowerCase(); }
     function uid8(){ return Math.random().toString(36).slice(2,10); }
@@ -1194,157 +1420,301 @@
     function getFloor(){ return floors[activeFloorIdx] || floors[0]; }
     function getSeatMap(){ return getFloor().seatMap; }
 
-    // ====================================================
-    // AUTH GATE
-    // ====================================================
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input?.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function fmtDateTime(input){
+      const d = toDate(input);
+      if (!d) return "—";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
+
+    function setDirty(flag = true){
+      hasUnsavedChanges = flag;
+      dirtyMsg.classList.toggle("hidden", !flag);
+    }
+
+    function setLoadMsg(text, type = "info"){
+      loadMsg.textContent = text || "";
+      loadMsg.style.color =
+        type === "ok" ? "var(--green)" :
+        type === "warn" ? "var(--red)" :
+        type === "orange" ? "var(--orange)" :
+        "var(--blue)";
+    }
+
+    function getSectionColor(s){
+      if (!s) return "";
+      s = s.toLowerCase();
+      if (s === "vip" || s.includes("vip")) return "var(--zone-vip)";
+      if (s === "a" || s.startsWith("a")) return "var(--zone-a)";
+      if (s === "b" || s.startsWith("b")) return "var(--zone-b)";
+      if (s === "c" || s.startsWith("c")) return "var(--zone-c)";
+      if (s === "d" || s.startsWith("d")) return "var(--zone-d)";
+      return "";
+    }
+
+    function openModal(id){
+      document.getElementById(id).classList.add("show");
+    }
+
+    function closeModal(id){
+      document.getElementById(id).classList.remove("show");
+    }
+
+    document.querySelectorAll(".modal-back").forEach(el => {
+      el.addEventListener("click", e => {
+        if (e.target === el) el.classList.remove("show");
+      });
+    });
+
+    async function loadMyUserDoc(uid){
+      const snap = await db.collection("users").doc(uid).get();
+      return snap.exists ? (snap.data() || {}) : null;
+    }
+
+    function canUseSeatEditor(userDoc){
+      if (!userDoc) return false;
+      const role = norm(userDoc.role);
+      const perms = userDoc.permissions || {};
+      if (["platform_super","platform_admin","org_super","org_admin"].includes(role)) return true;
+      if (role === "org_staff" && perms.canEditSeats === true) return true;
+      if (perms.canEditSeats === true) return true;
+      if (perms.canManageEvents === true) return true;
+      return false;
+    }
+
+    function updateAuthUI(){
+      if (!currentUser){
+        whoText.textContent = "未登入";
+        roleText.classList.add("hidden");
+        logoutBtn.classList.add("hidden");
+        gate.classList.remove("hidden");
+        appWrap.classList.add("hidden");
+        return;
+      }
+
+      whoText.textContent = currentUser.email || currentUser.uid;
+      roleText.textContent = currentRole || "member";
+      roleText.classList.remove("hidden");
+      logoutBtn.classList.remove("hidden");
+      gate.classList.add("hidden");
+      appWrap.classList.remove("hidden");
+    }
+
     document.getElementById("gateLoginBtn").onclick = async () => {
       const email = document.getElementById("gateEmail").value.trim();
       const pass = document.getElementById("gatePass").value;
-      const errEl = document.getElementById("gateErr");
-      errEl.style.display = "none";
+      gateErr.classList.add("hidden");
+      gateErr.textContent = "";
       try {
         await auth.signInWithEmailAndPassword(email, pass);
       } catch(e) {
-        errEl.textContent = e.message || "登入失敗";
-        errEl.style.display = "block";
+        gateErr.textContent = e.message || "登入失敗";
+        gateErr.classList.remove("hidden");
       }
     };
 
-    document.getElementById("logoutBtn").onclick = () => auth.signOut();
+    logoutBtn.onclick = () => auth.signOut();
 
-    auth.onAuthStateChanged(async user => {
-      currentUser = user;
-      if (!user) {
-        document.getElementById("gate").style.display = "flex";
-        document.getElementById("appWrap").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "none";
-        document.getElementById("whoText").textContent = "未登入";
+    async function loadEventsList(){
+      setLoadMsg("載入活動清單中…", "info");
+      try {
+        const snap = await db.collection("events").get();
+        const rows = [];
+        snap.forEach(docSnap => {
+          rows.push({ id: docSnap.id, ...(docSnap.data() || {}) });
+        });
+
+        rows.sort((a, b) => {
+          const ta = toDate(a.updatedAt)?.getTime() || toDate(a.createdAt)?.getTime() || 0;
+          const tb = toDate(b.updatedAt)?.getTime() || toDate(b.createdAt)?.getTime() || 0;
+          return tb - ta;
+        });
+
+        eventList = rows;
+        renderEventSelect();
+
+        if (!rows.length) {
+          setLoadMsg("目前沒有活動可選。", "warn");
+        } else {
+          setLoadMsg(`已載入 ${rows.length} 個活動`, "ok");
+        }
+      } catch (e) {
+        console.error(e);
+        setLoadMsg("活動清單載入失敗：" + (e.message || e), "warn");
+      }
+    }
+
+    function renderEventSelect(){
+      if (!eventList.length){
+        eventSelect.innerHTML = `<option value="">目前沒有活動</option>`;
         return;
       }
-      document.getElementById("whoText").textContent = user.email || user.uid;
-      document.getElementById("logoutBtn").style.display = "inline-flex";
-      document.getElementById("gate").style.display = "none";
-      document.getElementById("appWrap").style.display = "block";
-      applyZoom();
-      renderFloorTabs();
-      renderSeats();
-    });
 
-    // ====================================================
-    // LOAD EVENT SEATS
-    // ====================================================
-    document.getElementById("loadEventBtn").onclick = loadEventSeats;
+      eventSelect.innerHTML =
+        `<option value="">請選擇活動</option>` +
+        eventList.map(ev => {
+          const title = norm(ev.title || "未命名活動");
+          const published = ev.published === true ? "公開" : "未公開";
+          return `<option value="${esc(ev.id)}">${esc(title)}｜${esc(ev.id)}｜${published}</option>`;
+        }).join("");
+
+      if (currentEventId) {
+        eventSelect.value = currentEventId;
+      }
+    }
+
+    function resetMeta(){
+      metaEventTitle.textContent = "—";
+      metaEventId.textContent = "—";
+      metaEventPublished.textContent = "—";
+      metaEventTicketTypes.textContent = "—";
+    }
+
+    function renderMeta(eventData){
+      if (!eventData){
+        resetMeta();
+        return;
+      }
+      metaEventTitle.textContent = norm(eventData.title || "未命名活動");
+      metaEventId.textContent = norm(eventData.id || "—");
+      metaEventPublished.textContent = eventData.published === true ? "是" : "否";
+      metaEventTicketTypes.textContent = String(Array.isArray(eventData.ticketTypes) ? eventData.ticketTypes.length : 0);
+    }
 
     async function loadEventSeats(){
-      const eventId = norm(document.getElementById("eventIdInput").value);
-      if (!eventId) { setLoadMsg("請輸入活動 ID", "warn"); return; }
-      setLoadMsg("載入中…", "info");
-      try {
-        const snap = await db.collection("events").doc(eventId).collection("seats").get();
-        if (snap.empty) { setLoadMsg("此活動尚無座位資料", "warn"); return; }
+      const eventId = norm(eventSelect.value);
+      if (!eventId){
+        setLoadMsg("請先選擇活動", "warn");
+        return;
+      }
 
-        const newFloors = new Map();
-        snap.forEach(docSnap => {
+      if (hasUnsavedChanges && !confirm("目前有尚未儲存的變更，確定要切換活動並重新載入嗎？")) {
+        return;
+      }
+
+      setLoadMsg("載入活動與座位中…", "info");
+
+      try {
+        const eventSnap = await db.collection("events").doc(eventId).get();
+        if (!eventSnap.exists){
+          setLoadMsg("找不到活動資料", "warn");
+          return;
+        }
+
+        currentEvent = { id: eventSnap.id, ...(eventSnap.data() || {}) };
+        currentEventId = eventId;
+        renderMeta(currentEvent);
+
+        const seatSnap = await db.collection("events").doc(eventId).collection("seats").get();
+
+        const grouped = new Map();
+        seatSnap.forEach(docSnap => {
           const d = { seatId: docSnap.id, ...(docSnap.data() || {}) };
-          const fName = norm(d.floor || "1F");
-          if (!newFloors.has(fName)) newFloors.set(fName, new Map());
-          newFloors.get(fName).set(d.seatId, d);
+          const floorName = norm(d.floor || "1F");
+          if (!grouped.has(floorName)) grouped.set(floorName, new Map());
+          grouped.get(floorName).set(d.seatId, d);
         });
 
         floors = [];
-        for (const [name, seatMap] of newFloors.entries()) {
-          floors.push({ id: name, name, seatMap });
+        for (const [name, seatMap] of grouped.entries()) {
+          floors.push({ id:name, name, seatMap });
         }
-        if (!floors.length) floors = [{ id:"1F", name:"1F", seatMap: new Map() }];
+        if (!floors.length) {
+          floors = [{ id:"1F", name:"1F", seatMap:new Map() }];
+        }
+
         activeFloorIdx = 0;
+        selectedSeatId = "";
+        multiSelectedIds.clear();
+        detectedSeatIds.clear();
+
+        const localBg = localStorage.getItem(`seatmap_bg_${eventId}`);
+        if (localBg) {
+          detectImageData = localBg;
+          bgImg.src = localBg;
+          bgImg.classList.remove("hidden");
+        } else {
+          detectImageData = null;
+          bgImg.src = "";
+          bgImg.classList.add("hidden");
+        }
 
         renderFloorTabs();
         renderSeats();
         updateStats();
-        setLoadMsg(`已載入 ${snap.size} 個座位（${floors.length} 層）`, "ok");
-      } catch(e) {
+        updateSidePanel();
+        setDirty(false);
+        setLoadMsg(`已載入 ${seatSnap.size} 個座位（${floors.length} 層）`, "ok");
+      } catch (e) {
+        console.error(e);
         setLoadMsg("載入失敗：" + (e.message || e), "warn");
       }
     }
 
-    function setLoadMsg(txt, type){
-      const el = document.getElementById("loadMsg");
-      el.textContent = txt;
-      el.style.color = type === "ok" ? "var(--green)" : type === "warn" ? "var(--red)" : "var(--blue)";
-    }
-
-    document.getElementById("loadImageBtn").onclick = () => {
-      const url = norm(document.getElementById("bgImageInput").value);
-      const img = document.getElementById("bgImg");
-      if (url) { img.src = url; img.style.display = "block"; }
-      else { img.style.display = "none"; }
-    };
-
-    // ====================================================
-    // FLOORS
-    // ====================================================
-    document.getElementById("addFloorBtn").onclick = () => {
-      document.getElementById("floorNameInput").value = "";
-      openModal("modalFloor");
-    };
-
-    document.getElementById("floorModalCancel").onclick = () => closeModal("modalFloor");
-    document.getElementById("floorModalConfirm").onclick = () => {
-      const name = norm(document.getElementById("floorNameInput").value) || `${floors.length + 1}F`;
-      floors.push({ id: name, name, seatMap: new Map() });
-      activeFloorIdx = floors.length - 1;
-      closeModal("modalFloor");
-      renderFloorTabs();
-      renderSeats();
-      updateStats();
-    };
-
     function renderFloorTabs(){
       const el = document.getElementById("floorTabs");
-      el.innerHTML = floors.map((f, i) => `
-        <button class="floor-tab ${i === activeFloorIdx ? "active" : ""}" data-fi="${i}">${esc(f.name)}</button>
-      `).join("") + `<button class="floor-tab-add" id="addFloorBtn">＋ 新增樓層</button>`;
+      el.innerHTML =
+        floors.map((f, i) => `
+          <button class="floor-tab ${i === activeFloorIdx ? "active" : ""}" data-fi="${i}">
+            ${esc(f.name)}
+          </button>
+        `).join("") +
+        `<button class="floor-tab-add" id="addFloorBtn">＋ 新增樓層</button>`;
+
       el.querySelectorAll(".floor-tab").forEach(btn => {
         btn.addEventListener("click", () => {
-          activeFloorIdx = parseInt(btn.dataset.fi);
+          activeFloorIdx = Number(btn.dataset.fi);
           selectedSeatId = "";
           multiSelectedIds.clear();
           renderFloorTabs();
           renderSeats();
           updateStats();
           updateSidePanel();
-          document.getElementById("floorLabel").textContent = getFloor().name;
+          updateBatchCount();
         });
       });
+
       document.getElementById("addFloorBtn").onclick = () => {
         document.getElementById("floorNameInput").value = "";
         openModal("modalFloor");
       };
+
       document.getElementById("floorLabel").textContent = getFloor().name;
     }
 
-    // ====================================================
-    // TOOL BUTTONS
-    // ====================================================
+    document.getElementById("floorModalCancel").onclick = () => closeModal("modalFloor");
+    document.getElementById("floorModalConfirm").onclick = () => {
+      const name = norm(document.getElementById("floorNameInput").value) || `${floors.length + 1}F`;
+      floors.push({ id:name, name, seatMap:new Map() });
+      activeFloorIdx = floors.length - 1;
+      closeModal("modalFloor");
+      renderFloorTabs();
+      renderSeats();
+      updateStats();
+      setDirty(true);
+    };
+
     document.querySelectorAll("[data-tool]").forEach(btn => {
       btn.addEventListener("click", () => {
         currentTool = btn.dataset.tool;
         document.querySelectorAll("[data-tool]").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        const wrap = document.getElementById("canvasWrap");
-        wrap.className = "canvas-wrap mode-" + currentTool;
+        canvasWrap.className = "canvas-wrap mode-" + currentTool;
       });
     });
-
-    // ====================================================
-    // STAGE CANVAS INTERACTIONS
-    // ====================================================
-    const stage = document.getElementById("stage");
-    const selBox = document.getElementById("selBox");
-
-    stage.addEventListener("mousedown", onStageMouseDown);
-    stage.addEventListener("mousemove", onStageMouseMove);
-    window.addEventListener("mouseup", onStageMouseUp);
 
     function stageCoords(e){
       const rect = stage.getBoundingClientRect();
@@ -1352,135 +1722,6 @@
         x: Math.round((e.clientX - rect.left) / zoomScale),
         y: Math.round((e.clientY - rect.top) / zoomScale)
       };
-    }
-
-    function onStageMouseDown(e){
-      if (e.button !== 0) return;
-      const { x, y } = stageCoords(e);
-      const seatMap = getSeatMap();
-
-      if (currentTool === "add"){
-        // Check if clicked existing seat
-        const hit = hitSeat(seatMap, x, y);
-        if (hit) {
-          setSelectedSeat(hit.seatId);
-          return;
-        }
-        addSeat(seatMap, x, y);
-        renderSeats();
-        updateStats();
-        return;
-      }
-
-      if (currentTool === "delete"){
-        const hit = hitSeat(seatMap, x, y);
-        if (hit) {
-          seatMap.delete(hit.seatId);
-          if (selectedSeatId === hit.seatId) { selectedSeatId = ""; updateSidePanel(); }
-          multiSelectedIds.delete(hit.seatId);
-          renderSeats();
-          updateStats();
-        }
-        return;
-      }
-
-      if (currentTool === "move"){
-        const hit = hitSeat(seatMap, x, y);
-        if (hit) {
-          isSeatDragging = true;
-          dragSeatId = hit.seatId;
-          dragOffX = x - Number(hit.x || 0);
-          dragOffY = y - Number(hit.y || 0);
-          dragMoved = false;
-          e.preventDefault();
-        }
-        return;
-      }
-
-      if (currentTool === "select"){
-        const hit = hitSeat(seatMap, x, y);
-        if (hit) {
-          if (e.shiftKey) {
-            if (multiSelectedIds.has(hit.seatId)) multiSelectedIds.delete(hit.seatId);
-            else multiSelectedIds.add(hit.seatId);
-          } else {
-            multiSelectedIds.clear();
-            setSelectedSeat(hit.seatId);
-          }
-          renderSeats();
-          updateStats();
-          updateBatchCount();
-          return;
-        }
-        // Start drag selection
-        if (!e.shiftKey) { multiSelectedIds.clear(); selectedSeatId = ""; updateSidePanel(); }
-        isSelDragging = true;
-        selStart = { x, y };
-        selBox.style.display = "block";
-        selBox.style.left = x + "px";
-        selBox.style.top = y + "px";
-        selBox.style.width = "0px";
-        selBox.style.height = "0px";
-        e.preventDefault();
-      }
-    }
-
-    function onStageMouseMove(e){
-      const { x, y } = stageCoords(e);
-      const seatMap = getSeatMap();
-
-      if (isSeatDragging && dragSeatId) {
-        const seat = seatMap.get(dragSeatId);
-        if (seat) {
-          seat.x = Math.round((x - dragOffX) / 4) * 4;
-          seat.y = Math.round((y - dragOffY) / 4) * 4;
-          dragMoved = true;
-          renderSeats();
-          if (selectedSeatId === dragSeatId) updateSidePanel();
-        }
-        return;
-      }
-
-      if (isSelDragging) {
-        const rx = Math.min(selStart.x, x);
-        const ry = Math.min(selStart.y, y);
-        const rw = Math.abs(x - selStart.x);
-        const rh = Math.abs(y - selStart.y);
-        selBox.style.left = (rx * zoomScale) + "px";
-        selBox.style.top = (ry * zoomScale) + "px";
-        selBox.style.width = (rw * zoomScale) + "px";
-        selBox.style.height = (rh * zoomScale) + "px";
-      }
-    }
-
-    function onStageMouseUp(e){
-      if (isSeatDragging) {
-        isSeatDragging = false;
-        dragSeatId = "";
-        return;
-      }
-      if (!isSelDragging) return;
-      isSelDragging = false;
-      selBox.style.display = "none";
-
-      const { x, y } = stageCoords(e);
-      const rx = Math.min(selStart.x, x);
-      const ry = Math.min(selStart.y, y);
-      const rw = Math.abs(x - selStart.x);
-      const rh = Math.abs(y - selStart.y);
-      if (rw < 4 || rh < 4) return;
-
-      const seatMap = getSeatMap();
-      for (const [, seat] of seatMap) {
-        const sx = Number(seat.x || 0);
-        const sy = Number(seat.y || 0);
-        if (sx >= rx && sx <= rx + rw && sy >= ry && sy <= ry + rh) {
-          multiSelectedIds.add(seat.seatId);
-        }
-      }
-      renderSeats();
-      updateStats();
-      updateBatchCount();
     }
 
     function hitSeat(seatMap, x, y){
@@ -1499,15 +1740,12 @@
       if (hitSeat(seatMap, snX, snY)) return;
 
       const seatId = "seat_" + uid8();
-      const seatMap2 = seatMap;
       const floorName = getFloor().name;
-
-      // Auto label by position
       const rowChar = String.fromCharCode(65 + Math.max(0, Math.floor((snY - 60) / 34)));
       const colNum = Math.max(1, Math.round((snX - 60) / 34));
       const label = rowChar + colNum;
 
-      seatMap2.set(seatId, {
+      seatMap.set(seatId, {
         seatId,
         label,
         row: rowChar,
@@ -1529,14 +1767,18 @@
         orderId: ""
       });
       setSelectedSeat(seatId);
+      setDirty(true);
     }
 
-    // ====================================================
-    // RENDER SEATS
-    // ====================================================
+    function setSelectedSeat(seatId){
+      selectedSeatId = seatId;
+      renderSeats();
+      updateSidePanel();
+      updateStats();
+    }
+
     function renderSeats(){
       const seatMap = getSeatMap();
-      // Remove old seats from DOM
       stage.querySelectorAll(".seat").forEach(el => el.remove());
 
       for (const [, seat] of seatMap) {
@@ -1547,9 +1789,10 @@
         const sx = Number(seat.x || 0);
         const sy = Number(seat.y || 0);
         const rot = Number(seat.rotation || 0);
+
         el.style.left = (sx - 10) + "px";
         el.style.top = (sy - 10) + "px";
-        el.style.transform = `rotate(${rot}deg)`;
+        el.style.setProperty("--rot", `${rot}deg`);
 
         const status = norm(seat.status || "available");
         const isSelected = seat.seatId === selectedSeatId;
@@ -1562,10 +1805,12 @@
         else if (status === "disabled" || seat.enabled === false) el.classList.add("disabled");
         else if (status === "sold") el.classList.add("sold");
 
-        // Zone color
         if (!isSelected && !isMulti && status === "available" && !isDetected){
           const zc = getSectionColor(norm(seat.sectionId || ""));
-          if (zc){ el.style.background = zc; el.style.borderColor = zc; }
+          if (zc){
+            el.style.background = zc;
+            el.style.borderColor = zc;
+          }
         }
 
         const label = document.createElement("div");
@@ -1574,19 +1819,23 @@
         el.appendChild(label);
 
         el.addEventListener("click", () => {
-          if (currentTool === "select"){
-            // handled by mousedown
-            return;
-          }
-          if (currentTool === "add" || currentTool === "move"){
+          if (currentTool === "select") return;
+
+          if (currentTool === "add" || currentTool === "move") {
             setSelectedSeat(seat.seatId);
           }
-          if (currentTool === "delete"){
+
+          if (currentTool === "delete") {
             seatMap.delete(seat.seatId);
-            if (selectedSeatId === seat.seatId){ selectedSeatId = ""; updateSidePanel(); }
+            if (selectedSeatId === seat.seatId) {
+              selectedSeatId = "";
+              updateSidePanel();
+            }
             multiSelectedIds.delete(seat.seatId);
+            detectedSeatIds.delete(seat.seatId);
             renderSeats();
             updateStats();
+            setDirty(true);
           }
         });
 
@@ -1594,38 +1843,20 @@
       }
     }
 
-    function getSectionColor(s){
-      if (!s) return "";
-      s = s.toLowerCase();
-      if (s === "vip" || s.includes("vip")) return "var(--zone-vip)";
-      if (s === "a" || s.startsWith("a")) return "var(--zone-a)";
-      if (s === "b" || s.startsWith("b")) return "var(--zone-b)";
-      if (s === "c" || s.startsWith("c")) return "var(--zone-c)";
-      if (s === "d" || s.startsWith("d")) return "var(--zone-d)";
-      return "";
-    }
-
-    // ====================================================
-    // SIDE PANEL (single)
-    // ====================================================
-    function setSelectedSeat(seatId){
-      selectedSeatId = seatId;
-      renderSeats();
-      updateSidePanel();
-      updateStats();
-    }
-
     function updateSidePanel(){
       const seatMap = getSeatMap();
       const noSel = document.getElementById("noSelMsg");
       const prop = document.getElementById("singleProp");
+
       if (!selectedSeatId || !seatMap.has(selectedSeatId)){
-        noSel.style.display = "block";
-        prop.style.display = "none";
+        noSel.classList.remove("hidden");
+        prop.classList.add("hidden");
         return;
       }
-      noSel.style.display = "none";
-      prop.style.display = "block";
+
+      noSel.classList.add("hidden");
+      prop.classList.remove("hidden");
+
       const s = seatMap.get(selectedSeatId);
       document.getElementById("propLabel").value = norm(s.label);
       document.getElementById("propSeatNumber").value = norm(s.seatNumber);
@@ -1636,17 +1867,19 @@
       document.getElementById("propX").value = Number(s.x || 0);
       document.getElementById("propY").value = Number(s.y || 0);
       document.getElementById("propRotation").value = Number(s.rotation || 0);
-      document.getElementById("propRoles").value = (s.allowedRoles || []).join(", ");
-      document.getElementById("propTags").value = (s.allowedTags || []).join(", ");
-      document.getElementById("propTicketTypes").value = (s.allowedTicketTypes || []).join(", ");
+      document.getElementById("propRoles").value = Array.isArray(s.allowedRoles) ? s.allowedRoles.join(", ") : "";
+      document.getElementById("propTags").value = Array.isArray(s.allowedTags) ? s.allowedTags.join(", ") : "";
+      document.getElementById("propTicketTypes").value = Array.isArray(s.allowedTicketTypes) ? s.allowedTicketTypes.join(", ") : "";
     }
 
     document.getElementById("applyPropBtn").onclick = () => {
       const seatMap = getSeatMap();
       if (!selectedSeatId || !seatMap.has(selectedSeatId)) return;
+
       const s = seatMap.get(selectedSeatId);
       const sectionId = norm(document.getElementById("propSection").value);
       const sectionNames = { "":"", "vip":"VIP", "a":"A 區", "b":"B 區", "c":"C 區", "d":"D 區" };
+
       s.label = norm(document.getElementById("propLabel").value) || s.label;
       s.seatNumber = norm(document.getElementById("propSeatNumber").value);
       s.row = norm(document.getElementById("propRow").value);
@@ -1661,24 +1894,25 @@
       s.allowedRoles = document.getElementById("propRoles").value.split(",").map(v => v.trim()).filter(Boolean);
       s.allowedTags = document.getElementById("propTags").value.split(",").map(v => v.trim()).filter(Boolean);
       s.allowedTicketTypes = document.getElementById("propTicketTypes").value.split(",").map(v => v.trim()).filter(Boolean);
+
       renderSeats();
       updateStats();
+      setDirty(true);
     };
 
     document.getElementById("deleteSeatBtn").onclick = () => {
       const seatMap = getSeatMap();
       if (!selectedSeatId) return;
+
       seatMap.delete(selectedSeatId);
       detectedSeatIds.delete(selectedSeatId);
       selectedSeatId = "";
       updateSidePanel();
       renderSeats();
       updateStats();
+      setDirty(true);
     };
 
-    // ====================================================
-    // BATCH EDIT
-    // ====================================================
     document.querySelectorAll("[data-batch-tab]").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll("[data-batch-tab]").forEach(b => b.classList.remove("active"));
@@ -1691,12 +1925,12 @@
     function updateBatchCount(){
       const n = multiSelectedIds.size;
       const el = document.getElementById("batchSelCount");
-      if (!n) el.textContent = "尚未框選任何座位";
-      else el.textContent = `已選取 ${n} 個座位，可批次修改`;
+      el.textContent = n ? `已選取 ${n} 個座位，可批次修改` : "尚未框選任何座位";
     }
 
     document.getElementById("applyBatchBtn").onclick = () => {
       if (!multiSelectedIds.size) return;
+
       const seatMap = getSeatMap();
       const sectionId = document.getElementById("batchSection").value;
       const status = document.getElementById("batchStatus").value;
@@ -1707,44 +1941,52 @@
       for (const id of multiSelectedIds) {
         const s = seatMap.get(id);
         if (!s) continue;
-        if (sectionId) { s.sectionId = sectionId; s.sectionName = sectionNames[sectionId] || sectionId; }
-        if (status) { s.status = status; s.enabled = status !== "disabled"; }
+        if (sectionId !== "") {
+          s.sectionId = sectionId;
+          s.sectionName = sectionNames[sectionId] || sectionId;
+        }
+        if (status !== "") {
+          s.status = status;
+          s.enabled = status !== "disabled";
+        }
         if (price !== null) s.price = price;
       }
+
       renderSeats();
       updateStats();
+      setDirty(true);
     };
 
     document.getElementById("deleteMultiBtn").onclick = () => {
       if (!multiSelectedIds.size) return;
+
       const seatMap = getSeatMap();
       for (const id of multiSelectedIds) {
         seatMap.delete(id);
         detectedSeatIds.delete(id);
       }
+
       multiSelectedIds.clear();
-      if (selectedSeatId && !seatMap.has(selectedSeatId)){ selectedSeatId = ""; updateSidePanel(); }
+      if (selectedSeatId && !seatMap.has(selectedSeatId)) {
+        selectedSeatId = "";
+        updateSidePanel();
+      }
+
       renderSeats();
       updateStats();
       updateBatchCount();
+      setDirty(true);
     };
 
-    // ====================================================
-    // GENERATE GRID
-    // ====================================================
-    document.getElementById("generateGridBtn").onclick = () => {
+    document.getElementById("generateGridBtn").onclick = openGenerateConfirm;
+    document.getElementById("doGenBtn").onclick = openGenerateConfirm;
+
+    function openGenerateConfirm(){
       const rows = Number(document.getElementById("genRows").value) || 8;
       const cols = Number(document.getElementById("genCols").value) || 10;
       document.getElementById("modalGridSub").textContent = `將生成 ${rows} × ${cols} = ${rows * cols} 個座位`;
       openModal("modalGrid");
-    };
-
-    document.getElementById("doGenBtn").onclick = () => {
-      const rows = Number(document.getElementById("genRows").value) || 8;
-      const cols = Number(document.getElementById("genCols").value) || 10;
-      document.getElementById("modalGridSub").textContent = `將生成 ${rows} × ${cols} = ${rows * cols} 個座位`;
-      openModal("modalGrid");
-    };
+    }
 
     document.getElementById("modalGridCancel").onclick = () => closeModal("modalGrid");
     document.getElementById("modalGridConfirm").onclick = () => {
@@ -1768,10 +2010,12 @@
 
       for (let r = 0; r < rows; r++) {
         const rowLabel = prefix === "alpha" ? String.fromCharCode(65 + r) : String(r + 1);
+
         for (let c = 0; c < cols; c++) {
           const x = startX + c * gapX;
           const y = startY + r * gapY;
           if (hitSeat(seatMap, x, y)) continue;
+
           const seatId = "seat_" + uid8();
           seatMap.set(seatId, {
             seatId,
@@ -1781,7 +2025,8 @@
             sectionId,
             sectionName: sectionNames[sectionId] || sectionId,
             floor: floor.name,
-            x, y,
+            x,
+            y,
             rotation: 0,
             price,
             status: "available",
@@ -1795,64 +2040,110 @@
           });
         }
       }
+
       renderSeats();
       updateStats();
+      setDirty(true);
     }
 
-    // ====================================================
-    // IMAGE DETECT
-    // ====================================================
-    document.getElementById("detectBtn").onclick = () => {
-      document.getElementById("detectFileInput").click();
-    };
-
-    document.getElementById("doDetectBtn").onclick = detectFromImage;
-
-    let detectImageData = null;
-    document.getElementById("detectFileInput").addEventListener("change", e => {
+    document.getElementById("bgFileInput").addEventListener("change", e => {
       const file = e.target.files[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = ev => {
         detectImageData = ev.target.result;
-        // Also set as bg
-        const img = document.getElementById("bgImg");
-        img.src = detectImageData;
-        img.style.display = "block";
-        document.getElementById("bgImageInput").value = detectImageData.substring(0, 60) + "...";
+        bgImg.src = detectImageData;
+        bgImg.classList.remove("hidden");
+
+        if (currentEventId) {
+          try {
+            localStorage.setItem(`seatmap_bg_${currentEventId}`, detectImageData);
+          } catch (_) {}
+        }
+
+        setLoadMsg(`已載入背景圖：${file.name}`, "ok");
+        setDirty(true);
       };
       reader.readAsDataURL(file);
     });
 
-    async function detectFromImage(){
-      if (!detectImageData) { alert("請先選擇圖片"); return; }
-      const btn = document.getElementById("doDetectBtn");
-      btn.disabled = true;
-      const old = btn.textContent;
-      btn.textContent = "偵測中…";
-      document.getElementById("detectMsg").textContent = "";
+    document.getElementById("clearBgBtn").onclick = () => {
+      bgImg.src = "";
+      bgImg.classList.add("hidden");
+      detectImageData = null;
+      if (currentEventId) {
+        localStorage.removeItem(`seatmap_bg_${currentEventId}`);
+      }
+      setLoadMsg("已清除背景圖", "orange");
+      setDirty(true);
+    };
 
-      const CW = 1200, CH = 900;
+    document.getElementById("useDetectBtn").onclick = () => {
+      if (!detectImageData) {
+        alert("請先上傳座位圖背景");
+        return;
+      }
+      document.getElementById("doDetectBtn").click();
+    };
+
+    document.getElementById("detectBtn").onclick = () => {
+      document.getElementById("doDetectBtn").click();
+    };
+
+    document.getElementById("doDetectBtn").onclick = detectFromImage;
+
+    async function detectFromImage(){
+      if (!detectImageData) {
+        alert("請先上傳圖片");
+        return;
+      }
+
+      const btn = document.getElementById("doDetectBtn");
+      const old = btn.textContent;
+      const msgEl = document.getElementById("detectMsg");
+
+      btn.disabled = true;
+      btn.textContent = "偵測中…";
+      msgEl.textContent = "";
+
+      const CW = 1200;
+      const CH = 900;
       const img = new Image();
+
       img.onload = () => {
         try {
           const off = document.createElement("canvas");
-          off.width = CW; off.height = CH;
-          const octx = off.getContext("2d", { willReadFrequently: true });
-          octx.clearRect(0, 0, CW, CH);
-          octx.fillStyle = "#ffffff";
-          octx.fillRect(0, 0, CW, CH);
+          off.width = CW;
+          off.height = CH;
+          const ctx = off.getContext("2d", { willReadFrequently: true });
+
+          ctx.clearRect(0, 0, CW, CH);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, CW, CH);
 
           const ir = img.width / img.height;
           const cr = CW / CH;
           let dw, dh, dx, dy;
-          if (ir > cr){ dw = CW; dh = dw / ir; dx = 0; dy = (CH - dh) / 2; }
-          else { dh = CH; dw = dh * ir; dy = 0; dx = (CW - dw) / 2; }
-          octx.drawImage(img, dx, dy, dw, dh);
 
-          const imgD = octx.getImageData(0, 0, CW, CH);
+          if (ir > cr){
+            dw = CW;
+            dh = dw / ir;
+            dx = 0;
+            dy = (CH - dh) / 2;
+          } else {
+            dh = CH;
+            dw = dh * ir;
+            dy = 0;
+            dx = (CW - dw) / 2;
+          }
+
+          ctx.drawImage(img, dx, dy, dw, dh);
+
+          const imgD = ctx.getImageData(0, 0, CW, CH);
           const data = imgD.data;
           const visited = new Uint8Array(CW * CH);
+
           const thresh = Number(document.getElementById("detectThresh").value) || 205;
           const minArea = Number(document.getElementById("detectMinArea").value) || 8;
           const maxArea = Number(document.getElementById("detectMaxArea").value) || 400;
@@ -1868,50 +2159,75 @@
           }
 
           const found = [];
+
           for (let y = 0; y < CH; y++) {
             for (let x = 0; x < CW; x++) {
               const p = y * CW + x;
               if (visited[p]) continue;
               const i = p * 4;
-              if (!isTarget(i)){ visited[p] = 1; continue; }
+
+              if (!isTarget(i)) {
+                visited[p] = 1;
+                continue;
+              }
+
               const queue = [p];
               visited[p] = 1;
-              let area = 0, minX = x, maxX = x, minY = y, maxY = y;
+
+              let area = 0;
+              let minX = x, maxX = x, minY = y, maxY = y;
+
               while (queue.length) {
                 const cur = queue.pop();
-                const cx = cur % CW, cy = Math.floor(cur / CW);
+                const cx = cur % CW;
+                const cy = Math.floor(cur / CW);
                 area++;
-                if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
-                if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
-                for (const np of [cur-1,cur+1,cur-CW,cur+CW]) {
-                  if (np < 0 || np >= CW*CH) continue;
+
+                if (cx < minX) minX = cx;
+                if (cx > maxX) maxX = cx;
+                if (cy < minY) minY = cy;
+                if (cy > maxY) maxY = cy;
+
+                for (const np of [cur - 1, cur + 1, cur - CW, cur + CW]) {
+                  if (np < 0 || np >= CW * CH) continue;
                   if (visited[np]) continue;
-                  if (!isTarget(np*4)){ visited[np]=1; continue; }
-                  visited[np] = 1; queue.push(np);
+
+                  if (!isTarget(np * 4)) {
+                    visited[np] = 1;
+                    continue;
+                  }
+
+                  visited[np] = 1;
+                  queue.push(np);
                 }
               }
-              const bw = maxX - minX + 1, bh = maxY - minY + 1;
+
+              const bw = maxX - minX + 1;
+              const bh = maxY - minY + 1;
+
               if (area < minArea || area > maxArea) continue;
               if (bw < 2 || bh < 2 || bw > 60 || bh > 60) continue;
+
               const centerX = Math.round((minX + maxX) / 2);
               const centerY = Math.round((minY + maxY) / 2);
+
               if (centerX < 8 || centerY < 8 || centerX > 1192 || centerY > 892) continue;
-              found.push({ x: centerX, y: centerY });
+              found.push({ x:centerX, y:centerY });
             }
           }
 
           const deduped = [];
           found.sort((a,b) => a.y - b.y || a.x - b.x);
+
           for (const item of found) {
             const near = deduped.some(d => Math.hypot(d.x - item.x, d.y - item.y) < 10);
             if (!near) deduped.push(item);
           }
 
-          // Remove old detected
           const seatMap = getSeatMap();
           for (const id of detectedSeatIds) {
             seatMap.delete(id);
-            if (selectedSeatId === id){ selectedSeatId = ""; updateSidePanel(); }
+            if (selectedSeatId === id) selectedSeatId = "";
           }
           detectedSeatIds.clear();
 
@@ -1920,27 +2236,38 @@
             const seatId = "det_" + Date.now() + "_" + idx;
             seatMap.set(seatId, {
               seatId,
-              label: `候選${idx+1}`,
-              row: "", seatNumber: "",
-              sectionId: "", sectionName: "",
+              label: `候選${idx + 1}`,
+              row: "",
+              seatNumber: "",
+              sectionId: "",
+              sectionName: "",
               floor: floorName,
-              x: item.x, y: item.y,
-              rotation: 0, price: 0,
-              status: "available", enabled: true,
-              allowedRoles: [], allowedTags: [], allowedTicketTypes: [],
-              heldBy: "", heldUntil: null, orderId: "",
+              x: item.x,
+              y: item.y,
+              rotation: 0,
+              price: 0,
+              status: "available",
+              enabled: true,
+              allowedRoles: [],
+              allowedTags: [],
+              allowedTicketTypes: [],
+              heldBy: "",
+              heldUntil: null,
+              orderId: "",
               _detected: true
             });
             detectedSeatIds.add(seatId);
           });
 
           renderSeats();
+          updateSidePanel();
           updateStats();
-          const msgEl = document.getElementById("detectMsg");
+          setDirty(true);
+
           msgEl.style.color = "var(--green)";
-          msgEl.textContent = `已偵測 ${deduped.length} 顆候選座位。確認後請按「儲存全部座位」。`;
-        } catch(e) {
-          const msgEl = document.getElementById("detectMsg");
+          msgEl.textContent = `已偵測 ${deduped.length} 顆候選座位。`;
+        } catch (e) {
+          console.error(e);
           msgEl.style.color = "var(--red)";
           msgEl.textContent = "偵測失敗：" + (e.message || e);
         } finally {
@@ -1948,21 +2275,19 @@
           btn.textContent = old;
         }
       };
+
       img.src = detectImageData;
     }
 
-    // ====================================================
-    // SAVE TO FIRESTORE
-    // ====================================================
-    document.getElementById("saveSaveBtn").onclick = saveAllSeats;
-
     async function saveAllSeats(){
-      const eventId = norm(document.getElementById("eventIdInput").value);
-      if (!eventId){ alert("請輸入活動 ID"); return; }
+      if (!currentEventId){
+        alert("請先選擇活動");
+        return;
+      }
 
       const btn = document.getElementById("saveSaveBtn");
-      btn.disabled = true;
       const old = btn.textContent;
+      btn.disabled = true;
       btn.textContent = "儲存中…";
 
       try {
@@ -1971,8 +2296,8 @@
 
         for (const floor of floors) {
           for (const [, seat] of floor.seatMap) {
-            const ref = db.collection("events").doc(eventId).collection("seats").doc(seat.seatId);
-            const payload = {
+            const ref = db.collection("events").doc(currentEventId).collection("seats").doc(seat.seatId);
+            batch.set(ref, {
               seatId: seat.seatId,
               label: norm(seat.label),
               row: norm(seat.row),
@@ -1993,18 +2318,20 @@
               heldUntil: seat.heldUntil || null,
               orderId: norm(seat.orderId || ""),
               updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            batch.set(ref, payload, { merge: true });
+            }, { merge:true });
             count++;
           }
         }
 
         await batch.commit();
+        setDirty(false);
 
-        document.getElementById("modalSaveSub").textContent = `活動：${eventId}`;
+        document.getElementById("modalSaveSub").textContent = `活動：${currentEventId}`;
         document.getElementById("modalSaveMsg").textContent = `已成功儲存 ${count} 個座位至 Firestore。`;
         openModal("modalSave");
-      } catch(e) {
+        setLoadMsg(`已成功儲存 ${count} 個座位`, "ok");
+      } catch (e) {
+        console.error(e);
         alert("儲存失敗：" + (e.message || e));
       } finally {
         btn.disabled = false;
@@ -2012,49 +2339,59 @@
       }
     }
 
+    document.getElementById("saveSaveBtn").onclick = saveAllSeats;
     document.getElementById("modalSaveOk").onclick = () => closeModal("modalSave");
 
-    // ====================================================
-    // CLEAR
-    // ====================================================
     document.getElementById("clearAllBtn").onclick = () => {
-      if (!confirm(`確定清空「${getFloor().name}」所有座位？`)) return;
-      const seatMap = getSeatMap();
-      seatMap.clear();
+      const floor = getFloor();
+      if (!confirm(`確定清空「${floor.name}」所有座位？`)) return;
+
+      floor.seatMap.clear();
       detectedSeatIds.clear();
       selectedSeatId = "";
       multiSelectedIds.clear();
+
       updateSidePanel();
       renderSeats();
       updateStats();
+      updateBatchCount();
+      setDirty(true);
     };
 
-    // ====================================================
-    // ZOOM
-    // ====================================================
-    document.getElementById("zoomInBtn").onclick = () => { zoomScale = Math.min(3, Math.round((zoomScale + .1)*10)/10); applyZoom(); };
-    document.getElementById("zoomOutBtn").onclick = () => { zoomScale = Math.max(.3, Math.round((zoomScale - .1)*10)/10); applyZoom(); };
-    document.getElementById("zoomFitBtn").onclick = () => { zoomScale = 1; applyZoom(); };
-
     function applyZoom(){
-      const s = document.getElementById("stage");
-      s.style.transform = `scale(${zoomScale})`;
-      s.parentElement.style.minWidth = (1200 * zoomScale + 56) + "px";
-      s.parentElement.style.minHeight = Math.max(740, 900 * zoomScale + 80) + "px";
+      stage.style.transform = `scale(${zoomScale})`;
+      stageShell.style.minWidth = (1200 * zoomScale + 56) + "px";
+      stageShell.style.minHeight = Math.max(740, 900 * zoomScale + 80) + "px";
       document.getElementById("zoomText").textContent = Math.round(zoomScale * 100) + "%";
     }
 
-    // ====================================================
-    // STATS
-    // ====================================================
+    document.getElementById("zoomInBtn").onclick = () => {
+      zoomScale = Math.min(3, Math.round((zoomScale + .1) * 10) / 10);
+      applyZoom();
+    };
+
+    document.getElementById("zoomOutBtn").onclick = () => {
+      zoomScale = Math.max(.3, Math.round((zoomScale - .1) * 10) / 10);
+      applyZoom();
+    };
+
+    document.getElementById("zoomFitBtn").onclick = () => {
+      zoomScale = 1;
+      applyZoom();
+    };
+
     function updateStats(){
-      let total = 0, avail = 0, sold = 0;
+      let total = 0;
+      let avail = 0;
+      let sold = 0;
+
       const seatMap = getSeatMap();
       for (const [, s] of seatMap) {
         total++;
         if (s.status === "sold") sold++;
         else if (s.enabled !== false && s.status !== "disabled") avail++;
       }
+
       document.getElementById("statTotal").textContent = "總計 " + total;
       document.getElementById("statAvail").textContent = "可用 " + avail;
       document.getElementById("statSold").textContent = "已售 " + sold;
@@ -2062,18 +2399,204 @@
       document.getElementById("statMulti").textContent = "多選 " + multiSelectedIds.size;
     }
 
-    // ====================================================
-    // MODAL HELPERS
-    // ====================================================
-    function openModal(id){ document.getElementById(id).classList.add("show"); }
-    function closeModal(id){ document.getElementById(id).classList.remove("show"); }
-    document.querySelectorAll(".modal-back").forEach(el => {
-      el.addEventListener("click", e => { if (e.target === el) el.classList.remove("show"); });
+    stage.addEventListener("mousedown", onStageMouseDown);
+    stage.addEventListener("mousemove", onStageMouseMove);
+    window.addEventListener("mouseup", onStageMouseUp);
+
+    function onStageMouseDown(e){
+      if (e.button !== 0) return;
+
+      const { x, y } = stageCoords(e);
+      const seatMap = getSeatMap();
+
+      if (currentTool === "add") {
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          setSelectedSeat(hit.seatId);
+          return;
+        }
+        addSeat(seatMap, x, y);
+        renderSeats();
+        updateStats();
+        return;
+      }
+
+      if (currentTool === "delete") {
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          seatMap.delete(hit.seatId);
+          if (selectedSeatId === hit.seatId) {
+            selectedSeatId = "";
+            updateSidePanel();
+          }
+          multiSelectedIds.delete(hit.seatId);
+          detectedSeatIds.delete(hit.seatId);
+          renderSeats();
+          updateStats();
+          setDirty(true);
+        }
+        return;
+      }
+
+      if (currentTool === "move") {
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          isSeatDragging = true;
+          dragSeatId = hit.seatId;
+          dragOffX = x - Number(hit.x || 0);
+          dragOffY = y - Number(hit.y || 0);
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (currentTool === "select") {
+        const hit = hitSeat(seatMap, x, y);
+
+        if (hit) {
+          if (e.shiftKey) {
+            if (multiSelectedIds.has(hit.seatId)) multiSelectedIds.delete(hit.seatId);
+            else multiSelectedIds.add(hit.seatId);
+          } else {
+            multiSelectedIds.clear();
+            setSelectedSeat(hit.seatId);
+          }
+          renderSeats();
+          updateStats();
+          updateBatchCount();
+          return;
+        }
+
+        if (!e.shiftKey) {
+          multiSelectedIds.clear();
+          selectedSeatId = "";
+          updateSidePanel();
+        }
+
+        isSelDragging = true;
+        selStart = { x, y };
+        selBox.style.display = "block";
+        selBox.style.left = x + "px";
+        selBox.style.top = y + "px";
+        selBox.style.width = "0px";
+        selBox.style.height = "0px";
+        e.preventDefault();
+      }
+    }
+
+    function onStageMouseMove(e){
+      const { x, y } = stageCoords(e);
+      const seatMap = getSeatMap();
+
+      if (isSeatDragging && dragSeatId) {
+        const seat = seatMap.get(dragSeatId);
+        if (seat) {
+          seat.x = Math.round((x - dragOffX) / 4) * 4;
+          seat.y = Math.round((y - dragOffY) / 4) * 4;
+          renderSeats();
+          if (selectedSeatId === dragSeatId) updateSidePanel();
+          setDirty(true);
+        }
+        return;
+      }
+
+      if (isSelDragging) {
+        const rx = Math.min(selStart.x, x);
+        const ry = Math.min(selStart.y, y);
+        const rw = Math.abs(x - selStart.x);
+        const rh = Math.abs(y - selStart.y);
+
+        selBox.style.left = rx + "px";
+        selBox.style.top = ry + "px";
+        selBox.style.width = rw + "px";
+        selBox.style.height = rh + "px";
+      }
+    }
+
+    function onStageMouseUp(e){
+      if (isSeatDragging) {
+        isSeatDragging = false;
+        dragSeatId = "";
+        return;
+      }
+
+      if (!isSelDragging) return;
+      isSelDragging = false;
+      selBox.style.display = "none";
+
+      const { x, y } = stageCoords(e);
+      const rx = Math.min(selStart.x, x);
+      const ry = Math.min(selStart.y, y);
+      const rw = Math.abs(x - selStart.x);
+      const rh = Math.abs(y - selStart.y);
+
+      if (rw < 4 || rh < 4) return;
+
+      const seatMap = getSeatMap();
+      for (const [, seat] of seatMap) {
+        const sx = Number(seat.x || 0);
+        const sy = Number(seat.y || 0);
+        if (sx >= rx && sx <= rx + rw && sy >= ry && sy <= ry + rh) {
+          multiSelectedIds.add(seat.seatId);
+        }
+      }
+
+      renderSeats();
+      updateStats();
+      updateBatchCount();
+    }
+
+    document.getElementById("loadEventBtn").onclick = loadEventSeats;
+    document.getElementById("refreshOneBtn").onclick = loadEventsList;
+    document.getElementById("reloadEventsBtn").onclick = loadEventsList;
+
+    auth.onAuthStateChanged(async user => {
+      currentUser = user || null;
+      currentUserDoc = null;
+      currentRole = "";
+
+      if (!currentUser) {
+        updateAuthUI();
+        return;
+      }
+
+      try {
+        currentUserDoc = await loadMyUserDoc(currentUser.uid);
+        currentRole = norm(currentUserDoc?.role || "");
+
+        if (!canUseSeatEditor(currentUserDoc)) {
+          await auth.signOut();
+          gateErr.textContent = "你的帳號沒有座位編輯器權限。";
+          gateErr.classList.remove("hidden");
+          return;
+        }
+
+        updateAuthUI();
+        await loadEventsList();
+        applyZoom();
+        renderFloorTabs();
+        renderSeats();
+        updateStats();
+      } catch (e) {
+        console.error(e);
+        await auth.signOut();
+        gateErr.textContent = "權限檢查失敗，請稍後再試。";
+        gateErr.classList.remove("hidden");
+      }
     });
 
-    // Init
+    window.addEventListener("beforeunload", e => {
+      if (!hasUnsavedChanges) return;
+      e.preventDefault();
+      e.returnValue = "";
+    });
+
     applyZoom();
     renderFloorTabs();
+    renderSeats();
+    updateStats();
+    updateBatchCount();
+    resetMeta();
   </script>
 </body>
 </html>
