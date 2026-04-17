@@ -140,6 +140,10 @@
       padding:28px 22px 88px;
     }
 
+    .page.auth-hidden{
+      display:none;
+    }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -599,7 +603,7 @@
       </div>
     </div>
 
-    <main class="page">
+    <main class="page auth-hidden" id="pageRoot">
       <div class="back-row">
         <a href="member.html" class="back-link">← 返回會員中心</a>
         <div class="toolbar-right">
@@ -666,6 +670,7 @@
   const auth = getAuth(appFirebase);
   const db = getFirestore(appFirebase);
 
+  const pageRoot = document.getElementById("pageRoot");
   const accountBtn = document.getElementById("accountBtn");
   const app = document.getElementById("app");
   const heroUserText = document.getElementById("heroUserText");
@@ -818,8 +823,11 @@
 
   function getBuyerTicketCount(order){
     const assignments = getHolderAssignments(order);
-    if (!assignments.length) return 0;
-    return assignments.filter(item => item?.isBuyerTicket === true).length;
+    if (!assignments.length) {
+      const fallbackTotal = Number(order.totalQuantity || order.quantity || 0);
+      return fallbackTotal > 0 ? 1 : 0;
+    }
+    return assignments.filter(item => item?.isBuyerTicket === true).length || 1;
   }
 
   function getValidHolderCount(order){
@@ -1202,6 +1210,7 @@
       return;
     }
 
+    pageRoot.classList.remove("auth-hidden");
     heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
     app.className = "loading";
     app.innerHTML = "載入中…";
@@ -1211,6 +1220,7 @@
       render(orderCache);
     }catch(err){
       console.error(err);
+      pageRoot.classList.remove("auth-hidden");
       app.className = "empty";
       app.innerHTML = "訂單載入失敗，請稍後再試。";
     }
