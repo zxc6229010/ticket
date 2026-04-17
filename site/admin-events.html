@@ -558,15 +558,48 @@
           </div>
 
           <div>
-            <label>是否公開</label>
-            <select id="published">
-              <option value="false">不公開</option>
-              <option value="true">公開</option>
-            </select>
+  <label>是否公開</label>
+  <select id="published">
+    <option value="false">不公開</option>
+    <option value="true">公開</option>
+  </select>
 
-            <label>名額</label>
-            <input id="capacity" type="number" min="0" placeholder="例如：500" />
-          </div>
+  <label>名額</label>
+  <input id="capacity" type="number" min="0" placeholder="例如：500" />
+
+  <div class="divider"></div>
+
+  <h2 style="margin-top:0;">選位設定</h2>
+  <div class="sub" style="margin-top:8px;">
+    可設定此活動是否啟用座位圖與前台選位購票。
+  </div>
+
+  <label>是否開放選位</label>
+  <select id="seatingEnabled">
+    <option value="false">否</option>
+    <option value="true">是</option>
+  </select>
+
+  <label>選位模式</label>
+  <select id="seatingMode">
+    <option value="assigned">對號座</option>
+    <option value="free">自由入座</option>
+  </select>
+
+  <label>是否顯示座位圖</label>
+  <select id="seatMapEnabled">
+    <option value="true">顯示</option>
+    <option value="false">不顯示</option>
+  </select>
+
+  <label>每筆訂單最多可選幾席</label>
+  <input id="maxSeatsPerOrder" type="number" min="1" placeholder="例如：4" />
+
+  <div class="row" style="margin-top:12px;">
+    <button class="btn btn-sm" type="button" id="openSeatEditorBtn">前往座位編輯器</button>
+    <div class="small" id="seatEditorHint">請先儲存活動後再編輯座位圖。</div>
+  </div>
+</div>
         </div>
 
         <div class="grid" style="margin-top:12px;">
