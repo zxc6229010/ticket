@@ -502,306 +502,337 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      sendEmailVerification,
-      signOut,
-      onAuthStateChanged,
-      reload
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    sendEmailVerification,
+    signOut,
+    onAuthStateChanged,
+    reload
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e",
-      storageBucket: "concert-1ff7e.firebasestorage.app",
-      messagingSenderId: "704757384914",
-      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain: "concert-1ff7e.firebaseapp.com",
+    projectId: "concert-1ff7e",
+    storageBucket: "concert-1ff7e.firebasestorage.app",
+    messagingSenderId: "704757384914",
+    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+  };
 
-    const appFirebase = initializeApp(firebaseConfig);
-    const auth = getAuth(appFirebase);
+  const appFirebase = initializeApp(firebaseConfig);
+  const auth = getAuth(appFirebase);
 
-    const accountBtn = document.getElementById("accountBtn");
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const checkVerifyBtn = document.getElementById("checkVerifyBtn");
-    const resendVerifyBtn = document.getElementById("resendVerifyBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const msg = document.getElementById("msg");
+  const accountBtn = document.getElementById("accountBtn");
+  const emailEl = document.getElementById("email");
+  const passwordEl = document.getElementById("password");
+  const loginBtn = document.getElementById("loginBtn");
+  const checkVerifyBtn = document.getElementById("checkVerifyBtn");
+  const resendVerifyBtn = document.getElementById("resendVerifyBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const msg = document.getElementById("msg");
 
-    const params = new URLSearchParams(location.search);
-    const redirectTarget = params.get("redirect");
-    const prefillEmail = params.get("email");
+  const params = new URLSearchParams(location.search);
+  const redirectTarget = params.get("redirect");
+  const prefillEmail = params.get("email");
 
-    let lastSignedUser = null;
-    let redirecting = false;
+  let redirecting = false;
+  let lastPendingEmail = "";
+  let lastPendingPassword = "";
 
-    function esc(value){
-      return String(value ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
+  function esc(value){
+    return String(value ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m]));
+  }
+
+  function norm(value){
+    return String(value ?? "").trim();
+  }
+
+  function setMsg(type, text){
+    msg.className = `notice ${type}`;
+    msg.innerHTML = text;
+  }
+
+  function isValidEmail(email){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function getSafeRedirect(){
+    if (!redirectTarget) return "member.html";
+
+    const target = String(redirectTarget).trim();
+
+    if (!target) return "member.html";
+    if (target.startsWith("http://") || target.startsWith("https://")) return "member.html";
+    if (target.includes("login.html")) return "member.html";
+
+    return target;
+  }
+
+  function updateAccountLinks(user){
+    if (user) {
+      accountBtn.href = "member.html";
+      accountBtn.title = user.email || "會員中心";
+      accountBtn.setAttribute("aria-label", "會員中心");
+    } else {
+      accountBtn.href = "login.html";
+      accountBtn.title = "登入 / 會員中心";
+      accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+    }
+  }
+
+  function showVerifyActions(show){
+    checkVerifyBtn.classList.toggle("hidden", !show);
+    resendVerifyBtn.classList.toggle("hidden", !show);
+    logoutBtn.classList.toggle("hidden", !show);
+  }
+
+  function goNext(){
+    if (redirecting) return;
+    redirecting = true;
+    location.href = getSafeRedirect();
+  }
+
+  if (prefillEmail) {
+    try {
+      emailEl.value = decodeURIComponent(prefillEmail);
+    } catch {
+      emailEl.value = prefillEmail;
+    }
+  }
+
+  async function safeSignOut(){
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error("signOut failed:", e);
+    }
+  }
+
+  async function login(){
+    const email = norm(emailEl.value).toLowerCase();
+    const password = passwordEl.value;
+
+    if (!email) {
+      setMsg("warn", "請輸入電子郵件");
+      return;
     }
 
-    function norm(value){
-      return String(value ?? "").trim();
+    if (!isValidEmail(email)) {
+      setMsg("warn", "電子郵件格式不正確");
+      return;
     }
 
-    function setMsg(type, text){
-      msg.className = `notice ${type}`;
-      msg.innerHTML = text;
+    if (!password) {
+      setMsg("warn", "請輸入密碼");
+      return;
     }
 
-    function isValidEmail(email){
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
+    loginBtn.disabled = true;
+    const oldText = loginBtn.textContent;
+    loginBtn.textContent = "登入中…";
+    setMsg("info", "登入中…");
+    showVerifyActions(false);
 
-    function getSafeRedirect(){
-      if (!redirectTarget) return "member.html";
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const user = cred.user;
 
-      const target = String(redirectTarget).trim();
+      await reload(user);
 
-      if (!target) return "member.html";
-      if (target.startsWith("http://") || target.startsWith("https://")) return "member.html";
-      if (target.includes("login.html")) return "member.html";
+      if (!user.emailVerified) {
+        lastPendingEmail = email;
+        lastPendingPassword = password;
 
-      return target;
-    }
-
-    function updateAccountLinks(user){
-      if (user) {
-        accountBtn.href = "member.html";
-        accountBtn.title = user.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        accountBtn.href = "login.html";
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-    }
-
-    function showVerifyActions(show){
-      checkVerifyBtn.classList.toggle("hidden", !show);
-      resendVerifyBtn.classList.toggle("hidden", !show);
-      logoutBtn.classList.toggle("hidden", !show);
-    }
-
-    function goNext(){
-      if (redirecting) return;
-      redirecting = true;
-      location.href = getSafeRedirect();
-    }
-
-    if (prefillEmail) {
-      try {
-        emailEl.value = decodeURIComponent(prefillEmail);
-      } catch {
-        emailEl.value = prefillEmail;
-      }
-    }
-
-    async function login(){
-      const email = norm(emailEl.value).toLowerCase();
-      const password = passwordEl.value;
-
-      if (!email) {
-        setMsg("warn", "請輸入電子郵件");
-        return;
-      }
-
-      if (!isValidEmail(email)) {
-        setMsg("warn", "電子郵件格式不正確");
-        return;
-      }
-
-      if (!password) {
-        setMsg("warn", "請輸入密碼");
-        return;
-      }
-
-      loginBtn.disabled = true;
-      const oldText = loginBtn.textContent;
-      loginBtn.textContent = "登入中…";
-      setMsg("info", "登入中…");
-      showVerifyActions(false);
-
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        const user = cred.user;
-        lastSignedUser = user;
-
-        await reload(user);
-
-        if (!user.emailVerified) {
-          if (!emailEl.value) emailEl.value = user.email || "";
-
-          setMsg(
-            "pending",
-            `你已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || email)}</span> 收信並點擊驗證連結。`
-          );
-          showVerifyActions(true);
-          return;
-        }
-
-        setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
-        showVerifyActions(false);
-
-        setTimeout(() => {
-          goNext();
-        }, 500);
-
-      } catch (e) {
-        console.error(e);
-
-        let text = "登入失敗";
-        const code = String(e.code || "");
-
-        if (code.includes("auth/user-not-found")) {
-          text = "查無此帳號";
-        } else if (code.includes("auth/wrong-password")) {
-          text = "密碼錯誤";
-        } else if (code.includes("auth/invalid-credential")) {
-          text = "帳號或密碼錯誤";
-        } else if (code.includes("auth/invalid-email")) {
-          text = "電子郵件格式不正確";
-        } else if (code.includes("auth/too-many-requests")) {
-          text = "嘗試次數過多，請稍後再試";
-        } else if (code.includes("auth/network-request-failed")) {
-          text = "網路連線失敗";
-        }
-
-        setMsg("warn", esc(text));
-        showVerifyActions(false);
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = oldText;
-      }
-    }
-
-    async function resendVerificationEmail(){
-      const user = auth.currentUser || lastSignedUser;
-
-      if (!user) {
-        setMsg("warn", "目前沒有可重寄驗證信的帳號");
-        return;
-      }
-
-      resendVerifyBtn.disabled = true;
-      const oldText = resendVerifyBtn.textContent;
-      resendVerifyBtn.textContent = "寄送中…";
-
-      try {
-        await sendEmailVerification(user);
-        setMsg("ok", `驗證信已重新寄出到：<span class="mono">${esc(user.email || "-")}</span>`);
-      } catch (e) {
-        console.error(e);
-        setMsg("warn", "重寄驗證信失敗，請稍後再試");
-      } finally {
-        resendVerifyBtn.disabled = false;
-        resendVerifyBtn.textContent = oldText;
-      }
-    }
-
-    async function checkVerificationNow(){
-      const user = auth.currentUser || lastSignedUser;
-
-      if (!user) {
-        setMsg("warn", "目前沒有登入中的帳號");
-        return;
-      }
-
-      checkVerifyBtn.disabled = true;
-      const oldText = checkVerifyBtn.textContent;
-      checkVerifyBtn.textContent = "檢查中…";
-
-      try {
-        await reload(user);
-
-        if (user.emailVerified) {
-          setMsg("ok", `信箱驗證完成<br><span class="mono">${esc(user.email || "-")}</span>`);
-          showVerifyActions(false);
-
-          setTimeout(() => {
-            goNext();
-          }, 500);
-          return;
-        }
+        await safeSignOut();
 
         setMsg(
           "pending",
-          `目前尚未完成驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信後，再按一次重新檢查。`
+          `此帳號尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(email)}</span> 收信並點擊驗證連結後，再重新登入。`
         );
         showVerifyActions(true);
-      } catch (e) {
-        console.error(e);
-        setMsg("warn", "重新檢查失敗，請稍後再試");
-      } finally {
-        checkVerifyBtn.disabled = false;
-        checkVerifyBtn.textContent = oldText;
-      }
-    }
-
-    async function logoutCurrentUser(){
-      try {
-        await signOut(auth);
-        lastSignedUser = null;
-        showVerifyActions(false);
-        setMsg("info", "已登出，目前可重新登入。");
-      } catch (e) {
-        console.error(e);
-        setMsg("warn", "登出失敗，請稍後再試");
-      }
-    }
-
-    loginBtn.onclick = login;
-    resendVerifyBtn.onclick = resendVerificationEmail;
-    checkVerifyBtn.onclick = checkVerificationNow;
-    logoutBtn.onclick = logoutCurrentUser;
-
-    [emailEl, passwordEl].forEach(el => {
-      el.addEventListener("keydown", e => {
-        if (e.key === "Enter") login();
-      });
-    });
-
-    onAuthStateChanged(auth, async user => {
-      updateAccountLinks(user || null);
-
-      if (!user) {
-        showVerifyActions(false);
         return;
       }
 
-      try {
-        await reload(user);
-      } catch (e) {
-        console.error(e);
+      setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
+      showVerifyActions(false);
+
+      setTimeout(() => {
+        goNext();
+      }, 400);
+
+    } catch (e) {
+      console.error(e);
+
+      let text = "登入失敗";
+      const code = String(e.code || "");
+
+      if (code.includes("auth/user-not-found")) {
+        text = "查無此帳號";
+      } else if (code.includes("auth/wrong-password")) {
+        text = "密碼錯誤";
+      } else if (code.includes("auth/invalid-credential")) {
+        text = "帳號或密碼錯誤";
+      } else if (code.includes("auth/invalid-email")) {
+        text = "電子郵件格式不正確";
+      } else if (code.includes("auth/too-many-requests")) {
+        text = "嘗試次數過多，請稍後再試";
+      } else if (code.includes("auth/network-request-failed")) {
+        text = "網路連線失敗";
       }
+
+      setMsg("warn", esc(text));
+      showVerifyActions(false);
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = oldText;
+    }
+  }
+
+  async function resendVerificationEmail(){
+    const email = norm(emailEl.value || lastPendingEmail).toLowerCase();
+    const password = passwordEl.value || lastPendingPassword;
+
+    if (!email || !password) {
+      setMsg("warn", "請先輸入註冊時的電子郵件與密碼，再重寄驗證信。");
+      return;
+    }
+
+    resendVerifyBtn.disabled = true;
+    const oldText = resendVerifyBtn.textContent;
+    resendVerifyBtn.textContent = "寄送中…";
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const user = cred.user;
+
+      await reload(user);
 
       if (user.emailVerified) {
-        goNext();
+        await safeSignOut();
+        setMsg("ok", `這個帳號已完成驗證，請直接登入。<br><span class="mono">${esc(email)}</span>`);
+        showVerifyActions(false);
         return;
       }
 
-      lastSignedUser = user;
+      await sendEmailVerification(user);
+      await safeSignOut();
 
-      if (!emailEl.value) {
-        emailEl.value = user.email || "";
+      setMsg("ok", `驗證信已重新寄出到：<span class="mono">${esc(email)}</span>`);
+      showVerifyActions(true);
+    } catch (e) {
+      console.error(e);
+      await safeSignOut();
+      setMsg("warn", "重寄驗證信失敗，請確認帳號密碼是否正確，或稍後再試。");
+    } finally {
+      resendVerifyBtn.disabled = false;
+      resendVerifyBtn.textContent = oldText;
+    }
+  }
+
+  async function checkVerificationNow(){
+    const email = norm(emailEl.value || lastPendingEmail).toLowerCase();
+    const password = passwordEl.value || lastPendingPassword;
+
+    if (!email || !password) {
+      setMsg("warn", "請先輸入電子郵件與密碼，再重新檢查驗證狀態。");
+      return;
+    }
+
+    checkVerifyBtn.disabled = true;
+    const oldText = checkVerifyBtn.textContent;
+    checkVerifyBtn.textContent = "檢查中…";
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const user = cred.user;
+
+      await reload(user);
+
+      if (!user.emailVerified) {
+        await safeSignOut();
+        setMsg(
+          "pending",
+          `目前尚未完成驗證。<br>請先到 <span class="mono">${esc(email)}</span> 收信並點擊驗證連結後，再按一次重新檢查。`
+        );
+        showVerifyActions(true);
+        return;
       }
+
+      setMsg("ok", `信箱驗證完成，正在登入…<br><span class="mono">${esc(email)}</span>`);
+      showVerifyActions(false);
+
+      setTimeout(() => {
+        goNext();
+      }, 400);
+
+    } catch (e) {
+      console.error(e);
+      await safeSignOut();
+      setMsg("warn", "重新檢查失敗，請確認帳號密碼是否正確。");
+    } finally {
+      checkVerifyBtn.disabled = false;
+      checkVerifyBtn.textContent = oldText;
+    }
+  }
+
+  async function logoutCurrentUser(){
+    await safeSignOut();
+    showVerifyActions(false);
+    setMsg("info", "已登出，目前可重新登入。");
+  }
+
+  loginBtn.onclick = login;
+  resendVerifyBtn.onclick = resendVerificationEmail;
+  checkVerifyBtn.onclick = checkVerificationNow;
+  logoutBtn.onclick = logoutCurrentUser;
+
+  [emailEl, passwordEl].forEach(el => {
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter") login();
+    });
+  });
+
+  onAuthStateChanged(auth, async user => {
+    updateAccountLinks(user || null);
+
+    if (!user) {
+      return;
+    }
+
+    try {
+      await reload(user);
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (!user.emailVerified) {
+      const unsafeEmail = user.email || "";
+      await safeSignOut();
+
+      if (!emailEl.value && unsafeEmail) {
+        emailEl.value = unsafeEmail;
+      }
+
+      lastPendingEmail = unsafeEmail;
 
       setMsg(
         "pending",
-        `你目前已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信並完成驗證。`
+        `此帳號尚未完成信箱驗證，系統已自動登出。<br>請先到 <span class="mono">${esc(unsafeEmail || "-")}</span> 收信完成驗證後再登入。`
       );
       showVerifyActions(true);
-    });
-  </script>
+      return;
+    }
+
+    goNext();
+  });
+</script>
 </body>
 </html>

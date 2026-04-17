@@ -584,297 +584,343 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-        authDomain: "concert-1ff7e.firebaseapp.com",
-        projectId: "concert-1ff7e",
-        storageBucket: "concert-1ff7e.firebasestorage.app",
-        messagingSenderId: "704757384914",
-        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    });
+  }
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const accountBtn = document.getElementById("accountBtn");
+  const nameEl = document.getElementById("name");
+  const genderEl = document.getElementById("gender");
+  const birthYearEl = document.getElementById("birthYear");
+  const birthMonthEl = document.getElementById("birthMonth");
+  const birthDayEl = document.getElementById("birthDay");
+  const phoneEl = document.getElementById("phone");
+  const emailEl = document.getElementById("email");
+  const passwordEl = document.getElementById("password");
+  const confirmPasswordEl = document.getElementById("confirmPassword");
+  const registerBtn = document.getElementById("registerBtn");
+  const msg = document.getElementById("msg");
+
+  function esc(value){
+    return String(value ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m]));
+  }
+
+  function norm(value){
+    return String(value ?? "").trim();
+  }
+
+  function lower(value){
+    return norm(value).toLowerCase();
+  }
+
+  function setMsg(type, text){
+    msg.className = `notice ${type}`;
+    msg.innerHTML = text;
+  }
+
+  function isValidEmail(email){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function isValidPhone(phone){
+    return /^[0-9+\-\s()]{8,20}$/.test(phone);
+  }
+
+  function updateAccountLinks(user){
+    if (user) {
+      accountBtn.href = "member.html";
+      accountBtn.title = user.email || "會員中心";
+      accountBtn.setAttribute("aria-label", "會員中心");
+    } else {
+      accountBtn.href = "login.html";
+      accountBtn.title = "登入 / 會員中心";
+      accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+    }
+  }
+
+  function populateBirthdayOptions(){
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const startYear = currentYear - 100;
+    const endYear = currentYear;
+
+    birthYearEl.innerHTML = `<option value="">請選擇年份</option>`;
+    for (let y = endYear; y >= startYear; y--) {
+      birthYearEl.insertAdjacentHTML("beforeend", `<option value="${y}">${y} 年</option>`);
+    }
+
+    birthMonthEl.innerHTML = `<option value="">請選擇月份</option>`;
+    for (let m = 1; m <= 12; m++) {
+      birthMonthEl.insertAdjacentHTML("beforeend", `<option value="${m}">${m} 月</option>`);
+    }
+
+    renderDayOptions();
+  }
+
+  function getDaysInMonth(year, month){
+    if (!year || !month) return 31;
+    return new Date(year, month, 0).getDate();
+  }
+
+  function renderDayOptions(){
+    const year = Number(birthYearEl.value || 0);
+    const month = Number(birthMonthEl.value || 0);
+    const maxDays = getDaysInMonth(year, month);
+    const currentDay = Number(birthDayEl.value || 0);
+
+    birthDayEl.innerHTML = `<option value="">請選擇日期</option>`;
+    for (let d = 1; d <= maxDays; d++) {
+      birthDayEl.insertAdjacentHTML("beforeend", `<option value="${d}">${d} 日</option>`);
+    }
+
+    if (currentDay && currentDay <= maxDays) {
+      birthDayEl.value = String(currentDay);
+    }
+  }
+
+  function getBirthdayValue(){
+    const year = Number(birthYearEl.value || 0);
+    const month = Number(birthMonthEl.value || 0);
+    const day = Number(birthDayEl.value || 0);
+
+    if (!year || !month || !day) return "";
+
+    const mm = String(month).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    return `${year}-${mm}-${dd}`;
+  }
+
+  async function createEmailIndex(email, uid){
+    const key = lower(email);
+    if (!key) return;
+
+    await db.collection("email_index").doc(key).set({
+      uid,
+      email: key,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  async function safeSignOut(){
+    try {
+      await auth.signOut();
+    } catch (e) {
+      console.error("signOut failed:", e);
+    }
+  }
+
+  async function ensureUserProfile(user, profile){
+    await db.collection("users").doc(user.uid).set({
+      uid: user.uid,
+      email: profile.email,
+      name: profile.name,
+      gender: profile.gender,
+      birthday: profile.birthday,
+      phone: profile.phone,
+
+      enabled: true,
+      emailVerified: false,
+
+      verifiedSchoolId: "",
+      verifiedSchoolName: "",
+      verifyMethod: "",
+      schoolEmail: "",
+
+      role: "member",
+
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  async function register(){
+    const email = lower(emailEl.value);
+    const password = passwordEl.value;
+    const confirmPassword = confirmPasswordEl.value;
+
+    const name = norm(nameEl.value);
+    const gender = norm(genderEl.value);
+    const birthday = getBirthdayValue();
+    const phone = norm(phoneEl.value);
+
+    if (!email) {
+      setMsg("warn", "請輸入電子郵件");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      setMsg("warn", "電子郵件格式不正確");
+      return;
+    }
+
+    if (!password) {
+      setMsg("warn", "請輸入密碼");
+      return;
+    }
+
+    if (password.length < 6) {
+      setMsg("warn", "密碼至少需要 6 碼");
+      return;
+    }
+
+    if (!confirmPassword) {
+      setMsg("warn", "請輸入確認密碼");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setMsg("warn", "兩次輸入的密碼不一致");
+      return;
+    }
+
+    if (!name) {
+      setMsg("warn", "請輸入姓名");
+      return;
+    }
+
+    if (!gender) {
+      setMsg("warn", "請選擇性別");
+      return;
+    }
+
+    if (!birthday) {
+      setMsg("warn", "請完整選擇生日");
+      return;
+    }
+
+    if (!phone) {
+      setMsg("warn", "請輸入手機號碼");
+      return;
+    }
+
+    if (!isValidPhone(phone)) {
+      setMsg("warn", "手機號碼格式不正確");
+      return;
+    }
+
+    registerBtn.disabled = true;
+    const oldText = registerBtn.textContent;
+    registerBtn.textContent = "建立中…";
+    setMsg("info", "正在建立帳號…");
+
+    let createdUser = null;
+
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      createdUser = cred.user;
+
+      await ensureUserProfile(createdUser, {
+        email,
+        name,
+        gender,
+        birthday,
+        phone
       });
-    }
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    const accountBtn = document.getElementById("accountBtn");
-    const nameEl = document.getElementById("name");
-    const genderEl = document.getElementById("gender");
-    const birthYearEl = document.getElementById("birthYear");
-    const birthMonthEl = document.getElementById("birthMonth");
-    const birthDayEl = document.getElementById("birthDay");
-    const phoneEl = document.getElementById("phone");
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const confirmPasswordEl = document.getElementById("confirmPassword");
-    const registerBtn = document.getElementById("registerBtn");
-    const msg = document.getElementById("msg");
-
-    function esc(value){
-      return String(value ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
-    }
-
-    function norm(value){
-      return String(value ?? "").trim();
-    }
-
-    function lower(value){
-      return norm(value).toLowerCase();
-    }
-
-    function setMsg(type, text){
-      msg.className = `notice ${type}`;
-      msg.innerHTML = text;
-    }
-
-    function isValidEmail(email){
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    function isValidPhone(phone){
-      return /^[0-9+\-\s()]{8,20}$/.test(phone);
-    }
-
-    function updateAccountLinks(user){
-      if (user) {
-        accountBtn.href = "member.html";
-        accountBtn.title = user.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        accountBtn.href = "login.html";
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-    }
-
-    function populateBirthdayOptions(){
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const startYear = currentYear - 100;
-      const endYear = currentYear;
-
-      birthYearEl.innerHTML = `<option value="">請選擇年份</option>`;
-      for (let y = endYear; y >= startYear; y--) {
-        birthYearEl.insertAdjacentHTML("beforeend", `<option value="${y}">${y} 年</option>`);
-      }
-
-      birthMonthEl.innerHTML = `<option value="">請選擇月份</option>`;
-      for (let m = 1; m <= 12; m++) {
-        birthMonthEl.insertAdjacentHTML("beforeend", `<option value="${m}">${m} 月</option>`);
-      }
-
-      renderDayOptions();
-    }
-
-    function getDaysInMonth(year, month){
-      if (!year || !month) return 31;
-      return new Date(year, month, 0).getDate();
-    }
-
-    function renderDayOptions(){
-      const year = Number(birthYearEl.value || 0);
-      const month = Number(birthMonthEl.value || 0);
-      const maxDays = getDaysInMonth(year, month);
-      const currentDay = Number(birthDayEl.value || 0);
-
-      birthDayEl.innerHTML = `<option value="">請選擇日期</option>`;
-      for (let d = 1; d <= maxDays; d++) {
-        birthDayEl.insertAdjacentHTML("beforeend", `<option value="${d}">${d} 日</option>`);
-      }
-
-      if (currentDay && currentDay <= maxDays) {
-        birthDayEl.value = String(currentDay);
-      }
-    }
-
-    function getBirthdayValue(){
-      const year = Number(birthYearEl.value || 0);
-      const month = Number(birthMonthEl.value || 0);
-      const day = Number(birthDayEl.value || 0);
-
-      if (!year || !month || !day) return "";
-
-      const mm = String(month).padStart(2, "0");
-      const dd = String(day).padStart(2, "0");
-      return `${year}-${mm}-${dd}`;
-    }
-
-    async function createEmailIndex(email, uid){
-      const key = lower(email);
-      if (!key) return;
-
-      await db.collection("email_index").doc(key).set({
-        uid,
-        email: key,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-    }
-
-    async function register(){
-      const email = lower(emailEl.value);
-      const password = passwordEl.value;
-      const confirmPassword = confirmPasswordEl.value;
-
-      const name = norm(nameEl.value);
-      const gender = norm(genderEl.value);
-      const birthday = getBirthdayValue();
-      const phone = norm(phoneEl.value);
-
-      if (!email) {
-        setMsg("warn", "請輸入電子郵件");
-        return;
-      }
-
-      if (!isValidEmail(email)) {
-        setMsg("warn", "電子郵件格式不正確");
-        return;
-      }
-
-      if (!password) {
-        setMsg("warn", "請輸入密碼");
-        return;
-      }
-
-      if (password.length < 6) {
-        setMsg("warn", "密碼至少需要 6 碼");
-        return;
-      }
-
-      if (!confirmPassword) {
-        setMsg("warn", "請輸入確認密碼");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setMsg("warn", "兩次輸入的密碼不一致");
-        return;
-      }
-
-      if (!name) {
-        setMsg("warn", "請輸入姓名");
-        return;
-      }
-
-      if (!gender) {
-        setMsg("warn", "請選擇性別");
-        return;
-      }
-
-      if (!birthday) {
-        setMsg("warn", "請完整選擇生日");
-        return;
-      }
-
-      if (!phone) {
-        setMsg("warn", "請輸入手機號碼");
-        return;
-      }
-
-      if (!isValidPhone(phone)) {
-        setMsg("warn", "手機號碼格式不正確");
-        return;
-      }
-
-      registerBtn.disabled = true;
-      const oldText = registerBtn.textContent;
-      registerBtn.textContent = "建立中…";
-      setMsg("info", "正在建立帳號…");
+      await createEmailIndex(email, createdUser.uid);
 
       try {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-        const user = cred.user;
-
-        await db.collection("users").doc(user.uid).set({
-          uid: user.uid,
-          email,
-          name,
-          gender,
-          birthday,
-          phone,
-
-          enabled: true,
-          emailVerified: false,
-
-          verifiedSchoolId: "",
-          verifiedSchoolName: "",
-          verifyMethod: "",
-          schoolEmail: "",
-
-          role: "member",
-
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        await createEmailIndex(email, user.uid);
-
-        await user.sendEmailVerification();
+        await createdUser.sendEmailVerification();
+      } catch (mailErr) {
+        console.error("sendEmailVerification failed:", mailErr);
+        await safeSignOut();
 
         setMsg(
-          "ok",
-          `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span>\n請先到信箱完成驗證，再登入會員中心。`
+          "pending",
+          `帳號已建立成功，但驗證信寄送失敗。<br>請前往登入頁後使用「重寄驗證信」。<br><span class="mono">${esc(email)}</span>`
         );
 
-        registerBtn.textContent = "已建立帳號";
-
-        setTimeout(() => {
-          location.href = `login.html?email=${encodeURIComponent(email)}`;
-        }, 1600);
-      } catch (e) {
-        console.error(e);
-
-        let text = "註冊失敗";
-        const code = String(e.code || "");
-
-        if (code.includes("auth/email-already-in-use")) {
-          text = "這個電子郵件已被註冊";
-        } else if (code.includes("auth/invalid-email")) {
-          text = "電子郵件格式不正確";
-        } else if (code.includes("auth/weak-password")) {
-          text = "密碼強度不足，請至少使用 6 碼";
-        } else if (code.includes("auth/network-request-failed")) {
-          text = "網路連線失敗";
-        }
-
-        setMsg("warn", esc(text));
         registerBtn.disabled = false;
         registerBtn.textContent = oldText;
+        return;
       }
+
+      await safeSignOut();
+
+      setMsg(
+        "ok",
+        `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span><br>請先完成信箱驗證，再登入會員中心。`
+      );
+
+      registerBtn.textContent = "已建立帳號";
+
+      setTimeout(() => {
+        location.href = `login.html?email=${encodeURIComponent(email)}`;
+      }, 1400);
+
+    } catch (e) {
+      console.error(e);
+
+      let text = "註冊失敗";
+      const code = String(e.code || "");
+
+      if (code.includes("auth/email-already-in-use")) {
+        text = "這個電子郵件已被註冊";
+      } else if (code.includes("auth/invalid-email")) {
+        text = "電子郵件格式不正確";
+      } else if (code.includes("auth/weak-password")) {
+        text = "密碼強度不足，請至少使用 6 碼";
+      } else if (code.includes("auth/network-request-failed")) {
+        text = "網路連線失敗";
+      }
+
+      setMsg("warn", esc(text));
+      registerBtn.disabled = false;
+      registerBtn.textContent = oldText;
+    }
+  }
+
+  registerBtn.onclick = register;
+
+  [
+    emailEl,
+    passwordEl,
+    confirmPasswordEl,
+    nameEl,
+    phoneEl
+  ].forEach(el => {
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter") register();
+    });
+  });
+
+  birthYearEl.addEventListener("change", renderDayOptions);
+  birthMonthEl.addEventListener("change", renderDayOptions);
+
+  auth.onAuthStateChanged(async user => {
+    updateAccountLinks(user || null);
+
+    if (!user) return;
+
+    try {
+      await user.reload();
+    } catch (e) {
+      console.error(e);
     }
 
-    registerBtn.onclick = register;
+    if (!user.emailVerified) {
+      await safeSignOut();
+      updateAccountLinks(null);
+    }
+  });
 
-    [
-      emailEl,
-      passwordEl,
-      confirmPasswordEl,
-      nameEl,
-      genderEl,
-      birthYearEl,
-      birthMonthEl,
-      birthDayEl,
-      phoneEl
-    ].forEach(el => {
-      el.addEventListener("keydown", e => {
-        if (e.key === "Enter") register();
-      });
-    });
-
-    birthYearEl.addEventListener("change", renderDayOptions);
-    birthMonthEl.addEventListener("change", renderDayOptions);
-
-    auth.onAuthStateChanged(user => {
-      updateAccountLinks(user || null);
-    });
-
-    populateBirthdayOptions();
-  </script>
+  populateBirthdayOptions();
+</script>
 </body>
 </html>
