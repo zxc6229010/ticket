@@ -14,15 +14,25 @@
       --line:rgba(17,24,39,.10);
       --line-strong:rgba(17,24,39,.16);
       --shadow:0 16px 40px rgba(0,0,0,.08);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
       --black:#111;
-      --ok:#166534;
-      --warn:#b91c1c;
+
+      --green:#166534;
+      --green-bg:#dcfce7;
+      --red:#b91c1c;
+      --red-bg:#fee2e2;
+      --orange:#c2410c;
+      --orange-bg:#ffedd5;
       --blue:#1d4ed8;
-      --blue-soft:#eff6ff;
-      --seat:#ffffff;
+      --blue-bg:#dbeafe;
+      --gray:#6b7280;
+      --gray-bg:#f3f4f6;
+      --purple:#7c3aed;
+      --purple-bg:#ede9fe;
+
+      --seat:#fff;
       --seat-border:#111827;
       --seat-selected:#111827;
-      --seat-selected-border:#111827;
       --seat-multi:#1d4ed8;
       --seat-multi-border:#1d4ed8;
       --seat-disabled:#d1d5db;
@@ -31,257 +41,387 @@
       --seat-sold-border:#6b7280;
       --detect:#f59e0b;
       --detect-border:#d97706;
-      --select-box:rgba(29,78,216,.10);
-      --select-box-border:rgba(29,78,216,.45);
-      --vip:#d4af37;
-      --zone-a:#3b82f6;
-      --zone-b:#10b981;
-      --zone-c:#f59e0b;
-      --zone-d:#a855f7;
+      --zone-a:#0071e3;
+      --zone-b:#34c759;
+      --zone-c:#ff9f0a;
+      --zone-d:#af52de;
+      --zone-vip:#ff375f;
+
+      --radius-xl:34px;
+      --radius-lg:28px;
+      --radius-md:20px;
+      --max:1680px;
     }
 
     *{ box-sizing:border-box; }
 
-    body{
+    html,body{
       margin:0;
+      padding:0;
       background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    .wrap{
-      max-width:1580px;
+    a{ color:inherit; text-decoration:none; }
+
+    .shell{ min-height:100vh; }
+
+    .nav-wrap{
+      position:sticky;
+      top:0;
+      z-index:200;
+      backdrop-filter:saturate(180%) blur(18px);
+      background:rgba(245,245,247,.88);
+      border-bottom:1px solid rgba(0,0,0,.07);
+    }
+
+    .nav{
+      max-width:var(--max);
       margin:0 auto;
-      padding:22px 16px 30px;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      padding:16px;
-      margin-bottom:16px;
-    }
-
-    .topbar{
+      padding:0 22px;
+      min-height:58px;
       display:flex;
+      align-items:center;
       justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      flex-wrap:wrap;
+      gap:16px;
     }
 
-    h1{
-      margin:0;
-      font-size:24px;
-      font-weight:1000;
-      letter-spacing:-.02em;
-    }
-
-    h2{
-      margin:0;
-      font-size:17px;
-      font-weight:1000;
-    }
-
-    h3{
-      margin:0;
-      font-size:15px;
-      font-weight:1000;
-    }
-
-    .sub{
-      margin-top:6px;
-      font-size:14px;
-      color:var(--muted);
-      line-height:1.8;
-    }
-
-    .small{
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.7;
-    }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-    }
-
-    .row{
+    .brand{
       display:flex;
+      align-items:center;
       gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      white-space:nowrap;
     }
 
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:10px 16px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:#fff;
-      color:#111;
-      font-weight:1000;
-      font-size:14px;
-      cursor:pointer;
-      text-decoration:none;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
-      user-select:none;
-    }
-
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 10px 22px rgba(0,0,0,.08);
-    }
-
-    .btn:active{
-      transform:translateY(0) scale(.98);
-      box-shadow:none;
-    }
-
-    .btn[disabled]{
-      opacity:.55;
-      cursor:not-allowed;
-      box-shadow:none;
-      transform:none;
-    }
-
-    .btn-primary{
+    .brand-mark{
+      width:28px;
+      height:28px;
+      border-radius:9px;
       background:#111;
       color:#fff;
-      border-color:#111;
-    }
-
-    .btn-blue{
-      color:#1d4ed8;
-      background:#fff;
-      border-color:rgba(29,78,216,.22);
-    }
-
-    .btn-danger{
-      color:#b91c1c;
-      background:#fff;
-      border-color:rgba(185,28,28,.20);
-    }
-
-    .btn-sm{
-      min-height:38px;
-      padding:8px 14px;
-      font-size:13px;
-    }
-
-    label{
-      display:block;
-      margin:12px 0 6px;
-      font-size:13px;
-      font-weight:1000;
-      color:#111827;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="range"],
-    select{
-      width:100%;
-      padding:12px 13px;
-      border:1px solid var(--line-strong);
-      border-radius:14px;
-      background:#fff;
-      color:#111827;
-      font-size:15px;
-      outline:none;
-    }
-
-    input[type="file"]{
-      width:100%;
-      font-size:13px;
-      color:#374151;
-    }
-
-    .layout{
       display:grid;
-      grid-template-columns:300px minmax(0,1fr) 360px;
-      gap:16px;
-      align-items:start;
+      place-items:center;
+      font-size:14px;
+      font-weight:900;
     }
 
-    @media (max-width:1320px){
-      .layout{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .side-card{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      padding:16px;
-    }
-
-    .tool-list{
-      display:grid;
-      gap:10px;
-    }
-
-    .pill{
-      display:inline-flex;
+    .nav-right{
+      display:flex;
       align-items:center;
-      padding:6px 10px;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .who-pill{
+      padding:6px 12px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
       font-size:12px;
-      font-weight:1000;
+      font-weight:700;
+      color:var(--muted);
     }
 
-    .ok{ color:var(--ok); font-weight:1000; }
-    .warn{ color:var(--warn); font-weight:1000; }
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:22px 16px 60px;
+    }
 
-    .canvas-card{
+    /* Gate overlay */
+    .gate{
+      position:fixed;
+      inset:0;
+      background:var(--bg);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:24px;
+    }
+
+    .gate-card{
       background:#fff;
       border:1px solid var(--line);
-      border-radius:22px;
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      padding:36px 32px;
+      width:min(460px,100%);
+      text-align:center;
+    }
+
+    .gate-card h1{
+      margin:0 0 10px;
+      font-size:26px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .gate-card .sub{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      margin-bottom:20px;
+    }
+
+    /* Btn */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+      padding:9px 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      white-space:nowrap;
+      text-decoration:none;
+    }
+
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,0,0,.07); }
+    .btn:active{ transform:scale(.98); box-shadow:none; }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .btn-primary{ background:#111; color:#fff; border-color:#111; }
+    .btn-blue{ color:var(--blue); border-color:rgba(29,78,216,.22); }
+    .btn-danger{ color:var(--red); border-color:rgba(185,28,28,.20); }
+    .btn-sm{ min-height:34px; padding:7px 13px; font-size:12px; }
+
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    /* Cards */
+    .card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.07);
+      border-radius:28px;
       box-shadow:var(--shadow);
       overflow:hidden;
     }
 
-    .canvas-toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      padding:14px 16px;
+    .card-head{
+      padding:18px 20px 14px;
       border-bottom:1px solid var(--line);
-      flex-wrap:wrap;
-      background:#fff;
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
     }
 
+    .card-body{ padding:18px 20px 20px; }
+
+    h1{ margin:0; font-size:22px; font-weight:800; letter-spacing:-.03em; }
+    h2{ margin:0; font-size:18px; font-weight:800; letter-spacing:-.02em; }
+    h3{ margin:0; font-size:15px; font-weight:800; }
+
+    .sub{
+      margin-top:6px;
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.85;
+    }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.75;
+    }
+
+    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; }
+
+    label{
+      display:block;
+      font-size:12px;
+      font-weight:800;
+      color:#111827;
+      margin:12px 0 5px;
+      letter-spacing:.01em;
+    }
+
+    .input, select{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid var(--line-strong);
+      border-radius:12px;
+      background:#fff;
+      color:#111827;
+      font-size:14px;
+      outline:none;
+      transition:border-color .12s;
+      font-family:inherit;
+    }
+
+    .input:focus, select:focus{ border-color:#111827; box-shadow:0 0 0 3px rgba(17,24,39,.06); }
+
+    .input-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:480px){ .input-row{ grid-template-columns:1fr; } }
+
+    .checkbox-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:10px 0;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    /* Status notice boxes */
+    .notice{
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:13px;
+      line-height:1.85;
+      margin:10px 0;
+    }
+
+    .notice.ok{ background:var(--green-bg); color:var(--green); border:1px solid rgba(22,101,52,.12); }
+    .notice.warn{ background:var(--red-bg); color:var(--red); border:1px solid rgba(185,28,28,.12); }
+    .notice.info{ background:var(--blue-bg); color:var(--blue); border:1px solid rgba(29,78,216,.12); }
+    .notice.orange{ background:var(--orange-bg); color:var(--orange); border:1px solid rgba(194,65,12,.12); }
+
+    .notice strong{ font-weight:800; }
+
+    /* Layout grid */
+    .editor-layout{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 320px;
+      gap:16px;
+      align-items:start;
+      margin-top:16px;
+    }
+
+    @media (max-width:1100px){
+      .editor-layout{ grid-template-columns:1fr; }
+    }
+
+    .editor-left{ display:grid; gap:16px; }
+
+    .editor-right{
+      display:grid;
+      gap:16px;
+      position:sticky;
+      top:74px;
+    }
+
+    @media (max-width:1100px){
+      .editor-right{ position:static; }
+    }
+
+    /* Toolbar */
+    .toolbar{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      padding:14px 18px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(255,255,255,1) 0%,rgba(249,250,251,1) 100%);
+    }
+
+    .toolbar-title{
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-right:4px;
+    }
+
+    .sep{
+      width:1px;
+      height:22px;
+      background:var(--line-strong);
+      margin:0 2px;
+    }
+
+    /* Tool mode buttons */
+    .tool-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:6px 13px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .12s;
+      white-space:nowrap;
+    }
+
+    .tool-btn:hover{ border-color:#111827; color:#111827; }
+    .tool-btn.active{ background:#111827; color:#fff; border-color:#111827; }
+
+    /* Stage canvas wrapper */
     .canvas-wrap{
       position:relative;
       overflow:auto;
-      background:#f8fafc;
-      min-height:720px;
-      max-height:78vh;
+      background:
+        linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.025) 1px, transparent 1px),
+        #f1f3f8;
+      background-size:24px 24px;
+      min-height:740px;
+      max-height:80vh;
+      border-radius:0 0 22px 22px;
+      cursor:crosshair;
+    }
+
+    .canvas-wrap.mode-move{ cursor:move; }
+    .canvas-wrap.mode-select{ cursor:default; }
+    .canvas-wrap.mode-pan{ cursor:grab; }
+    .canvas-wrap.mode-pan.panning{ cursor:grabbing; }
+
+    .stage-shell{
+      width:max-content;
+      margin:0 auto;
+      padding:28px 28px 36px;
+    }
+
+    .stage-top{
+      display:flex;
+      justify-content:center;
+      margin-bottom:16px;
+    }
+
+    .stage-sign{
+      min-width:400px;
+      max-width:700px;
+      text-align:center;
+      padding:14px 24px;
+      border-radius:22px 22px 40px 40px;
+      background:linear-gradient(180deg,#111111 0%,#2c2c2e 100%);
+      color:#fff;
+      font-size:17px;
+      font-weight:800;
+      letter-spacing:.16em;
+      box-shadow:0 14px 30px rgba(17,17,17,.18);
     }
 
     .stage{
       position:relative;
       width:1200px;
       height:900px;
-      margin:0 auto;
       background:
-        linear-gradient(180deg, rgba(255,255,255,.65), rgba(255,255,255,.65)),
-        linear-gradient(90deg, rgba(17,24,39,.03) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(17,24,39,.03) 1px, transparent 1px);
-      background-size:auto, 24px 24px, 24px 24px;
+        linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.25)),
+        #f1f1f4;
+      border:1px solid rgba(0,0,0,.07);
+      border-radius:26px;
       transform-origin:top left;
       user-select:none;
-      overflow:hidden;
+      overflow:visible;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.4), 0 8px 32px rgba(0,0,0,.06);
     }
 
     .seatmap-image{
@@ -291,52 +431,59 @@
       height:100%;
       object-fit:contain;
       pointer-events:none;
-      opacity:1;
+      border-radius:26px;
     }
 
+    /* Seat elements */
     .seat{
       position:absolute;
-      width:18px;
-      height:18px;
-      border-radius:4px;
+      width:20px;
+      height:20px;
+      border-radius:5px;
       border:1.5px solid var(--seat-border);
       background:var(--seat);
+      box-shadow:0 2px 5px rgba(0,0,0,.09);
       cursor:pointer;
       transform-origin:center center;
-      box-shadow:0 2px 6px rgba(0,0,0,.08);
-      transition:transform .08s ease, box-shadow .08s ease, background .08s ease;
+      transition:transform .1s ease, box-shadow .1s ease, background .1s ease;
     }
 
     .seat:hover{
-      transform:scale(1.06);
+      transform:scale(1.14);
+      z-index:10;
+      box-shadow:0 4px 12px rgba(0,0,0,.13);
     }
 
     .seat.selected{
-      background:var(--seat-selected) !important;
-      border-color:var(--seat-selected-border) !important;
-      box-shadow:0 0 0 3px rgba(17,24,39,.18);
+      background:var(--seat-selected);
+      border-color:var(--seat-selected);
+      box-shadow:0 0 0 3px rgba(17,24,39,.14);
+      z-index:8;
     }
 
-    .seat.multi{
-      background:var(--seat-multi) !important;
-      border-color:var(--seat-multi-border) !important;
+    .seat.multi-selected{
+      background:var(--seat-multi);
+      border-color:var(--seat-multi-border);
       box-shadow:0 0 0 3px rgba(29,78,216,.18);
-    }
-
-    .seat.detected{
-      background:var(--detect);
-      border-color:var(--detect-border);
-      box-shadow:0 0 0 3px rgba(245,158,11,.16);
+      z-index:8;
     }
 
     .seat.disabled{
-      background:var(--seat-disabled) !important;
-      border-color:var(--seat-disabled-border) !important;
+      background:var(--seat-disabled);
+      border-color:var(--seat-disabled-border);
+      opacity:.8;
     }
 
     .seat.sold{
-      background:var(--seat-sold) !important;
-      border-color:var(--seat-sold-border) !important;
+      background:var(--seat-sold);
+      border-color:var(--seat-sold-border);
+      cursor:not-allowed;
+    }
+
+    .seat.detected{
+      background:#fef9c3;
+      border-color:var(--detect-border);
+      box-shadow:0 0 0 2px rgba(245,158,11,.25);
     }
 
     .seat-label{
@@ -349,1238 +496,1027 @@
       white-space:nowrap;
       color:#111827;
       pointer-events:none;
-      font-weight:900;
-      background:rgba(255,255,255,.92);
-      padding:1px 4px;
-      border-radius:6px;
-      border:1px solid rgba(17,24,39,.08);
+      font-weight:800;
+      background:rgba(255,255,255,.95);
+      padding:1px 3px;
+      border-radius:5px;
+      border:1px solid rgba(0,0,0,.07);
+      z-index:2;
     }
 
-    .selection-box{
+    /* Selection box */
+    .sel-box{
       position:absolute;
-      border:1.5px dashed var(--select-box-border);
-      background:var(--select-box);
+      border:1.5px solid rgba(29,78,216,.5);
+      background:rgba(29,78,216,.07);
+      border-radius:4px;
       pointer-events:none;
-      z-index:99;
+      z-index:50;
+      display:none;
     }
 
-    .notice{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:#f9fafb;
-      font-size:13px;
-      line-height:1.8;
-      color:#4b5563;
-    }
-
-    .field-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    @media (max-width:760px){
-      .field-grid{
-        grid-template-columns:1fr;
-      }
-    }
-
-    .checklist{
-      display:grid;
-      gap:8px;
-      margin-top:8px;
-    }
-
-    .check-item{
+    /* Legend row */
+    .legend{
       display:flex;
-      gap:8px;
-      align-items:flex-start;
-      font-size:14px;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px 18px;
+      border-top:1px solid var(--line);
+      background:#fff;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-size:12px;
+      font-weight:800;
       color:#374151;
     }
 
-    .check-item input{
-      margin-top:2px;
+    .legend-dot{
+      width:14px;
+      height:14px;
+      border-radius:4px;
+      flex-shrink:0;
     }
 
-    .empty{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.8;
+    /* Stats row */
+    .stat-row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
     }
 
-    .divider{
+    .stat-pill{
+      padding:6px 11px;
+      border-radius:999px;
+      background:#f3f4f6;
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:800;
+      color:#374151;
+    }
+
+    /* Property panel */
+    .prop-section{
+      margin-top:4px;
+    }
+
+    .prop-divider{
       height:1px;
       background:var(--line);
       margin:14px 0;
     }
 
-    .box{
-      margin-top:14px;
-      padding:14px;
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:#fbfcfe;
+    /* Tab nav */
+    .tab-nav{
+      display:flex;
+      gap:4px;
+      padding:4px;
+      background:#f3f4f6;
+      border-radius:12px;
+      margin-bottom:14px;
     }
 
-    .selected-list{
-      margin-top:12px;
-      border:1px solid var(--line);
-      border-radius:16px;
+    .tab-nav-btn{
+      flex:1;
+      padding:7px;
+      border-radius:9px;
+      border:none;
+      background:transparent;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
+      cursor:pointer;
+      transition:all .12s;
+      font-family:inherit;
+    }
+
+    .tab-nav-btn.active{
       background:#fff;
-      padding:12px;
-      max-height:180px;
-      overflow:auto;
+      color:#111827;
+      box-shadow:0 1px 4px rgba(0,0,0,.08);
     }
 
-    .selected-item{
-      padding:6px 0;
-      border-top:1px dashed var(--line);
+    .tab-pane{ display:none; }
+    .tab-pane.active{ display:block; }
+
+    /* Pill */
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:11px;
+      font-weight:800;
+      box-shadow:var(--shadow-soft);
+    }
+
+    /* Modal */
+    .modal-back{
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.4);
+      backdrop-filter:blur(8px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+
+    .modal-back.show{ display:flex; }
+
+    .modal{
+      width:min(520px,100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:0 28px 70px rgba(15,23,42,.2);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      padding:18px 20px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(255,255,255,1) 0%,rgba(249,250,251,1) 100%);
+    }
+
+    .modal-title{
+      margin:0;
+      font-size:20px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .modal-sub{
+      margin-top:5px;
       font-size:13px;
-      font-weight:1000;
-      line-height:1.7;
+      color:var(--muted);
+      line-height:1.8;
     }
 
-    .selected-item:first-child{
-      border-top:none;
-      padding-top:0;
-    }
+    .modal-body{ padding:18px 20px 20px; }
 
-    .tabs{
+    .modal-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      justify-content:flex-end;
       margin-top:14px;
     }
 
-    .tab-btn{
-      min-height:36px;
-      padding:8px 12px;
+    /* Floor tabs */
+    .floor-tabs{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      padding:14px 18px;
+      border-bottom:1px solid var(--line);
+      background:#fafafa;
+    }
+
+    .floor-tab{
+      padding:7px 14px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      font-size:13px;
-      font-weight:1000;
-      cursor:pointer;
-    }
-
-    .tab-btn.active{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    .tab-pane{
-      display:none;
-    }
-
-    .tab-pane.active{
-      display:block;
-    }
-
-    .range-row{
-      display:grid;
-      grid-template-columns:1fr 84px;
-      gap:10px;
-      align-items:center;
-    }
-
-    .hint-soft{
-      margin-top:8px;
-      background:var(--blue-soft);
-      border:1px solid rgba(29,78,216,.12);
-      color:#1e40af;
-      border-radius:14px;
-      padding:10px 12px;
       font-size:12px;
-      line-height:1.7;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .12s;
+      color:var(--muted);
+    }
+
+    .floor-tab:hover{ border-color:#111827; color:#111827; }
+    .floor-tab.active{ background:#111827; color:#fff; border-color:#111827; }
+
+    .floor-tab-add{
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px dashed var(--line-strong);
+      background:transparent;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      color:var(--muted);
+      transition:all .12s;
+    }
+
+    .floor-tab-add:hover{ border-color:var(--blue); color:var(--blue); }
+
+    @media (max-width:860px){
+      .nav{ min-height:auto; padding-top:12px; padding-bottom:12px; }
+      .page{ padding:16px 14px 60px; }
+      .editor-layout{ grid-template-columns:1fr; }
+      .canvas-wrap{ min-height:520px; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div id="gate" class="card"></div>
+  <div class="shell">
+    <div class="nav-wrap">
+      <div class="nav">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
+        </a>
+        <div class="nav-right">
+          <span class="who-pill" id="whoText">未登入</span>
+          <button class="btn btn-sm" id="logoutBtn" style="display:none">登出</button>
+        </div>
+      </div>
+    </div>
 
-    <div id="app" style="display:none;">
-      <div class="card">
-        <div class="topbar">
-          <div>
-            <h1>座位編輯器</h1>
-            <div class="sub">
-              匯入座位圖、半自動偵測座位、手動修正、多選批次設定、整批儲存。
+    <!-- Gate -->
+    <div class="gate" id="gate">
+      <div class="gate-card">
+        <h1>座位編輯器</h1>
+        <div class="sub">請先以後台帳號登入</div>
+        <div style="margin-top:18px;display:grid;gap:10px;">
+          <input class="input" id="gateEmail" type="email" placeholder="Email">
+          <input class="input" id="gatePass" type="password" placeholder="密碼">
+          <button class="btn btn-primary" id="gateLoginBtn">登入</button>
+          <div class="notice warn" id="gateErr" style="display:none;margin:0;"></div>
+        </div>
+      </div>
+    </div>
+
+    <main class="page" id="appWrap" style="display:none">
+
+      <!-- Top selectors -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-head">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h1>座位編輯器</h1>
+              <div class="sub">建立座位圖、設定區域與票種限制，並儲存至 Firestore。</div>
             </div>
-            <div class="sub small">
-              登入：<span id="who" class="mono">-</span>｜
-              角色：<span id="roleText" class="mono">-</span>
+            <div class="row">
+              <button class="btn btn-sm" id="saveSaveBtn">💾 儲存全部座位</button>
+              <button class="btn btn-sm btn-danger" id="clearAllBtn">清空本層</button>
             </div>
           </div>
+        </div>
 
-          <div class="row">
-            <a class="btn btn-sm" href="dashboard.html">回主選單</a>
-            <button class="btn btn-sm" id="logoutBtn">登出</button>
+        <div class="card-body">
+          <div class="input-row">
+            <div>
+              <label>活動 ID</label>
+              <input class="input" id="eventIdInput" placeholder="Firestore 中的 eventId">
+            </div>
+            <div>
+              <label>座位圖背景圖 URL（選填）</label>
+              <input class="input" id="bgImageInput" placeholder="https://...">
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <div class="row">
+              <button class="btn btn-sm btn-blue" id="loadEventBtn">載入活動座位</button>
+              <button class="btn btn-sm" id="loadImageBtn">套用背景圖</button>
+              <div id="loadMsg" class="small" style="flex:1;"></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="layout">
-        <!-- 左 -->
-        <div class="side-card">
-          <h2>流程工具</h2>
+      <div class="editor-layout">
+        <!-- Left: stage canvas -->
+        <div class="editor-left">
+          <div class="card">
+            <!-- Floor tabs -->
+            <div class="floor-tabs" id="floorTabs">
+              <button class="floor-tab-add" id="addFloorBtn">＋ 新增樓層</button>
+            </div>
 
-          <label>活動</label>
-          <select id="eventSel"></select>
-          <div id="eventMeta" class="small" style="margin-top:8px;">-</div>
+            <!-- Canvas toolbar -->
+            <div class="toolbar">
+              <span class="toolbar-title" id="floorLabel">1F</span>
+              <div class="sep"></div>
+              <button class="tool-btn active" id="toolAdd" data-tool="add">＋ 新增座位</button>
+              <button class="tool-btn" id="toolMove" data-tool="move">✥ 移動</button>
+              <button class="tool-btn" id="toolSelect" data-tool="select">☐ 框選</button>
+              <button class="tool-btn" id="toolDelete" data-tool="delete">✕ 刪除</button>
+              <div class="sep"></div>
+              <button class="btn btn-sm btn-blue" id="generateGridBtn">⊞ 批量生成</button>
+              <button class="btn btn-sm" id="detectBtn">🔍 圖片偵測</button>
+              <div style="flex:1;"></div>
+              <button class="btn btn-sm" id="zoomOutBtn">－</button>
+              <span class="small mono" id="zoomText">100%</span>
+              <button class="btn btn-sm" id="zoomInBtn">＋</button>
+              <button class="btn btn-sm" id="zoomFitBtn">⊡</button>
+            </div>
 
-          <div class="divider"></div>
-
-          <div class="tabs">
-            <button class="tab-btn active" data-tab="tab-image">圖片 / 偵測</button>
-            <button class="tab-btn" data-tab="tab-manual">手動編修</button>
-          </div>
-
-          <div id="tab-image" class="tab-pane active">
-            <div class="box">
-              <h3>匯入座位圖</h3>
-              <label>上傳圖片（本機）</label>
-              <input id="imageUploadInput" type="file" accept="image/*" />
-
-              <div class="row" style="margin-top:10px;">
-                <button class="btn" id="useEventImageBtn">使用活動既有底圖</button>
-                <button class="btn btn-danger" id="clearImageBtn">清除目前圖片</button>
-              </div>
-
-              <div class="hint-soft">
-                若活動本來就有 <span class="mono">seatMapImage</span>，可直接使用。<br>
-                若你另外上傳本機圖片，只會先在這頁預覽，不會自動改 Firestore 活動資料。
+            <!-- Stage -->
+            <div class="canvas-wrap mode-add" id="canvasWrap">
+              <div class="stage-shell">
+                <div class="stage-top">
+                  <div class="stage-sign">STAGE</div>
+                </div>
+                <div class="stage" id="stage">
+                  <img class="seatmap-image" id="bgImg" src="" alt="" style="display:none;">
+                  <div class="sel-box" id="selBox"></div>
+                </div>
               </div>
             </div>
 
-            <div class="box">
-              <h3>自動偵測座位</h3>
-
-              <label>亮度門檻（越小越偏向抓深色座位）</label>
-              <div class="range-row">
-                <input id="detectThresholdInput" type="range" min="20" max="240" value="205" />
-                <input id="detectThresholdText" type="number" min="20" max="240" value="205" />
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>最小面積</label>
-                  <input id="detectMinAreaInput" type="number" min="1" value="8" />
-                </div>
-                <div>
-                  <label>最大面積</label>
-                  <input id="detectMaxAreaInput" type="number" min="1" value="400" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>偵測縮放倍率</label>
-                  <select id="detectScaleInput">
-                    <option value="1">1.0（精準較慢）</option>
-                    <option value="2" selected>2.0（建議）</option>
-                    <option value="3">3.0（較快）</option>
-                  </select>
-                </div>
-                <div>
-                  <label>偵測模式</label>
-                  <select id="detectModeInput">
-                    <option value="dark" selected>抓深色 / 彩色座位</option>
-                    <option value="light">抓淺色座位</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row" style="margin-top:12px;">
-                <button class="btn btn-primary" id="detectSeatsBtn">開始偵測</button>
-                <button class="btn" id="removeDetectedBtn">刪除本次偵測結果</button>
-              </div>
-
-              <div id="detectMsg" class="small" style="margin-top:10px;"></div>
-            </div>
-          </div>
-
-          <div id="tab-manual" class="tab-pane">
-            <div class="tool-list" style="margin-top:14px;">
-              <button class="btn btn-primary" id="addSeatModeBtn">點擊新增座位：開</button>
-              <button class="btn" id="reloadSeatsBtn">重新載入座位</button>
-              <button class="btn" id="clearSelectionBtn">取消選取</button>
-              <button class="btn btn-blue" id="selectAllBtn">全選目前座位</button>
-              <button class="btn btn-primary" id="saveSeatBtn" disabled>儲存目前座位</button>
-              <button class="btn btn-primary" id="saveAllSeatsBtn">儲存全部座位</button>
-              <button class="btn btn-danger" id="deleteSeatBtn" disabled>刪除目前座位</button>
+            <!-- Legend -->
+            <div class="legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#fff;border:1.5px solid #111827;"></span>可用</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#111827;border:1.5px solid #111827;"></span>已選</div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--blue);border:1.5px solid var(--blue);"></span>多選</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#d1d5db;border:1.5px solid #9ca3af;"></span>停用</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#6b7280;border:1.5px solid #6b7280;"></span>已售</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#fef9c3;border:1.5px solid #d97706;"></span>偵測候選</div>
             </div>
 
-            <div class="notice">
-              操作方式：<br>
-              1. 點一顆座位＝單選<br>
-              2. Shift + 點座位＝加入 / 移除多選<br>
-              3. 空白處拖曳＝框選多顆<br>
-              4. 拖曳已選座位可一起移動<br>
-              5. 開啟「點擊新增座位」後，點畫布可手動補座位
-            </div>
-
-            <div class="box">
-              <h3>已選座位</h3>
-              <div class="small" id="multiCountText" style="margin-top:6px;">目前未選取</div>
-              <div class="selected-list" id="selectedSeatList">
-                <div class="empty">尚未選取任何座位</div>
-              </div>
+            <!-- Stats -->
+            <div style="padding:12px 18px;border-top:1px solid var(--line);background:#fafafa;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="stat-pill" id="statTotal">總計 0</span>
+              <span class="stat-pill" id="statAvail">可用 0</span>
+              <span class="stat-pill" id="statSold">已售 0</span>
+              <span class="stat-pill" id="statSel">已選 0</span>
+              <span class="stat-pill" id="statMulti">多選 0</span>
             </div>
           </div>
         </div>
 
-        <!-- 中 -->
-        <div class="canvas-card">
-          <div class="canvas-toolbar">
-            <div class="row">
-              <span class="pill">畫布尺寸：1200 × 900</span>
-              <span class="pill">已載入座位：<span id="seatCountText" style="margin-left:6px;">0</span></span>
-              <span class="pill">偵測候選：<span id="detectedCountText" style="margin-left:6px;">0</span></span>
-            </div>
+        <!-- Right: properties -->
+        <div class="editor-right">
 
-            <div class="row">
-              <button class="btn btn-sm" id="zoomOutBtn">－ 縮小</button>
-              <button class="btn btn-sm" id="zoomResetBtn">100%</button>
-              <button class="btn btn-sm" id="zoomInBtn">＋ 放大</button>
+          <!-- Single seat -->
+          <div class="card" id="panelSingle">
+            <div class="card-head">
+              <h2>座位屬性</h2>
+              <div class="sub">點選座位後編輯其屬性</div>
+            </div>
+            <div class="card-body">
+              <div id="noSelMsg" class="small" style="padding:8px 0;">尚未選取任何座位。點選舞台上的座位即可編輯。</div>
+
+              <div id="singleProp" style="display:none;">
+                <div class="input-row">
+                  <div>
+                    <label>標籤 / 顯示名稱</label>
+                    <input class="input" id="propLabel" placeholder="A1">
+                  </div>
+                  <div>
+                    <label>座號</label>
+                    <input class="input" id="propSeatNumber" placeholder="1">
+                  </div>
+                </div>
+                <div class="input-row">
+                  <div>
+                    <label>排</label>
+                    <input class="input" id="propRow" placeholder="A">
+                  </div>
+                  <div>
+                    <label>票價（NT$，留空繼承票種）</label>
+                    <input class="input" id="propPrice" type="number" placeholder="0">
+                  </div>
+                </div>
+                <div>
+                  <label>區域 ID</label>
+                  <select id="propSection" class="input">
+                    <option value="">未分區</option>
+                    <option value="vip">VIP</option>
+                    <option value="a">A 區</option>
+                    <option value="b">B 區</option>
+                    <option value="c">C 區</option>
+                    <option value="d">D 區</option>
+                  </select>
+                </div>
+                <div>
+                  <label>狀態</label>
+                  <select id="propStatus" class="input">
+                    <option value="available">可用</option>
+                    <option value="disabled">停用</option>
+                    <option value="sold">已售出</option>
+                  </select>
+                </div>
+                <div class="input-row">
+                  <div>
+                    <label>X 座標</label>
+                    <input class="input" id="propX" type="number">
+                  </div>
+                  <div>
+                    <label>Y 座標</label>
+                    <input class="input" id="propY" type="number">
+                  </div>
+                </div>
+                <div>
+                  <label>旋轉角度</label>
+                  <input class="input" id="propRotation" type="number" value="0" placeholder="0">
+                </div>
+
+                <div class="prop-divider"></div>
+                <h3>存取限制（選填）</h3>
+                <div class="sub" style="margin-top:4px;margin-bottom:8px;">逗號分隔，留空代表不限</div>
+                <div>
+                  <label>允許角色 (allowedRoles)</label>
+                  <input class="input" id="propRoles" placeholder="vip, general">
+                </div>
+                <div>
+                  <label>允許標籤 (allowedTags)</label>
+                  <input class="input" id="propTags" placeholder="invite, campus_a">
+                </div>
+                <div>
+                  <label>允許票種 ID (allowedTicketTypes)</label>
+                  <input class="input" id="propTicketTypes" placeholder="vip_ticket, general">
+                </div>
+
+                <div class="prop-divider"></div>
+                <div class="row">
+                  <button class="btn btn-sm btn-primary" id="applyPropBtn">套用</button>
+                  <button class="btn btn-sm btn-danger" id="deleteSeatBtn">刪除此座位</button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="canvas-wrap" id="canvasWrap">
-            <div class="stage" id="stage">
-              <img id="seatMapImage" class="seatmap-image" src="" alt="seat map" style="display:none;" />
+          <!-- Batch -->
+          <div class="card">
+            <div class="card-head">
+              <h2>批次操作</h2>
+              <div class="sub">框選或 Shift 點選多個座位後批次修改</div>
+            </div>
+            <div class="card-body">
+              <div class="tab-nav">
+                <button class="tab-nav-btn active" data-batch-tab="batch-generate">批量生成</button>
+                <button class="tab-nav-btn" data-batch-tab="batch-edit">批次修改</button>
+              </div>
+
+              <!-- Generate tab -->
+              <div class="tab-pane active" id="batch-generate">
+                <div class="input-row">
+                  <div>
+                    <label>行數（排）</label>
+                    <input class="input" id="genRows" type="number" value="8" min="1">
+                  </div>
+                  <div>
+                    <label>列數（號）</label>
+                    <input class="input" id="genCols" type="number" value="10" min="1">
+                  </div>
+                </div>
+                <div class="input-row">
+                  <div>
+                    <label>起始 X</label>
+                    <input class="input" id="genStartX" type="number" value="80">
+                  </div>
+                  <div>
+                    <label>起始 Y</label>
+                    <input class="input" id="genStartY" type="number" value="80">
+                  </div>
+                </div>
+                <div class="input-row">
+                  <div>
+                    <label>水平間距</label>
+                    <input class="input" id="genGapX" type="number" value="34">
+                  </div>
+                  <div>
+                    <label>垂直間距</label>
+                    <input class="input" id="genGapY" type="number" value="34">
+                  </div>
+                </div>
+                <div>
+                  <label>排標前綴</label>
+                  <select class="input" id="genPrefix">
+                    <option value="alpha">英文字母 (A, B, C…)</option>
+                    <option value="num">數字 (1, 2, 3…)</option>
+                  </select>
+                </div>
+                <div>
+                  <label>區域</label>
+                  <select class="input" id="genSection">
+                    <option value="">未分區</option>
+                    <option value="vip">VIP</option>
+                    <option value="a">A 區</option>
+                    <option value="b">B 區</option>
+                    <option value="c">C 區</option>
+                    <option value="d">D 區</option>
+                  </select>
+                </div>
+                <div>
+                  <label>票價（NT$）</label>
+                  <input class="input" id="genPrice" type="number" value="800">
+                </div>
+                <div style="margin-top:12px;">
+                  <button class="btn btn-sm btn-primary" id="doGenBtn" style="width:100%;">生成座位</button>
+                </div>
+              </div>
+
+              <!-- Batch edit tab -->
+              <div class="tab-pane" id="batch-edit">
+                <div class="notice info" id="batchSelCount">尚未框選任何座位</div>
+                <div>
+                  <label>區域 ID</label>
+                  <select class="input" id="batchSection">
+                    <option value="">— 不修改 —</option>
+                    <option value="vip">VIP</option>
+                    <option value="a">A 區</option>
+                    <option value="b">B 區</option>
+                    <option value="c">C 區</option>
+                    <option value="d">D 區</option>
+                  </select>
+                </div>
+                <div>
+                  <label>狀態</label>
+                  <select class="input" id="batchStatus">
+                    <option value="">— 不修改 —</option>
+                    <option value="available">可用</option>
+                    <option value="disabled">停用</option>
+                  </select>
+                </div>
+                <div>
+                  <label>票價（NT$，留空不修改）</label>
+                  <input class="input" id="batchPrice" type="number" placeholder="">
+                </div>
+                <div style="margin-top:12px;display:grid;gap:8px;">
+                  <button class="btn btn-sm btn-primary" id="applyBatchBtn">套用至已選</button>
+                  <button class="btn btn-sm btn-danger" id="deleteMultiBtn">刪除已選座位</button>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!-- Image detect -->
+          <div class="card">
+            <div class="card-head">
+              <h2>圖片偵測</h2>
+              <div class="sub">從背景圖自動偵測座位位置</div>
+            </div>
+            <div class="card-body">
+              <div>
+                <label>上傳圖片偵測</label>
+                <input type="file" class="input" id="detectFileInput" accept="image/*">
+              </div>
+              <div class="input-row" style="margin-top:8px;">
+                <div>
+                  <label>亮度閾值</label>
+                  <input class="input" id="detectThresh" type="number" value="205" min="50" max="254">
+                </div>
+                <div>
+                  <label>模式</label>
+                  <select class="input" id="detectMode">
+                    <option value="dark">抓深色</option>
+                    <option value="light">抓淺色</option>
+                  </select>
+                </div>
+              </div>
+              <div class="input-row">
+                <div>
+                  <label>最小像素面積</label>
+                  <input class="input" id="detectMinArea" type="number" value="8">
+                </div>
+                <div>
+                  <label>最大像素面積</label>
+                  <input class="input" id="detectMaxArea" type="number" value="400">
+                </div>
+              </div>
+              <div style="margin-top:12px;">
+                <button class="btn btn-sm btn-primary" id="doDetectBtn" style="width:100%;">開始偵測</button>
+              </div>
+              <div id="detectMsg" class="small" style="margin-top:8px;"></div>
+            </div>
+          </div>
+
         </div>
+      </div>
 
-        <!-- 右 -->
-        <div class="side-card">
-          <div class="tabs">
-            <button class="tab-btn active" data-right-tab="right-single">單顆座位</button>
-            <button class="tab-btn" data-right-tab="right-batch">批次設定</button>
-            <button class="tab-btn" data-right-tab="right-generate">批次生成</button>
-          </div>
+    </main>
+  </div>
 
-          <div id="right-single" class="tab-pane active">
-            <h2>單顆座位設定</h2>
-            <div id="seatEditorEmpty" class="empty" style="margin-top:10px;">
-              尚未選取單一座位。請先點中一顆座位，或在畫布上新增一顆座位。
-            </div>
-
-            <div id="seatEditor" style="display:none;">
-              <div class="field-grid">
-                <div>
-                  <label>seatId</label>
-                  <input id="seatIdInput" type="text" placeholder="例如：A-R01-S08" />
-                </div>
-                <div>
-                  <label>顯示名稱</label>
-                  <input id="seatLabelInput" type="text" placeholder="例如：A排08號" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>區域 sectionId</label>
-                  <input id="sectionIdInput" type="text" placeholder="例如：A / VIP" />
-                </div>
-                <div>
-                  <label>區域名稱</label>
-                  <input id="sectionNameInput" type="text" placeholder="例如：A區" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>樓層</label>
-                  <input id="floorInput" type="text" placeholder="例如：1F" />
-                </div>
-                <div>
-                  <label>價格</label>
-                  <input id="priceInput" type="number" min="0" placeholder="例如：1200" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>排 row</label>
-                  <input id="rowInput" type="text" placeholder="例如：A / 01" />
-                </div>
-                <div>
-                  <label>座號 seatNumber</label>
-                  <input id="seatNumberInput" type="text" placeholder="例如：08" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>X</label>
-                  <input id="xInput" type="number" />
-                </div>
-                <div>
-                  <label>Y</label>
-                  <input id="yInput" type="number" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>旋轉 rotation</label>
-                  <input id="rotationInput" type="number" value="0" />
-                </div>
-                <div>
-                  <label>狀態</label>
-                  <select id="statusInput">
-                    <option value="available">available</option>
-                    <option value="disabled">disabled</option>
-                    <option value="sold">sold</option>
-                  </select>
-                </div>
-              </div>
-
-              <label>開放角色（逗號分隔）</label>
-              <input id="rolesInput" type="text" placeholder="例如：general,vip" />
-
-              <label>開放標籤（逗號分隔）</label>
-              <input id="tagsInput" type="text" placeholder="例如：student,teacher" />
-
-              <label>開放票種（逗號分隔）</label>
-              <input id="ticketTypesInput" type="text" placeholder="例如：general,vip" />
-
-              <div class="checklist">
-                <label class="check-item">
-                  <input id="enabledInput" type="checkbox" checked />
-                  <span>此座位啟用 enabled</span>
-                </label>
-
-                <label class="check-item">
-                  <input id="wheelchairInput" type="checkbox" />
-                  <span>輪椅席 isWheelchair</span>
-                </label>
-
-                <label class="check-item">
-                  <input id="companionInput" type="checkbox" />
-                  <span>陪同席 isCompanionSeat</span>
-                </label>
-              </div>
-
-              <div id="seatMsg" class="small" style="margin-top:12px;"></div>
-            </div>
-          </div>
-
-          <div id="right-batch" class="tab-pane">
-            <h2>批次套用設定</h2>
-            <div class="small" style="margin-top:8px;">
-              對目前多選的座位一次套用。空白欄位不會覆蓋原值。
-            </div>
-
-            <div class="box">
-              <div class="field-grid">
-                <div>
-                  <label>區域 sectionId</label>
-                  <input id="batchSectionIdInput" type="text" placeholder="例如：A / VIP" />
-                </div>
-                <div>
-                  <label>區域名稱</label>
-                  <input id="batchSectionNameInput" type="text" placeholder="例如：A區" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>樓層</label>
-                  <input id="batchFloorInput" type="text" placeholder="例如：1F" />
-                </div>
-                <div>
-                  <label>價格</label>
-                  <input id="batchPriceInput" type="number" min="0" placeholder="例如：1200" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>狀態</label>
-                  <select id="batchStatusInput">
-                    <option value="">（不修改）</option>
-                    <option value="available">available</option>
-                    <option value="disabled">disabled</option>
-                    <option value="sold">sold</option>
-                  </select>
-                </div>
-                <div>
-                  <label>旋轉 rotation</label>
-                  <input id="batchRotationInput" type="number" placeholder="例如：0 / 15 / -15" />
-                </div>
-              </div>
-
-              <label>開放角色（逗號分隔）</label>
-              <input id="batchRolesInput" type="text" placeholder="例如：general,vip" />
-
-              <label>開放標籤（逗號分隔）</label>
-              <input id="batchTagsInput" type="text" placeholder="例如：student,teacher" />
-
-              <label>開放票種（逗號分隔）</label>
-              <input id="batchTicketTypesInput" type="text" placeholder="例如：general,vip" />
-
-              <div class="checklist">
-                <label class="check-item">
-                  <input id="batchEnabledInput" type="checkbox" />
-                  <span>套用 enabled = true</span>
-                </label>
-                <label class="check-item">
-                  <input id="batchDisabledInput" type="checkbox" />
-                  <span>套用 enabled = false</span>
-                </label>
-                <label class="check-item">
-                  <input id="batchWheelchairInput" type="checkbox" />
-                  <span>套用 isWheelchair = true</span>
-                </label>
-                <label class="check-item">
-                  <input id="batchCompanionInput" type="checkbox" />
-                  <span>套用 isCompanionSeat = true</span>
-                </label>
-              </div>
-
-              <div class="row" style="margin-top:12px;">
-                <button class="btn btn-primary" id="applyBatchBtn">套用到已選座位</button>
-                <button class="btn btn-danger" id="deleteBatchBtn">刪除已選座位</button>
-              </div>
-
-              <div id="batchMsg" class="small" style="margin-top:12px;"></div>
-            </div>
-
-            <div class="divider"></div>
-
-            <h2>自動重新編號</h2>
-            <div class="small" style="margin-top:8px;">
-              會依照目前選取座位的排序重新編號。
-            </div>
-
-            <div class="box">
-              <div class="field-grid">
-                <div>
-                  <label>起始座號</label>
-                  <input id="autoSeatStartInput" type="number" min="1" value="1" />
-                </div>
-                <div>
-                  <label>座號補零位數</label>
-                  <input id="autoPadInput" type="number" min="1" value="2" />
-                </div>
-              </div>
-
-              <button class="btn btn-primary" id="autoNumberBtn" style="margin-top:12px;">重新編號已選座位</button>
-              <div id="autoMsg" class="small" style="margin-top:10px;"></div>
-            </div>
-          </div>
-
-          <div id="right-generate" class="tab-pane">
-            <h2>批次生成座位</h2>
-            <div class="small" style="margin-top:8px;">
-              若你要快速建立整區矩陣座位，可先生成再微調。
-            </div>
-
-            <div class="box">
-              <div class="field-grid">
-                <div>
-                  <label>起始 X</label>
-                  <input id="genStartX" type="number" value="100" />
-                </div>
-                <div>
-                  <label>起始 Y</label>
-                  <input id="genStartY" type="number" value="100" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>排數</label>
-                  <input id="genRows" type="number" min="1" value="10" />
-                </div>
-                <div>
-                  <label>每排座位數</label>
-                  <input id="genCols" type="number" min="1" value="20" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>X 間距</label>
-                  <input id="genGapX" type="number" value="24" />
-                </div>
-                <div>
-                  <label>Y 間距</label>
-                  <input id="genGapY" type="number" value="28" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>區域 sectionId</label>
-                  <input id="genSectionId" type="text" placeholder="例如：A / VIP / B1" />
-                </div>
-                <div>
-                  <label>區域名稱</label>
-                  <input id="genSectionName" type="text" placeholder="例如：A區" />
-                </div>
-              </div>
-
-              <div class="field-grid">
-                <div>
-                  <label>樓層</label>
-                  <input id="genFloor" type="text" value="1F" />
-                </div>
-                <div>
-                  <label>價格</label>
-                  <input id="genPrice" type="number" min="0" value="0" />
-                </div>
-              </div>
-
-              <button class="btn btn-primary" id="generateSeatsBtn" style="margin-top:12px;">生成座位</button>
-              <div id="genMsg" class="small" style="margin-top:10px;"></div>
-            </div>
-          </div>
+  <!-- Grid generate modal -->
+  <div class="modal-back" id="modalGrid">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title">批量生成確認</h3>
+        <div class="modal-sub" id="modalGridSub">—</div>
+      </div>
+      <div class="modal-body">
+        <div class="notice warn">此操作會在目前舞台新增座位，不會刪除現有座位。</div>
+        <div class="modal-actions">
+          <button class="btn btn-sm" id="modalGridCancel">取消</button>
+          <button class="btn btn-sm btn-primary" id="modalGridConfirm">確認生成</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Save modal -->
+  <div class="modal-back" id="modalSave">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title">儲存完成</h3>
+        <div class="modal-sub" id="modalSaveSub">—</div>
+      </div>
+      <div class="modal-body">
+        <div class="notice ok" id="modalSaveMsg"></div>
+        <div class="modal-actions">
+          <button class="btn btn-sm btn-primary" id="modalSaveOk">確認</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add floor modal -->
+  <div class="modal-back" id="modalFloor">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 class="modal-title">新增樓層</h3>
+        <div class="modal-sub">設定樓層名稱（例如 1F、2F、VIP）</div>
+      </div>
+      <div class="modal-body">
+        <input class="input" id="floorNameInput" placeholder="1F">
+        <div class="modal-actions" style="margin-top:12px;">
+          <button class="btn btn-sm" id="floorModalCancel">取消</button>
+          <button class="btn btn-sm btn-primary" id="floorModalConfirm">新增</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-        authDomain: "concert-1ff7e.firebaseapp.com",
-        projectId: "concert-1ff7e",
-        storageBucket: "concert-1ff7e.firebasestorage.app",
-        messagingSenderId: "704757384914",
-        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-      });
-    }
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384994",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    });
 
     const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    const gate = document.getElementById("gate");
-    const app = document.getElementById("app");
-    const who = document.getElementById("who");
-    const roleText = document.getElementById("roleText");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const eventSel = document.getElementById("eventSel");
-    const eventMeta = document.getElementById("eventMeta");
-
-    const addSeatModeBtn = document.getElementById("addSeatModeBtn");
-    const reloadSeatsBtn = document.getElementById("reloadSeatsBtn");
-    const clearSelectionBtn = document.getElementById("clearSelectionBtn");
-    const selectAllBtn = document.getElementById("selectAllBtn");
-    const saveSeatBtn = document.getElementById("saveSeatBtn");
-    const saveAllSeatsBtn = document.getElementById("saveAllSeatsBtn");
-    const deleteSeatBtn = document.getElementById("deleteSeatBtn");
-
-    const stage = document.getElementById("stage");
-    const seatMapImage = document.getElementById("seatMapImage");
-    const seatCountText = document.getElementById("seatCountText");
-    const detectedCountText = document.getElementById("detectedCountText");
-    const canvasWrap = document.getElementById("canvasWrap");
-
-    const zoomOutBtn = document.getElementById("zoomOutBtn");
-    const zoomResetBtn = document.getElementById("zoomResetBtn");
-    const zoomInBtn = document.getElementById("zoomInBtn");
-
-    const seatEditorEmpty = document.getElementById("seatEditorEmpty");
-    const seatEditor = document.getElementById("seatEditor");
-    const seatMsg = document.getElementById("seatMsg");
-
-    const selectedSeatList = document.getElementById("selectedSeatList");
-    const multiCountText = document.getElementById("multiCountText");
-
-    const seatIdInput = document.getElementById("seatIdInput");
-    const seatLabelInput = document.getElementById("seatLabelInput");
-    const sectionIdInput = document.getElementById("sectionIdInput");
-    const sectionNameInput = document.getElementById("sectionNameInput");
-    const floorInput = document.getElementById("floorInput");
-    const priceInput = document.getElementById("priceInput");
-    const rowInput = document.getElementById("rowInput");
-    const seatNumberInput = document.getElementById("seatNumberInput");
-    const xInput = document.getElementById("xInput");
-    const yInput = document.getElementById("yInput");
-    const rotationInput = document.getElementById("rotationInput");
-    const statusInput = document.getElementById("statusInput");
-    const rolesInput = document.getElementById("rolesInput");
-    const tagsInput = document.getElementById("tagsInput");
-    const ticketTypesInput = document.getElementById("ticketTypesInput");
-    const enabledInput = document.getElementById("enabledInput");
-    const wheelchairInput = document.getElementById("wheelchairInput");
-    const companionInput = document.getElementById("companionInput");
-
-    const batchSectionIdInput = document.getElementById("batchSectionIdInput");
-    const batchSectionNameInput = document.getElementById("batchSectionNameInput");
-    const batchFloorInput = document.getElementById("batchFloorInput");
-    const batchPriceInput = document.getElementById("batchPriceInput");
-    const batchStatusInput = document.getElementById("batchStatusInput");
-    const batchRotationInput = document.getElementById("batchRotationInput");
-    const batchRolesInput = document.getElementById("batchRolesInput");
-    const batchTagsInput = document.getElementById("batchTagsInput");
-    const batchTicketTypesInput = document.getElementById("batchTicketTypesInput");
-    const batchEnabledInput = document.getElementById("batchEnabledInput");
-    const batchDisabledInput = document.getElementById("batchDisabledInput");
-    const batchWheelchairInput = document.getElementById("batchWheelchairInput");
-    const batchCompanionInput = document.getElementById("batchCompanionInput");
-    const applyBatchBtn = document.getElementById("applyBatchBtn");
-    const deleteBatchBtn = document.getElementById("deleteBatchBtn");
-    const batchMsg = document.getElementById("batchMsg");
-
-    const genStartX = document.getElementById("genStartX");
-    const genStartY = document.getElementById("genStartY");
-    const genRows = document.getElementById("genRows");
-    const genCols = document.getElementById("genCols");
-    const genGapX = document.getElementById("genGapX");
-    const genGapY = document.getElementById("genGapY");
-    const genSectionId = document.getElementById("genSectionId");
-    const genSectionName = document.getElementById("genSectionName");
-    const genFloor = document.getElementById("genFloor");
-    const genPrice = document.getElementById("genPrice");
-    const generateSeatsBtn = document.getElementById("generateSeatsBtn");
-    const genMsg = document.getElementById("genMsg");
-
-    const autoSeatStartInput = document.getElementById("autoSeatStartInput");
-    const autoPadInput = document.getElementById("autoPadInput");
-    const autoNumberBtn = document.getElementById("autoNumberBtn");
-    const autoMsg = document.getElementById("autoMsg");
-
-    const imageUploadInput = document.getElementById("imageUploadInput");
-    const useEventImageBtn = document.getElementById("useEventImageBtn");
-    const clearImageBtn = document.getElementById("clearImageBtn");
-    const detectSeatsBtn = document.getElementById("detectSeatsBtn");
-    const removeDetectedBtn = document.getElementById("removeDetectedBtn");
-    const detectThresholdInput = document.getElementById("detectThresholdInput");
-    const detectThresholdText = document.getElementById("detectThresholdText");
-    const detectMinAreaInput = document.getElementById("detectMinAreaInput");
-    const detectMaxAreaInput = document.getElementById("detectMaxAreaInput");
-    const detectScaleInput = document.getElementById("detectScaleInput");
-    const detectModeInput = document.getElementById("detectModeInput");
-    const detectMsg = document.getElementById("detectMsg");
-
+    // ====================================================
+    // STATE
+    // ====================================================
     let currentUser = null;
     let currentRole = "";
-    let currentEventId = "";
-    let currentEventData = null;
 
-    let addSeatMode = true;
+    // floors: [{ id, name, seatMap: Map<seatId, seat> }]
+    let floors = [{ id: "1F", name: "1F", seatMap: new Map() }];
+    let activeFloorIdx = 0;
+
     let zoomScale = 1;
-
-    let seatMap = new Map();
+    let currentTool = "add";
     let selectedSeatId = "";
-    let selectedSeatIds = new Set();
-
-    let dragState = null;
-    let boxSelectState = null;
-    let selectionBoxEl = null;
-
-    let uploadedPreviewUrl = "";
+    let multiSelectedIds = new Set();
     let detectedSeatIds = new Set();
 
-    function esc(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
-    }
+    // Selection box drag
+    let isSelDragging = false;
+    let selStart = { x:0, y:0 };
 
-    function norm(v){
-      return String(v ?? "").trim();
-    }
+    // Seat drag (move)
+    let isSeatDragging = false;
+    let dragSeatId = "";
+    let dragOffX = 0;
+    let dragOffY = 0;
+    let dragMoved = false;
 
-    function splitCsv(v){
-      return norm(v).split(",").map(x => norm(x)).filter(Boolean);
-    }
+    // ====================================================
+    // HELPERS
+    // ====================================================
+    function esc(v){ return String(v ?? "").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
+    function norm(v){ return String(v ?? "").trim(); }
+    function lower(v){ return norm(v).toLowerCase(); }
+    function uid8(){ return Math.random().toString(36).slice(2,10); }
 
-    function showGate(html){
-      gate.innerHTML = html;
-      gate.style.display = "block";
-      app.style.display = "none";
-    }
+    function getFloor(){ return floors[activeFloorIdx] || floors[0]; }
+    function getSeatMap(){ return getFloor().seatMap; }
 
-    async function doLogout(){
-      await firebase.auth().signOut();
-    }
-    logoutBtn.onclick = doLogout;
+    // ====================================================
+    // AUTH GATE
+    // ====================================================
+    document.getElementById("gateLoginBtn").onclick = async () => {
+      const email = document.getElementById("gateEmail").value.trim();
+      const pass = document.getElementById("gatePass").value;
+      const errEl = document.getElementById("gateErr");
+      errEl.style.display = "none";
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+      } catch(e) {
+        errEl.textContent = e.message || "登入失敗";
+        errEl.style.display = "block";
+      }
+    };
 
-    async function loadMyRole(uid){
-      const snap = await db.collection("users").doc(uid).get();
-      if (!snap.exists) return { ok:false, reason:"尚未授權" };
-      const u = snap.data() || {};
-      if (u.enabled !== true) return { ok:false, reason:"帳號已停用" };
-      return {
-        ok:true,
-        role:norm(u.role),
-        userData:u
-      };
-    }
+    document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
-    function getSectionColor(sectionId){
-      const s = norm(sectionId).toUpperCase();
-      if (!s) return "";
-      if (s === "VIP") return getComputedStyle(document.documentElement).getPropertyValue("--vip").trim();
-      if (s === "A" || s.startsWith("A")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-a").trim();
-      if (s === "B" || s.startsWith("B")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-b").trim();
-      if (s === "C" || s.startsWith("C")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-c").trim();
-      if (s === "D" || s.startsWith("D")) return getComputedStyle(document.documentElement).getPropertyValue("--zone-d").trim();
-      return "";
-    }
-
-    function getSelectedSeatsArray(){
-      return [...selectedSeatIds]
-        .map(id => seatMap.get(id))
-        .filter(Boolean)
-        .sort((a, b) => {
-          const ay = Number(a.y || 0);
-          const by = Number(b.y || 0);
-          if (Math.abs(ay - by) > 8) return ay - by;
-          return Number(a.x || 0) - Number(b.x || 0);
-        });
-    }
-
-    function updateSelectedSeatList(){
-      const items = getSelectedSeatsArray();
-      if (!items.length) {
-        multiCountText.textContent = "目前未選取";
-        selectedSeatList.innerHTML = `<div class="empty">尚未選取任何座位</div>`;
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+      if (!user) {
+        document.getElementById("gate").style.display = "flex";
+        document.getElementById("appWrap").style.display = "none";
+        document.getElementById("logoutBtn").style.display = "none";
+        document.getElementById("whoText").textContent = "未登入";
         return;
       }
-
-      multiCountText.textContent = `已選 ${items.length} 顆座位`;
-      selectedSeatList.innerHTML = items.map(seat => `
-        <div class="selected-item">${esc(seat.label || seat.seatId)}｜${esc(seat.sectionId || "-")}｜${esc(seat.row || "-")}-${esc(seat.seatNumber || "-")}</div>
-      `).join("");
-    }
-
-    function refreshSelectionUi(){
-      updateSelectedSeatList();
-      const hasSingle = !!selectedSeatId && seatMap.has(selectedSeatId);
-      const hasAny = selectedSeatIds.size > 0;
-
-      saveSeatBtn.disabled = !hasSingle;
-      deleteSeatBtn.disabled = !hasSingle;
-
-      if (!hasSingle) {
-        seatEditor.style.display = "none";
-        seatEditorEmpty.style.display = "block";
-      }
-
-      applyBatchBtn.disabled = !hasAny;
-      deleteBatchBtn.disabled = !hasAny;
-      autoNumberBtn.disabled = !hasAny;
-      detectedCountText.textContent = detectedSeatIds.size;
-    }
-
-    function resetSeatEditor(){
-      selectedSeatId = "";
-      seatEditor.style.display = "none";
-      seatEditorEmpty.style.display = "block";
-      seatMsg.innerHTML = "";
-
-      seatIdInput.value = "";
-      seatLabelInput.value = "";
-      sectionIdInput.value = "";
-      sectionNameInput.value = "";
-      floorInput.value = "";
-      priceInput.value = "";
-      rowInput.value = "";
-      seatNumberInput.value = "";
-      xInput.value = "";
-      yInput.value = "";
-      rotationInput.value = "0";
-      statusInput.value = "available";
-      rolesInput.value = "";
-      tagsInput.value = "";
-      ticketTypesInput.value = "";
-      enabledInput.checked = true;
-      wheelchairInput.checked = false;
-      companionInput.checked = false;
-
-      refreshSelectionUi();
+      document.getElementById("whoText").textContent = user.email || user.uid;
+      document.getElementById("logoutBtn").style.display = "inline-flex";
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("appWrap").style.display = "block";
+      applyZoom();
+      renderFloorTabs();
       renderSeats();
-    }
-
-    function showSeatEditor(seat){
-      seatEditorEmpty.style.display = "none";
-      seatEditor.style.display = "block";
-
-      seatIdInput.value = norm(seat.seatId || "");
-      seatLabelInput.value = norm(seat.label || "");
-      sectionIdInput.value = norm(seat.sectionId || "");
-      sectionNameInput.value = norm(seat.sectionName || "");
-      floorInput.value = norm(seat.floor || "");
-      priceInput.value = Number(seat.price || 0);
-      rowInput.value = norm(seat.row || "");
-      seatNumberInput.value = norm(seat.seatNumber || "");
-      xInput.value = Number(seat.x || 0);
-      yInput.value = Number(seat.y || 0);
-      rotationInput.value = Number(seat.rotation || 0);
-      statusInput.value = norm(seat.status || "available");
-      rolesInput.value = Array.isArray(seat.allowedRoles) ? seat.allowedRoles.join(",") : "";
-      tagsInput.value = Array.isArray(seat.allowedTags) ? seat.allowedTags.join(",") : "";
-      ticketTypesInput.value = Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes.join(",") : "";
-      enabledInput.checked = seat.enabled !== false;
-      wheelchairInput.checked = seat.isWheelchair === true;
-      companionInput.checked = seat.isCompanionSeat === true;
-
-      seatMsg.innerHTML = seat._detected ? `<span class="ok">這顆是本次圖片偵測出的候選座位</span>` : "";
-      refreshSelectionUi();
-    }
-
-    function buildSeatPayloadFromEditor(){
-      const seatId = norm(seatIdInput.value);
-      return {
-        seatId,
-        sectionId: norm(sectionIdInput.value),
-        sectionName: norm(sectionNameInput.value),
-        floor: norm(floorInput.value),
-        row: norm(rowInput.value),
-        seatNumber: norm(seatNumberInput.value),
-        label: norm(seatLabelInput.value) || seatId,
-        x: Number(xInput.value || 0),
-        y: Number(yInput.value || 0),
-        rotation: Number(rotationInput.value || 0),
-        price: Number(priceInput.value || 0),
-        status: norm(statusInput.value || "available"),
-        enabled: enabledInput.checked,
-        allowedRoles: splitCsv(rolesInput.value),
-        allowedTags: splitCsv(tagsInput.value),
-        allowedTicketTypes: splitCsv(ticketTypesInput.value),
-        isWheelchair: wheelchairInput.checked,
-        isCompanionSeat: companionInput.checked,
-        heldBy: "",
-        heldUntil: null,
-        orderId: ""
-      };
-    }
-
-    function updateSelectedSeatFromEditorToMemory(){
-      if (!selectedSeatId || !seatMap.has(selectedSeatId)) return;
-
-      const payload = buildSeatPayloadFromEditor();
-      const old = seatMap.get(selectedSeatId);
-      const nextId = payload.seatId || selectedSeatId;
-
-      if (nextId !== selectedSeatId) {
-        seatMap.delete(selectedSeatId);
-        selectedSeatIds.delete(selectedSeatId);
-        detectedSeatIds.delete(selectedSeatId);
-
-        seatMap.set(nextId, { ...old, ...payload, _detected: old._detected === true });
-        selectedSeatIds.add(nextId);
-        if (old._detected === true) detectedSeatIds.add(nextId);
-        selectedSeatId = nextId;
-      } else {
-        seatMap.set(selectedSeatId, { ...old, ...payload });
-      }
-
-      renderSeats();
-      refreshSelectionUi();
-    }
-
-    [
-      seatIdInput, seatLabelInput, sectionIdInput, sectionNameInput, floorInput,
-      priceInput, rowInput, seatNumberInput, xInput, yInput, rotationInput,
-      statusInput, rolesInput, tagsInput, ticketTypesInput, enabledInput,
-      wheelchairInput, companionInput
-    ].forEach(el => {
-      el.addEventListener("input", updateSelectedSeatFromEditorToMemory);
-      el.addEventListener("change", updateSelectedSeatFromEditorToMemory);
     });
 
-    function getSeatClass(seat){
-      let cls = "seat";
-      if (seat._detected === true) cls += " detected";
-      if (seat.status === "disabled" || seat.enabled === false) cls += " disabled";
-      if (seat.status === "sold") cls += " sold";
-      if (selectedSeatIds.has(seat.seatId)) {
-        cls += seat.seatId === selectedSeatId ? " selected" : " multi";
+    // ====================================================
+    // LOAD EVENT SEATS
+    // ====================================================
+    document.getElementById("loadEventBtn").onclick = loadEventSeats;
+
+    async function loadEventSeats(){
+      const eventId = norm(document.getElementById("eventIdInput").value);
+      if (!eventId) { setLoadMsg("請輸入活動 ID", "warn"); return; }
+      setLoadMsg("載入中…", "info");
+      try {
+        const snap = await db.collection("events").doc(eventId).collection("seats").get();
+        if (snap.empty) { setLoadMsg("此活動尚無座位資料", "warn"); return; }
+
+        const newFloors = new Map();
+        snap.forEach(docSnap => {
+          const d = { seatId: docSnap.id, ...(docSnap.data() || {}) };
+          const fName = norm(d.floor || "1F");
+          if (!newFloors.has(fName)) newFloors.set(fName, new Map());
+          newFloors.get(fName).set(d.seatId, d);
+        });
+
+        floors = [];
+        for (const [name, seatMap] of newFloors.entries()) {
+          floors.push({ id: name, name, seatMap });
+        }
+        if (!floors.length) floors = [{ id:"1F", name:"1F", seatMap: new Map() }];
+        activeFloorIdx = 0;
+
+        renderFloorTabs();
+        renderSeats();
+        updateStats();
+        setLoadMsg(`已載入 ${snap.size} 個座位（${floors.length} 層）`, "ok");
+      } catch(e) {
+        setLoadMsg("載入失敗：" + (e.message || e), "warn");
       }
-      return cls;
     }
 
-    function renderSeats(){
-      [...stage.querySelectorAll(".seat")].forEach(el => el.remove());
+    function setLoadMsg(txt, type){
+      const el = document.getElementById("loadMsg");
+      el.textContent = txt;
+      el.style.color = type === "ok" ? "var(--green)" : type === "warn" ? "var(--red)" : "var(--blue)";
+    }
 
-      const seats = [...seatMap.values()];
-      seatCountText.textContent = seats.length;
+    document.getElementById("loadImageBtn").onclick = () => {
+      const url = norm(document.getElementById("bgImageInput").value);
+      const img = document.getElementById("bgImg");
+      if (url) { img.src = url; img.style.display = "block"; }
+      else { img.style.display = "none"; }
+    };
 
-      seats.forEach(seat => {
-        const el = document.createElement("div");
-        el.className = getSeatClass(seat);
-        el.style.left = `${Number(seat.x || 0)}px`;
-        el.style.top = `${Number(seat.y || 0)}px`;
-        el.style.transform = `rotate(${Number(seat.rotation || 0)}deg)`;
+    // ====================================================
+    // FLOORS
+    // ====================================================
+    document.getElementById("addFloorBtn").onclick = () => {
+      document.getElementById("floorNameInput").value = "";
+      openModal("modalFloor");
+    };
 
-        const zoneColor = getSectionColor(seat.sectionId);
-        if (
-          zoneColor &&
-          !selectedSeatIds.has(seat.seatId) &&
-          seat._detected !== true &&
-          seat.status !== "sold" &&
-          seat.status !== "disabled" &&
-          seat.enabled !== false
-        ) {
-          el.style.background = zoneColor;
-          el.style.borderColor = zoneColor;
-        }
+    document.getElementById("floorModalCancel").onclick = () => closeModal("modalFloor");
+    document.getElementById("floorModalConfirm").onclick = () => {
+      const name = norm(document.getElementById("floorNameInput").value) || `${floors.length + 1}F`;
+      floors.push({ id: name, name, seatMap: new Map() });
+      activeFloorIdx = floors.length - 1;
+      closeModal("modalFloor");
+      renderFloorTabs();
+      renderSeats();
+      updateStats();
+    };
 
-        const label = document.createElement("div");
-        label.className = "seat-label";
-        label.textContent = norm(seat.label || seat.seatId || "seat");
-        el.appendChild(label);
-
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          selectSeat(seat.seatId, e.shiftKey);
+    function renderFloorTabs(){
+      const el = document.getElementById("floorTabs");
+      el.innerHTML = floors.map((f, i) => `
+        <button class="floor-tab ${i === activeFloorIdx ? "active" : ""}" data-fi="${i}">${esc(f.name)}</button>
+      `).join("") + `<button class="floor-tab-add" id="addFloorBtn">＋ 新增樓層</button>`;
+      el.querySelectorAll(".floor-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeFloorIdx = parseInt(btn.dataset.fi);
+          selectedSeatId = "";
+          multiSelectedIds.clear();
+          renderFloorTabs();
+          renderSeats();
+          updateStats();
+          updateSidePanel();
+          document.getElementById("floorLabel").textContent = getFloor().name;
         });
-
-        el.addEventListener("mousedown", (e) => {
-          e.stopPropagation();
-          startSeatPointer(e, seat.seatId);
-        });
-
-        stage.appendChild(el);
       });
-
-      updateSelectedSeatList();
+      document.getElementById("addFloorBtn").onclick = () => {
+        document.getElementById("floorNameInput").value = "";
+        openModal("modalFloor");
+      };
+      document.getElementById("floorLabel").textContent = getFloor().name;
     }
 
-    function clearAllSelection(){
-      selectedSeatId = "";
-      selectedSeatIds.clear();
-      resetSeatEditor();
-      batchMsg.innerHTML = "";
-      autoMsg.innerHTML = "";
-      renderSeats();
-      refreshSelectionUi();
-    }
+    // ====================================================
+    // TOOL BUTTONS
+    // ====================================================
+    document.querySelectorAll("[data-tool]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentTool = btn.dataset.tool;
+        document.querySelectorAll("[data-tool]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const wrap = document.getElementById("canvasWrap");
+        wrap.className = "canvas-wrap mode-" + currentTool;
+      });
+    });
 
-    function selectSeat(seatId, keepMulti = false){
-      const seat = seatMap.get(seatId);
-      if (!seat) return;
+    // ====================================================
+    // STAGE CANVAS INTERACTIONS
+    // ====================================================
+    const stage = document.getElementById("stage");
+    const selBox = document.getElementById("selBox");
 
-      if (keepMulti) {
-        if (selectedSeatIds.has(seatId)) {
-          selectedSeatIds.delete(seatId);
-          if (selectedSeatId === seatId) {
-            selectedSeatId = [...selectedSeatIds][0] || "";
-          }
-        } else {
-          selectedSeatIds.add(seatId);
-          selectedSeatId = seatId;
-        }
+    stage.addEventListener("mousedown", onStageMouseDown);
+    stage.addEventListener("mousemove", onStageMouseMove);
+    window.addEventListener("mouseup", onStageMouseUp);
 
-        if (selectedSeatId && seatMap.has(selectedSeatId)) {
-          showSeatEditor(seatMap.get(selectedSeatId));
-        } else {
-          resetSeatEditor();
-        }
-        renderSeats();
-        refreshSelectionUi();
-        return;
-      }
-
-      selectedSeatIds.clear();
-      selectedSeatIds.add(seatId);
-      selectedSeatId = seatId;
-      showSeatEditor(seat);
-      renderSeats();
-      refreshSelectionUi();
-    }
-
-    function stagePointFromMouse(e){
+    function stageCoords(e){
       const rect = stage.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / zoomScale;
-      const y = (e.clientY - rect.top) / zoomScale;
-      return { x, y };
-    }
-
-    function startSeatPointer(e, seatId){
-      const seat = seatMap.get(seatId);
-      if (!seat) return;
-
-      if (e.shiftKey) {
-        selectSeat(seatId, true);
-        return;
-      }
-
-      if (!selectedSeatIds.has(seatId)) {
-        selectedSeatIds.clear();
-        selectedSeatIds.add(seatId);
-        selectedSeatId = seatId;
-        showSeatEditor(seat);
-        renderSeats();
-        refreshSelectionUi();
-      } else if (!selectedSeatId) {
-        selectedSeatId = seatId;
-        showSeatEditor(seat);
-      }
-
-      const pt = stagePointFromMouse(e);
-      const ids = [...selectedSeatIds];
-
-      dragState = {
-        seatIds: ids,
-        startMouseX: pt.x,
-        startMouseY: pt.y,
-        seatStartMap: new Map(ids.map(id => {
-          const s = seatMap.get(id);
-          return [id, { x: Number(s.x || 0), y: Number(s.y || 0) }];
-        }))
+      return {
+        x: Math.round((e.clientX - rect.left) / zoomScale),
+        y: Math.round((e.clientY - rect.top) / zoomScale)
       };
     }
 
-    window.addEventListener("mousemove", (e) => {
-      if (dragState) {
-        const pt = stagePointFromMouse(e);
-        const dx = Math.round(pt.x - dragState.startMouseX);
-        const dy = Math.round(pt.y - dragState.startMouseY);
+    function onStageMouseDown(e){
+      if (e.button !== 0) return;
+      const { x, y } = stageCoords(e);
+      const seatMap = getSeatMap();
 
-        dragState.seatIds.forEach(id => {
-          const seat = seatMap.get(id);
-          const start = dragState.seatStartMap.get(id);
-          if (!seat || !start) return;
-          seat.x = start.x + dx;
-          seat.y = start.y + dy;
-          seatMap.set(id, seat);
-        });
-
-        if (selectedSeatId && seatMap.has(selectedSeatId)) {
-          const s = seatMap.get(selectedSeatId);
-          xInput.value = Number(s.x || 0);
-          yInput.value = Number(s.y || 0);
+      if (currentTool === "add"){
+        // Check if clicked existing seat
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          setSelectedSeat(hit.seatId);
+          return;
         }
-
+        addSeat(seatMap, x, y);
         renderSeats();
+        updateStats();
         return;
       }
 
-      if (boxSelectState) {
-        const pt = stagePointFromMouse(e);
-        boxSelectState.currentX = pt.x;
-        boxSelectState.currentY = pt.y;
-        drawSelectionBox();
-      }
-    });
-
-    window.addEventListener("mouseup", () => {
-      if (dragState) {
-        dragState = null;
+      if (currentTool === "delete"){
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          seatMap.delete(hit.seatId);
+          if (selectedSeatId === hit.seatId) { selectedSeatId = ""; updateSidePanel(); }
+          multiSelectedIds.delete(hit.seatId);
+          renderSeats();
+          updateStats();
+        }
         return;
       }
-      if (boxSelectState) {
-        finishBoxSelection();
-      }
-    });
 
-    function drawSelectionBox(){
-      if (!boxSelectState) return;
-
-      const x1 = Math.min(boxSelectState.startX, boxSelectState.currentX);
-      const y1 = Math.min(boxSelectState.startY, boxSelectState.currentY);
-      const x2 = Math.max(boxSelectState.startX, boxSelectState.currentX);
-      const y2 = Math.max(boxSelectState.startY, boxSelectState.currentY);
-
-      if (!selectionBoxEl) {
-        selectionBoxEl = document.createElement("div");
-        selectionBoxEl.className = "selection-box";
-        stage.appendChild(selectionBoxEl);
+      if (currentTool === "move"){
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          isSeatDragging = true;
+          dragSeatId = hit.seatId;
+          dragOffX = x - Number(hit.x || 0);
+          dragOffY = y - Number(hit.y || 0);
+          dragMoved = false;
+          e.preventDefault();
+        }
+        return;
       }
 
-      selectionBoxEl.style.left = `${x1}px`;
-      selectionBoxEl.style.top = `${y1}px`;
-      selectionBoxEl.style.width = `${x2 - x1}px`;
-      selectionBoxEl.style.height = `${y2 - y1}px`;
+      if (currentTool === "select"){
+        const hit = hitSeat(seatMap, x, y);
+        if (hit) {
+          if (e.shiftKey) {
+            if (multiSelectedIds.has(hit.seatId)) multiSelectedIds.delete(hit.seatId);
+            else multiSelectedIds.add(hit.seatId);
+          } else {
+            multiSelectedIds.clear();
+            setSelectedSeat(hit.seatId);
+          }
+          renderSeats();
+          updateStats();
+          updateBatchCount();
+          return;
+        }
+        // Start drag selection
+        if (!e.shiftKey) { multiSelectedIds.clear(); selectedSeatId = ""; updateSidePanel(); }
+        isSelDragging = true;
+        selStart = { x, y };
+        selBox.style.display = "block";
+        selBox.style.left = x + "px";
+        selBox.style.top = y + "px";
+        selBox.style.width = "0px";
+        selBox.style.height = "0px";
+        e.preventDefault();
+      }
     }
 
-    function finishBoxSelection(){
-      if (!boxSelectState) return;
+    function onStageMouseMove(e){
+      const { x, y } = stageCoords(e);
+      const seatMap = getSeatMap();
 
-      const x1 = Math.min(boxSelectState.startX, boxSelectState.currentX);
-      const y1 = Math.min(boxSelectState.startY, boxSelectState.currentY);
-      const x2 = Math.max(boxSelectState.startX, boxSelectState.currentX);
-      const y2 = Math.max(boxSelectState.startY, boxSelectState.currentY);
+      if (isSeatDragging && dragSeatId) {
+        const seat = seatMap.get(dragSeatId);
+        if (seat) {
+          seat.x = Math.round((x - dragOffX) / 4) * 4;
+          seat.y = Math.round((y - dragOffY) / 4) * 4;
+          dragMoved = true;
+          renderSeats();
+          if (selectedSeatId === dragSeatId) updateSidePanel();
+        }
+        return;
+      }
 
-      const hitIds = [...seatMap.values()].filter(seat => {
+      if (isSelDragging) {
+        const rx = Math.min(selStart.x, x);
+        const ry = Math.min(selStart.y, y);
+        const rw = Math.abs(x - selStart.x);
+        const rh = Math.abs(y - selStart.y);
+        selBox.style.left = (rx * zoomScale) + "px";
+        selBox.style.top = (ry * zoomScale) + "px";
+        selBox.style.width = (rw * zoomScale) + "px";
+        selBox.style.height = (rh * zoomScale) + "px";
+      }
+    }
+
+    function onStageMouseUp(e){
+      if (isSeatDragging) {
+        isSeatDragging = false;
+        dragSeatId = "";
+        return;
+      }
+      if (!isSelDragging) return;
+      isSelDragging = false;
+      selBox.style.display = "none";
+
+      const { x, y } = stageCoords(e);
+      const rx = Math.min(selStart.x, x);
+      const ry = Math.min(selStart.y, y);
+      const rw = Math.abs(x - selStart.x);
+      const rh = Math.abs(y - selStart.y);
+      if (rw < 4 || rh < 4) return;
+
+      const seatMap = getSeatMap();
+      for (const [, seat] of seatMap) {
         const sx = Number(seat.x || 0);
         const sy = Number(seat.y || 0);
-        const sw = 18;
-        const sh = 18;
-        return sx + sw >= x1 && sx <= x2 && sy + sh >= y1 && sy <= y2;
-      }).map(seat => seat.seatId);
-
-      if (!boxSelectState.keepMulti) {
-        selectedSeatIds.clear();
+        if (sx >= rx && sx <= rx + rw && sy >= ry && sy <= ry + rh) {
+          multiSelectedIds.add(seat.seatId);
+        }
       }
-      hitIds.forEach(id => selectedSeatIds.add(id));
-
-      selectedSeatId = hitIds[0] || [...selectedSeatIds][0] || "";
-
-      if (selectedSeatId && seatMap.has(selectedSeatId)) {
-        showSeatEditor(seatMap.get(selectedSeatId));
-      } else {
-        resetSeatEditor();
-      }
-
-      if (selectionBoxEl) {
-        selectionBoxEl.remove();
-        selectionBoxEl = null;
-      }
-
-      boxSelectState = null;
       renderSeats();
-      refreshSelectionUi();
+      updateStats();
+      updateBatchCount();
     }
 
-    stage.addEventListener("mousedown", (e) => {
-      if (e.target !== stage && e.target !== seatMapImage) return;
-      const pt = stagePointFromMouse(e);
-      boxSelectState = {
-        startX: pt.x,
-        startY: pt.y,
-        currentX: pt.x,
-        currentY: pt.y,
-        keepMulti: e.shiftKey
-      };
-    });
-
-    stage.addEventListener("click", (e) => {
-      if (!currentEventId) return;
-      if (e.target !== stage && e.target !== seatMapImage) return;
-      if (boxSelectState) return;
-
-      if (!addSeatMode) {
-        if (!e.shiftKey) clearAllSelection();
-        return;
+    function hitSeat(seatMap, x, y){
+      const HIT = 12;
+      for (const [, seat] of seatMap) {
+        const sx = Number(seat.x || 0);
+        const sy = Number(seat.y || 0);
+        if (Math.abs(sx - x) <= HIT && Math.abs(sy - y) <= HIT) return seat;
       }
+      return null;
+    }
 
-      const pt = stagePointFromMouse(e);
-      const nextIndex = seatMap.size + 1;
-      const seatId = `seat_${Date.now()}_${nextIndex}`;
+    function addSeat(seatMap, x, y){
+      const snX = Math.round(x / 4) * 4;
+      const snY = Math.round(y / 4) * 4;
+      if (hitSeat(seatMap, snX, snY)) return;
 
-      const seat = {
+      const seatId = "seat_" + uid8();
+      const seatMap2 = seatMap;
+      const floorName = getFloor().name;
+
+      // Auto label by position
+      const rowChar = String.fromCharCode(65 + Math.max(0, Math.floor((snY - 60) / 34)));
+      const colNum = Math.max(1, Math.round((snX - 60) / 34));
+      const label = rowChar + colNum;
+
+      seatMap2.set(seatId, {
         seatId,
+        label,
+        row: rowChar,
+        seatNumber: String(colNum),
         sectionId: "",
         sectionName: "",
-        floor: "1F",
-        row: "",
-        seatNumber: "",
-        label: `新座位 ${nextIndex}`,
-        x: Math.round(pt.x - 9),
-        y: Math.round(pt.y - 9),
+        floor: floorName,
+        x: snX,
+        y: snY,
         rotation: 0,
         price: 0,
         status: "available",
@@ -1588,537 +1524,264 @@
         allowedRoles: [],
         allowedTags: [],
         allowedTicketTypes: [],
-        isWheelchair: false,
-        isCompanionSeat: false,
         heldBy: "",
         heldUntil: null,
-        orderId: "",
-        _detected: false
-      };
-
-      seatMap.set(seatId, seat);
-      selectedSeatIds.clear();
-      selectedSeatIds.add(seatId);
-      selectedSeatId = seatId;
-      showSeatEditor(seat);
-      renderSeats();
-      refreshSelectionUi();
-      seatMsg.innerHTML = `<span class="ok">已新增新座位，請記得儲存。</span>`;
-    });
-
-    clearSelectionBtn.onclick = clearAllSelection;
-
-    selectAllBtn.onclick = () => {
-      selectedSeatIds = new Set([...seatMap.keys()]);
-      selectedSeatId = [...selectedSeatIds][0] || "";
-      if (selectedSeatId && seatMap.has(selectedSeatId)) {
-        showSeatEditor(seatMap.get(selectedSeatId));
-      } else {
-        resetSeatEditor();
-      }
-      renderSeats();
-      refreshSelectionUi();
-    };
-
-    addSeatModeBtn.onclick = () => {
-      addSeatMode = !addSeatMode;
-      addSeatModeBtn.textContent = `點擊新增座位：${addSeatMode ? "開" : "關"}`;
-      addSeatModeBtn.classList.toggle("btn-primary", addSeatMode);
-    };
-
-    function applyZoom(){
-      stage.style.transform = `scale(${zoomScale})`;
-      stage.style.width = "1200px";
-      stage.style.height = "900px";
-      const scaledHeight = 900 * zoomScale;
-      stage.parentElement.style.minHeight = `${Math.max(720, scaledHeight)}px`;
-      stage.style.margin = "0 auto";
-    }
-
-    zoomOutBtn.onclick = () => {
-      zoomScale = Math.max(0.4, Math.round((zoomScale - 0.1) * 10) / 10);
-      applyZoom();
-    };
-    zoomResetBtn.onclick = () => {
-      zoomScale = 1;
-      applyZoom();
-    };
-    zoomInBtn.onclick = () => {
-      zoomScale = Math.min(2.5, Math.round((zoomScale + 0.1) * 10) / 10);
-      applyZoom();
-    };
-
-    async function loadEvents(){
-      eventSel.innerHTML = `<option value="">載入中…</option>`;
-
-      const snap = await db.collection("events").get();
-      const rows = snap.docs.map(doc => ({
-        id: doc.id,
-        ...(doc.data() || {})
-      }));
-
-      rows.sort((a, b) => norm(a.title).localeCompare(norm(b.title), "zh-Hant"));
-
-      if (!rows.length) {
-        eventSel.innerHTML = `<option value="">目前沒有活動</option>`;
-        return;
-      }
-
-      eventSel.innerHTML = rows.map(item => `
-        <option value="${esc(item.id)}">${esc(item.title || item.id)}（${esc(item.id)}）</option>
-      `).join("");
-
-      currentEventId = eventSel.value;
-      await loadEventData();
-    }
-
-    async function loadEventData(){
-      currentEventId = norm(eventSel.value);
-      seatMap.clear();
-      selectedSeatId = "";
-      selectedSeatIds.clear();
-      detectedSeatIds.clear();
-      seatMsg.innerHTML = "";
-      batchMsg.innerHTML = "";
-      autoMsg.innerHTML = "";
-      genMsg.innerHTML = "";
-      detectMsg.innerHTML = "";
-      renderSeats();
-      refreshSelectionUi();
-
-      if (!currentEventId) {
-        currentEventData = null;
-        eventMeta.innerHTML = `<span class="warn">請先選擇活動</span>`;
-        seatMapImage.style.display = "none";
-        seatMapImage.src = "";
-        return;
-      }
-
-      const snap = await db.collection("events").doc(currentEventId).get();
-      currentEventData = snap.exists ? (snap.data() || {}) : null;
-
-      if (!currentEventData) {
-        eventMeta.innerHTML = `<span class="warn">找不到活動資料</span>`;
-        return;
-      }
-
-      const title = norm(currentEventData.title || currentEventId);
-      const seatMapEnabled = currentEventData.seatMapEnabled === true;
-      const seatMapImageUrl = norm(currentEventData.seatMapImage || "");
-
-      eventMeta.innerHTML = `
-        活動：<b>${esc(title)}</b><br>
-        seatMapEnabled：<span class="mono">${seatMapEnabled ? "true" : "false"}</span><br>
-        底圖：<span class="mono">${seatMapImageUrl ? "已設定" : "未設定"}</span>
-      `;
-
-      if (seatMapImageUrl) {
-        seatMapImage.src = seatMapImageUrl;
-        seatMapImage.style.display = "block";
-      } else {
-        seatMapImage.src = "";
-        seatMapImage.style.display = "none";
-      }
-
-      await loadSeats();
-    }
-
-    async function loadSeats(){
-      if (!currentEventId) return;
-
-      seatMap.clear();
-      selectedSeatId = "";
-      selectedSeatIds.clear();
-      detectedSeatIds.clear();
-      seatMsg.innerHTML = "";
-      batchMsg.innerHTML = "";
-      autoMsg.innerHTML = "";
-      genMsg.innerHTML = "";
-      detectMsg.innerHTML = "";
-
-      const snap = await db.collection("events").doc(currentEventId).collection("seats").get();
-      snap.forEach(doc => {
-        const seat = doc.data() || {};
-        const seatId = norm(seat.seatId || doc.id);
-        seatMap.set(seatId, { seatId, ...seat, _detected:false });
+        orderId: ""
       });
-
-      renderSeats();
-      refreshSelectionUi();
+      setSelectedSeat(seatId);
     }
 
-    reloadSeatsBtn.onclick = loadSeats;
-    eventSel.onchange = loadEventData;
+    // ====================================================
+    // RENDER SEATS
+    // ====================================================
+    function renderSeats(){
+      const seatMap = getSeatMap();
+      // Remove old seats from DOM
+      stage.querySelectorAll(".seat").forEach(el => el.remove());
 
-    function buildSavePayload(seat){
-      return {
-        seatId: norm(seat.seatId),
-        sectionId: norm(seat.sectionId),
-        sectionName: norm(seat.sectionName),
-        floor: norm(seat.floor),
-        row: norm(seat.row),
-        seatNumber: norm(seat.seatNumber),
-        label: norm(seat.label),
-        x: Number(seat.x || 0),
-        y: Number(seat.y || 0),
-        rotation: Number(seat.rotation || 0),
-        price: Number(seat.price || 0),
-        status: norm(seat.status || "available"),
-        enabled: seat.enabled !== false,
-        allowedRoles: Array.isArray(seat.allowedRoles) ? seat.allowedRoles : [],
-        allowedTags: Array.isArray(seat.allowedTags) ? seat.allowedTags : [],
-        allowedTicketTypes: Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes : [],
-        isWheelchair: seat.isWheelchair === true,
-        isCompanionSeat: seat.isCompanionSeat === true,
-        heldBy: "",
-        heldUntil: null,
-        orderId: norm(seat.orderId || "")
-      };
-    }
+      for (const [, seat] of seatMap) {
+        const el = document.createElement("div");
+        el.className = "seat";
+        el.dataset.seatId = seat.seatId;
 
-    async function saveCurrentSeat(){
-      if (!currentEventId) {
-        alert("請先選擇活動");
-        return;
-      }
-      if (!selectedSeatId) {
-        alert("請先選取單一座位");
-        return;
-      }
+        const sx = Number(seat.x || 0);
+        const sy = Number(seat.y || 0);
+        const rot = Number(seat.rotation || 0);
+        el.style.left = (sx - 10) + "px";
+        el.style.top = (sy - 10) + "px";
+        el.style.transform = `rotate(${rot}deg)`;
 
-      const payload = buildSeatPayloadFromEditor();
-      if (!payload.seatId) {
-        seatMsg.innerHTML = `<span class="warn">seatId 不可空白</span>`;
-        return;
-      }
+        const status = norm(seat.status || "available");
+        const isSelected = seat.seatId === selectedSeatId;
+        const isMulti = multiSelectedIds.has(seat.seatId);
+        const isDetected = detectedSeatIds.has(seat.seatId);
 
-      saveSeatBtn.disabled = true;
-      const oldText = saveSeatBtn.textContent;
-      saveSeatBtn.textContent = "儲存中…";
-      seatMsg.innerHTML = "";
+        if (isMulti) el.classList.add("multi-selected");
+        else if (isSelected) el.classList.add("selected");
+        else if (isDetected) el.classList.add("detected");
+        else if (status === "disabled" || seat.enabled === false) el.classList.add("disabled");
+        else if (status === "sold") el.classList.add("sold");
 
-      try{
-        const oldSeat = seatMap.get(selectedSeatId) || {};
-        const saveData = {
-          ...buildSavePayload({ ...oldSeat, ...payload }),
-          updatedAt: new Date(),
-          updatedByUid: currentUser ? currentUser.uid : ""
-        };
-
-        await db.collection("events")
-          .doc(currentEventId)
-          .collection("seats")
-          .doc(payload.seatId)
-          .set(saveData, { merge:true });
-
-        if (payload.seatId !== selectedSeatId && seatMap.has(selectedSeatId)) {
-          await db.collection("events")
-            .doc(currentEventId)
-            .collection("seats")
-            .doc(selectedSeatId)
-            .delete();
-
-          const wasDetected = detectedSeatIds.has(selectedSeatId);
-          seatMap.delete(selectedSeatId);
-          selectedSeatIds.delete(selectedSeatId);
-          detectedSeatIds.delete(selectedSeatId);
-
-          seatMap.set(payload.seatId, { ...saveData, _detected: wasDetected });
-          selectedSeatIds.add(payload.seatId);
-          if (wasDetected) detectedSeatIds.add(payload.seatId);
-          selectedSeatId = payload.seatId;
-        } else {
-          const wasDetected = detectedSeatIds.has(payload.seatId);
-          seatMap.set(payload.seatId, { ...saveData, _detected: wasDetected });
-          selectedSeatId = payload.seatId;
-          selectedSeatIds.add(payload.seatId);
+        // Zone color
+        if (!isSelected && !isMulti && status === "available" && !isDetected){
+          const zc = getSectionColor(norm(seat.sectionId || ""));
+          if (zc){ el.style.background = zc; el.style.borderColor = zc; }
         }
 
-        renderSeats();
-        refreshSelectionUi();
-        seatMsg.innerHTML = `<span class="ok">座位已儲存</span>`;
-      }catch(e){
-        console.error(e);
-        seatMsg.innerHTML = `<span class="warn">儲存失敗：${esc(e.message || e)}</span>`;
-      }finally{
-        saveSeatBtn.disabled = false;
-        saveSeatBtn.textContent = oldText;
-      }
-    }
+        const label = document.createElement("div");
+        label.className = "seat-label";
+        label.textContent = norm(seat.label || seat.seatId).substring(0, 5);
+        el.appendChild(label);
 
-    saveSeatBtn.onclick = saveCurrentSeat;
-
-    async function saveAllSeats(){
-      if (!currentEventId) {
-        alert("請先選擇活動");
-        return;
-      }
-
-      const seats = [...seatMap.values()];
-      if (!seats.length) {
-        alert("目前沒有座位可儲存");
-        return;
-      }
-
-      saveAllSeatsBtn.disabled = true;
-      const oldText = saveAllSeatsBtn.textContent;
-      saveAllSeatsBtn.textContent = "儲存全部中…";
-      seatMsg.innerHTML = "";
-      batchMsg.innerHTML = "";
-      genMsg.innerHTML = "";
-      autoMsg.innerHTML = "";
-      detectMsg.innerHTML = "";
-
-      try{
-        const CHUNK = 400;
-
-        for (let i = 0; i < seats.length; i += CHUNK) {
-          const chunk = seats.slice(i, i + CHUNK);
-          const batch = db.batch();
-
-          chunk.forEach(seat => {
-            const payload = {
-              ...buildSavePayload(seat),
-              updatedAt: new Date(),
-              updatedByUid: currentUser ? currentUser.uid : ""
-            };
-
-            const ref = db.collection("events")
-              .doc(currentEventId)
-              .collection("seats")
-              .doc(norm(seat.seatId));
-
-            batch.set(ref, payload, { merge:true });
-          });
-
-          await batch.commit();
-        }
-
-        // 儲存後把 detected 狀態留著沒問題，但也可以視為已確認
-        detectedSeatIds.clear();
-        [...seatMap.keys()].forEach(id => {
-          const seat = seatMap.get(id);
-          if (seat) seatMap.set(id, { ...seat, _detected:false });
+        el.addEventListener("click", () => {
+          if (currentTool === "select"){
+            // handled by mousedown
+            return;
+          }
+          if (currentTool === "add" || currentTool === "move"){
+            setSelectedSeat(seat.seatId);
+          }
+          if (currentTool === "delete"){
+            seatMap.delete(seat.seatId);
+            if (selectedSeatId === seat.seatId){ selectedSeatId = ""; updateSidePanel(); }
+            multiSelectedIds.delete(seat.seatId);
+            renderSeats();
+            updateStats();
+          }
         });
 
-        renderSeats();
-        refreshSelectionUi();
-        seatMsg.innerHTML = `<span class="ok">已儲存全部 ${seats.length} 顆座位</span>`;
-      }catch(e){
-        console.error(e);
-        seatMsg.innerHTML = `<span class="warn">儲存全部失敗：${esc(e.message || e)}</span>`;
-      }finally{
-        saveAllSeatsBtn.disabled = false;
-        saveAllSeatsBtn.textContent = oldText;
+        stage.appendChild(el);
       }
     }
 
-    saveAllSeatsBtn.onclick = saveAllSeats;
-
-    async function deleteCurrentSeat(){
-      if (!currentEventId || !selectedSeatId) return;
-      const ok = confirm(`確定要刪除座位「${selectedSeatId}」嗎？`);
-      if (!ok) return;
-
-      deleteSeatBtn.disabled = true;
-      const oldText = deleteSeatBtn.textContent;
-      deleteSeatBtn.textContent = "刪除中…";
-
-      try{
-        await db.collection("events")
-          .doc(currentEventId)
-          .collection("seats")
-          .doc(selectedSeatId)
-          .delete();
-
-        seatMap.delete(selectedSeatId);
-        selectedSeatIds.delete(selectedSeatId);
-        detectedSeatIds.delete(selectedSeatId);
-        selectedSeatId = "";
-        if (selectedSeatIds.size) {
-          selectedSeatId = [...selectedSeatIds][0];
-          showSeatEditor(seatMap.get(selectedSeatId));
-        } else {
-          resetSeatEditor();
-        }
-        renderSeats();
-        refreshSelectionUi();
-      }catch(e){
-        console.error(e);
-        alert("刪除失敗：" + (e.message || e));
-      }finally{
-        deleteSeatBtn.disabled = false;
-        deleteSeatBtn.textContent = oldText;
-      }
+    function getSectionColor(s){
+      if (!s) return "";
+      s = s.toLowerCase();
+      if (s === "vip" || s.includes("vip")) return "var(--zone-vip)";
+      if (s === "a" || s.startsWith("a")) return "var(--zone-a)";
+      if (s === "b" || s.startsWith("b")) return "var(--zone-b)";
+      if (s === "c" || s.startsWith("c")) return "var(--zone-c)";
+      if (s === "d" || s.startsWith("d")) return "var(--zone-d)";
+      return "";
     }
 
-    deleteSeatBtn.onclick = deleteCurrentSeat;
-
-    function buildBatchPatch(){
-      const patch = {};
-      const setIfNotBlank = (key, value) => {
-        if (norm(value) !== "") patch[key] = value;
-      };
-
-      setIfNotBlank("sectionId", norm(batchSectionIdInput.value));
-      setIfNotBlank("sectionName", norm(batchSectionNameInput.value));
-      setIfNotBlank("floor", norm(batchFloorInput.value));
-      if (norm(batchPriceInput.value) !== "") patch.price = Number(batchPriceInput.value);
-      if (norm(batchStatusInput.value) !== "") patch.status = norm(batchStatusInput.value);
-      if (norm(batchRotationInput.value) !== "") patch.rotation = Number(batchRotationInput.value);
-
-      if (norm(batchRolesInput.value) !== "") patch.allowedRoles = splitCsv(batchRolesInput.value);
-      if (norm(batchTagsInput.value) !== "") patch.allowedTags = splitCsv(batchTagsInput.value);
-      if (norm(batchTicketTypesInput.value) !== "") patch.allowedTicketTypes = splitCsv(batchTicketTypesInput.value);
-
-      if (batchEnabledInput.checked && !batchDisabledInput.checked) patch.enabled = true;
-      if (batchDisabledInput.checked && !batchEnabledInput.checked) patch.enabled = false;
-      if (batchWheelchairInput.checked) patch.isWheelchair = true;
-      if (batchCompanionInput.checked) patch.isCompanionSeat = true;
-
-      return patch;
+    // ====================================================
+    // SIDE PANEL (single)
+    // ====================================================
+    function setSelectedSeat(seatId){
+      selectedSeatId = seatId;
+      renderSeats();
+      updateSidePanel();
+      updateStats();
     }
 
-    applyBatchBtn.onclick = async () => {
-      if (!currentEventId) {
-        alert("請先選擇活動");
+    function updateSidePanel(){
+      const seatMap = getSeatMap();
+      const noSel = document.getElementById("noSelMsg");
+      const prop = document.getElementById("singleProp");
+      if (!selectedSeatId || !seatMap.has(selectedSeatId)){
+        noSel.style.display = "block";
+        prop.style.display = "none";
         return;
       }
-      if (!selectedSeatIds.size) {
-        alert("請先選取座位");
-        return;
-      }
+      noSel.style.display = "none";
+      prop.style.display = "block";
+      const s = seatMap.get(selectedSeatId);
+      document.getElementById("propLabel").value = norm(s.label);
+      document.getElementById("propSeatNumber").value = norm(s.seatNumber);
+      document.getElementById("propRow").value = norm(s.row);
+      document.getElementById("propPrice").value = Number(s.price || 0) || "";
+      document.getElementById("propSection").value = norm(s.sectionId);
+      document.getElementById("propStatus").value = norm(s.status || "available");
+      document.getElementById("propX").value = Number(s.x || 0);
+      document.getElementById("propY").value = Number(s.y || 0);
+      document.getElementById("propRotation").value = Number(s.rotation || 0);
+      document.getElementById("propRoles").value = (s.allowedRoles || []).join(", ");
+      document.getElementById("propTags").value = (s.allowedTags || []).join(", ");
+      document.getElementById("propTicketTypes").value = (s.allowedTicketTypes || []).join(", ");
+    }
 
-      const patch = buildBatchPatch();
-      if (!Object.keys(patch).length) {
-        batchMsg.innerHTML = `<span class="warn">沒有可套用的欄位</span>`;
-        return;
-      }
-
-      applyBatchBtn.disabled = true;
-      const oldText = applyBatchBtn.textContent;
-      applyBatchBtn.textContent = "套用中…";
-      batchMsg.innerHTML = "";
-
-      try{
-        const ids = [...selectedSeatIds];
-        for (const id of ids) {
-          const old = seatMap.get(id);
-          if (!old) continue;
-          const next = { ...old, ...patch };
-          seatMap.set(id, next);
-        }
-
-        if (selectedSeatId && seatMap.has(selectedSeatId)) {
-          showSeatEditor(seatMap.get(selectedSeatId));
-        }
-
-        renderSeats();
-        refreshSelectionUi();
-        batchMsg.innerHTML = `<span class="ok">已套用到 ${ids.length} 顆座位，記得按「儲存全部座位」</span>`;
-      }catch(e){
-        console.error(e);
-        batchMsg.innerHTML = `<span class="warn">批次套用失敗：${esc(e.message || e)}</span>`;
-      }finally{
-        applyBatchBtn.disabled = false;
-        applyBatchBtn.textContent = oldText;
-      }
+    document.getElementById("applyPropBtn").onclick = () => {
+      const seatMap = getSeatMap();
+      if (!selectedSeatId || !seatMap.has(selectedSeatId)) return;
+      const s = seatMap.get(selectedSeatId);
+      const sectionId = norm(document.getElementById("propSection").value);
+      const sectionNames = { "":"", "vip":"VIP", "a":"A 區", "b":"B 區", "c":"C 區", "d":"D 區" };
+      s.label = norm(document.getElementById("propLabel").value) || s.label;
+      s.seatNumber = norm(document.getElementById("propSeatNumber").value);
+      s.row = norm(document.getElementById("propRow").value);
+      s.price = Number(document.getElementById("propPrice").value) || 0;
+      s.sectionId = sectionId;
+      s.sectionName = sectionNames[sectionId] || sectionId;
+      s.status = norm(document.getElementById("propStatus").value) || "available";
+      s.enabled = s.status !== "disabled";
+      s.x = Number(document.getElementById("propX").value) || s.x;
+      s.y = Number(document.getElementById("propY").value) || s.y;
+      s.rotation = Number(document.getElementById("propRotation").value) || 0;
+      s.allowedRoles = document.getElementById("propRoles").value.split(",").map(v => v.trim()).filter(Boolean);
+      s.allowedTags = document.getElementById("propTags").value.split(",").map(v => v.trim()).filter(Boolean);
+      s.allowedTicketTypes = document.getElementById("propTicketTypes").value.split(",").map(v => v.trim()).filter(Boolean);
+      renderSeats();
+      updateStats();
     };
 
-    deleteBatchBtn.onclick = async () => {
-      if (!currentEventId) {
-        alert("請先選擇活動");
-        return;
-      }
-      if (!selectedSeatIds.size) {
-        alert("請先選取座位");
-        return;
-      }
-
-      const ids = [...selectedSeatIds];
-      const ok = confirm(`確定要刪除目前選取的 ${ids.length} 顆座位嗎？`);
-      if (!ok) return;
-
-      deleteBatchBtn.disabled = true;
-      const oldText = deleteBatchBtn.textContent;
-      deleteBatchBtn.textContent = "刪除中…";
-      batchMsg.innerHTML = "";
-
-      try{
-        const CHUNK = 400;
-        for (let i = 0; i < ids.length; i += CHUNK) {
-          const chunk = ids.slice(i, i + CHUNK);
-          const batch = db.batch();
-
-          chunk.forEach(id => {
-            const ref = db.collection("events")
-              .doc(currentEventId)
-              .collection("seats")
-              .doc(id);
-            batch.delete(ref);
-            seatMap.delete(id);
-            detectedSeatIds.delete(id);
-          });
-
-          await batch.commit();
-        }
-
-        selectedSeatIds.clear();
-        selectedSeatId = "";
-        resetSeatEditor();
-        renderSeats();
-        refreshSelectionUi();
-        batchMsg.innerHTML = `<span class="ok">已刪除 ${ids.length} 顆座位</span>`;
-      }catch(e){
-        console.error(e);
-        batchMsg.innerHTML = `<span class="warn">批次刪除失敗：${esc(e.message || e)}</span>`;
-      }finally{
-        deleteBatchBtn.disabled = false;
-        deleteBatchBtn.textContent = oldText;
-      }
+    document.getElementById("deleteSeatBtn").onclick = () => {
+      const seatMap = getSeatMap();
+      if (!selectedSeatId) return;
+      seatMap.delete(selectedSeatId);
+      detectedSeatIds.delete(selectedSeatId);
+      selectedSeatId = "";
+      updateSidePanel();
+      renderSeats();
+      updateStats();
     };
 
-    generateSeatsBtn.onclick = () => {
-      if (!currentEventId) {
-        alert("請先選擇活動");
-        return;
+    // ====================================================
+    // BATCH EDIT
+    // ====================================================
+    document.querySelectorAll("[data-batch-tab]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("[data-batch-tab]").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.batchTab).classList.add("active");
+      });
+    });
+
+    function updateBatchCount(){
+      const n = multiSelectedIds.size;
+      const el = document.getElementById("batchSelCount");
+      if (!n) el.textContent = "尚未框選任何座位";
+      else el.textContent = `已選取 ${n} 個座位，可批次修改`;
+    }
+
+    document.getElementById("applyBatchBtn").onclick = () => {
+      if (!multiSelectedIds.size) return;
+      const seatMap = getSeatMap();
+      const sectionId = document.getElementById("batchSection").value;
+      const status = document.getElementById("batchStatus").value;
+      const priceRaw = document.getElementById("batchPrice").value;
+      const price = priceRaw !== "" ? Number(priceRaw) : null;
+      const sectionNames = { "":"", "vip":"VIP", "a":"A 區", "b":"B 區", "c":"C 區", "d":"D 區" };
+
+      for (const id of multiSelectedIds) {
+        const s = seatMap.get(id);
+        if (!s) continue;
+        if (sectionId) { s.sectionId = sectionId; s.sectionName = sectionNames[sectionId] || sectionId; }
+        if (status) { s.status = status; s.enabled = status !== "disabled"; }
+        if (price !== null) s.price = price;
       }
+      renderSeats();
+      updateStats();
+    };
 
-      const startX = Number(genStartX.value || 0);
-      const startY = Number(genStartY.value || 0);
-      const rows = Number(genRows.value || 0);
-      const cols = Number(genCols.value || 0);
-      const gapX = Number(genGapX.value || 0);
-      const gapY = Number(genGapY.value || 0);
-      const sectionId = norm(genSectionId.value);
-      const sectionName = norm(genSectionName.value) || sectionId;
-      const floor = norm(genFloor.value) || "1F";
-      const price = Number(genPrice.value || 0);
-
-      if (rows <= 0 || cols <= 0) {
-        genMsg.innerHTML = `<span class="warn">排數與每排座位數必須大於 0</span>`;
-        return;
+    document.getElementById("deleteMultiBtn").onclick = () => {
+      if (!multiSelectedIds.size) return;
+      const seatMap = getSeatMap();
+      for (const id of multiSelectedIds) {
+        seatMap.delete(id);
+        detectedSeatIds.delete(id);
       }
+      multiSelectedIds.clear();
+      if (selectedSeatId && !seatMap.has(selectedSeatId)){ selectedSeatId = ""; updateSidePanel(); }
+      renderSeats();
+      updateStats();
+      updateBatchCount();
+    };
 
-      let created = 0;
-      const newIds = [];
+    // ====================================================
+    // GENERATE GRID
+    // ====================================================
+    document.getElementById("generateGridBtn").onclick = () => {
+      const rows = Number(document.getElementById("genRows").value) || 8;
+      const cols = Number(document.getElementById("genCols").value) || 10;
+      document.getElementById("modalGridSub").textContent = `將生成 ${rows} × ${cols} = ${rows * cols} 個座位`;
+      openModal("modalGrid");
+    };
+
+    document.getElementById("doGenBtn").onclick = () => {
+      const rows = Number(document.getElementById("genRows").value) || 8;
+      const cols = Number(document.getElementById("genCols").value) || 10;
+      document.getElementById("modalGridSub").textContent = `將生成 ${rows} × ${cols} = ${rows * cols} 個座位`;
+      openModal("modalGrid");
+    };
+
+    document.getElementById("modalGridCancel").onclick = () => closeModal("modalGrid");
+    document.getElementById("modalGridConfirm").onclick = () => {
+      closeModal("modalGrid");
+      doGenerate();
+    };
+
+    function doGenerate(){
+      const seatMap = getSeatMap();
+      const floor = getFloor();
+      const rows = Number(document.getElementById("genRows").value) || 8;
+      const cols = Number(document.getElementById("genCols").value) || 10;
+      const startX = Number(document.getElementById("genStartX").value) || 80;
+      const startY = Number(document.getElementById("genStartY").value) || 80;
+      const gapX = Number(document.getElementById("genGapX").value) || 34;
+      const gapY = Number(document.getElementById("genGapY").value) || 34;
+      const prefix = document.getElementById("genPrefix").value;
+      const sectionId = document.getElementById("genSection").value;
+      const price = Number(document.getElementById("genPrice").value) || 0;
+      const sectionNames = { "":"", "vip":"VIP", "a":"A 區", "b":"B 區", "c":"C 區", "d":"D 區" };
 
       for (let r = 0; r < rows; r++) {
-        const rowLabel = String.fromCharCode(65 + r);
+        const rowLabel = prefix === "alpha" ? String.fromCharCode(65 + r) : String(r + 1);
         for (let c = 0; c < cols; c++) {
-          const seatNum = String(c + 1).padStart(2, "0");
-          const seatId = `${sectionId || "SEC"}-${rowLabel}-${seatNum}-${Date.now()}-${r}-${c}`;
-
+          const x = startX + c * gapX;
+          const y = startY + r * gapY;
+          if (hitSeat(seatMap, x, y)) continue;
+          const seatId = "seat_" + uid8();
           seatMap.set(seatId, {
             seatId,
-            sectionId,
-            sectionName,
-            floor,
+            label: rowLabel + (c + 1),
             row: rowLabel,
-            seatNumber: seatNum,
-            label: `${rowLabel}${seatNum}`,
-            x: Math.round(startX + c * gapX),
-            y: Math.round(startY + r * gapY),
+            seatNumber: String(c + 1),
+            sectionId,
+            sectionName: sectionNames[sectionId] || sectionId,
+            floor: floor.name,
+            x, y,
             rotation: 0,
             price,
             status: "available",
@@ -2126,459 +1789,291 @@
             allowedRoles: [],
             allowedTags: [],
             allowedTicketTypes: [],
-            isWheelchair: false,
-            isCompanionSeat: false,
             heldBy: "",
             heldUntil: null,
-            orderId: "",
-            _detected: false
+            orderId: ""
           });
-
-          newIds.push(seatId);
-          created++;
         }
       }
-
-      selectedSeatIds = new Set(newIds);
-      selectedSeatId = newIds[0] || "";
-      if (selectedSeatId && seatMap.has(selectedSeatId)) {
-        showSeatEditor(seatMap.get(selectedSeatId));
-      }
-
       renderSeats();
-      refreshSelectionUi();
-      genMsg.innerHTML = `<span class="ok">已生成 ${created} 顆座位，記得按「儲存全部座位」</span>`;
-    };
-
-    autoNumberBtn.onclick = () => {
-      if (!selectedSeatIds.size) {
-        autoMsg.innerHTML = `<span class="warn">請先選取座位</span>`;
-        return;
-      }
-
-      let current = Number(autoSeatStartInput.value || 1);
-      const pad = Math.max(1, Number(autoPadInput.value || 2));
-      const seats = getSelectedSeatsArray();
-
-      seats.forEach(seat => {
-        const num = String(current).padStart(pad, "0");
-        seat.seatNumber = num;
-        seat.label = `${norm(seat.row) || ""}${num}`;
-        seatMap.set(seat.seatId, seat);
-        current++;
-      });
-
-      if (selectedSeatId && seatMap.has(selectedSeatId)) {
-        showSeatEditor(seatMap.get(selectedSeatId));
-      }
-
-      renderSeats();
-      refreshSelectionUi();
-      autoMsg.innerHTML = `<span class="ok">已重新編號 ${seats.length} 顆座位，記得按「儲存全部座位」</span>`;
-    };
-
-    function syncThresholdInputs(fromRange = true){
-      if (fromRange) {
-        detectThresholdText.value = detectThresholdInput.value;
-      } else {
-        let v = Number(detectThresholdText.value || 205);
-        v = Math.max(20, Math.min(240, v));
-        detectThresholdText.value = v;
-        detectThresholdInput.value = v;
-      }
+      updateStats();
     }
 
-    detectThresholdInput.addEventListener("input", () => syncThresholdInputs(true));
-    detectThresholdText.addEventListener("input", () => syncThresholdInputs(false));
+    // ====================================================
+    // IMAGE DETECT
+    // ====================================================
+    document.getElementById("detectBtn").onclick = () => {
+      document.getElementById("detectFileInput").click();
+    };
 
-    function setStageImage(url){
-      if (uploadedPreviewUrl && uploadedPreviewUrl.startsWith("blob:")) {
-        try { URL.revokeObjectURL(uploadedPreviewUrl); } catch(_) {}
-      }
-      uploadedPreviewUrl = url || "";
+    document.getElementById("doDetectBtn").onclick = detectFromImage;
 
-      if (url) {
-        seatMapImage.src = url;
-        seatMapImage.style.display = "block";
-      } else {
-        seatMapImage.src = "";
-        seatMapImage.style.display = "none";
-      }
-    }
-
-    imageUploadInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
+    let detectImageData = null;
+    document.getElementById("detectFileInput").addEventListener("change", e => {
+      const file = e.target.files[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
-      setStageImage(url);
-      detectMsg.innerHTML = `<span class="ok">已載入本機圖片，可開始偵測座位</span>`;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        detectImageData = ev.target.result;
+        // Also set as bg
+        const img = document.getElementById("bgImg");
+        img.src = detectImageData;
+        img.style.display = "block";
+        document.getElementById("bgImageInput").value = detectImageData.substring(0, 60) + "...";
+      };
+      reader.readAsDataURL(file);
     });
 
-    useEventImageBtn.onclick = () => {
-      const seatMapImageUrl = norm(currentEventData?.seatMapImage || "");
-      if (!seatMapImageUrl) {
-        detectMsg.innerHTML = `<span class="warn">此活動目前沒有 seatMapImage</span>`;
-        return;
-      }
-      setStageImage(seatMapImageUrl);
-      detectMsg.innerHTML = `<span class="ok">已套用活動既有底圖</span>`;
-    };
+    async function detectFromImage(){
+      if (!detectImageData) { alert("請先選擇圖片"); return; }
+      const btn = document.getElementById("doDetectBtn");
+      btn.disabled = true;
+      const old = btn.textContent;
+      btn.textContent = "偵測中…";
+      document.getElementById("detectMsg").textContent = "";
 
-    clearImageBtn.onclick = () => {
-      setStageImage("");
-      detectMsg.innerHTML = `<span class="ok">已清除目前圖片</span>`;
-    };
+      const CW = 1200, CH = 900;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const off = document.createElement("canvas");
+          off.width = CW; off.height = CH;
+          const octx = off.getContext("2d", { willReadFrequently: true });
+          octx.clearRect(0, 0, CW, CH);
+          octx.fillStyle = "#ffffff";
+          octx.fillRect(0, 0, CW, CH);
 
-    removeDetectedBtn.onclick = () => {
-      let removed = 0;
-      [...detectedSeatIds].forEach(id => {
-        if (seatMap.has(id)) {
-          seatMap.delete(id);
-          selectedSeatIds.delete(id);
-          if (selectedSeatId === id) selectedSeatId = "";
-          removed++;
-        }
-      });
-      detectedSeatIds.clear();
+          const ir = img.width / img.height;
+          const cr = CW / CH;
+          let dw, dh, dx, dy;
+          if (ir > cr){ dw = CW; dh = dw / ir; dx = 0; dy = (CH - dh) / 2; }
+          else { dh = CH; dw = dh * ir; dy = 0; dx = (CW - dw) / 2; }
+          octx.drawImage(img, dx, dy, dw, dh);
 
-      if (selectedSeatId && seatMap.has(selectedSeatId)) {
-        showSeatEditor(seatMap.get(selectedSeatId));
-      } else {
-        resetSeatEditor();
-      }
+          const imgD = octx.getImageData(0, 0, CW, CH);
+          const data = imgD.data;
+          const visited = new Uint8Array(CW * CH);
+          const thresh = Number(document.getElementById("detectThresh").value) || 205;
+          const minArea = Number(document.getElementById("detectMinArea").value) || 8;
+          const maxArea = Number(document.getElementById("detectMaxArea").value) || 400;
+          const mode = document.getElementById("detectMode").value;
 
-      renderSeats();
-      refreshSelectionUi();
-      detectMsg.innerHTML = `<span class="ok">已移除 ${removed} 顆本次偵測結果</span>`;
-    };
-
-    function loadImageElement(src){
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-      });
-    }
-
-    async function detectSeatsFromCurrentImage(){
-      const src = norm(seatMapImage.src || "");
-      if (!src) {
-        detectMsg.innerHTML = `<span class="warn">請先匯入或選擇底圖</span>`;
-        return;
-      }
-
-      detectSeatsBtn.disabled = true;
-      const oldText = detectSeatsBtn.textContent;
-      detectSeatsBtn.textContent = "偵測中…";
-      detectMsg.innerHTML = "";
-
-      try{
-        const img = await loadImageElement(src);
-
-        const stageW = 1200;
-        const stageH = 900;
-        const scaleDiv = Math.max(1, Number(detectScaleInput.value || 2));
-        const cw = Math.max(80, Math.floor(stageW / scaleDiv));
-        const ch = Math.max(60, Math.floor(stageH / scaleDiv));
-
-        const off = document.createElement("canvas");
-        off.width = cw;
-        off.height = ch;
-        const octx = off.getContext("2d", { willReadFrequently:true });
-
-        octx.clearRect(0, 0, cw, ch);
-        octx.fillStyle = "#ffffff";
-        octx.fillRect(0, 0, cw, ch);
-
-        // 依畫布比例去畫圖，跟 stage 的 contain 行為接近
-        const imgRatio = img.width / img.height;
-        const canvasRatio = cw / ch;
-        let dw, dh, dx, dy;
-        if (imgRatio > canvasRatio) {
-          dw = cw;
-          dh = dw / imgRatio;
-          dx = 0;
-          dy = (ch - dh) / 2;
-        } else {
-          dh = ch;
-          dw = dh * imgRatio;
-          dy = 0;
-          dx = (cw - dw) / 2;
-        }
-        octx.drawImage(img, dx, dy, dw, dh);
-
-        const imgData = octx.getImageData(0, 0, cw, ch);
-        const data = imgData.data;
-        const visited = new Uint8Array(cw * ch);
-
-        const threshold = Number(detectThresholdInput.value || 205);
-        const minArea = Number(detectMinAreaInput.value || 8);
-        const maxArea = Number(detectMaxAreaInput.value || 400);
-        const mode = detectModeInput.value || "dark";
-
-        function isTarget(idx){
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const a = data[idx + 3];
-          if (a < 10) return false;
-
-          const brightness = (r * 0.299) + (g * 0.587) + (b * 0.114);
-          const saturation = Math.max(r, g, b) - Math.min(r, g, b);
-
-          if (mode === "light") {
-            return brightness >= threshold;
+          function isTarget(i){
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            if (a < 10) return false;
+            const br = r * .299 + g * .587 + b * .114;
+            const sat = Math.max(r,g,b) - Math.min(r,g,b);
+            if (mode === "light") return br >= thresh;
+            return br <= thresh || (sat >= 38 && br <= thresh + 18);
           }
 
-          // dark 模式：抓深色或飽和色
-          return (brightness <= threshold) || (saturation >= 38 && brightness <= (threshold + 18));
-        }
-
-        const found = [];
-
-        for (let y = 0; y < ch; y++) {
-          for (let x = 0; x < cw; x++) {
-            const p = y * cw + x;
-            if (visited[p]) continue;
-
-            const idx = p * 4;
-            if (!isTarget(idx)) {
+          const found = [];
+          for (let y = 0; y < CH; y++) {
+            for (let x = 0; x < CW; x++) {
+              const p = y * CW + x;
+              if (visited[p]) continue;
+              const i = p * 4;
+              if (!isTarget(i)){ visited[p] = 1; continue; }
+              const queue = [p];
               visited[p] = 1;
-              continue;
-            }
-
-            const queue = [p];
-            visited[p] = 1;
-
-            let area = 0;
-            let minX = x, maxX = x, minY = y, maxY = y;
-
-            while (queue.length) {
-              const cur = queue.pop();
-              const cx = cur % cw;
-              const cy = Math.floor(cur / cw);
-              area++;
-
-              if (cx < minX) minX = cx;
-              if (cx > maxX) maxX = cx;
-              if (cy < minY) minY = cy;
-              if (cy > maxY) maxY = cy;
-
-              const neighbors = [
-                cur - 1,
-                cur + 1,
-                cur - cw,
-                cur + cw
-              ];
-
-              for (const np of neighbors) {
-                if (np < 0 || np >= cw * ch) continue;
-                const nx = np % cw;
-                const ny = Math.floor(np / cw);
-                if (Math.abs(nx - cx) + Math.abs(ny - cy) !== 1) continue;
-                if (visited[np]) continue;
-
-                const nidx = np * 4;
-                if (!isTarget(nidx)) {
-                  visited[np] = 1;
-                  continue;
+              let area = 0, minX = x, maxX = x, minY = y, maxY = y;
+              while (queue.length) {
+                const cur = queue.pop();
+                const cx = cur % CW, cy = Math.floor(cur / CW);
+                area++;
+                if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+                if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+                for (const np of [cur-1,cur+1,cur-CW,cur+CW]) {
+                  if (np < 0 || np >= CW*CH) continue;
+                  if (visited[np]) continue;
+                  if (!isTarget(np*4)){ visited[np]=1; continue; }
+                  visited[np] = 1; queue.push(np);
                 }
-
-                visited[np] = 1;
-                queue.push(np);
               }
+              const bw = maxX - minX + 1, bh = maxY - minY + 1;
+              if (area < minArea || area > maxArea) continue;
+              if (bw < 2 || bh < 2 || bw > 60 || bh > 60) continue;
+              const centerX = Math.round((minX + maxX) / 2);
+              const centerY = Math.round((minY + maxY) / 2);
+              if (centerX < 8 || centerY < 8 || centerX > 1192 || centerY > 892) continue;
+              found.push({ x: centerX, y: centerY });
             }
+          }
 
-            const bw = maxX - minX + 1;
-            const bh = maxY - minY + 1;
+          const deduped = [];
+          found.sort((a,b) => a.y - b.y || a.x - b.x);
+          for (const item of found) {
+            const near = deduped.some(d => Math.hypot(d.x - item.x, d.y - item.y) < 10);
+            if (!near) deduped.push(item);
+          }
 
-            if (area < minArea || area > maxArea) continue;
-            if (bw < 2 || bh < 2) continue;
-            if (bw > 60 || bh > 60) continue;
+          // Remove old detected
+          const seatMap = getSeatMap();
+          for (const id of detectedSeatIds) {
+            seatMap.delete(id);
+            if (selectedSeatId === id){ selectedSeatId = ""; updateSidePanel(); }
+          }
+          detectedSeatIds.clear();
 
-            const centerX = Math.round(((minX + maxX) / 2) * scaleDiv);
-            const centerY = Math.round(((minY + maxY) / 2) * scaleDiv);
+          const floorName = getFloor().name;
+          deduped.forEach((item, idx) => {
+            const seatId = "det_" + Date.now() + "_" + idx;
+            seatMap.set(seatId, {
+              seatId,
+              label: `候選${idx+1}`,
+              row: "", seatNumber: "",
+              sectionId: "", sectionName: "",
+              floor: floorName,
+              x: item.x, y: item.y,
+              rotation: 0, price: 0,
+              status: "available", enabled: true,
+              allowedRoles: [], allowedTags: [], allowedTicketTypes: [],
+              heldBy: "", heldUntil: null, orderId: "",
+              _detected: true
+            });
+            detectedSeatIds.add(seatId);
+          });
 
-            // 避免抓到太靠邊框
-            if (centerX < 8 || centerY < 8 || centerX > 1192 || centerY > 892) continue;
+          renderSeats();
+          updateStats();
+          const msgEl = document.getElementById("detectMsg");
+          msgEl.style.color = "var(--green)";
+          msgEl.textContent = `已偵測 ${deduped.length} 顆候選座位。確認後請按「儲存全部座位」。`;
+        } catch(e) {
+          const msgEl = document.getElementById("detectMsg");
+          msgEl.style.color = "var(--red)";
+          msgEl.textContent = "偵測失敗：" + (e.message || e);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = old;
+        }
+      };
+      img.src = detectImageData;
+    }
 
-            found.push({ x:centerX, y:centerY, area, bw, bh });
+    // ====================================================
+    // SAVE TO FIRESTORE
+    // ====================================================
+    document.getElementById("saveSaveBtn").onclick = saveAllSeats;
+
+    async function saveAllSeats(){
+      const eventId = norm(document.getElementById("eventIdInput").value);
+      if (!eventId){ alert("請輸入活動 ID"); return; }
+
+      const btn = document.getElementById("saveSaveBtn");
+      btn.disabled = true;
+      const old = btn.textContent;
+      btn.textContent = "儲存中…";
+
+      try {
+        const batch = db.batch();
+        let count = 0;
+
+        for (const floor of floors) {
+          for (const [, seat] of floor.seatMap) {
+            const ref = db.collection("events").doc(eventId).collection("seats").doc(seat.seatId);
+            const payload = {
+              seatId: seat.seatId,
+              label: norm(seat.label),
+              row: norm(seat.row),
+              seatNumber: norm(seat.seatNumber),
+              sectionId: norm(seat.sectionId),
+              sectionName: norm(seat.sectionName),
+              floor: norm(seat.floor || floor.name),
+              x: Number(seat.x || 0),
+              y: Number(seat.y || 0),
+              rotation: Number(seat.rotation || 0),
+              price: Number(seat.price || 0),
+              status: norm(seat.status || "available"),
+              enabled: seat.enabled !== false,
+              allowedRoles: Array.isArray(seat.allowedRoles) ? seat.allowedRoles : [],
+              allowedTags: Array.isArray(seat.allowedTags) ? seat.allowedTags : [],
+              allowedTicketTypes: Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes : [],
+              heldBy: norm(seat.heldBy || ""),
+              heldUntil: seat.heldUntil || null,
+              orderId: norm(seat.orderId || ""),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            batch.set(ref, payload, { merge: true });
+            count++;
           }
         }
 
-        // 去重：距離太近的只留一顆
-        const deduped = [];
-        found.sort((a, b) => a.y - b.y || a.x - b.x);
+        await batch.commit();
 
-        for (const item of found) {
-          const tooNear = deduped.some(d => {
-            const dx = d.x - item.x;
-            const dy = d.y - item.y;
-            return Math.sqrt(dx * dx + dy * dy) < 10;
-          });
-          if (!tooNear) deduped.push(item);
-        }
-
-        // 先刪本次舊偵測
-        [...detectedSeatIds].forEach(id => {
-          seatMap.delete(id);
-          selectedSeatIds.delete(id);
-          if (selectedSeatId === id) selectedSeatId = "";
-        });
-        detectedSeatIds.clear();
-
-        const createdIds = [];
-        deduped.forEach((item, idx) => {
-          const seatId = `det_${Date.now()}_${idx + 1}`;
-          seatMap.set(seatId, {
-            seatId,
-            sectionId: "",
-            sectionName: "",
-            floor: "1F",
-            row: "",
-            seatNumber: "",
-            label: `候選 ${idx + 1}`,
-            x: item.x,
-            y: item.y,
-            rotation: 0,
-            price: 0,
-            status: "available",
-            enabled: true,
-            allowedRoles: [],
-            allowedTags: [],
-            allowedTicketTypes: [],
-            isWheelchair: false,
-            isCompanionSeat: false,
-            heldBy: "",
-            heldUntil: null,
-            orderId: "",
-            _detected: true
-          });
-          detectedSeatIds.add(seatId);
-          createdIds.push(seatId);
-        });
-
-        selectedSeatIds = new Set(createdIds);
-        selectedSeatId = createdIds[0] || "";
-
-        if (selectedSeatId && seatMap.has(selectedSeatId)) {
-          showSeatEditor(seatMap.get(selectedSeatId));
-        } else {
-          resetSeatEditor();
-        }
-
-        renderSeats();
-        refreshSelectionUi();
-        detectMsg.innerHTML = `<span class="ok">已偵測 ${deduped.length} 顆候選座位。可刪掉抓錯的，再按「儲存全部座位」。</span>`;
-      } catch (e) {
-        console.error(e);
-        detectMsg.innerHTML = `<span class="warn">圖片偵測失敗：${esc(e.message || e)}</span>`;
+        document.getElementById("modalSaveSub").textContent = `活動：${eventId}`;
+        document.getElementById("modalSaveMsg").textContent = `已成功儲存 ${count} 個座位至 Firestore。`;
+        openModal("modalSave");
+      } catch(e) {
+        alert("儲存失敗：" + (e.message || e));
       } finally {
-        detectSeatsBtn.disabled = false;
-        detectSeatsBtn.textContent = oldText;
+        btn.disabled = false;
+        btn.textContent = old;
       }
     }
 
-    detectSeatsBtn.onclick = detectSeatsFromCurrentImage;
+    document.getElementById("modalSaveOk").onclick = () => closeModal("modalSave");
 
-    document.querySelectorAll("[data-tab]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll("[data-tab]").forEach(x => x.classList.remove("active"));
-        document.querySelectorAll(".tab-pane").forEach(x => {
-          if (x.id === "tab-image" || x.id === "tab-manual") x.classList.remove("active");
-        });
-        btn.classList.add("active");
-        document.getElementById(tab).classList.add("active");
-      });
-    });
+    // ====================================================
+    // CLEAR
+    // ====================================================
+    document.getElementById("clearAllBtn").onclick = () => {
+      if (!confirm(`確定清空「${getFloor().name}」所有座位？`)) return;
+      const seatMap = getSeatMap();
+      seatMap.clear();
+      detectedSeatIds.clear();
+      selectedSeatId = "";
+      multiSelectedIds.clear();
+      updateSidePanel();
+      renderSeats();
+      updateStats();
+    };
 
-    document.querySelectorAll("[data-right-tab]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const tab = btn.dataset.rightTab;
-        document.querySelectorAll("[data-right-tab]").forEach(x => x.classList.remove("active"));
-        ["right-single","right-batch","right-generate"].forEach(id => {
-          document.getElementById(id).classList.remove("active");
-        });
-        btn.classList.add("active");
-        document.getElementById(tab).classList.add("active");
-      });
-    });
+    // ====================================================
+    // ZOOM
+    // ====================================================
+    document.getElementById("zoomInBtn").onclick = () => { zoomScale = Math.min(3, Math.round((zoomScale + .1)*10)/10); applyZoom(); };
+    document.getElementById("zoomOutBtn").onclick = () => { zoomScale = Math.max(.3, Math.round((zoomScale - .1)*10)/10); applyZoom(); };
+    document.getElementById("zoomFitBtn").onclick = () => { zoomScale = 1; applyZoom(); };
 
-    firebase.auth().onAuthStateChanged(async user => {
-      currentUser = user || null;
+    function applyZoom(){
+      const s = document.getElementById("stage");
+      s.style.transform = `scale(${zoomScale})`;
+      s.parentElement.style.minWidth = (1200 * zoomScale + 56) + "px";
+      s.parentElement.style.minHeight = Math.max(740, 900 * zoomScale + 80) + "px";
+      document.getElementById("zoomText").textContent = Math.round(zoomScale * 100) + "%";
+    }
 
-      if (!user) {
-        showGate(`
-          <h1>座位編輯器</h1>
-          <div class="sub">請先登入後台帳號。</div>
-          <div style="margin-top:16px;">
-            <button class="btn btn-primary" id="loginBtn">使用 Email 登入</button>
-          </div>
-        `);
-
-        document.getElementById("loginBtn").onclick = async () => {
-          const email = window.prompt("請輸入 Email");
-          if (!email) return;
-          const password = window.prompt("請輸入密碼");
-          if (!password) return;
-          await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
-        };
-        return;
+    // ====================================================
+    // STATS
+    // ====================================================
+    function updateStats(){
+      let total = 0, avail = 0, sold = 0;
+      const seatMap = getSeatMap();
+      for (const [, s] of seatMap) {
+        total++;
+        if (s.status === "sold") sold++;
+        else if (s.enabled !== false && s.status !== "disabled") avail++;
       }
+      document.getElementById("statTotal").textContent = "總計 " + total;
+      document.getElementById("statAvail").textContent = "可用 " + avail;
+      document.getElementById("statSold").textContent = "已售 " + sold;
+      document.getElementById("statSel").textContent = "已選 " + (selectedSeatId ? 1 : 0);
+      document.getElementById("statMulti").textContent = "多選 " + multiSelectedIds.size;
+    }
 
-      try{
-        const r = await loadMyRole(user.uid);
-        if (!r.ok) {
-          showGate(`
-            <h1>無法進入</h1>
-            <div class="sub warn">${esc(r.reason)}</div>
-            <div style="margin-top:16px;">
-              <button class="btn" id="outBtn">登出</button>
-            </div>
-          `);
-          document.getElementById("outBtn").onclick = doLogout;
-          return;
-        }
-
-        currentRole = r.role;
-        const allowed = ["platform_super","platform_admin","org_super","org_admin"];
-        if (!allowed.includes(currentRole)) {
-          showGate(`
-            <h1>權限不足</h1>
-            <div class="sub warn">你的角色無法使用座位編輯器。</div>
-            <div style="margin-top:16px;">
-              <button class="btn" id="outBtn">登出</button>
-            </div>
-          `);
-          document.getElementById("outBtn").onclick = doLogout;
-          return;
-        }
-
-        gate.style.display = "none";
-        app.style.display = "block";
-
-        who.textContent = user.email || user.uid;
-        roleText.textContent = currentRole || "-";
-
-        applyZoom();
-        refreshSelectionUi();
-        await loadEvents();
-
-      }catch(e){
-        console.error(e);
-        showGate(`
-          <h1>發生錯誤</h1>
-          <div class="sub warn">無法讀取資料，請查看 Console。</div>
-          <div style="margin-top:16px;">
-            <button class="btn" id="outBtn">登出</button>
-          </div>
-        `);
-        document.getElementById("outBtn").onclick = doLogout;
-      }
+    // ====================================================
+    // MODAL HELPERS
+    // ====================================================
+    function openModal(id){ document.getElementById(id).classList.add("show"); }
+    function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+    document.querySelectorAll(".modal-back").forEach(el => {
+      el.addEventListener("click", e => { if (e.target === el) el.classList.remove("show"); });
     });
+
+    // Init
+    applyZoom();
+    renderFloorTabs();
   </script>
 </body>
 </html>
