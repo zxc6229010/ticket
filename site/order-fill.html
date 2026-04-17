@@ -678,783 +678,784 @@
   </div>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-    authDomain: "concert-1ff7e.firebaseapp.com",
-    projectId: "concert-1ff7e",
-    storageBucket: "concert-1ff7e.firebasestorage.app",
-    messagingSenderId: "704757384914",
-    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-  };
-
-  const appFirebase = initializeApp(firebaseConfig);
-  const auth = getAuth(appFirebase);
-  const db = getFirestore(appFirebase);
-
-  const app = document.getElementById("app");
-  const accountBtn = document.getElementById("accountBtn");
-  const backLink = document.getElementById("backLink");
-
-  const params = new URLSearchParams(location.search);
-  const eventId = String(params.get("id") || "").trim();
-  const orderId = String(params.get("orderId") || "").trim();
-
-  let currentUser = null;
-  let currentOrder = null;
-  let holderState = [];
-  let checkingMap = {};
-  let userDocCache = new Map();
-
-  function esc(value){
-    return String(value ?? "").replace(/[&<>"']/g, m => ({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[m]));
-  }
-
-  function norm(value){
-    return String(value ?? "").trim();
-  }
-
-  function lower(value){
-    return norm(value).toLowerCase();
-  }
-
-  function toDate(input){
-    if (!input) return null;
-    if (typeof input?.toDate === "function") return input.toDate();
-    const d = new Date(input);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-
-  function formatDateTime(input){
-    const d = toDate(input);
-    if (!d) return "-";
-    return d.toLocaleString("zh-Hant", {
-      hour12:false,
-      year:"numeric",
-      month:"2-digit",
-      day:"2-digit",
-      hour:"2-digit",
-      minute:"2-digit"
-    });
-  }
-
-  function formatPrice(v){
-    const n = Number(v || 0);
-    if (!n) return "免費";
-    return "NT$ " + n.toLocaleString("zh-Hant");
-  }
-
-  function updateAccountLinks(user){
-    if (user) {
-      accountBtn.href = "member.html";
-      accountBtn.title = user.email || "會員中心";
-      accountBtn.setAttribute("aria-label", "會員中心");
-    } else {
-      accountBtn.href = buildLoginRedirectUrl();
-      accountBtn.title = "登入 / 會員中心";
-      accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-    }
-  }
-
-  function buildLoginRedirectUrl(){
-    const url = new URL("login.html", location.href);
-    url.searchParams.set("redirect", location.pathname + location.search);
-    return url.pathname + url.search;
-  }
-
-  function goLogin(){
-    location.href = buildLoginRedirectUrl();
-  }
-
-  function getOrderRef(){
-    return doc(db, "events", eventId, "orders", orderId);
-  }
-
-  async function getOrder(){
-    const ref = getOrderRef();
-    const snap = await getDoc(ref);
-    return snap.exists() ? { id: snap.id, ref, ...(snap.data() || {}) } : null;
-  }
-
-  async function getUserDocByEmail(email){
-    const key = lower(email);
-    if (!key) return null;
-    if (userDocCache.has(key)) return userDocCache.get(key);
-
-    let userResult = null;
-
-    try {
-      const indexSnap = await getDoc(doc(db, "email_index", key));
-      if (indexSnap.exists()) {
-        const indexData = indexSnap.data() || {};
-        const uid = norm(indexData.uid || "");
-        if (uid) {
-          const userSnap = await getDoc(doc(db, "users", uid));
-          if (userSnap.exists()) {
-            userResult = { uid, ...(userSnap.data() || {}) };
-          }
-        }
-      }
-    } catch (err) {
-      console.error("email_index lookup failed", err);
-    }
-
-    userDocCache.set(key, userResult);
-    return userResult;
-  }
-
-  function flattenItems(order){
-    const summary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
-    const existingAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
-    const flat = [];
-
-    let pointer = 0;
-    const buyerEmail = lower(order.buyerEmail || currentUser?.email || "");
-    const buyerUid = norm(order.buyerUid || order.uid || currentUser?.uid || "");
-
-    summary.forEach((item, groupIndex) => {
-      const qty = Number(item.quantity || 0);
-      for (let i = 0; i < qty; i++) {
-        const existing = existingAssignments[pointer] || {};
-        const isBuyerTicket = existing.isBuyerTicket === true || pointer === 0;
-
-        flat.push({
-          holderIndex: pointer,
-          groupIndex,
-          ticketTypeId: norm(item.ticketTypeId || existing.ticketTypeId || ""),
-          ticketTypeName: norm(item.ticketTypeName || existing.ticketTypeName || `票種 ${groupIndex + 1}`),
-          price: Number(item.unitPrice || item.price || existing.price || 0),
-
-          isBuyerTicket,
-
-          email: isBuyerTicket
-            ? buyerEmail
-            : norm(existing.email || ""),
-
-          name: norm(existing.name || ""),
-          uid: isBuyerTicket
-            ? buyerUid
-            : norm(existing.uid || ""),
-
-          verifiedSchoolId: norm(existing.verifiedSchoolId || ""),
-          verifiedSchoolName: norm(existing.verifiedSchoolName || ""),
-          verifyMethod: norm(existing.verifyMethod || ""),
-          status: norm(existing.status || ""),
-          message: norm(existing.message || "")
-        });
-
-        pointer += 1;
-      }
-    });
-
-    // 沒資料時補空陣列保護
-    return flat.map((item, index) => {
-      if (index === 0) {
-        return {
-          ...item,
-          isBuyerTicket: true,
-          email: buyerEmail,
-          uid: buyerUid
-        };
-      }
-      return item;
-    });
-  }
-
-  function isOrderExpired(order){
-    const expiresAt = toDate(order.expiresAt);
-    if (!expiresAt) return false;
-    return Date.now() > expiresAt.getTime();
-  }
-
-  function isOrderLocked(order){
-    const status = lower(order.status);
-    if (["paid","completed","cancelled","void","refunded"].includes(status)) return true;
-    if (isOrderExpired(order)) return true;
-    return false;
-  }
-
-  function holderStatusMeta(item){
-    if (checkingMap[item.holderIndex]) {
-      return { text: "檢查中", className: "status-blue" };
-    }
-
-    if (item.status === "valid") {
-      return { text: "已通過", className: "status-ok" };
-    }
-
-    if (!item.email) {
-      return { text: "尚未填寫", className: "status-gray" };
-    }
-
-    return { text: "未通過", className: "status-warn" };
-  }
-
-  async function validateOneHolder(index){
-    const item = holderState[index];
-    if (!item) return;
-
-    const email = lower(item.email);
-    const name = norm(item.name);
-
-    item.uid = item.isBuyerTicket
-      ? norm(currentOrder?.buyerUid || currentOrder?.uid || currentUser?.uid || "")
-      : "";
-
-    item.verifiedSchoolId = "";
-    item.verifiedSchoolName = "";
-    item.verifyMethod = "";
-
-    if (!email) {
-      item.status = "";
-      item.message = item.isBuyerTicket
-        ? "主購人票已自動帶入主購者帳號。"
-        : "請先填寫持票人 Email。";
-      renderPage();
-      return;
-    }
-
-    checkingMap[index] = true;
-    renderPage();
-
-    try {
-      const user = await getUserDocByEmail(email);
-
-      if (!user) {
-        item.status = "invalid";
-        item.message = "查無此會員帳號，對方必須先完成註冊。";
-        return;
-      }
-
-      const verifiedSchoolId = norm(user.verifiedSchoolId || "");
-      const verifiedSchoolName = norm(user.verifiedSchoolName || "");
-      const verifyMethod = norm(user.verifyMethod || "");
-
-      if (!verifiedSchoolId) {
-        item.uid = norm(user.uid || "");
-        item.status = "invalid";
-        item.message = "此會員尚未完成校園驗證。";
-        return;
-      }
-
-      item.uid = norm(user.uid || "");
-      item.verifiedSchoolId = verifiedSchoolId;
-      item.verifiedSchoolName = verifiedSchoolName;
-      item.verifyMethod = verifyMethod;
-      item.status = "valid";
-      item.message = name
-        ? "資料檢查通過。"
-        : "帳號與資格已通過，建議補上持票人姓名。";
-    } catch (err) {
-      console.error(err);
-      item.status = "invalid";
-      item.message = "檢查失敗，請稍後再試。";
-    } finally {
-      delete checkingMap[index];
-      renderPage();
-    }
-  }
-
-  async function validateAllHolders(){
-    for (let i = 0; i < holderState.length; i++) {
-      await validateOneHolder(i);
-    }
-  }
-
-  function allHoldersReady(){
-    if (!holderState.length) return false;
-    return holderState.every(item => {
-      if (item.isBuyerTicket) {
-        return lower(item.email) && item.status === "valid";
-      }
-      return lower(item.email) && item.status === "valid";
-    });
-  }
-
-  function buildAssignmentsPayload(){
-    return holderState.map(item => ({
-      holderIndex: item.holderIndex,
-      ticketTypeId: item.ticketTypeId,
-      ticketTypeName: item.ticketTypeName,
-      price: Number(item.price || 0),
-
-      isBuyerTicket: item.isBuyerTicket === true,
-
-      email: lower(item.email),
-      name: norm(item.name),
-      uid: norm(item.uid),
-
-      verifiedSchoolId: norm(item.verifiedSchoolId),
-      verifiedSchoolName: norm(item.verifiedSchoolName),
-      verifyMethod: norm(item.verifyMethod),
-
-      status: item.status === "valid" ? "valid" : "invalid",
-      message: norm(item.message)
-    }));
-  }
-
-  function buildParticipantEmails(){
-    const emails = holderState
-      .map(item => lower(item.email))
-      .filter(Boolean);
-
-    return [...new Set(emails)];
-  }
-
-  function buildParticipantUids(){
-    const uids = holderState
-      .map(item => norm(item.uid))
-      .filter(Boolean);
-
-    return [...new Set(uids)];
-  }
-
-  function buildSharedOrderRefs(){
-    const refs = holderState
-      .map(item => norm(item.uid))
-      .filter(Boolean)
-      .map(uid => ({
-        uid,
-        eventId,
-        orderId
-      }));
-
-    const seen = new Set();
-    return refs.filter(ref => {
-      const key = `${ref.uid}__${ref.eventId}__${ref.orderId}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-  }
-
-  function buildTicketId(order, assignment){
-    const holderKey = assignment.uid || lower(assignment.email) || `holder_${assignment.holderIndex}`;
-    return `${order.id}_${assignment.holderIndex}_${holderKey}`.replace(/[^\w\-@.]/g, "_");
-  }
-
-  async function createTicketsForOrder(order, assignments){
-    const tasks = assignments.map(async assignment => {
-      const ticketId = buildTicketId(order, assignment);
-      const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
-      const ticketSnap = await getDoc(ticketRef);
-
-      if (ticketSnap.exists()) return;
-
-      await setDoc(ticketRef, {
-        eventId,
-        eventTitle: norm(order.eventTitle || ""),
-        orderId: order.id,
-
-        uid: norm(assignment.uid),
-        email: lower(assignment.email),
-        holderEmail: lower(assignment.email),
-        holderName: norm(assignment.name),
-
-        isBuyerTicket: assignment.isBuyerTicket === true,
-
-        ticketTypeId: norm(assignment.ticketTypeId),
-        ticketTypeName: norm(assignment.ticketTypeName),
-        ticketPrice: Number(assignment.price || 0),
-
-        seatLabel: "",
-        sectionId: "",
-        qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
-
-        status: "valid",
-        checkedIn: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-    });
-
-    await Promise.all(tasks);
-  }
-
-  async function saveAssignments(asFinalSubmit = false){
-    if (!currentOrder?.ref) return;
-
-    if (isOrderLocked(currentOrder)) {
-      alert("此訂單目前不可修改。");
-      return;
-    }
-
-    const assignments = buildAssignmentsPayload();
-    const participantEmails = buildParticipantEmails();
-    const participantUids = buildParticipantUids();
-    const sharedOrderRefs = buildSharedOrderRefs();
-    const ready = allHoldersReady();
-
-    if (asFinalSubmit && !ready) {
-      alert("尚有持票人資料未完成或未通過驗證。");
-      return;
-    }
-
-    const payload = {
-      holderAssignments: assignments,
-      participantEmails,
-      participantUids,
-      sharedOrderRefs,
-      updatedAt: serverTimestamp()
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
     };
 
-    if (asFinalSubmit) {
-      payload.status = "ready_for_checkout";
-      payload.fillStatus = "completed";
-      payload.holderInfoCompletedAt = serverTimestamp();
+    const appFirebase = initializeApp(firebaseConfig);
+    const auth = getAuth(appFirebase);
+    const db = getFirestore(appFirebase);
+
+    const app = document.getElementById("app");
+    const accountBtn = document.getElementById("accountBtn");
+    const backLink = document.getElementById("backLink");
+
+    const params = new URLSearchParams(location.search);
+    const eventId = String(params.get("id") || "").trim();
+    const orderId = String(params.get("orderId") || "").trim();
+
+    let currentUser = null;
+    let currentOrder = null;
+    let holderState = [];
+    let checkingMap = {};
+    let userDocCache = new Map();
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
     }
 
-    await updateDoc(currentOrder.ref, payload);
-
-    if (asFinalSubmit) {
-      await createTicketsForOrder(currentOrder, assignments);
+    function norm(value){
+      return String(value ?? "").trim();
     }
 
-    currentOrder = await getOrder();
-    holderState = flattenItems(currentOrder);
-    renderPage();
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
 
-    alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
-  }
+    function toDate(input){
+      if (!input) return null;
+      if (typeof input?.toDate === "function") return input.toDate();
+      const d = new Date(input);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
 
-  function renderHolderCard(item){
-    const meta = holderStatusMeta(item);
-    const locked = isOrderLocked(currentOrder);
-    const buyerLocked = item.isBuyerTicket === true;
+    function formatDateTime(input){
+      const d = toDate(input);
+      if (!d) return "-";
+      return d.toLocaleString("zh-Hant", {
+        hour12:false,
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+      });
+    }
 
-    return `
-      <div class="holder-card">
-        <div class="holder-head">
-          <div>
-            <h3 class="holder-title">
-              第 ${item.holderIndex + 1} 張票
-              ${buyerLocked ? `<span class="pill" style="margin-left:8px;">主購人票</span>` : ``}
-            </h3>
-            <div class="holder-sub">
-              票種：${esc(item.ticketTypeName)}<br>
-              票價：${esc(formatPrice(item.price))}
-            </div>
-          </div>
+    function formatPrice(v){
+      const n = Number(v || 0);
+      if (!n) return "免費";
+      return "NT$ " + n.toLocaleString("zh-Hant");
+    }
 
-          <span class="status ${meta.className}">${esc(meta.text)}</span>
-        </div>
+    function getOrderStatusText(status){
+      const s = lower(status);
 
-        <div class="holder-body">
-          <div class="grid">
-            <div class="field full">
-              <label class="label" for="email_${item.holderIndex}">持票人 Email</label>
-              <input
-                id="email_${item.holderIndex}"
-                class="input"
-                type="email"
-                value="${esc(item.email)}"
-                placeholder="請輸入持票人會員 Email"
-                ${(locked || buyerLocked) ? "disabled" : ""}
-              />
-              <div class="hint">
-                ${
-                  buyerLocked
-                    ? "這一張為主購人票，已自動綁定主購者帳號，不可改成其他人。"
-                    : "此 Email 必須已註冊會員帳號，且已完成校園驗證。"
-                }
+      if (s === "pending_holder_info") return "待填持票人資料";
+      if (s === "ready_for_checkout") return "可進入下一步";
+      if (s === "registered") return "已建立";
+      if (s === "paid") return "已付款";
+      if (s === "completed") return "已完成";
+      if (s === "pending") return "待處理";
+      if (s === "processing") return "處理中";
+      if (s === "cancelled") return "已取消";
+      if (s === "void") return "已作廢";
+      if (s === "refunded") return "已退款";
+      if (s === "expired") return "已逾期";
+
+      return status || "-";
+    }
+
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = buildLoginRedirectUrl();
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function buildLoginRedirectUrl(){
+      const url = new URL("login.html", location.href);
+      url.searchParams.set("redirect", location.pathname + location.search);
+      return url.pathname + url.search;
+    }
+
+    function goLogin(){
+      location.href = buildLoginRedirectUrl();
+    }
+
+    function getOrderRef(){
+      return doc(db, "events", eventId, "orders", orderId);
+    }
+
+    async function getOrder(){
+      const ref = getOrderRef();
+      const snap = await getDoc(ref);
+      return snap.exists() ? { id: snap.id, ref, ...(snap.data() || {}) } : null;
+    }
+
+    async function getUserDocByEmail(email){
+      const key = lower(email);
+      if (!key) return null;
+      if (userDocCache.has(key)) return userDocCache.get(key);
+
+      let userResult = null;
+
+      try {
+        const indexSnap = await getDoc(doc(db, "email_index", key));
+        if (indexSnap.exists()) {
+          const indexData = indexSnap.data() || {};
+          const uid = norm(indexData.uid || "");
+          if (uid) {
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if (userSnap.exists()) {
+              userResult = { uid, ...(userSnap.data() || {}) };
+            }
+          }
+        }
+      } catch (err) {
+        console.error("email_index lookup failed", err);
+      }
+
+      userDocCache.set(key, userResult);
+      return userResult;
+    }
+
+    function flattenItems(order){
+      const summary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
+      const existingAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
+      const flat = [];
+
+      let pointer = 0;
+      const buyerEmail = lower(order.buyerEmail || currentUser?.email || "");
+      const buyerUid = norm(order.buyerUid || order.uid || currentUser?.uid || "");
+
+      summary.forEach((item, groupIndex) => {
+        const qty = Number(item.quantity || 0);
+        for (let i = 0; i < qty; i++) {
+          const existing = existingAssignments[pointer] || {};
+          const isBuyerTicket = existing.isBuyerTicket === true || pointer === 0;
+
+          flat.push({
+            holderIndex: pointer,
+            groupIndex,
+            ticketTypeId: norm(item.ticketTypeId || existing.ticketTypeId || ""),
+            ticketTypeName: norm(item.ticketTypeName || existing.ticketTypeName || `票種 ${groupIndex + 1}`),
+            price: Number(item.unitPrice || item.price || existing.price || 0),
+
+            isBuyerTicket,
+
+            email: isBuyerTicket ? buyerEmail : norm(existing.email || ""),
+            name: norm(existing.name || ""),
+            uid: isBuyerTicket ? buyerUid : norm(existing.uid || ""),
+
+            verifiedSchoolId: norm(existing.verifiedSchoolId || ""),
+            verifiedSchoolName: norm(existing.verifiedSchoolName || ""),
+            verifyMethod: norm(existing.verifyMethod || ""),
+            status: norm(existing.status || ""),
+            message: norm(existing.message || "")
+          });
+
+          pointer += 1;
+        }
+      });
+
+      return flat.map((item, index) => {
+        if (index === 0) {
+          return {
+            ...item,
+            isBuyerTicket: true,
+            email: buyerEmail,
+            uid: buyerUid
+          };
+        }
+        return item;
+      });
+    }
+
+    function isOrderExpired(order){
+      const expiresAt = toDate(order.expiresAt);
+      if (!expiresAt) return false;
+      return Date.now() > expiresAt.getTime();
+    }
+
+    function isOrderLocked(order){
+      const status = lower(order.status);
+      if (["paid","completed","cancelled","void","refunded"].includes(status)) return true;
+      if (isOrderExpired(order)) return true;
+      return false;
+    }
+
+    function holderStatusMeta(item){
+      if (checkingMap[item.holderIndex]) {
+        return { text: "檢查中", className: "status-blue" };
+      }
+
+      if (item.status === "valid") {
+        return { text: "已通過", className: "status-ok" };
+      }
+
+      if (!item.email) {
+        return { text: "尚未填寫", className: "status-gray" };
+      }
+
+      return { text: "未通過", className: "status-warn" };
+    }
+
+    async function validateOneHolder(index){
+      const item = holderState[index];
+      if (!item) return;
+
+      const email = lower(item.email);
+      const name = norm(item.name);
+
+      item.uid = item.isBuyerTicket
+        ? norm(currentOrder?.buyerUid || currentOrder?.uid || currentUser?.uid || "")
+        : "";
+
+      item.verifiedSchoolId = "";
+      item.verifiedSchoolName = "";
+      item.verifyMethod = "";
+
+      if (!email) {
+        item.status = "";
+        item.message = item.isBuyerTicket
+          ? "主購人票已自動帶入主購者帳號。"
+          : "請先填寫持票人 Email。";
+        renderPage();
+        return;
+      }
+
+      checkingMap[index] = true;
+      renderPage();
+
+      try {
+        const user = await getUserDocByEmail(email);
+
+        if (!user) {
+          item.status = "invalid";
+          item.message = "查無此會員帳號，對方必須先完成註冊。";
+          return;
+        }
+
+        const verifiedSchoolId = norm(user.verifiedSchoolId || "");
+        const verifiedSchoolName = norm(user.verifiedSchoolName || "");
+        const verifyMethod = norm(user.verifyMethod || "");
+
+        if (!verifiedSchoolId) {
+          item.uid = norm(user.uid || "");
+          item.status = "invalid";
+          item.message = "此會員尚未完成校園驗證。";
+          return;
+        }
+
+        item.uid = norm(user.uid || "");
+        item.verifiedSchoolId = verifiedSchoolId;
+        item.verifiedSchoolName = verifiedSchoolName;
+        item.verifyMethod = verifyMethod;
+        item.status = "valid";
+        item.message = name
+          ? "資料檢查通過。"
+          : "帳號與資格已通過，建議補上持票人姓名。";
+      } catch (err) {
+        console.error(err);
+        item.status = "invalid";
+        item.message = "檢查失敗，請稍後再試。";
+      } finally {
+        delete checkingMap[index];
+        renderPage();
+      }
+    }
+
+    async function validateAllHolders(){
+      for (let i = 0; i < holderState.length; i++) {
+        await validateOneHolder(i);
+      }
+    }
+
+    function allHoldersReady(){
+      if (!holderState.length) return false;
+      return holderState.every(item => lower(item.email) && item.status === "valid");
+    }
+
+    function buildAssignmentsPayload(){
+      return holderState.map(item => ({
+        holderIndex: item.holderIndex,
+        ticketTypeId: item.ticketTypeId,
+        ticketTypeName: item.ticketTypeName,
+        price: Number(item.price || 0),
+
+        isBuyerTicket: item.isBuyerTicket === true,
+
+        email: lower(item.email),
+        name: norm(item.name),
+        uid: norm(item.uid),
+
+        verifiedSchoolId: norm(item.verifiedSchoolId),
+        verifiedSchoolName: norm(item.verifiedSchoolName),
+        verifyMethod: norm(item.verifyMethod),
+
+        status: item.status === "valid" ? "valid" : "invalid",
+        message: norm(item.message)
+      }));
+    }
+
+    function buildParticipantEmails(){
+      const emails = holderState.map(item => lower(item.email)).filter(Boolean);
+      return [...new Set(emails)];
+    }
+
+    function buildParticipantUids(){
+      const uids = holderState.map(item => norm(item.uid)).filter(Boolean);
+      return [...new Set(uids)];
+    }
+
+    function buildSharedOrderRefs(){
+      const refs = holderState
+        .map(item => norm(item.uid))
+        .filter(Boolean)
+        .map(uid => ({
+          uid,
+          eventId,
+          orderId
+        }));
+
+      const seen = new Set();
+      return refs.filter(ref => {
+        const key = `${ref.uid}__${ref.eventId}__${ref.orderId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function buildTicketId(order, assignment){
+      const holderKey = assignment.uid || lower(assignment.email) || `holder_${assignment.holderIndex}`;
+      return `${order.id}_${assignment.holderIndex}_${holderKey}`.replace(/[^\w\-@.]/g, "_");
+    }
+
+    async function createTicketsForOrder(order, assignments){
+      const tasks = assignments.map(async assignment => {
+        const ticketId = buildTicketId(order, assignment);
+        const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
+        const ticketSnap = await getDoc(ticketRef);
+
+        if (ticketSnap.exists()) return;
+
+        await setDoc(ticketRef, {
+          eventId,
+          eventTitle: norm(order.eventTitle || ""),
+          orderId: order.id,
+
+          uid: norm(assignment.uid),
+          email: lower(assignment.email),
+          holderEmail: lower(assignment.email),
+          holderName: norm(assignment.name),
+
+          isBuyerTicket: assignment.isBuyerTicket === true,
+
+          ticketTypeId: norm(assignment.ticketTypeId),
+          ticketTypeName: norm(assignment.ticketTypeName),
+          ticketPrice: Number(assignment.price || 0),
+
+          seatLabel: "",
+          sectionId: "",
+          qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
+
+          status: "valid",
+          checkedIn: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+
+      await Promise.all(tasks);
+    }
+
+    async function saveAssignments(asFinalSubmit = false){
+      if (!currentOrder?.ref) return;
+
+      if (isOrderLocked(currentOrder)) {
+        alert("此訂單目前不可修改。");
+        return;
+      }
+
+      const assignments = buildAssignmentsPayload();
+      const participantEmails = buildParticipantEmails();
+      const participantUids = buildParticipantUids();
+      const sharedOrderRefs = buildSharedOrderRefs();
+      const ready = allHoldersReady();
+
+      if (asFinalSubmit && !ready) {
+        alert("尚有持票人資料未完成或未通過驗證。");
+        return;
+      }
+
+      const payload = {
+        holderAssignments: assignments,
+        participantEmails,
+        participantUids,
+        sharedOrderRefs,
+        updatedAt: serverTimestamp()
+      };
+
+      if (asFinalSubmit) {
+        payload.status = "ready_for_checkout";
+        payload.fillStatus = "completed";
+        payload.holderInfoCompletedAt = serverTimestamp();
+      }
+
+      await updateDoc(currentOrder.ref, payload);
+
+      if (asFinalSubmit) {
+        await createTicketsForOrder(currentOrder, assignments);
+      }
+
+      currentOrder = await getOrder();
+      holderState = flattenItems(currentOrder);
+      renderPage();
+
+      alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
+    }
+
+    function renderHolderCard(item){
+      const meta = holderStatusMeta(item);
+      const locked = isOrderLocked(currentOrder);
+      const buyerLocked = item.isBuyerTicket === true;
+
+      return `
+        <div class="holder-card">
+          <div class="holder-head">
+            <div>
+              <h3 class="holder-title">
+                第 ${item.holderIndex + 1} 張票
+                ${buyerLocked ? `<span class="pill" style="margin-left:8px;">主購人票</span>` : ``}
+              </h3>
+              <div class="holder-sub">
+                票種：${esc(item.ticketTypeName)}<br>
+                票價：${esc(formatPrice(item.price))}
               </div>
             </div>
 
-            <div class="field full">
-              <label class="label" for="name_${item.holderIndex}">持票人姓名</label>
-              <input
-                id="name_${item.holderIndex}"
-                class="input"
-                type="text"
-                value="${esc(item.name)}"
-                placeholder="請輸入持票人姓名"
-                ${locked ? "disabled" : ""}
-              />
-            </div>
+            <span class="status ${meta.className}">${esc(meta.text)}</span>
           </div>
 
-          <div class="check-row">
-            <div class="check-line">
-              <span class="check-label">會員 UID</span>
-              <span class="check-value mono">${esc(item.uid || "-")}</span>
-            </div>
-            <div class="check-line">
-              <span class="check-label">驗證學校</span>
-              <span class="check-value">${esc(item.verifiedSchoolName || item.verifiedSchoolId || "-")}</span>
-            </div>
-            <div class="check-line">
-              <span class="check-label">驗證方式</span>
-              <span class="check-value">${esc(item.verifyMethod || "-")}</span>
-            </div>
-          </div>
-
-          <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
-            ${esc(item.message || (buyerLocked ? "主購人票已自動帶入主購者資料。" : "尚未檢查。"))}
-          </div>
-
-          ${
-            locked
-              ? ""
-              : `
-                <div class="action-stack">
-                  <button class="btn" data-check-holder="${item.holderIndex}">
-                    驗證這位持票人
-                  </button>
+          <div class="holder-body">
+            <div class="grid">
+              <div class="field full">
+                <label class="label" for="email_${item.holderIndex}">持票人 Email</label>
+                <input
+                  id="email_${item.holderIndex}"
+                  class="input"
+                  type="email"
+                  value="${esc(item.email)}"
+                  placeholder="請輸入持票人會員 Email"
+                  ${(locked || buyerLocked) ? "disabled" : ""}
+                />
+                <div class="hint">
+                  ${
+                    buyerLocked
+                      ? "這一張為主購人票，已自動綁定主購者帳號，不可改成其他人。"
+                      : "此 Email 必須已註冊會員帳號，且已完成校園驗證。"
+                  }
                 </div>
-              `
-          }
-        </div>
-      </div>
-    `;
-  }
+              </div>
 
-  function renderPage(){
-    if (!currentOrder) {
-      app.className = "empty";
-      app.innerHTML = "找不到訂單。";
-      return;
+              <div class="field full">
+                <label class="label" for="name_${item.holderIndex}">持票人姓名</label>
+                <input
+                  id="name_${item.holderIndex}"
+                  class="input"
+                  type="text"
+                  value="${esc(item.name)}"
+                  placeholder="請輸入持票人姓名"
+                  ${locked ? "disabled" : ""}
+                />
+              </div>
+            </div>
+
+            <div class="check-row">
+              <div class="check-line">
+                <span class="check-label">會員 UID</span>
+                <span class="check-value mono">${esc(item.uid || "-")}</span>
+              </div>
+              <div class="check-line">
+                <span class="check-label">驗證學校</span>
+                <span class="check-value">${esc(item.verifiedSchoolName || item.verifiedSchoolId || "-")}</span>
+              </div>
+              <div class="check-line">
+                <span class="check-label">驗證方式</span>
+                <span class="check-value">${esc(item.verifyMethod || "-")}</span>
+              </div>
+            </div>
+
+            <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
+              ${esc(item.message || (buyerLocked ? "主購人票已自動帶入主購者資料。" : "尚未檢查。"))}
+            </div>
+
+            ${
+              locked
+                ? ""
+                : `
+                  <div class="action-stack">
+                    <button class="btn" data-check-holder="${item.holderIndex}">
+                      驗證這位持票人
+                    </button>
+                  </div>
+                `
+            }
+          </div>
+        </div>
+      `;
     }
 
-    const expired = isOrderExpired(currentOrder);
-    const locked = isOrderLocked(currentOrder);
-    const ready = allHoldersReady();
-    const totalQty = holderState.length;
-    const checkedQty = holderState.filter(item => item.status === "valid").length;
-    const buyerTicketCount = holderState.filter(item => item.isBuyerTicket === true).length;
+    function renderPage(){
+      if (!currentOrder) {
+        app.className = "empty";
+        app.innerHTML = "找不到訂單。";
+        return;
+      }
 
-    backLink.href = `my-orders.html`;
+      const expired = isOrderExpired(currentOrder);
+      const locked = isOrderLocked(currentOrder);
+      const ready = allHoldersReady();
+      const totalQty = holderState.length;
+      const checkedQty = holderState.filter(item => item.status === "valid").length;
+      const buyerTicketCount = holderState.filter(item => item.isBuyerTicket === true).length;
+      const orderStatusText = getOrderStatusText(currentOrder.status);
 
-    app.className = "";
-    app.innerHTML = `
-      <section class="hero">
-        <h1 class="hero-title">填寫持票人資料</h1>
-        <div class="hero-sub">
+      backLink.href = "my-orders.html";
+
+      app.className = "";
+      app.innerHTML = `
+        <section class="hero">
+          <h1 class="hero-title">填寫持票人資料</h1>
+          <div class="hero-sub">
 活動：${esc(currentOrder.eventTitle || "未命名活動")}
 主購者：${esc(currentUser?.email || "-")}
 ${expired ? "此訂單已超過填寫期限。" : ""}
-        </div>
-        <div class="hero-meta">
-          <span class="pill">訂單 ID：${esc(currentOrder.id || "-")}</span>
-          <span class="pill">訂單狀態：${esc(currentOrder.status || "-")}</span>
-          <span class="pill">截止時間：${esc(formatDateTime(currentOrder.expiresAt))}</span>
-          <span class="pill">完成進度：${esc(`${checkedQty} / ${totalQty}`)}</span>
-          <span class="pill">主購人票：${esc(buyerTicketCount)}</span>
-        </div>
-      </section>
-
-      <div class="layout">
-        <section class="main-card">
-          <h2 class="section-title">持票人名單</h2>
-          <div class="section-sub">
-            第一張票固定為主購人票，會自動帶入主購者帳號。
-            其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。
           </div>
-
-          <div class="holder-list">
-            ${holderState.map(item => renderHolderCard(item)).join("")}
+          <div class="hero-meta">
+            <span class="pill">訂單 ID：${esc(currentOrder.id || "-")}</span>
+            <span class="pill">訂單狀態：${esc(orderStatusText)}</span>
+            <span class="pill">截止時間：${esc(formatDateTime(currentOrder.expiresAt))}</span>
+            <span class="pill">完成進度：${esc(`${checkedQty} / ${totalQty}`)}</span>
+            <span class="pill">主購人票：${esc(buyerTicketCount)}</span>
           </div>
         </section>
 
-        <aside class="side-card">
-          <h2 class="section-title">訂單摘要</h2>
-          <div class="section-sub">
-            完成全部資料檢查後，這筆訂單才會正式成立並建立票券。
-          </div>
+        <div class="layout">
+          <section class="main-card">
+            <h2 class="section-title">持票人名單</h2>
+            <div class="section-sub">
+              第一張票固定為主購人票，會自動帶入主購者帳號。
+              其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。
+            </div>
 
-          <div class="summary">
-            <div class="summary-row">
-              <span>活動</span>
-              <strong>${esc(currentOrder.eventTitle || "-")}</strong>
+            <div class="holder-list">
+              ${holderState.map(item => renderHolderCard(item)).join("")}
             </div>
-            <div class="summary-row">
-              <span>訂單狀態</span>
-              <strong>${esc(currentOrder.status || "-")}</strong>
-            </div>
-            <div class="summary-row">
-              <span>總張數</span>
-              <strong>${esc(totalQty)}</strong>
-            </div>
-            <div class="summary-row">
-              <span>主購人票</span>
-              <strong>${esc(buyerTicketCount)}</strong>
-            </div>
-            <div class="summary-row">
-              <span>已通過</span>
-              <strong>${esc(checkedQty)}</strong>
-            </div>
-            <div class="summary-row">
-              <span>總金額</span>
-              <strong>${esc(formatPrice(currentOrder.totalAmount || 0))}</strong>
-            </div>
-          </div>
+          </section>
 
-          <div class="notice ${expired ? "warn" : ready ? "ok" : "info"}">
-            ${
-              expired
-                ? "這筆訂單已超過填寫期限，不能再修改。"
-                : ready
-                ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
-                : "請先完成所有持票人資料填寫與資格檢查。"
-            }
-          </div>
+          <aside class="side-card">
+            <h2 class="section-title">訂單摘要</h2>
+            <div class="section-sub">
+              完成全部資料檢查後，這筆訂單才會正式成立並建立票券。
+            </div>
 
-          <div class="action-stack">
-            <button class="btn" id="checkAllBtn" ${locked ? "disabled" : ""}>檢查全部持票人</button>
-            <button class="btn" id="saveBtn" ${locked ? "disabled" : ""}>先儲存目前資料</button>
-            <button class="btn btn-primary" id="submitBtn" ${(locked || !ready) ? "disabled" : ""}>完成填寫並送出</button>
-          </div>
-        </aside>
-      </div>
-    `;
+            <div class="summary">
+              <div class="summary-row">
+                <span>活動</span>
+                <strong>${esc(currentOrder.eventTitle || "-")}</strong>
+              </div>
+              <div class="summary-row">
+                <span>訂單狀態</span>
+                <strong>${esc(orderStatusText)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總張數</span>
+                <strong>${esc(totalQty)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>主購人票</span>
+                <strong>${esc(buyerTicketCount)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>已通過</span>
+                <strong>${esc(checkedQty)}</strong>
+              </div>
+              <div class="summary-row">
+                <span>總金額</span>
+                <strong>${esc(formatPrice(currentOrder.totalAmount || 0))}</strong>
+              </div>
+            </div>
 
-    holderState.forEach(item => {
-      const emailEl = document.getElementById(`email_${item.holderIndex}`);
-      const nameEl = document.getElementById(`name_${item.holderIndex}`);
+            <div class="notice ${expired ? "warn" : ready ? "ok" : "info"}">
+              ${
+                expired
+                  ? "這筆訂單已超過填寫期限，不能再修改。"
+                  : ready
+                  ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
+                  : "請先完成所有持票人資料填寫與資格檢查。"
+              }
+            </div>
 
-      if (emailEl && !item.isBuyerTicket) {
-        emailEl.addEventListener("input", e => {
-          holderState[item.holderIndex].email = lower(e.target.value);
-          holderState[item.holderIndex].status = "";
-          holderState[item.holderIndex].message = "尚未檢查。";
-          holderState[item.holderIndex].uid = "";
-          holderState[item.holderIndex].verifiedSchoolId = "";
-          holderState[item.holderIndex].verifiedSchoolName = "";
-          holderState[item.holderIndex].verifyMethod = "";
-          renderPage();
+            <div class="action-stack">
+              <button class="btn" id="checkAllBtn" ${locked ? "disabled" : ""}>檢查全部持票人</button>
+              <button class="btn" id="saveBtn" ${locked ? "disabled" : ""}>先儲存目前資料</button>
+              <button class="btn btn-primary" id="submitBtn" ${(locked || !ready) ? "disabled" : ""}>完成填寫並送出</button>
+            </div>
+          </aside>
+        </div>
+      `;
+
+      holderState.forEach(item => {
+        const emailEl = document.getElementById(`email_${item.holderIndex}`);
+        const nameEl = document.getElementById(`name_${item.holderIndex}`);
+
+        if (emailEl && !item.isBuyerTicket) {
+          emailEl.addEventListener("input", e => {
+            holderState[item.holderIndex].email = lower(e.target.value);
+            holderState[item.holderIndex].status = "";
+            holderState[item.holderIndex].message = "尚未檢查。";
+            holderState[item.holderIndex].uid = "";
+            holderState[item.holderIndex].verifiedSchoolId = "";
+            holderState[item.holderIndex].verifiedSchoolName = "";
+            holderState[item.holderIndex].verifyMethod = "";
+            renderPage();
+          });
+        }
+
+        if (nameEl) {
+          nameEl.addEventListener("input", e => {
+            holderState[item.holderIndex].name = norm(e.target.value);
+          });
+        }
+      });
+
+      document.querySelectorAll("[data-check-holder]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const index = Number(btn.dataset.checkHolder);
+          await validateOneHolder(index);
+        });
+      });
+
+      const checkAllBtn = document.getElementById("checkAllBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const submitBtn = document.getElementById("submitBtn");
+
+      if (checkAllBtn) {
+        checkAllBtn.addEventListener("click", async () => {
+          checkAllBtn.disabled = true;
+          const old = checkAllBtn.textContent;
+          checkAllBtn.textContent = "檢查中…";
+          try {
+            await validateAllHolders();
+          } finally {
+            checkAllBtn.disabled = false;
+            checkAllBtn.textContent = old;
+          }
         });
       }
 
-      if (nameEl) {
-        nameEl.addEventListener("input", e => {
-          holderState[item.holderIndex].name = norm(e.target.value);
+      if (saveBtn) {
+        saveBtn.addEventListener("click", async () => {
+          saveBtn.disabled = true;
+          const old = saveBtn.textContent;
+          saveBtn.textContent = "儲存中…";
+          try {
+            await saveAssignments(false);
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = old;
+          }
         });
       }
-    });
 
-    document.querySelectorAll("[data-check-holder]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const index = Number(btn.dataset.checkHolder);
-        await validateOneHolder(index);
-      });
-    });
-
-    const checkAllBtn = document.getElementById("checkAllBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const submitBtn = document.getElementById("submitBtn");
-
-    if (checkAllBtn) {
-      checkAllBtn.addEventListener("click", async () => {
-        checkAllBtn.disabled = true;
-        const old = checkAllBtn.textContent;
-        checkAllBtn.textContent = "檢查中…";
-        try {
-          await validateAllHolders();
-        } finally {
-          checkAllBtn.disabled = false;
-          checkAllBtn.textContent = old;
-        }
-      });
-    }
-
-    if (saveBtn) {
-      saveBtn.addEventListener("click", async () => {
-        saveBtn.disabled = true;
-        const old = saveBtn.textContent;
-        saveBtn.textContent = "儲存中…";
-        try {
-          await saveAssignments(false);
-        } finally {
-          saveBtn.disabled = false;
-          saveBtn.textContent = old;
-        }
-      });
-    }
-
-    if (submitBtn) {
-      submitBtn.addEventListener("click", async () => {
-        submitBtn.disabled = true;
-        const old = submitBtn.textContent;
-        submitBtn.textContent = "送出中…";
-        try {
-          await saveAssignments(true);
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = old;
-        }
-      });
-    }
-  }
-
-  async function initPage(){
-    if (!eventId || !orderId) {
-      app.className = "empty";
-      app.innerHTML = "缺少訂單資訊。";
-      return;
-    }
-
-    currentOrder = await getOrder();
-
-    if (!currentOrder) {
-      app.className = "empty";
-      app.innerHTML = "找不到訂單。";
-      return;
-    }
-
-    const buyerUid = norm(currentOrder.uid || currentOrder.buyerUid);
-    if (!currentUser || currentUser.uid !== buyerUid) {
-      app.className = "empty";
-      app.innerHTML = "只有主購者可以填寫這筆訂單的持票人資料。";
-      return;
-    }
-
-    holderState = flattenItems(currentOrder);
-
-    // 確保第一張一定是主購人票
-    if (holderState.length > 0) {
-      holderState[0].isBuyerTicket = true;
-      holderState[0].email = lower(currentOrder.buyerEmail || currentUser.email || "");
-      holderState[0].uid = norm(currentOrder.buyerUid || currentOrder.uid || currentUser.uid || "");
-      if (!holderState[0].message) {
-        holderState[0].message = "主購人票已自動帶入主購者資料。";
+      if (submitBtn) {
+        submitBtn.addEventListener("click", async () => {
+          submitBtn.disabled = true;
+          const old = submitBtn.textContent;
+          submitBtn.textContent = "送出中…";
+          try {
+            await saveAssignments(true);
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = old;
+          }
+        });
       }
     }
 
-    renderPage();
-  }
+    async function initPage(){
+      if (!eventId || !orderId) {
+        app.className = "empty";
+        app.innerHTML = "缺少訂單資訊。";
+        return;
+      }
 
-  onAuthStateChanged(auth, async user => {
-    currentUser = user || null;
-    updateAccountLinks(currentUser);
+      currentOrder = await getOrder();
 
-    if (!user) {
-      goLogin();
-      return;
+      if (!currentOrder) {
+        app.className = "empty";
+        app.innerHTML = "找不到訂單。";
+        return;
+      }
+
+      const buyerUid = norm(currentOrder.uid || currentOrder.buyerUid);
+      if (!currentUser || currentUser.uid !== buyerUid) {
+        app.className = "empty";
+        app.innerHTML = "只有主購者可以填寫這筆訂單的持票人資料。";
+        return;
+      }
+
+      holderState = flattenItems(currentOrder);
+
+      if (holderState.length > 0) {
+        holderState[0].isBuyerTicket = true;
+        holderState[0].email = lower(currentOrder.buyerEmail || currentUser.email || "");
+        holderState[0].uid = norm(currentOrder.buyerUid || currentOrder.uid || currentUser.uid || "");
+        if (!holderState[0].message) {
+          holderState[0].message = "主購人票已自動帶入主購者資料。";
+        }
+      }
+
+      renderPage();
     }
 
-    try {
-      await initPage();
-    } catch (err) {
-      console.error(err);
-      app.className = "empty";
-      app.innerHTML = "頁面載入失敗，請稍後再試。";
-    }
-  });
-</script>
+    onAuthStateChanged(auth, async user => {
+      currentUser = user || null;
+      updateAccountLinks(currentUser);
+
+      if (!user) {
+        goLogin();
+        return;
+      }
+
+      try {
+        await initPage();
+      } catch (err) {
+        console.error(err);
+        app.className = "empty";
+        app.innerHTML = "頁面載入失敗，請稍後再試。";
+      }
+    });
+  </script>
 </body>
 </html>

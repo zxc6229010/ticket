@@ -755,18 +755,21 @@
   function getStatusText(status){
     status = lower(status);
 
-    if (status === "pending_holder_info") return "待填持票人資料";
-    if (status === "ready_for_checkout") return "可進入下一步";
-    if (status === "registered") return "已建立";
-    if (status === "paid") return "已付款";
-    if (status === "completed") return "已完成";
-    if (status === "pending") return "待處理";
-    if (status === "processing") return "處理中";
-    if (status === "cancelled") return "已取消";
-    if (status === "void") return "已作廢";
-    if (status === "refunded") return "已退款";
-    if (status === "expired") return "已逾期";
-    return status || "-";
+    const map = {
+      pending_holder_info: "待填持票人資料",
+      ready_for_checkout: "可進入下一步",
+      registered: "已建立",
+      paid: "已付款",
+      completed: "已完成",
+      pending: "待處理",
+      processing: "處理中",
+      cancelled: "已取消",
+      void: "已作廢",
+      refunded: "已退款",
+      expired: "已逾期"
+    };
+
+    return map[status] || "未知狀態";
   }
 
   function getStatusClass(status){
@@ -814,7 +817,9 @@
   }
 
   function getBuyerTicketCount(order){
-    return getHolderAssignments(order).filter(item => item?.isBuyerTicket === true).length;
+    const assignments = getHolderAssignments(order);
+    if (!assignments.length) return 0;
+    return assignments.filter(item => item?.isBuyerTicket === true).length;
   }
 
   function getValidHolderCount(order){
@@ -838,8 +843,9 @@
     return assignments.map((item, index) => {
       const label = item.isBuyerTicket ? `第 ${index + 1} 張（主購人票）` : `第 ${index + 1} 張`;
       const email = norm(item.email || "-");
+      const name = norm(item.name || "");
       const status = lower(item.status) === "valid" ? "已通過" : "未完成";
-      return `${label}：${email}｜${status}`;
+      return `${label}：${name ? name + "｜" : ""}${email}｜${status}`;
     }).join("\n");
   }
 
@@ -956,16 +962,16 @@
 
       const canFillNow =
         realStatus !== "expired" &&
-        ["pending_holder_info","ready_for_checkout"].includes(lower(o.status || ""));
+        ["pending_holder_info","ready_for_checkout"].includes(realStatus);
 
       const itemSummaryText =
         Array.isArray(o.itemSummary) && o.itemSummary.length
           ? o.itemSummary.map(item => {
-              const name = item.ticketTypeName || item.ticketTypeId || "票種";
+              const name = item.ticketTypeName || "票種";
               const qty = item.quantity || 0;
               return `${name} × ${qty}`;
             }).join("、")
-          : (o.ticketTypeName || "-");
+          : "-";
 
       return `
         <div class="order-card">
@@ -1001,11 +1007,11 @@
                 </div>
                 <div class="kv">
                   <div class="k">總張數</div>
-                  <div class="v">${esc(holderTotal || o.totalQuantity || o.quantity || 0)}</div>
+                  <div class="v">${esc(holderTotal || 0)}</div>
                 </div>
                 <div class="kv">
                   <div class="k">主購人票</div>
-                  <div class="v">${esc(buyerTicketCount || (holderTotal ? 1 : 0))}</div>
+                  <div class="v">${esc(buyerTicketCount)}</div>
                 </div>
                 <div class="kv">
                   <div class="k">填寫進度</div>
@@ -1086,19 +1092,19 @@
               ${
                 realStatus === "expired"
                   ? "這筆訂單已超過填寫期限，因此已失效。若仍想購買，請重新回到活動頁下單。"
-                  : lower(o.status) === "pending_holder_info"
+                  : realStatus === "pending_holder_info"
                   ? "此訂單已成立，但尚未完成所有持票人資料填寫。第一張票固定為主購人票，請在期限內完成其餘持票人資料。"
-                  : lower(o.status) === "ready_for_checkout"
+                  : realStatus === "ready_for_checkout"
                   ? "此訂單的持票人資料已完成，可以進入下一步付款或後續流程。"
-                  : lower(o.status) === "registered"
+                  : realStatus === "registered"
                   ? "此訂單已建立完成。若票券已同步建立，可前往「我的票券」查看。"
-                  : lower(o.status) === "paid"
+                  : realStatus === "paid"
                   ? "此訂單已完成付款，可前往「我的票券」查看可入場票券。"
-                  : lower(o.status) === "completed"
+                  : realStatus === "completed"
                   ? "此訂單已完成全部流程。"
-                  : lower(o.status) === "cancelled"
+                  : realStatus === "cancelled"
                   ? "此訂單已取消。若有疑問，請聯絡主辦單位。"
-                  : lower(o.status) === "refunded"
+                  : realStatus === "refunded"
                   ? "此訂單已退款。"
                   : "此訂單狀態請以系統顯示為準。"
               }
@@ -1125,7 +1131,7 @@
     app.innerHTML = `
       <div class="toolbar">
         <div class="toolbar-left">
-          <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID / 主購者 Email" />
+          <input id="searchInput" class="input" placeholder="搜尋活動名稱 / 票種 / 訂單 ID / 主購者 Email / 持票人" />
         </div>
 
         <div class="toolbar-right">
@@ -1163,12 +1169,11 @@
 
         const hay = [
           o.eventTitle,
-          o.ticketTypeName,
           o.id,
           o.buyerEmail,
           ...(Array.isArray(o.seatLabels) ? o.seatLabels : []),
           ...(Array.isArray(o.participantEmails) ? o.participantEmails : []),
-          ...(Array.isArray(o.itemSummary) ? o.itemSummary.map(x => `${x.ticketTypeName || ""} ${x.ticketTypeId || ""}`) : []),
+          ...(Array.isArray(o.itemSummary) ? o.itemSummary.map(x => `${x.ticketTypeName || ""}`) : []),
           ...(Array.isArray(o.holderAssignments) ? o.holderAssignments.map(x => `${x.email || ""} ${x.name || ""}`) : [])
         ].map(lower).join(" ");
 
@@ -1210,6 +1215,6 @@
       app.innerHTML = "訂單載入失敗，請稍後再試。";
     }
   });
-</script>
+  </script>
 </body>
 </html>
