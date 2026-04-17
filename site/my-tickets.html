@@ -149,6 +149,10 @@
       padding:28px 22px 88px;
     }
 
+    .page.auth-hidden{
+      display:none;
+    }
+
     .btn{
       display:inline-flex;
       align-items:center;
@@ -692,7 +696,7 @@
       </div>
     </div>
 
-    <main class="page">
+    <main class="page auth-hidden" id="pageRoot">
       <div class="back-row">
         <a class="back-link" href="member.html">← 返回會員中心</a>
         <div class="row">
@@ -755,7 +759,7 @@
       where,
       getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.esm.min.js";
+    import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -770,6 +774,7 @@
     const auth = getAuth(appFirebase);
     const db = getFirestore(appFirebase);
 
+    const pageRoot = document.getElementById("pageRoot");
     const accountBtn = document.getElementById("accountBtn");
     const app = document.getElementById("app");
     const heroUserText = document.getElementById("heroUserText");
@@ -1052,7 +1057,11 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
 
       tickets.forEach(async (ticket, index) => {
         const qrCanvasId = `qr_${index}_${ticket.id}`;
-        await drawQrToCanvas(qrCanvasId, ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`);
+        try{
+          await drawQrToCanvas(qrCanvasId, ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}`);
+        }catch(err){
+          console.error("QR render failed:", err);
+        }
       });
 
       document.querySelectorAll("[data-view-ticket]").forEach(btn => {
@@ -1197,6 +1206,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
         return;
       }
 
+      pageRoot.classList.remove("auth-hidden");
       heroUserText.textContent = `登入帳號：${user.email || user.uid}`;
       app.className = "loading";
       app.innerHTML = "載入中…";
@@ -1205,6 +1215,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
         await loadTickets(user.uid);
       } catch (e) {
         console.error(e);
+        pageRoot.classList.remove("auth-hidden");
         app.className = "empty";
         app.innerHTML = "票券載入失敗，請稍後再試。";
       }
