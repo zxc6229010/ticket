@@ -524,6 +524,7 @@
       font-size:13px;
       color:var(--muted);
       line-height:1.95;
+      white-space:pre-wrap;
     }
 
     .status{
@@ -574,6 +575,162 @@
 
     .hidden{
       display:none !important;
+    }
+
+    /* 未登入版面 */
+    .auth-guest-wrap{
+      max-width:640px;
+      margin:0 auto;
+    }
+
+    .auth-hero{
+      background:
+        radial-gradient(circle at top right, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:40px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:34px 30px;
+      margin-bottom:22px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .auth-hero::after{
+      content:"";
+      position:absolute;
+      right:-70px;
+      top:-80px;
+      width:260px;
+      height:260px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(0,0,0,.03), rgba(0,0,0,0));
+      pointer-events:none;
+    }
+
+    .auth-hero-title{
+      margin:0;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .auth-hero-sub{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .auth-card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:0 16px 40px rgba(0,0,0,.06);
+      overflow:hidden;
+    }
+
+    .auth-card-head{
+      padding:22px 24px 16px;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .auth-card-title{
+      margin:0;
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .auth-card-body{
+      padding:22px 24px 24px;
+    }
+
+    .auth-field{
+      display:grid;
+      gap:8px;
+      margin-bottom:16px;
+    }
+
+    .auth-label{
+      font-size:13px;
+      font-weight:800;
+      color:#111827;
+    }
+
+    .auth-input{
+      width:100%;
+      min-height:50px;
+      padding:12px 16px;
+      border:1px solid rgba(0,0,0,.12);
+      border-radius:18px;
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      outline:none;
+      transition:border-color .12s ease, box-shadow .12s ease;
+    }
+
+    .auth-input:focus{
+      border-color:#111827;
+      box-shadow:0 0 0 4px rgba(17,24,39,.06);
+    }
+
+    .auth-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin:8px 0 16px;
+      flex-wrap:wrap;
+    }
+
+    .auth-link{
+      font-size:14px;
+      font-weight:700;
+      color:#111827;
+    }
+
+    .auth-note{
+      min-height:52px;
+      display:flex;
+      align-items:center;
+      border-radius:18px;
+      padding:14px 16px;
+      background:#dbeafe;
+      color:#1d4ed8;
+      font-size:14px;
+      line-height:1.8;
+      margin-bottom:16px;
+      border:1px solid rgba(29,78,216,.10);
+    }
+
+    .auth-submit{
+      width:100%;
+      min-height:52px;
+      border:none;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .auth-submit:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.10);
+    }
+
+    .auth-submit:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
     }
 
     .footer{
@@ -644,6 +801,21 @@
 
       .side-card{
         border-radius:24px;
+      }
+
+      .auth-hero{
+        border-radius:28px;
+        padding:28px 20px;
+      }
+
+      .auth-card{
+        border-radius:26px;
+      }
+
+      .auth-card-head,
+      .auth-card-body{
+        padding-left:20px;
+        padding-right:20px;
       }
     }
   </style>
@@ -949,9 +1121,36 @@
           status === "cancelled" ? "已取消" :
           status === "void" ? "已作廢" :
           status === "refunded" ? "已退款" :
+          status === "expired" ? "已逾期" :
           (status || "不可用"),
         className: "status-warn"
       };
+    }
+
+    function getOrderStatusText(status){
+      const s = lower(status);
+      const map = {
+        pending_holder_info: "待填持票人資料",
+        ready_for_checkout: "可進入下一步",
+        registered: "已建立",
+        paid: "已付款",
+        completed: "已完成",
+        pending: "待處理",
+        processing: "處理中",
+        cancelled: "已取消",
+        void: "已作廢",
+        refunded: "已退款",
+        expired: "已逾期"
+      };
+      return map[s] || (status || "未知狀態");
+    }
+
+    function getOrderStatusClass(status){
+      const s = lower(status);
+      if (["registered","paid","completed","ready_for_checkout"].includes(s)) return "status-ok";
+      if (["pending","processing","pending_holder_info"].includes(s)) return "status-gray";
+      if (["cancelled","void","refunded","expired"].includes(s)) return "status-warn";
+      return "status-gray";
     }
 
     function updateAccountLinks(user){
@@ -979,7 +1178,7 @@
     }
 
     function showGate(html){
-      gate.className = "empty";
+      gate.className = "";
       gate.innerHTML = html;
       gate.style.display = "block";
       app.classList.add("hidden");
@@ -1014,19 +1213,32 @@
 
     async function loadOrders(uid){
       try {
-        const snap = await db.collectionGroup("orders")
+        const buyerSnap = await db.collectionGroup("orders")
+          .where("buyerUid", "==", uid)
+          .get();
+
+        const uidSnap = await db.collectionGroup("orders")
           .where("uid", "==", uid)
           .get();
 
-        const rows = [];
-        snap.forEach(docSnap => {
-          rows.push({
+        const merged = new Map();
+
+        buyerSnap.forEach(docSnap => {
+          merged.set(docSnap.id, {
             id: docSnap.id,
             ...docSnap.data()
           });
         });
 
-        orderCache = rows.sort((a, b) => {
+        uidSnap.forEach(docSnap => {
+          merged.set(docSnap.id, {
+            ...(merged.get(docSnap.id) || {}),
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
+        orderCache = [...merged.values()].sort((a, b) => {
           const ta = toDate(a.createdAt)?.getTime() || 0;
           const tb = toDate(b.createdAt)?.getTime() || 0;
           return tb - ta;
@@ -1081,15 +1293,19 @@
             <div>
               <div class="item-title">${esc(order.eventTitle || "未命名活動")}</div>
               <div class="item-sub">
-                訂單 ID：<span class="mono">${esc(order.id)}</span><br>
-                票種：${esc(order.ticketTypeName || "-")}<br>
-                張數：${esc(order.quantity || 1)}<br>
-                金額：${esc(formatPrice(order.totalAmount || 0))}<br>
-                建立時間：${esc(formatDateTime(order.createdAt))}
+訂單 ID：<span class="mono">${esc(order.id)}</span>
+票種：${esc(
+  Array.isArray(order.itemSummary) && order.itemSummary.length
+    ? order.itemSummary.map(x => `${x.ticketTypeName || "票種"} × ${x.quantity || 0}`).join("、")
+    : (order.ticketTypeName || "-")
+)}
+張數：${esc(order.totalQuantity || order.quantity || 1)}
+金額：${esc(formatPrice(order.totalAmount || 0))}
+建立時間：${esc(formatDateTime(order.createdAt))}
               </div>
             </div>
-            <span class="status ${lower(order.status || "") === "registered" ? "status-ok" : "status-gray"}">
-              ${esc(order.status || "registered")}
+            <span class="status ${getOrderStatusClass(order.status)}">
+              ${esc(getOrderStatusText(order.status))}
             </span>
           </div>
         </div>
@@ -1112,9 +1328,9 @@
               <div>
                 <div class="item-title">${esc(ticket.eventTitle || "未命名活動")}</div>
                 <div class="item-sub">
-                  票券 ID：<span class="mono">${esc(ticket.id)}</span><br>
-                  票種：${esc(ticket.ticketTypeName || "-")}<br>
-                  座位：${esc(ticket.seatLabel || "-")}
+票券 ID：<span class="mono">${esc(ticket.id)}</span>
+票種：${esc(ticket.ticketTypeName || "-")}
+座位：${esc(ticket.seatLabel || "-")}
                 </div>
               </div>
               <span class="status ${meta.className}">${esc(meta.text)}</span>
@@ -1222,10 +1438,6 @@
         securityMsg.className = "notice ok";
         securityMsg.innerHTML = `驗證信已重新寄出到：${esc(currentUser.email || "-")}`;
         securityMsg.classList.remove("hidden");
-
-        if (switchTab) {
-          // 保持目前分頁，不做切換
-        }
       } catch (e) {
         console.error(e);
         securityMsg.className = "notice warn";
@@ -1264,17 +1476,98 @@
       }
     };
 
+    function renderGuestLogin(){
+      showGate(`
+        <div class="auth-guest-wrap">
+          <section class="auth-hero">
+            <h1 class="auth-hero-title">登入</h1>
+            <div class="auth-hero-sub">使用你的會員帳號登入。
+若尚未完成信箱驗證，系統會提示你先完成驗證。</div>
+          </section>
+
+          <section class="auth-card">
+            <div class="auth-card-head">
+              <h2 class="auth-card-title">會員帳號</h2>
+            </div>
+
+            <div class="auth-card-body">
+              <div class="auth-field">
+                <label class="auth-label" for="guestEmail">電子郵件</label>
+                <input id="guestEmail" class="auth-input" type="email" placeholder="請輸入 Email" />
+              </div>
+
+              <div class="auth-field">
+                <label class="auth-label" for="guestPassword">密碼</label>
+                <input id="guestPassword" class="auth-input" type="password" placeholder="請輸入密碼" />
+              </div>
+
+              <div class="auth-row">
+                <a class="auth-link" href="register.html">註冊帳號</a>
+                <a class="auth-link" href="forgot-password.html">忘記密碼</a>
+              </div>
+
+              <div class="auth-note" id="guestMsg">請輸入登入資料。</div>
+
+              <button class="auth-submit" id="guestLoginBtn">登入</button>
+            </div>
+          </section>
+        </div>
+      `);
+
+      const guestEmail = document.getElementById("guestEmail");
+      const guestPassword = document.getElementById("guestPassword");
+      const guestLoginBtn = document.getElementById("guestLoginBtn");
+      const guestMsg = document.getElementById("guestMsg");
+
+      async function submitGuestLogin() {
+        const email = String(guestEmail.value || "").trim();
+        const password = String(guestPassword.value || "");
+
+        if (!email || !password) {
+          guestMsg.textContent = "請輸入 Email 與密碼。";
+          return;
+        }
+
+        guestLoginBtn.disabled = true;
+        guestLoginBtn.textContent = "登入中…";
+        guestMsg.textContent = "正在登入，請稍候…";
+
+        try {
+          await auth.signInWithEmailAndPassword(email, password);
+          guestMsg.textContent = "登入成功，正在跳轉…";
+        } catch (err) {
+          console.error(err);
+
+          let msg = "登入失敗，請稍後再試。";
+
+          if (err.code === "auth/invalid-email") msg = "Email 格式不正確。";
+          else if (err.code === "auth/user-not-found") msg = "查無此帳號。";
+          else if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") msg = "帳號或密碼錯誤。";
+          else if (err.code === "auth/too-many-requests") msg = "嘗試次數過多，請稍後再試。";
+
+          guestMsg.textContent = msg;
+        } finally {
+          guestLoginBtn.disabled = false;
+          guestLoginBtn.textContent = "登入";
+        }
+      }
+
+      guestLoginBtn.addEventListener("click", submitGuestLogin);
+      guestPassword.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitGuestLogin();
+      });
+      guestEmail.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitGuestLogin();
+      });
+    }
+
     auth.onAuthStateChanged(async user => {
       currentUser = user || null;
       updateAccountLinks(currentUser);
       updateTopBarButtons(currentUser);
 
       if (!user) {
-        showGate(`
-請先登入會員帳號。
-
-<a class="btn btn-primary" href="login.html" style="margin-top:14px;">前往登入</a>
-        `.trim());
+        renderGuestLogin();
         return;
       }
 
