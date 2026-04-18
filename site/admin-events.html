@@ -558,48 +558,48 @@
           </div>
 
           <div>
-  <label>是否公開</label>
-  <select id="published">
-    <option value="false">不公開</option>
-    <option value="true">公開</option>
-  </select>
+            <label>是否公開</label>
+            <select id="published">
+              <option value="false">不公開</option>
+              <option value="true">公開</option>
+            </select>
 
-  <label>名額</label>
-  <input id="capacity" type="number" min="0" placeholder="例如：500" />
+            <label>名額</label>
+            <input id="capacity" type="number" min="0" placeholder="例如：500" />
 
-  <div class="divider"></div>
+            <div class="divider"></div>
 
-  <h2 style="margin-top:0;">選位設定</h2>
-  <div class="sub" style="margin-top:8px;">
-    可設定此活動是否啟用座位圖與前台選位購票。
-  </div>
+            <h2 style="margin-top:0;">選位設定</h2>
+            <div class="sub" style="margin-top:8px;">
+              可設定此活動是否啟用座位圖與前台選位購票。
+            </div>
 
-  <label>是否開放選位</label>
-  <select id="seatingEnabled">
-    <option value="false">否</option>
-    <option value="true">是</option>
-  </select>
+            <label>是否開放選位</label>
+            <select id="seatingEnabled">
+              <option value="false">否</option>
+              <option value="true">是</option>
+            </select>
 
-  <label>選位模式</label>
-  <select id="seatingMode">
-    <option value="assigned">對號座</option>
-    <option value="free">自由入座</option>
-  </select>
+            <label>選位模式</label>
+            <select id="seatingMode">
+              <option value="assigned">對號座</option>
+              <option value="free">自由入座</option>
+            </select>
 
-  <label>是否顯示座位圖</label>
-  <select id="seatMapEnabled">
-    <option value="true">顯示</option>
-    <option value="false">不顯示</option>
-  </select>
+            <label>是否顯示座位圖</label>
+            <select id="seatMapEnabled">
+              <option value="true">顯示</option>
+              <option value="false">不顯示</option>
+            </select>
 
-  <label>每筆訂單最多可選幾席</label>
-  <input id="maxSeatsPerOrder" type="number" min="1" placeholder="例如：4" />
+            <label>每筆訂單最多可選幾席</label>
+            <input id="maxSeatsPerOrder" type="number" min="1" placeholder="例如：4" />
 
-  <div class="row" style="margin-top:12px;">
-    <button class="btn btn-sm" type="button" id="openSeatEditorBtn">前往座位編輯器</button>
-    <div class="small" id="seatEditorHint">請先儲存活動後再編輯座位圖。</div>
-  </div>
-</div>
+            <div class="row" style="margin-top:12px;">
+              <button class="btn btn-sm" type="button" id="openSeatEditorBtn">前往座位編輯器</button>
+              <div class="small" id="seatEditorHint">請先儲存活動後再編輯座位圖。</div>
+            </div>
+          </div>
         </div>
 
         <div class="grid" style="margin-top:12px;">
@@ -745,6 +745,13 @@
     const approvalHint = document.getElementById("approvalHint");
     const publishedEl = document.getElementById("published");
     const capacityEl = document.getElementById("capacity");
+
+    const seatingEnabledEl = document.getElementById("seatingEnabled");
+    const seatingModeEl = document.getElementById("seatingMode");
+    const seatMapEnabledEl = document.getElementById("seatMapEnabled");
+    const maxSeatsPerOrderEl = document.getElementById("maxSeatsPerOrder");
+    const openSeatEditorBtn = document.getElementById("openSeatEditorBtn");
+    const seatEditorHint = document.getElementById("seatEditorHint");
 
     const titleEl = document.getElementById("title");
     const locationEl = document.getElementById("location");
@@ -939,6 +946,17 @@
       return "審核中";
     }
 
+    function getSeatingSummary(e){
+      const seating = e?.seating || {};
+      const enabled = seating.enabled === true;
+      const mode = norm(seating.mode || "assigned");
+      const seatMapEnabled = seating.seatMapEnabled !== false;
+      const maxSeats = Number(seating.maxSeatsPerOrder || 0) || 0;
+
+      if (!enabled) return "不開放選位";
+      return `${mode === "free" ? "自由入座" : "對號座"}｜座位圖${seatMapEnabled ? "顯示" : "不顯示"}｜單筆最多 ${maxSeats || 1} 席`;
+    }
+
     async function loadNameMaps(){
       schoolNameMap = {};
       orgNameMap = {};
@@ -964,6 +982,22 @@
       const titleOk = norm(titleEl.value).length > 0;
       const ownerOk = norm(ownerSchoolSel.value).length > 0;
       saveBtn.disabled = !(titleOk && ownerOk);
+    }
+
+    function updateSeatEditorHint(){
+      if (!editingId) {
+        seatEditorHint.textContent = "請先儲存活動後再編輯座位圖。";
+        openSeatEditorBtn.disabled = true;
+        return;
+      }
+
+      if (seatingEnabledEl.value !== "true") {
+        seatEditorHint.textContent = "此活動目前未開放選位，仍可先建立座位資料。";
+      } else {
+        seatEditorHint.textContent = "可前往編輯此活動的座位圖。";
+      }
+
+      openSeatEditorBtn.disabled = false;
     }
 
     function moveEditorHome(showEditor = true){
@@ -1557,6 +1591,11 @@
       publishedEl.value = "false";
       capacityEl.value = "";
 
+      seatingEnabledEl.value = "false";
+      seatingModeEl.value = "assigned";
+      seatMapEnabledEl.value = "true";
+      maxSeatsPerOrderEl.value = "";
+
       saleStartAtEl.value = "";
       saleEndAtEl.value = "";
       eventStartAtEl.value = "";
@@ -1576,6 +1615,7 @@
       refreshApprovalStatusState();
       refreshOwnerSelectState();
       updateSaveBtn();
+      updateSeatEditorHint();
 
       if (wasManage) {
         moveEditorHome(false);
@@ -1631,6 +1671,7 @@
         const ticketCount = Array.isArray(e.ticketTypes) ? e.ticketTypes.length : 0;
         const gateCount = Array.isArray(e.gates) ? e.gates.length : 0;
         const coverImage = norm(e.coverImage || "");
+        const seatingSummary = getSeatingSummary(e);
 
         const tag = owner === "__global__"
           ? `<span class="pill">平台活動</span>`
@@ -1648,6 +1689,7 @@
                   圖片：<span class="mono">${coverImage ? "已設定" : "未設定"}</span><br>
                   開放時間：<span class="mono">${esc(saleStart || "-")}</span> ～ <span class="mono">${esc(saleEnd || "-")}</span><br>
                   活動時間：<span class="mono">${esc(eventStart || "-")}</span><br>
+                  選位設定：<span class="mono">${esc(seatingSummary)}</span><br>
                   公關代碼：<span class="mono">${promoEnabled ? "開啟" : "關閉"}</span>｜
                   數量：<span class="mono">${promoCount}</span><br>
                   票種數量：<span class="mono">${ticketCount}</span>｜
@@ -1663,6 +1705,7 @@
                 <div class="quick-links">
                   <a class="btn btn-sm" href="admin-event-detail.html?eventId=${encodeURIComponent(id)}">活動詳情</a>
                   <a class="btn btn-sm" href="admin-staff-assign.html?eventId=${encodeURIComponent(id)}">工作人員指派</a>
+                  <a class="btn btn-sm" href="seat-editor.html?eventId=${encodeURIComponent(id)}">座位編輯器</a>
                 </div>
               </div>
 
@@ -1714,6 +1757,12 @@
         approvalStatusEl.value = e.approvalStatus || "pending";
         capacityEl.value = (e.capacity ?? "") === "" ? "" : String(e.capacity ?? "");
 
+        const seating = e.seating || {};
+        seatingEnabledEl.value = seating.enabled === true ? "true" : "false";
+        seatingModeEl.value = seating.mode || "assigned";
+        seatMapEnabledEl.value = seating.seatMapEnabled !== false ? "true" : "false";
+        maxSeatsPerOrderEl.value = String(Number(seating.maxSeatsPerOrder || 1) || 1);
+
         saleStartAtEl.value = toInputDateTime(e.saleStartAt);
         saleEndAtEl.value = toInputDateTime(e.saleEndAt);
         eventStartAtEl.value = toInputDateTime(e.eventStartAt);
@@ -1751,6 +1800,7 @@
 
         setEditorMessage(`<span class="ok">已載入活動資料</span>`);
         updateSaveBtn();
+        updateSeatEditorHint();
 
         setPageMode("manage");
         await loadEvents();
@@ -1812,6 +1862,8 @@
           throw new Error("你有設定公關限定票種，但目前沒有任何公關代碼");
         }
 
+        const maxSeatsPerOrder = Math.max(1, Number(maxSeatsPerOrderEl.value || 1) || 1);
+
         let finalCoverImage = existingCoverImage;
 
         if (selectedCoverFile) {
@@ -1828,6 +1880,13 @@
           coverImage: norm(finalCoverImage),
           description: norm(descriptionEl.value),
           capacity: capacityEl.value === "" ? null : Number(capacityEl.value),
+
+          seating: {
+            enabled: seatingEnabledEl.value === "true",
+            mode: seatingModeEl.value,
+            seatMapEnabled: seatMapEnabledEl.value === "true",
+            maxSeatsPerOrder
+          },
 
           saleStartAt: parseInputDateTime(saleStartAtEl.value),
           saleEndAt: parseInputDateTime(saleEndAtEl.value),
@@ -1854,14 +1913,17 @@
         if (!editingId) {
           payload.createdAt = new Date();
           payload.createdBy = currentUser ? currentUser.uid : "";
-          await db.collection("events").add(payload);
+          const ref = await db.collection("events").add(payload);
+          editingId = ref.id;
         } else {
           await db.collection("events").doc(editingId).update(payload);
         }
 
         if (isEditing) {
           setEditorMessage(`<span class="ok">更新成功</span>`);
+          const keepEditingId = editingId;
           resetEditor();
+          editingId = keepEditingId;
           setPageMode("manage");
           await loadEvents();
         } else {
@@ -1869,6 +1931,8 @@
           resetEditor();
           setPageMode("create");
         }
+
+        updateSeatEditorHint();
       } catch (err) {
         console.error(err);
         alert(err.message || "儲存失敗");
@@ -1886,6 +1950,11 @@
       el.addEventListener("change", updateSaveBtn);
     });
 
+    [seatingEnabledEl, seatingModeEl, seatMapEnabledEl, maxSeatsPerOrderEl].forEach(el => {
+      el.addEventListener("input", updateSeatEditorHint);
+      el.addEventListener("change", updateSeatEditorHint);
+    });
+
     coverImageFileEl.addEventListener("change", () => {
       const file = coverImageFileEl.files && coverImageFileEl.files[0]
         ? coverImageFileEl.files[0]
@@ -1896,6 +1965,14 @@
     });
 
     ownerSchoolSel.addEventListener("change", updateSaveBtn);
+
+    openSeatEditorBtn.onclick = () => {
+      if (!editingId) {
+        alert("請先儲存活動，再設定座位");
+        return;
+      }
+      location.href = `seat-editor.html?eventId=${encodeURIComponent(editingId)}`;
+    };
 
     resetBtn.onclick = async () => {
       const wasManage = currentView === "manage";
