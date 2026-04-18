@@ -501,7 +501,9 @@
 
               <div class="field">
                 <label class="label" for="password">密碼</label>
-                <input id="password" class="input" type="password" placeholder="至少 6 碼" autocomplete="new-password" />
+                <input id="password" class="input" type="password" placeholder="至少 8 碼，需包含大小寫字母與數字" autocomplete="new-password" />
+                <div class="hint">密碼需符合 Firebase 規則：
+至少 8 碼，且包含大寫字母、小寫字母、數字。</div>
               </div>
 
               <div class="field">
@@ -584,343 +586,377 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-  if (!firebase.apps.length) {
-    firebase.initializeApp({
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e",
-      storageBucket: "concert-1ff7e.firebasestorage.app",
-      messagingSenderId: "704757384914",
-      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-    });
-  }
-
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  const accountBtn = document.getElementById("accountBtn");
-  const nameEl = document.getElementById("name");
-  const genderEl = document.getElementById("gender");
-  const birthYearEl = document.getElementById("birthYear");
-  const birthMonthEl = document.getElementById("birthMonth");
-  const birthDayEl = document.getElementById("birthDay");
-  const phoneEl = document.getElementById("phone");
-  const emailEl = document.getElementById("email");
-  const passwordEl = document.getElementById("password");
-  const confirmPasswordEl = document.getElementById("confirmPassword");
-  const registerBtn = document.getElementById("registerBtn");
-  const msg = document.getElementById("msg");
-
-  function esc(value){
-    return String(value ?? "").replace(/[&<>"']/g, m => ({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[m]));
-  }
-
-  function norm(value){
-    return String(value ?? "").trim();
-  }
-
-  function lower(value){
-    return norm(value).toLowerCase();
-  }
-
-  function setMsg(type, text){
-    msg.className = `notice ${type}`;
-    msg.innerHTML = text;
-  }
-
-  function isValidEmail(email){
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  function isValidPhone(phone){
-    return /^[0-9+\-\s()]{8,20}$/.test(phone);
-  }
-
-  function updateAccountLinks(user){
-    if (user) {
-      accountBtn.href = "member.html";
-      accountBtn.title = user.email || "會員中心";
-      accountBtn.setAttribute("aria-label", "會員中心");
-    } else {
-      accountBtn.href = "login.html";
-      accountBtn.title = "登入 / 會員中心";
-      accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-    }
-  }
-
-  function populateBirthdayOptions(){
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const startYear = currentYear - 100;
-    const endYear = currentYear;
-
-    birthYearEl.innerHTML = `<option value="">請選擇年份</option>`;
-    for (let y = endYear; y >= startYear; y--) {
-      birthYearEl.insertAdjacentHTML("beforeend", `<option value="${y}">${y} 年</option>`);
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+        authDomain: "concert-1ff7e.firebaseapp.com",
+        projectId: "concert-1ff7e",
+        storageBucket: "concert-1ff7e.firebasestorage.app",
+        messagingSenderId: "704757384914",
+        appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+      });
     }
 
-    birthMonthEl.innerHTML = `<option value="">請選擇月份</option>`;
-    for (let m = 1; m <= 12; m++) {
-      birthMonthEl.insertAdjacentHTML("beforeend", `<option value="${m}">${m} 月</option>`);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const accountBtn = document.getElementById("accountBtn");
+    const nameEl = document.getElementById("name");
+    const genderEl = document.getElementById("gender");
+    const birthYearEl = document.getElementById("birthYear");
+    const birthMonthEl = document.getElementById("birthMonth");
+    const birthDayEl = document.getElementById("birthDay");
+    const phoneEl = document.getElementById("phone");
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const confirmPasswordEl = document.getElementById("confirmPassword");
+    const registerBtn = document.getElementById("registerBtn");
+    const msg = document.getElementById("msg");
+
+    let authAccountCreated = false;
+    let createdUserEmail = "";
+    let createdUid = "";
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
     }
 
-    renderDayOptions();
-  }
-
-  function getDaysInMonth(year, month){
-    if (!year || !month) return 31;
-    return new Date(year, month, 0).getDate();
-  }
-
-  function renderDayOptions(){
-    const year = Number(birthYearEl.value || 0);
-    const month = Number(birthMonthEl.value || 0);
-    const maxDays = getDaysInMonth(year, month);
-    const currentDay = Number(birthDayEl.value || 0);
-
-    birthDayEl.innerHTML = `<option value="">請選擇日期</option>`;
-    for (let d = 1; d <= maxDays; d++) {
-      birthDayEl.insertAdjacentHTML("beforeend", `<option value="${d}">${d} 日</option>`);
+    function norm(value){
+      return String(value ?? "").trim();
     }
 
-    if (currentDay && currentDay <= maxDays) {
-      birthDayEl.value = String(currentDay);
-    }
-  }
-
-  function getBirthdayValue(){
-    const year = Number(birthYearEl.value || 0);
-    const month = Number(birthMonthEl.value || 0);
-    const day = Number(birthDayEl.value || 0);
-
-    if (!year || !month || !day) return "";
-
-    const mm = String(month).padStart(2, "0");
-    const dd = String(day).padStart(2, "0");
-    return `${year}-${mm}-${dd}`;
-  }
-
-  async function createEmailIndex(email, uid){
-    const key = lower(email);
-    if (!key) return;
-
-    await db.collection("email_index").doc(key).set({
-      uid,
-      email: key,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  }
-
-  function withTimeout(promise, ms, message){
-    return Promise.race([
-      promise,
-      new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(message || "操作逾時")), ms);
-      })
-    ]);
-  }
-
-  async function register(){
-    const email = lower(emailEl.value);
-    const password = passwordEl.value;
-    const confirmPassword = confirmPasswordEl.value;
-
-    const name = norm(nameEl.value);
-    const gender = norm(genderEl.value);
-    const birthday = getBirthdayValue();
-    const phone = norm(phoneEl.value);
-
-    if (!email) {
-      setMsg("warn", "請輸入電子郵件");
-      return;
+    function lower(value){
+      return norm(value).toLowerCase();
     }
 
-    if (!isValidEmail(email)) {
-      setMsg("warn", "電子郵件格式不正確");
-      return;
+    function setMsg(type, text){
+      msg.className = `notice ${type}`;
+      msg.innerHTML = text;
     }
 
-    if (!password) {
-      setMsg("warn", "請輸入密碼");
-      return;
+    function isValidEmail(email){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    if (password.length < 6) {
-      setMsg("warn", "密碼需至少 6 碼（依 Firebase 預設規則）");
-      return;
+    function isValidPhone(phone){
+      return /^[0-9+\-\s()]{8,20}$/.test(phone);
     }
 
-    if (!confirmPassword) {
-      setMsg("warn", "請輸入確認密碼");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setMsg("warn", "兩次輸入的密碼不一致");
-      return;
-    }
-
-    if (!name) {
-      setMsg("warn", "請輸入姓名");
-      return;
-    }
-
-    if (!gender) {
-      setMsg("warn", "請選擇性別");
-      return;
-    }
-
-    if (!birthday) {
-      setMsg("warn", "請完整選擇生日");
-      return;
-    }
-
-    if (!phone) {
-      setMsg("warn", "請輸入手機號碼");
-      return;
-    }
-
-    if (!isValidPhone(phone)) {
-      setMsg("warn", "手機號碼格式不正確");
-      return;
-    }
-
-    registerBtn.disabled = true;
-    const oldText = registerBtn.textContent;
-    registerBtn.textContent = "建立中…";
-    setMsg("info", "正在建立 Firebase 帳號…");
-
-    try {
-      const cred = await withTimeout(
-        auth.createUserWithEmailAndPassword(email, password),
-        20000,
-        "建立帳號逾時，請檢查網路或 Firebase 設定"
+    function isStrongPassword(password){
+      return (
+        password.length >= 8 &&
+        /[A-Z]/.test(password) &&
+        /[a-z]/.test(password) &&
+        /[0-9]/.test(password)
       );
+    }
 
-      const user = cred.user;
-      if (!user) {
-        throw new Error("帳號建立失敗，沒有取得使用者資料");
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function populateBirthdayOptions(){
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const startYear = currentYear - 100;
+      const endYear = currentYear;
+
+      birthYearEl.innerHTML = `<option value="">請選擇年份</option>`;
+      for (let y = endYear; y >= startYear; y--) {
+        birthYearEl.insertAdjacentHTML("beforeend", `<option value="${y}">${y} 年</option>`);
       }
 
-      setMsg("info", "帳號建立成功，正在寄送驗證信…");
-
-      await withTimeout(
-        user.sendEmailVerification(),
-        20000,
-        "驗證信寄送逾時，請稍後再試"
-      );
-
-      setMsg("info", "驗證信已寄出，正在寫入會員資料…");
-
-      await withTimeout(
-        db.collection("users").doc(user.uid).set({
-          uid: user.uid,
-          email,
-          name,
-          gender,
-          birthday,
-          phone,
-
-          enabled: true,
-          emailVerified: false,
-
-          verifiedSchoolId: "",
-          verifiedSchoolName: "",
-          verifyMethod: "",
-          schoolEmail: "",
-
-          role: "member",
-
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }),
-        20000,
-        "寫入 users 資料逾時，請檢查 Firestore 規則"
-      );
-
-      await withTimeout(
-        createEmailIndex(email, user.uid),
-        20000,
-        "寫入 email_index 逾時，請檢查 Firestore 規則"
-      );
-
-      // 註冊完不保留登入，避免未驗證帳號直接留在登入狀態
-      await auth.signOut();
-
-      setMsg(
-        "ok",
-        `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span><br>請先到信箱完成驗證，再登入。`
-      );
-
-      registerBtn.textContent = "已建立帳號";
-
-      setTimeout(() => {
-        location.href = `login.html?email=${encodeURIComponent(email)}`;
-      }, 1800);
-
-    } catch (e) {
-      console.error("register error:", e);
-
-      let text = "註冊失敗";
-      const code = String(e.code || "");
-      const message = String(e.message || "");
-
-      if (code.includes("auth/email-already-in-use")) {
-        text = "這個電子郵件已被註冊";
-      } else if (code.includes("auth/invalid-email")) {
-        text = "電子郵件格式不正確";
-      } else if (code.includes("auth/weak-password")) {
-        text = "密碼太弱，Firebase 至少需要 6 碼";
-      } else if (code.includes("auth/network-request-failed")) {
-        text = "網路連線失敗";
-      } else if (message.includes("users 資料逾時")) {
-        text = "帳號已建立，但寫入會員資料逾時，請檢查 Firestore 規則";
-      } else if (message.includes("email_index")) {
-        text = "帳號已建立，但 email_index 寫入失敗，請檢查 Firestore 規則";
-      } else if (message.includes("驗證信")) {
-        text = "帳號已建立，但驗證信寄送失敗，請稍後到登入頁重寄驗證信";
-      } else if (message.includes("建立帳號逾時")) {
-        text = "建立帳號逾時，請檢查網路或 Firebase 設定";
+      birthMonthEl.innerHTML = `<option value="">請選擇月份</option>`;
+      for (let m = 1; m <= 12; m++) {
+        birthMonthEl.insertAdjacentHTML("beforeend", `<option value="${m}">${m} 月</option>`);
       }
 
-      setMsg("warn", esc(text));
-      registerBtn.disabled = false;
-      registerBtn.textContent = oldText;
+      renderDayOptions();
     }
-  }
 
-  registerBtn.onclick = register;
+    function getDaysInMonth(year, month){
+      if (!year || !month) return 31;
+      return new Date(year, month, 0).getDate();
+    }
 
-  [
-    emailEl,
-    passwordEl,
-    confirmPasswordEl,
-    nameEl,
-    genderEl,
-    birthYearEl,
-    birthMonthEl,
-    birthDayEl,
-    phoneEl
-  ].forEach(el => {
-    el.addEventListener("keydown", e => {
-      if (e.key === "Enter") register();
+    function renderDayOptions(){
+      const year = Number(birthYearEl.value || 0);
+      const month = Number(birthMonthEl.value || 0);
+      const maxDays = getDaysInMonth(year, month);
+      const currentDay = Number(birthDayEl.value || 0);
+
+      birthDayEl.innerHTML = `<option value="">請選擇日期</option>`;
+      for (let d = 1; d <= maxDays; d++) {
+        birthDayEl.insertAdjacentHTML("beforeend", `<option value="${d}">${d} 日</option>`);
+      }
+
+      if (currentDay && currentDay <= maxDays) {
+        birthDayEl.value = String(currentDay);
+      }
+    }
+
+    function getBirthdayValue(){
+      const year = Number(birthYearEl.value || 0);
+      const month = Number(birthMonthEl.value || 0);
+      const day = Number(birthDayEl.value || 0);
+
+      if (!year || !month || !day) return "";
+
+      const mm = String(month).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      return `${year}-${mm}-${dd}`;
+    }
+
+    async function createEmailIndex(email, uid){
+      const key = lower(email);
+      if (!key) return;
+
+      await db.collection("email_index").doc(key).set({
+        uid,
+        email: key,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    function withTimeout(promise, ms, message){
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error(message || "操作逾時")), ms);
+        })
+      ]);
+    }
+
+    async function safeSignOut(){
+      try{
+        await auth.signOut();
+      }catch(e){
+        console.warn("signOut failed:", e);
+      }
+    }
+
+    async function register(){
+      const email = lower(emailEl.value);
+      const password = passwordEl.value;
+      const confirmPassword = confirmPasswordEl.value;
+
+      const name = norm(nameEl.value);
+      const gender = norm(genderEl.value);
+      const birthday = getBirthdayValue();
+      const phone = norm(phoneEl.value);
+
+      authAccountCreated = false;
+      createdUserEmail = "";
+      createdUid = "";
+
+      if (!email) {
+        setMsg("warn", "請輸入電子郵件");
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        setMsg("warn", "電子郵件格式不正確");
+        return;
+      }
+
+      if (!password) {
+        setMsg("warn", "請輸入密碼");
+        return;
+      }
+
+      if (!isStrongPassword(password)) {
+        setMsg("warn", "密碼需至少 8 碼，且包含大寫字母、小寫字母、數字");
+        return;
+      }
+
+      if (!confirmPassword) {
+        setMsg("warn", "請輸入確認密碼");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setMsg("warn", "兩次輸入的密碼不一致");
+        return;
+      }
+
+      if (!name) {
+        setMsg("warn", "請輸入姓名");
+        return;
+      }
+
+      if (!gender) {
+        setMsg("warn", "請選擇性別");
+        return;
+      }
+
+      if (!birthday) {
+        setMsg("warn", "請完整選擇生日");
+        return;
+      }
+
+      if (!phone) {
+        setMsg("warn", "請輸入手機號碼");
+        return;
+      }
+
+      if (!isValidPhone(phone)) {
+        setMsg("warn", "手機號碼格式不正確");
+        return;
+      }
+
+      registerBtn.disabled = true;
+      const oldText = registerBtn.textContent;
+      registerBtn.textContent = "建立中…";
+      setMsg("info", "正在建立帳號…");
+
+      try {
+        const cred = await withTimeout(
+          auth.createUserWithEmailAndPassword(email, password),
+          20000,
+          "建立帳號逾時，請檢查網路或 Firebase 設定"
+        );
+
+        const user = cred.user;
+        if (!user) {
+          throw new Error("帳號建立失敗，沒有取得使用者資料");
+        }
+
+        authAccountCreated = true;
+        createdUserEmail = email;
+        createdUid = user.uid;
+
+        setMsg("info", "帳號已建立，正在寄送驗證信…");
+
+        await withTimeout(
+          user.sendEmailVerification(),
+          20000,
+          "驗證信寄送逾時，請稍後到登入頁重寄"
+        );
+
+        setMsg("info", "驗證信已寄出，正在寫入會員資料…");
+
+        await withTimeout(
+          db.collection("users").doc(user.uid).set({
+            uid: user.uid,
+            email,
+            name,
+            gender,
+            birthday,
+            phone,
+
+            enabled: true,
+            emailVerified: false,
+
+            verifiedSchoolId: "",
+            verifiedSchoolName: "",
+            verifyMethod: "",
+            schoolEmail: "",
+
+            role: "member",
+
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }),
+          20000,
+          "寫入 users 資料逾時，請檢查 Firestore 規則"
+        );
+
+        await withTimeout(
+          createEmailIndex(email, user.uid),
+          20000,
+          "寫入 email_index 逾時，請檢查 Firestore 規則"
+        );
+
+        await safeSignOut();
+
+        setMsg(
+          "ok",
+          `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span><br>請先到信箱完成驗證，再登入。`
+        );
+
+        registerBtn.textContent = "已建立帳號";
+
+        setTimeout(() => {
+          location.href = `login.html?email=${encodeURIComponent(email)}`;
+        }, 1800);
+
+      } catch (e) {
+        console.error("register error:", e);
+
+        let text = "註冊失敗";
+        const code = String(e.code || "");
+        const message = String(e.message || "");
+
+        if (code.includes("auth/email-already-in-use")) {
+          text = "這個電子郵件已被註冊";
+        } else if (code.includes("auth/invalid-email")) {
+          text = "電子郵件格式不正確";
+        } else if (code.includes("auth/weak-password")) {
+          text = "密碼不符合 Firebase 規則（需 8 碼以上，且包含大小寫字母與數字）";
+        } else if (code.includes("auth/network-request-failed")) {
+          text = "網路連線失敗";
+        } else if (message.includes("建立帳號逾時")) {
+          text = "建立帳號逾時，請檢查網路或 Firebase 設定";
+        } else if (message.includes("驗證信寄送逾時")) {
+          text = "帳號已建立，但驗證信寄送逾時，請稍後到登入頁重寄驗證信";
+        } else if (message.includes("寫入 users")) {
+          text = "帳號已建立，但會員資料寫入失敗，請檢查 Firestore 規則";
+        } else if (message.includes("email_index")) {
+          text = "帳號已建立，但 email_index 寫入失敗，請檢查 Firestore 規則";
+        }
+
+        if (authAccountCreated) {
+          text += `<br><br>目前 Firebase Auth 帳號可能已建立：<span class="mono">${esc(createdUserEmail || email)}</span>`;
+        }
+
+        await safeSignOut();
+
+        setMsg("warn", text);
+        registerBtn.disabled = false;
+        registerBtn.textContent = oldText;
+      }
+    }
+
+    registerBtn.onclick = register;
+
+    [
+      emailEl,
+      passwordEl,
+      confirmPasswordEl,
+      nameEl,
+      genderEl,
+      birthYearEl,
+      birthMonthEl,
+      birthDayEl,
+      phoneEl
+    ].forEach(el => {
+      el.addEventListener("keydown", e => {
+        if (e.key === "Enter") register();
+      });
     });
-  });
 
-  birthYearEl.addEventListener("change", renderDayOptions);
-  birthMonthEl.addEventListener("change", renderDayOptions);
+    birthYearEl.addEventListener("change", renderDayOptions);
+    birthMonthEl.addEventListener("change", renderDayOptions);
 
-  auth.onAuthStateChanged(user => {
-    updateAccountLinks(user || null);
-  });
+    auth.onAuthStateChanged(user => {
+      updateAccountLinks(user || null);
+    });
 
-  populateBirthdayOptions();
-</script>
+    populateBirthdayOptions();
+  </script>
 </body>
 </html>
