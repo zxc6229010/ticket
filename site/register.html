@@ -717,36 +717,13 @@
     }, { merge: true });
   }
 
-  async function safeSignOut(){
-    try {
-      await auth.signOut();
-    } catch (e) {
-      console.error("signOut failed:", e);
-    }
-  }
-
-  async function ensureUserProfile(user, profile){
-    await db.collection("users").doc(user.uid).set({
-      uid: user.uid,
-      email: profile.email,
-      name: profile.name,
-      gender: profile.gender,
-      birthday: profile.birthday,
-      phone: profile.phone,
-
-      enabled: true,
-      emailVerified: false,
-
-      verifiedSchoolId: "",
-      verifiedSchoolName: "",
-      verifyMethod: "",
-      schoolEmail: "",
-
-      role: "member",
-
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+  function withTimeout(promise, ms, message){
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(message || "操作逾時")), ms);
+      })
+    ]);
   }
 
   async function register(){
@@ -775,7 +752,7 @@
     }
 
     if (password.length < 6) {
-      setMsg("warn", "密碼至少需要 6 碼");
+      setMsg("warn", "密碼需至少 6 碼（依 Firebase 預設規則）");
       return;
     }
 
@@ -817,67 +794,99 @@
     registerBtn.disabled = true;
     const oldText = registerBtn.textContent;
     registerBtn.textContent = "建立中…";
-    setMsg("info", "正在建立帳號…");
-
-    let createdUser = null;
+    setMsg("info", "正在建立 Firebase 帳號…");
 
     try {
-      const cred = await auth.createUserWithEmailAndPassword(email, password);
-      createdUser = cred.user;
+      const cred = await withTimeout(
+        auth.createUserWithEmailAndPassword(email, password),
+        20000,
+        "建立帳號逾時，請檢查網路或 Firebase 設定"
+      );
 
-      await ensureUserProfile(createdUser, {
-        email,
-        name,
-        gender,
-        birthday,
-        phone
-      });
-
-      await createEmailIndex(email, createdUser.uid);
-
-      try {
-        await createdUser.sendEmailVerification();
-      } catch (mailErr) {
-        console.error("sendEmailVerification failed:", mailErr);
-        await safeSignOut();
-
-        setMsg(
-          "pending",
-          `帳號已建立成功，但驗證信寄送失敗。<br>請前往登入頁後使用「重寄驗證信」。<br><span class="mono">${esc(email)}</span>`
-        );
-
-        registerBtn.disabled = false;
-        registerBtn.textContent = oldText;
-        return;
+      const user = cred.user;
+      if (!user) {
+        throw new Error("帳號建立失敗，沒有取得使用者資料");
       }
 
-      await safeSignOut();
+      setMsg("info", "帳號建立成功，正在寄送驗證信…");
+
+      await withTimeout(
+        user.sendEmailVerification(),
+        20000,
+        "驗證信寄送逾時，請稍後再試"
+      );
+
+      setMsg("info", "驗證信已寄出，正在寫入會員資料…");
+
+      await withTimeout(
+        db.collection("users").doc(user.uid).set({
+          uid: user.uid,
+          email,
+          name,
+          gender,
+          birthday,
+          phone,
+
+          enabled: true,
+          emailVerified: false,
+
+          verifiedSchoolId: "",
+          verifiedSchoolName: "",
+          verifyMethod: "",
+          schoolEmail: "",
+
+          role: "member",
+
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }),
+        20000,
+        "寫入 users 資料逾時，請檢查 Firestore 規則"
+      );
+
+      await withTimeout(
+        createEmailIndex(email, user.uid),
+        20000,
+        "寫入 email_index 逾時，請檢查 Firestore 規則"
+      );
+
+      // 註冊完不保留登入，避免未驗證帳號直接留在登入狀態
+      await auth.signOut();
 
       setMsg(
         "ok",
-        `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span><br>請先完成信箱驗證，再登入會員中心。`
+        `註冊成功，驗證信已寄送到：<span class="mono">${esc(email)}</span><br>請先到信箱完成驗證，再登入。`
       );
 
       registerBtn.textContent = "已建立帳號";
 
       setTimeout(() => {
         location.href = `login.html?email=${encodeURIComponent(email)}`;
-      }, 1400);
+      }, 1800);
 
     } catch (e) {
-      console.error(e);
+      console.error("register error:", e);
 
       let text = "註冊失敗";
       const code = String(e.code || "");
+      const message = String(e.message || "");
 
       if (code.includes("auth/email-already-in-use")) {
         text = "這個電子郵件已被註冊";
       } else if (code.includes("auth/invalid-email")) {
         text = "電子郵件格式不正確";
       } else if (code.includes("auth/weak-password")) {
-        text = "密碼強度不足，請至少使用 6 碼";
+        text = "密碼太弱，Firebase 至少需要 6 碼";
       } else if (code.includes("auth/network-request-failed")) {
         text = "網路連線失敗";
+      } else if (message.includes("users 資料逾時")) {
+        text = "帳號已建立，但寫入會員資料逾時，請檢查 Firestore 規則";
+      } else if (message.includes("email_index")) {
+        text = "帳號已建立，但 email_index 寫入失敗，請檢查 Firestore 規則";
+      } else if (message.includes("驗證信")) {
+        text = "帳號已建立，但驗證信寄送失敗，請稍後到登入頁重寄驗證信";
+      } else if (message.includes("建立帳號逾時")) {
+        text = "建立帳號逾時，請檢查網路或 Firebase 設定";
       }
 
       setMsg("warn", esc(text));
@@ -893,6 +902,10 @@
     passwordEl,
     confirmPasswordEl,
     nameEl,
+    genderEl,
+    birthYearEl,
+    birthMonthEl,
+    birthDayEl,
     phoneEl
   ].forEach(el => {
     el.addEventListener("keydown", e => {
@@ -903,21 +916,8 @@
   birthYearEl.addEventListener("change", renderDayOptions);
   birthMonthEl.addEventListener("change", renderDayOptions);
 
-  auth.onAuthStateChanged(async user => {
+  auth.onAuthStateChanged(user => {
     updateAccountLinks(user || null);
-
-    if (!user) return;
-
-    try {
-      await user.reload();
-    } catch (e) {
-      console.error(e);
-    }
-
-    if (!user.emailVerified) {
-      await safeSignOut();
-      updateAccountLinks(null);
-    }
   });
 
   populateBirthdayOptions();
