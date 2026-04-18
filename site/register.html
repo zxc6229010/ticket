@@ -519,7 +519,7 @@
               </div>
 
               <div class="field full">
-                <div class="hint">密碼需符合 Firebase 規則：至少 8 碼，且包含大寫字母、小寫字母、數字。</div>
+                <div class="hint">密碼需符合規則：至少 8 碼，且包含大寫字母、小寫字母、數字。</div>
               </div>
             </div>
 
@@ -917,7 +917,7 @@
         } else if (code.includes("auth/invalid-email")) {
           text = "電子郵件格式不正確";
         } else if (code.includes("auth/weak-password")) {
-          text = "密碼不符合 Firebase 規則（需 8 碼以上，且包含大小寫字母與數字）";
+          text = "密碼不符合規則（需 8 碼以上，且包含大小寫字母與數字）";
         } else if (code.includes("auth/network-request-failed")) {
           text = "網路連線失敗";
         } else if (message.includes("建立帳號逾時")) {
