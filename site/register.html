@@ -214,53 +214,49 @@
     }
 
     .grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-  align-items:start;
-}
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      align-items:start;
+    }
 
-@media (max-width:760px){
-  .grid{
-    grid-template-columns:1fr;
-  }
-}
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
 
-.field{
-  display:grid;
-  gap:6px;
-  min-width:0;
-}
+    .field{
+      display:grid;
+      gap:6px;
+      min-width:0;
+    }
 
-.field.full{
-  grid-column:1 / -1;
-}
+    .field.full{
+      grid-column:1 / -1;
+    }
 
-.birthday-grid{
-  display:grid;
-  grid-template-columns:1.4fr 1fr 1fr;
-  gap:10px;
-  align-items:start;
-}
+    .label{
+      display:block;
+      font-size:13px;
+      font-weight:800;
+      color:#111827;
+    }
 
-.birthday-grid > *{
-  min-width:0;
-}
-
-.input,
-.select{
-  width:100%;
-  min-width:0;
-  min-height:48px;
-  padding:12px 14px;
-  border:1px solid rgba(0,0,0,.12);
-  border-radius:16px;
-  background:#fff;
-  color:#111827;
-  font-size:15px;
-  outline:none;
-  transition:border-color .12s ease, box-shadow .12s ease;
-}
+    .input,
+    .select{
+      width:100%;
+      min-width:0;
+      min-height:48px;
+      padding:12px 14px;
+      border:1px solid rgba(0,0,0,.12);
+      border-radius:16px;
+      background:#fff;
+      color:#111827;
+      font-size:15px;
+      outline:none;
+      transition:border-color .12s ease, box-shadow .12s ease;
+    }
 
     .input:focus,
     .select:focus{
@@ -292,6 +288,11 @@
       display:grid;
       grid-template-columns:1.4fr 1fr 1fr;
       gap:10px;
+      align-items:start;
+    }
+
+    .birthday-grid > *{
+      min-width:0;
     }
 
     @media (max-width:560px){
@@ -508,18 +509,18 @@
               </div>
 
               <div class="field">
-  <label class="label" for="password">密碼</label>
-  <input id="password" class="input" type="password" placeholder="至少 8 碼，需包含大小寫字母與數字" autocomplete="new-password" />
-</div>
+                <label class="label" for="password">密碼</label>
+                <input id="password" class="input" type="password" placeholder="至少 8 碼，需包含大小寫字母與數字" autocomplete="new-password" />
+              </div>
 
-<div class="field">
-  <label class="label" for="confirmPassword">確認密碼</label>
-  <input id="confirmPassword" class="input" type="password" placeholder="再次輸入密碼" autocomplete="new-password" />
-</div>
+              <div class="field">
+                <label class="label" for="confirmPassword">確認密碼</label>
+                <input id="confirmPassword" class="input" type="password" placeholder="再次輸入密碼" autocomplete="new-password" />
+              </div>
 
-<div class="field full">
-  <div class="hint">密碼需符合  規則：至少 8 碼，且包含大寫字母、小寫字母、數字。</div>
-</div>
+              <div class="field full">
+                <div class="hint">密碼需符合 Firebase 規則：至少 8 碼，且包含大寫字母、小寫字母、數字。</div>
+              </div>
             </div>
 
             <div class="section-divider">
