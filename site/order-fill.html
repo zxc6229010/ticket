@@ -768,6 +768,7 @@
       if (s === "registered") return "已建立";
       if (s === "paid") return "已付款";
       if (s === "completed") return "已完成";
+      if (s === "pending_payment") return "待付款";
       if (s === "pending") return "待處理";
       if (s === "processing") return "處理中";
       if (s === "cancelled") return "已取消";
@@ -837,8 +838,34 @@
       return userResult;
     }
 
+    function getOrderItems(order){
+      if (Array.isArray(order?.items) && order.items.length) {
+        return order.items;
+      }
+      if (Array.isArray(order?.itemSummary) && order.itemSummary.length) {
+        return order.itemSummary;
+      }
+      return [];
+    }
+
+    function getOrderTotalQuantity(order){
+      const direct = Number(order?.totalQuantity || 0);
+      if (direct > 0) return direct;
+
+      const items = getOrderItems(order);
+      return items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    }
+
+    function getBuyerTicketCount(order){
+      return getOrderTotalQuantity(order) > 0 ? 1 : 0;
+    }
+
+    function getExtraHolderCount(order){
+      return Math.max(0, getOrderTotalQuantity(order) - getBuyerTicketCount(order));
+    }
+
     function flattenItems(order){
-      const summary = Array.isArray(order.itemSummary) ? order.itemSummary : [];
+      const sourceItems = getOrderItems(order);
       const existingAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
       const flat = [];
 
@@ -846,11 +873,11 @@
       const buyerEmail = lower(order.buyerEmail || currentUser?.email || "");
       const buyerUid = norm(order.buyerUid || order.uid || currentUser?.uid || "");
 
-      summary.forEach((item, groupIndex) => {
+      sourceItems.forEach((item, groupIndex) => {
         const qty = Number(item.quantity || 0);
         for (let i = 0; i < qty; i++) {
           const existing = existingAssignments[pointer] || {};
-          const isBuyerTicket = existing.isBuyerTicket === true || pointer === 0;
+          const isBuyerTicket = pointer === 0 || existing.isBuyerTicket === true;
 
           flat.push({
             holderIndex: pointer,
@@ -861,7 +888,7 @@
 
             isBuyerTicket,
 
-            email: isBuyerTicket ? buyerEmail : norm(existing.email || ""),
+            email: isBuyerTicket ? buyerEmail : lower(existing.email || ""),
             name: norm(existing.name || ""),
             uid: isBuyerTicket ? buyerUid : norm(existing.uid || ""),
 
@@ -876,17 +903,15 @@
         }
       });
 
-      return flat.map((item, index) => {
-        if (index === 0) {
-          return {
-            ...item,
-            isBuyerTicket: true,
-            email: buyerEmail,
-            uid: buyerUid
-          };
-        }
-        return item;
-      });
+      if (flat.length > 0) {
+        flat[0].isBuyerTicket = true;
+        flat[0].email = buyerEmail;
+        flat[0].uid = buyerUid;
+        flat[0].status = "valid";
+        flat[0].message = "主購人票已自動視為主購者本人使用，無需另外填寫。";
+      }
+
+      return flat;
     }
 
     function isOrderExpired(order){
@@ -922,22 +947,24 @@
       const item = holderState[index];
       if (!item) return;
 
+      if (item.isBuyerTicket) {
+        item.status = "valid";
+        item.message = "主購人票已自動視為主購者本人使用，無需驗證。";
+        renderPage();
+        return;
+      }
+
       const email = lower(item.email);
       const name = norm(item.name);
 
-      item.uid = item.isBuyerTicket
-        ? norm(currentOrder?.buyerUid || currentOrder?.uid || currentUser?.uid || "")
-        : "";
-
+      item.uid = "";
       item.verifiedSchoolId = "";
       item.verifiedSchoolName = "";
       item.verifyMethod = "";
 
       if (!email) {
         item.status = "";
-        item.message = item.isBuyerTicket
-          ? "主購人票已自動帶入主購者帳號。"
-          : "請先填寫持票人 Email。";
+        item.message = "請先填寫持票人 Email。";
         renderPage();
         return;
       }
@@ -985,13 +1012,15 @@
 
     async function validateAllHolders(){
       for (let i = 0; i < holderState.length; i++) {
+        if (holderState[i]?.isBuyerTicket) continue;
         await validateOneHolder(i);
       }
     }
 
     function allHoldersReady(){
-      if (!holderState.length) return false;
-      return holderState.every(item => lower(item.email) && item.status === "valid");
+      const extraHolders = holderState.filter(item => !item.isBuyerTicket);
+      if (extraHolders.length === 0) return true;
+      return extraHolders.every(item => lower(item.email) && item.status === "valid");
     }
 
     function buildAssignmentsPayload(){
@@ -1011,7 +1040,7 @@
         verifiedSchoolName: norm(item.verifiedSchoolName),
         verifyMethod: norm(item.verifyMethod),
 
-        status: item.status === "valid" ? "valid" : "invalid",
+        status: item.isBuyerTicket ? "valid" : (item.status === "valid" ? "valid" : "invalid"),
         message: norm(item.message)
       }));
     }
@@ -1137,16 +1166,12 @@
     function renderHolderCard(item){
       const meta = holderStatusMeta(item);
       const locked = isOrderLocked(currentOrder);
-      const buyerLocked = item.isBuyerTicket === true;
 
       return `
         <div class="holder-card">
           <div class="holder-head">
             <div>
-              <h3 class="holder-title">
-                第 ${item.holderIndex + 1} 張票
-                ${buyerLocked ? `<span class="pill" style="margin-left:8px;">主購人票</span>` : ``}
-              </h3>
+              <h3 class="holder-title">第 ${item.holderIndex + 1} 張票</h3>
               <div class="holder-sub">
                 票種：${esc(item.ticketTypeName)}<br>
                 票價：${esc(formatPrice(item.price))}
@@ -1166,14 +1191,10 @@
                   type="email"
                   value="${esc(item.email)}"
                   placeholder="請輸入持票人會員 Email"
-                  ${(locked || buyerLocked) ? "disabled" : ""}
+                  ${locked ? "disabled" : ""}
                 />
                 <div class="hint">
-                  ${
-                    buyerLocked
-                      ? "這一張為主購人票，已自動綁定主購者帳號，不可改成其他人。"
-                      : "此 Email 必須已註冊會員帳號，且已完成校園驗證。"
-                  }
+                  此 Email 必須已註冊會員帳號，且已完成校園驗證。
                 </div>
               </div>
 
@@ -1206,7 +1227,7 @@
             </div>
 
             <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
-              ${esc(item.message || (buyerLocked ? "主購人票已自動帶入主購者資料。" : "尚未檢查。"))}
+              ${esc(item.message || "尚未檢查。")}
             </div>
 
             ${
@@ -1235,12 +1256,17 @@
       const expired = isOrderExpired(currentOrder);
       const locked = isOrderLocked(currentOrder);
       const ready = allHoldersReady();
-      const totalQty = holderState.length;
-      const checkedQty = holderState.filter(item => item.status === "valid").length;
-      const buyerTicketCount = holderState.filter(item => item.isBuyerTicket === true).length;
+
+      const totalQty = getOrderTotalQuantity(currentOrder);
+      const buyerTicketCount = getBuyerTicketCount(currentOrder);
+      const extraHolderCount = getExtraHolderCount(currentOrder);
+      const checkedExtraCount = holderState.filter(item => !item.isBuyerTicket && item.status === "valid").length;
+
       const orderStatusText = getOrderStatusText(currentOrder.status);
 
       backLink.href = "my-orders.html";
+
+      const extraHolderCards = holderState.filter(item => !item.isBuyerTicket);
 
       app.className = "";
       app.innerHTML = `
@@ -1255,7 +1281,7 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
             <span class="pill">訂單 ID：${esc(currentOrder.id || "-")}</span>
             <span class="pill">訂單狀態：${esc(orderStatusText)}</span>
             <span class="pill">截止時間：${esc(formatDateTime(currentOrder.expiresAt))}</span>
-            <span class="pill">完成進度：${esc(`${checkedQty} / ${totalQty}`)}</span>
+            <span class="pill">完成進度：${esc(extraHolderCount > 0 ? `${checkedExtraCount} / ${extraHolderCount}` : "無需填寫")}</span>
             <span class="pill">主購人票：${esc(buyerTicketCount)}</span>
           </div>
         </section>
@@ -1264,19 +1290,47 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
           <section class="main-card">
             <h2 class="section-title">持票人名單</h2>
             <div class="section-sub">
-              第一張票固定為主購人票，會自動帶入主購者帳號。
-              其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。
+              ${
+                extraHolderCount > 0
+                  ? "第一張票固定為主購人票，會自動帶入主購者帳號。其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。"
+                  : "此訂單僅購買 1 張票，系統會直接視為主購人本人使用，無需另外填寫持票人資料。"
+              }
             </div>
 
             <div class="holder-list">
-              ${holderState.map(item => renderHolderCard(item)).join("")}
+              ${
+                extraHolderCount > 0
+                  ? extraHolderCards.map(item => renderHolderCard(item)).join("")
+                  : `
+                    <div class="holder-card">
+                      <div class="holder-head">
+                        <div>
+                          <h3 class="holder-title">主購人票</h3>
+                          <div class="holder-sub">
+                            這張票將直接視為主購人本人使用。
+                          </div>
+                        </div>
+                        <span class="status status-ok">無需填寫</span>
+                      </div>
+                      <div class="holder-body">
+                        <div class="notice ok">
+                          此訂單只有 1 張票，已自動綁定主購者帳號 ${esc(currentUser?.email || "-")}，不需要另外填寫持票人資料。
+                        </div>
+                      </div>
+                    </div>
+                  `
+              }
             </div>
           </section>
 
           <aside class="side-card">
             <h2 class="section-title">訂單摘要</h2>
             <div class="section-sub">
-              完成全部資料檢查後，這筆訂單才會正式成立並建立票券。
+              ${
+                extraHolderCount > 0
+                  ? "完成全部資料檢查後，這筆訂單才會正式成立並建立票券。"
+                  : "此訂單僅有 1 張票，確認後即可直接正式成立並建立票券。"
+              }
             </div>
 
             <div class="summary">
@@ -1297,8 +1351,12 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
                 <strong>${esc(buyerTicketCount)}</strong>
               </div>
               <div class="summary-row">
+                <span>需填寫持票人</span>
+                <strong>${esc(extraHolderCount)}</strong>
+              </div>
+              <div class="summary-row">
                 <span>已通過</span>
-                <strong>${esc(checkedQty)}</strong>
+                <strong>${esc(checkedExtraCount)}</strong>
               </div>
               <div class="summary-row">
                 <span>總金額</span>
@@ -1311,33 +1369,36 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
                 expired
                   ? "這筆訂單已超過填寫期限，不能再修改。"
                   : ready
-                  ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
+                  ? (extraHolderCount > 0
+                      ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
+                      : "這筆訂單無需填寫持票人資料，可以直接送出並正式成立訂單。")
                   : "請先完成所有持票人資料填寫與資格檢查。"
               }
             </div>
 
             <div class="action-stack">
-              <button class="btn" id="checkAllBtn" ${locked ? "disabled" : ""}>檢查全部持票人</button>
-              <button class="btn" id="saveBtn" ${locked ? "disabled" : ""}>先儲存目前資料</button>
+              <button class="btn" id="checkAllBtn" ${(locked || extraHolderCount <= 0) ? "disabled" : ""}>檢查全部持票人</button>
+              <button class="btn" id="saveBtn" ${(locked || extraHolderCount <= 0) ? "disabled" : ""}>先儲存目前資料</button>
               <button class="btn btn-primary" id="submitBtn" ${(locked || !ready) ? "disabled" : ""}>完成填寫並送出</button>
             </div>
           </aside>
         </div>
       `;
 
-      holderState.forEach(item => {
+      extraHolderCards.forEach(item => {
         const emailEl = document.getElementById(`email_${item.holderIndex}`);
         const nameEl = document.getElementById(`name_${item.holderIndex}`);
 
-        if (emailEl && !item.isBuyerTicket) {
+        if (emailEl) {
           emailEl.addEventListener("input", e => {
-            holderState[item.holderIndex].email = lower(e.target.value);
-            holderState[item.holderIndex].status = "";
-            holderState[item.holderIndex].message = "尚未檢查。";
-            holderState[item.holderIndex].uid = "";
-            holderState[item.holderIndex].verifiedSchoolId = "";
-            holderState[item.holderIndex].verifiedSchoolName = "";
-            holderState[item.holderIndex].verifyMethod = "";
+            const idx = item.holderIndex;
+            holderState[idx].email = lower(e.target.value);
+            holderState[idx].status = "";
+            holderState[idx].message = "尚未檢查。";
+            holderState[idx].uid = "";
+            holderState[idx].verifiedSchoolId = "";
+            holderState[idx].verifiedSchoolName = "";
+            holderState[idx].verifyMethod = "";
             renderPage();
           });
         }
@@ -1426,16 +1487,6 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
       }
 
       holderState = flattenItems(currentOrder);
-
-      if (holderState.length > 0) {
-        holderState[0].isBuyerTicket = true;
-        holderState[0].email = lower(currentOrder.buyerEmail || currentUser.email || "");
-        holderState[0].uid = norm(currentOrder.buyerUid || currentOrder.uid || currentUser.uid || "");
-        if (!holderState[0].message) {
-          holderState[0].message = "主購人票已自動帶入主購者資料。";
-        }
-      }
-
       renderPage();
     }
 
