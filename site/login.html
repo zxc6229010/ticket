@@ -475,7 +475,6 @@
               <button class="btn btn-primary btn-block" id="loginBtn">登入</button>
               <button class="btn btn-block hidden" id="checkVerifyBtn">我已完成驗證，重新檢查</button>
               <button class="btn btn-block hidden" id="resendVerifyBtn">重寄驗證信</button>
-              <button class="btn btn-block hidden" id="logoutBtn">登出目前帳號</button>
             </div>
           </div>
         </div>
@@ -530,15 +529,16 @@
     const loginBtn = document.getElementById("loginBtn");
     const checkVerifyBtn = document.getElementById("checkVerifyBtn");
     const resendVerifyBtn = document.getElementById("resendVerifyBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
     const msg = document.getElementById("msg");
 
     const params = new URLSearchParams(location.search);
     const redirectTarget = params.get("redirect");
     const prefillEmail = params.get("email");
 
-    let lastSignedUser = null;
+    let pendingVerifyEmail = "";
+    let pendingVerifyUser = null;
     let redirecting = false;
+    let bootChecked = false;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -552,6 +552,10 @@
 
     function norm(value){
       return String(value ?? "").trim();
+    }
+
+    function lower(value){
+      return norm(value).toLowerCase();
     }
 
     function setMsg(type, text){
@@ -590,13 +594,20 @@
     function showVerifyActions(show){
       checkVerifyBtn.classList.toggle("hidden", !show);
       resendVerifyBtn.classList.toggle("hidden", !show);
-      logoutBtn.classList.toggle("hidden", !show);
     }
 
     function goNext(){
       if (redirecting) return;
       redirecting = true;
       location.href = getSafeRedirect();
+    }
+
+    async function forceLogoutSilently(){
+      try{
+        await signOut(auth);
+      }catch(e){
+        console.warn("signOut failed:", e);
+      }
     }
 
     if (prefillEmail) {
@@ -608,7 +619,7 @@
     }
 
     async function login(){
-      const email = norm(emailEl.value).toLowerCase();
+      const email = lower(emailEl.value);
       const password = passwordEl.value;
 
       if (!email) {
@@ -635,20 +646,29 @@
       try {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const user = cred.user;
-        lastSignedUser = user;
+
+        if (!user) {
+          throw new Error("登入失敗");
+        }
 
         await reload(user);
 
         if (!user.emailVerified) {
-          if (!emailEl.value) emailEl.value = user.email || "";
+          pendingVerifyEmail = user.email || email;
+          pendingVerifyUser = user;
+
+          await forceLogoutSilently();
 
           setMsg(
             "pending",
-            `你已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || email)}</span> 收信並點擊驗證連結。`
+            `此帳號尚未完成信箱驗證，系統已自動登出。<br>請先到 <span class="mono">${esc(pendingVerifyEmail)}</span> 收信完成驗證後再登入。`
           );
           showVerifyActions(true);
           return;
         }
+
+        pendingVerifyEmail = "";
+        pendingVerifyUser = null;
 
         setMsg("ok", `登入成功<br><span class="mono">${esc(email)}</span>`);
         showVerifyActions(false);
@@ -686,23 +706,55 @@
     }
 
     async function resendVerificationEmail(){
-      const user = auth.currentUser || lastSignedUser;
-
-      if (!user) {
-        setMsg("warn", "目前沒有可重寄驗證信的帳號");
-        return;
-      }
+      const fallbackEmail = lower(emailEl.value);
+      let user = pendingVerifyUser;
 
       resendVerifyBtn.disabled = true;
       const oldText = resendVerifyBtn.textContent;
       resendVerifyBtn.textContent = "寄送中…";
 
       try {
+        if (!user) {
+          const email = lower(emailEl.value);
+          const password = passwordEl.value;
+
+          if (!email || !password) {
+            throw new Error("請先輸入 Email 與密碼，再重寄驗證信");
+          }
+
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          user = cred.user || null;
+
+          if (!user) {
+            throw new Error("找不到可重寄驗證信的帳號");
+          }
+
+          await reload(user);
+
+          if (user.emailVerified) {
+            await forceLogoutSilently();
+            pendingVerifyEmail = "";
+            pendingVerifyUser = null;
+            showVerifyActions(false);
+            setMsg("ok", "此帳號已完成驗證，請直接重新登入。");
+            return;
+          }
+
+          pendingVerifyEmail = user.email || email;
+          pendingVerifyUser = user;
+        }
+
         await sendEmailVerification(user);
-        setMsg("ok", `驗證信已重新寄出到：<span class="mono">${esc(user.email || "-")}</span>`);
+        await forceLogoutSilently();
+
+        setMsg(
+          "ok",
+          `驗證信已重新寄出到：<span class="mono">${esc(user.email || pendingVerifyEmail || fallbackEmail || "-")}</span><br>請完成驗證後再登入。`
+        );
+        showVerifyActions(true);
       } catch (e) {
         console.error(e);
-        setMsg("warn", "重寄驗證信失敗，請稍後再試");
+        setMsg("warn", esc(e?.message || "重寄驗證信失敗，請稍後再試"));
       } finally {
         resendVerifyBtn.disabled = false;
         resendVerifyBtn.textContent = oldText;
@@ -710,10 +762,16 @@
     }
 
     async function checkVerificationNow(){
-      const user = auth.currentUser || lastSignedUser;
+      const email = lower(emailEl.value) || lower(pendingVerifyEmail);
+      const password = passwordEl.value;
 
-      if (!user) {
-        setMsg("warn", "目前沒有登入中的帳號");
+      if (!email) {
+        setMsg("warn", "請先輸入電子郵件");
+        return;
+      }
+
+      if (!password) {
+        setMsg("warn", "請先輸入密碼，再重新檢查");
         return;
       }
 
@@ -722,11 +780,20 @@
       checkVerifyBtn.textContent = "檢查中…";
 
       try {
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const user = cred.user;
+
+        if (!user) {
+          throw new Error("無法取得帳號資料");
+        }
+
         await reload(user);
 
         if (user.emailVerified) {
-          setMsg("ok", `信箱驗證完成<br><span class="mono">${esc(user.email || "-")}</span>`);
+          pendingVerifyEmail = "";
+          pendingVerifyUser = null;
           showVerifyActions(false);
+          setMsg("ok", `信箱驗證完成<br><span class="mono">${esc(user.email || email)}</span>`);
 
           setTimeout(() => {
             goNext();
@@ -734,36 +801,28 @@
           return;
         }
 
+        pendingVerifyEmail = user.email || email;
+        pendingVerifyUser = user;
+
+        await forceLogoutSilently();
+
         setMsg(
           "pending",
-          `目前尚未完成驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信後，再按一次重新檢查。`
+          `目前尚未完成驗證。<br>請先到 <span class="mono">${esc(pendingVerifyEmail)}</span> 收信後，再按一次重新檢查。`
         );
         showVerifyActions(true);
       } catch (e) {
         console.error(e);
-        setMsg("warn", "重新檢查失敗，請稍後再試");
+        setMsg("warn", esc(e?.message || "重新檢查失敗，請稍後再試"));
       } finally {
         checkVerifyBtn.disabled = false;
         checkVerifyBtn.textContent = oldText;
       }
     }
 
-    async function logoutCurrentUser(){
-      try {
-        await signOut(auth);
-        lastSignedUser = null;
-        showVerifyActions(false);
-        setMsg("info", "已登出，目前可重新登入。");
-      } catch (e) {
-        console.error(e);
-        setMsg("warn", "登出失敗，請稍後再試");
-      }
-    }
-
     loginBtn.onclick = login;
     resendVerifyBtn.onclick = resendVerificationEmail;
     checkVerifyBtn.onclick = checkVerificationNow;
-    logoutBtn.onclick = logoutCurrentUser;
 
     [emailEl, passwordEl].forEach(el => {
       el.addEventListener("keydown", e => {
@@ -774,33 +833,45 @@
     onAuthStateChanged(auth, async user => {
       updateAccountLinks(user || null);
 
-      if (!user) {
+      if (!bootChecked) {
+        bootChecked = true;
+
+        if (user) {
+          try {
+            await reload(user);
+          } catch (e) {
+            console.error(e);
+          }
+
+          if (user.emailVerified) {
+            goNext();
+            return;
+          }
+
+          pendingVerifyEmail = user.email || "";
+          pendingVerifyUser = user;
+
+          await forceLogoutSilently();
+
+          if (!emailEl.value && pendingVerifyEmail) {
+            emailEl.value = pendingVerifyEmail;
+          }
+
+          setMsg(
+            "pending",
+            `此帳號尚未完成信箱驗證，系統已自動登出。<br>請先到 <span class="mono">${esc(pendingVerifyEmail || "-")}</span> 收信完成驗證後再登入。`
+          );
+          showVerifyActions(true);
+          return;
+        }
+
         showVerifyActions(false);
         return;
       }
 
-      try {
-        await reload(user);
-      } catch (e) {
-        console.error(e);
+      if (!user) {
+        updateAccountLinks(null);
       }
-
-      if (user.emailVerified) {
-        goNext();
-        return;
-      }
-
-      lastSignedUser = user;
-
-      if (!emailEl.value) {
-        emailEl.value = user.email || "";
-      }
-
-      setMsg(
-        "pending",
-        `你目前已登入，但尚未完成信箱驗證。<br>請先到 <span class="mono">${esc(user.email || "-")}</span> 收信並完成驗證。`
-      );
-      showVerifyActions(true);
     });
   </script>
 </body>
