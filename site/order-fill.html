@@ -1172,13 +1172,7 @@
     }
 
     async function saveAssignments(asFinalSubmit = false){
-      console.log("===== DEBUG =====");
-console.log("目前登入 UID：", currentUser?.uid);
-console.log("目前登入 Email：", currentUser?.email);
-console.log("訂單 buyerUid：", currentOrder?.buyerUid);
-console.log("訂單 buyerEmail：", currentOrder?.buyerEmail);
-console.log("訂單 status：", currentOrder?.status);
-console.log("訂單 fillStatus：", currentOrder?.fillStatus);
+      
       if (!currentOrder?.ref) return;
 
       if (isOrderLocked(currentOrder)) {
