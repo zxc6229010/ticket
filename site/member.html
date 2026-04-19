@@ -577,7 +577,6 @@
       display:none !important;
     }
 
-    /* 未登入版面 */
     .auth-guest-wrap{
       max-width:640px;
       margin:0 auto;
@@ -959,10 +958,6 @@
                 查看目前帳號名下的票券摘要。
               </div>
 
-              <div class="row" style="margin-top:18px;">
-                <a class="btn btn-primary" href="my-tickets.html">前往我的票券</a>
-              </div>
-
               <div id="ticketSummaryWrap" class="list"></div>
             </section>
 
@@ -1104,6 +1099,41 @@
       return `NT$ ${num.toLocaleString("zh-Hant")}`;
     }
 
+    function mergeDocsFromSnapshots(snapshotResults){
+      const merged = new Map();
+
+      snapshotResults.forEach(result => {
+        if (result.status !== "fulfilled") return;
+        const snap = result.value;
+        if (!snap) return;
+
+        snap.forEach(docSnap => {
+          const path = docSnap.ref.path;
+          merged.set(path, {
+            id: docSnap.id,
+            _path: path,
+            ...docSnap.data()
+          });
+        });
+      });
+
+      return [...merged.values()];
+    }
+
+    function getOrderTicketTypeSummary(order){
+      const items = Array.isArray(order.items) && order.items.length
+        ? order.items
+        : (Array.isArray(order.itemSummary) ? order.itemSummary : []);
+
+      if (!items.length) {
+        return order.ticketTypeName || "-";
+      }
+
+      return items
+        .map(x => `${x.ticketTypeName || "票種"} × ${x.quantity || 0}`)
+        .join("、");
+    }
+
     function getTicketStatusMeta(ticket){
       const status = lower(ticket.status || "valid");
       const checked = ticket.checkedIn === true || lower(ticket.checkinStatus || "") === "checked_in";
@@ -1136,6 +1166,7 @@
         paid: "已付款",
         completed: "已完成",
         pending: "待處理",
+        pending_payment: "待付款",
         processing: "處理中",
         cancelled: "已取消",
         void: "已作廢",
@@ -1148,7 +1179,7 @@
     function getOrderStatusClass(status){
       const s = lower(status);
       if (["registered","paid","completed","ready_for_checkout"].includes(s)) return "status-ok";
-      if (["pending","processing","pending_holder_info"].includes(s)) return "status-gray";
+      if (["pending","processing","pending_holder_info","pending_payment"].includes(s)) return "status-gray";
       if (["cancelled","void","refunded","expired"].includes(s)) return "status-warn";
       return "status-gray";
     }
@@ -1213,32 +1244,24 @@
 
     async function loadOrders(uid){
       try {
-        const buyerSnap = await db.collectionGroup("orders")
-          .where("buyerUid", "==", uid)
-          .get();
+        const tasks = [
+          db.collectionGroup("orders")
+            .where("buyerUid", "==", uid)
+            .get(),
 
-        const uidSnap = await db.collectionGroup("orders")
-          .where("uid", "==", uid)
-          .get();
+          db.collectionGroup("orders")
+            .where("uid", "==", uid)
+            .get(),
 
-        const merged = new Map();
+          db.collectionGroup("orders")
+            .where("participantUids", "array-contains", uid)
+            .get()
+        ];
 
-        buyerSnap.forEach(docSnap => {
-          merged.set(docSnap.id, {
-            id: docSnap.id,
-            ...docSnap.data()
-          });
-        });
+        const results = await Promise.allSettled(tasks);
+        const mergedRows = mergeDocsFromSnapshots(results);
 
-        uidSnap.forEach(docSnap => {
-          merged.set(docSnap.id, {
-            ...(merged.get(docSnap.id) || {}),
-            id: docSnap.id,
-            ...docSnap.data()
-          });
-        });
-
-        orderCache = [...merged.values()].sort((a, b) => {
+        orderCache = mergedRows.sort((a, b) => {
           const ta = toDate(a.createdAt)?.getTime() || 0;
           const tb = toDate(b.createdAt)?.getTime() || 0;
           return tb - ta;
@@ -1246,7 +1269,7 @@
 
         renderOrders();
       } catch (e) {
-        console.error(e);
+        console.error("loadOrders failed:", e);
         ordersWrap.className = "empty";
         ordersWrap.innerHTML = "訂單載入失敗，請稍後再試。";
       }
@@ -1254,19 +1277,20 @@
 
     async function loadTickets(uid){
       try {
-        const snap = await db.collectionGroup("tickets")
-          .where("uid", "==", uid)
-          .get();
+        const tasks = [
+          db.collectionGroup("tickets")
+            .where("uid", "==", uid)
+            .get(),
 
-        const rows = [];
-        snap.forEach(docSnap => {
-          rows.push({
-            id: docSnap.id,
-            ...docSnap.data()
-          });
-        });
+          db.collectionGroup("tickets")
+            .where("buyerUid", "==", uid)
+            .get()
+        ];
 
-        ticketCache = rows.sort((a, b) => {
+        const results = await Promise.allSettled(tasks);
+        const mergedRows = mergeDocsFromSnapshots(results);
+
+        ticketCache = mergedRows.sort((a, b) => {
           const ta = toDate(a.createdAt)?.getTime() || 0;
           const tb = toDate(b.createdAt)?.getTime() || 0;
           return tb - ta;
@@ -1274,7 +1298,7 @@
 
         renderTicketSummary();
       } catch (e) {
-        console.error(e);
+        console.error("loadTickets failed:", e);
         ticketSummaryWrap.innerHTML = `<div class="empty">票券摘要載入失敗，請稍後再試。</div>`;
       }
     }
@@ -1294,11 +1318,7 @@
               <div class="item-title">${esc(order.eventTitle || "未命名活動")}</div>
               <div class="item-sub">
 訂單 ID：<span class="mono">${esc(order.id)}</span>
-票種：${esc(
-  Array.isArray(order.itemSummary) && order.itemSummary.length
-    ? order.itemSummary.map(x => `${x.ticketTypeName || "票種"} × ${x.quantity || 0}`).join("、")
-    : (order.ticketTypeName || "-")
-)}
+票種：${esc(getOrderTicketTypeSummary(order))}
 張數：${esc(order.totalQuantity || order.quantity || 1)}
 金額：${esc(formatPrice(order.totalAmount || 0))}
 建立時間：${esc(formatDateTime(order.createdAt))}
@@ -1342,7 +1362,7 @@
       if (ticketCache.length > 4) {
         ticketSummaryWrap.insertAdjacentHTML("beforeend", `
           <div class="notice info">
-            目前共有 ${ticketCache.length} 張票券，更多內容請前往「我的票券」查看。
+            目前共有 ${ticketCache.length} 張票券。
           </div>
         `);
       }
