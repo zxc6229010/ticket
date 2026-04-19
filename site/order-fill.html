@@ -951,7 +951,7 @@
 
     function isActiveOrderStatus(status){
       const s = lower(status);
-      return ["pending_holder_info", "pending_payment", "processing", "ready_for_checkout"].includes(s);
+      return ["pending", "pending_holder_info", "pending_payment", "processing", "ready_for_checkout"].includes(s);
     }
 
     function holderStatusMeta(item){
@@ -1112,9 +1112,7 @@
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
 
         const ticketSnap = await getDoc(ticketRef);
-        if (ticketSnap.exists()) {
-          return;
-        }
+        if (ticketSnap.exists()) return;
 
         await setDoc(ticketRef, {
           eventId,
@@ -1258,14 +1256,64 @@
       }
 
       try {
+        const freshOrder = await getOrder();
+        if (!freshOrder) {
+          alert("找不到最新訂單資料。");
+          return;
+        }
+
+        currentOrder = freshOrder;
+
+        const buyerUid = norm(currentOrder.buyerUid || currentOrder.uid || "");
+        if (!currentUser || currentUser.uid !== buyerUid) {
+          alert("只有主購者可以修改這筆訂單。");
+          return;
+        }
+
+        if (isOrderLocked(currentOrder)) {
+          alert("此訂單目前不可修改。");
+          renderPage();
+          return;
+        }
+
         const assignments = buildAssignmentsPayload();
         const participantEmails = buildParticipantEmails();
         const participantUids = buildParticipantUids();
         const sharedOrderRefs = buildSharedOrderRefs();
         const ready = allHoldersReady();
+        const extraHolderCount = getExtraHolderCount(currentOrder);
 
         if (asFinalSubmit && !ready) {
           alert("尚有持票人資料未完成或未通過驗證。");
+          return;
+        }
+
+        if (extraHolderCount <= 0) {
+          const minimalPayload = {
+            updatedAt: serverTimestamp()
+          };
+
+          if (asFinalSubmit) {
+            minimalPayload.status = "ready_for_checkout";
+            minimalPayload.fillStatus = "completed";
+            minimalPayload.holderInfoCompletedAt = serverTimestamp();
+          }
+
+          console.log("免填資料模式：開始更新訂單");
+          await updateDoc(currentOrder.ref, minimalPayload);
+          console.log("免填資料模式：訂單更新成功");
+
+          if (asFinalSubmit) {
+            console.log("免填資料模式：開始建立票券");
+            await createTicketsForOrder(currentOrder, assignments);
+            console.log("免填資料模式：票券建立成功");
+          }
+
+          currentOrder = await getOrder();
+          holderState = flattenItems(currentOrder);
+          renderPage();
+
+          alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
           return;
         }
 
