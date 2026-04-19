@@ -1068,7 +1068,9 @@
         mode,
         randomLength,
         maxUses: Math.max(0, Number(x.maxUses || 0) || 0),
-        usedCount: Math.max(0, Number(x.usedCount || 0) || 0)
+        usedCount: Math.max(0, Number(x.usedCount || 0) || 0),
+        ticketTypeId: norm(x.ticketTypeId || ""),
+        ticketTypeName: norm(x.ticketTypeName || "")
       };
     }
 
@@ -1165,6 +1167,12 @@
                 }
               </div>
             </div>
+
+            ${
+              item.ticketTypeName
+                ? `<div class="small" style="margin-top:10px;">目前綁定票種：<span class="mono">${esc(item.ticketTypeName)}</span></div>`
+                : `<div class="small warn" style="margin-top:10px;">尚未綁定票種</div>`
+            }
 
             ${isRandom ? `
               <label>備註</label>
@@ -1290,7 +1298,7 @@
                             <input
                               type="checkbox"
                               ${checked ? "checked" : ""}
-                              onchange="toggleTicketPromoBind(${idx}, '${esc(normalized.id)}', this.checked)"
+                              onchange="toggleTicketPromoBind(${idx}, '${normalized.id.replace(/'/g, "\\'")}', this.checked)"
                             />
                             <span class="pill">${esc(normalized.code || `代碼 ${codeIdx + 1}`)}</span>
                             <span class="small">${esc(normalized.note || "")}</span>
@@ -1342,7 +1350,24 @@
         .filter(item => item.name);
     }
 
-    function buildPromoCodesPayload(){
+    function buildTicketTypesPayload(){
+      const promoIds = new Set(
+        promoCodesState
+          .map(normalizePromoItem)
+          .filter(item => item.id)
+          .map(item => item.id)
+      );
+
+      return ticketTypesState
+        .map(normalizeTicketTypeItem)
+        .filter(item => item.name && item.id)
+        .map(item => ({
+          ...item,
+          promoCodeIds: item.promoCodeIds.filter(id => promoIds.has(id))
+        }));
+    }
+
+    function buildPromoCodesPayload(ticketTypesPayload){
       const cleaned = promoCodesState
         .map(normalizePromoItem)
         .filter(item => item.code);
@@ -1354,25 +1379,48 @@
       for (const item of cleaned) {
         const idKey = item.id.toLowerCase();
         const codeKey = item.code.toLowerCase();
-        if (seenId.has(idKey) || seenCode.has(codeKey)) continue;
+
+        if (seenId.has(idKey)) {
+          throw new Error(`公關代碼 ID 重複：${item.id}`);
+        }
+        if (seenCode.has(codeKey)) {
+          throw new Error(`公關代碼重複：${item.code}`);
+        }
+
         seenId.add(idKey);
         seenCode.add(codeKey);
         unique.push(item);
       }
 
-      return unique;
-    }
+      const codeUsageMap = new Map();
 
-    function buildTicketTypesPayload(){
-      const promoIds = new Set(buildPromoCodesPayload().map(item => item.id));
+      ticketTypesPayload.forEach(ticket => {
+        (ticket.promoCodeIds || []).forEach(codeId => {
+          if (!codeUsageMap.has(codeId)) codeUsageMap.set(codeId, []);
+          codeUsageMap.get(codeId).push(ticket);
+        });
+      });
 
-      return ticketTypesState
-        .map(normalizeTicketTypeItem)
-        .filter(item => item.name && item.id)
-        .map(item => ({
+      return unique.map(item => {
+        const binds = codeUsageMap.get(item.id) || [];
+
+        if (binds.length === 0) {
+          throw new Error(`公關代碼「${item.code}」尚未綁定票種`);
+        }
+
+        if (binds.length > 1) {
+          throw new Error(`公關代碼「${item.code}」只能綁定 1 種票種`);
+        }
+
+        const targetTicket = binds[0];
+
+        return {
           ...item,
-          promoCodeIds: item.promoCodeIds.filter(id => promoIds.has(id))
-        }));
+          code: item.code.toUpperCase(),
+          ticketTypeId: targetTicket.id,
+          ticketTypeName: targetTicket.name
+        };
+      });
     }
 
     window.updatePromoCode = (idx, key, value) => {
@@ -1478,7 +1526,9 @@
         mode: "manual",
         randomLength: 8,
         maxUses: 0,
-        usedCount: 0
+        usedCount: 0,
+        ticketTypeId: "",
+        ticketTypeName: ""
       });
       renderPromoCodes();
       renderTicketTypes();
@@ -1710,8 +1760,8 @@
               </div>
 
               <div class="right">
-                <button class="btn btn-sm" onclick="editEvent('${esc(id)}')">編輯</button>
-                ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(id)}','${esc(title)}')">刪除</button>` : ``}
+                <button class="btn btn-sm" onclick="editEvent('${id.replace(/'/g, "\\'")}')">編輯</button>
+                ${isPlatformSuper() ? `<button class="btn btn-sm btn-danger" onclick="deleteEvent('${id.replace(/'/g, "\\'")}','${String(title).replace(/'/g, "\\'")}')">刪除</button>` : ``}
               </div>
             </div>
 
@@ -1843,8 +1893,8 @@
         const title = norm(titleEl.value);
         const ownerSchoolId = getScopeOwnerSchoolId();
         const publishScope = publishScopeEl.value;
-        const promoCodes = buildPromoCodesPayload();
         const ticketTypes = buildTicketTypesPayload();
+        const promoCodes = buildPromoCodesPayload(ticketTypes);
         const gates = buildGateAssignmentsPayload();
 
         if (!title) throw new Error("請輸入活動名稱");
