@@ -28,7 +28,7 @@
       --gray:#6b7280;
       --gray-bg:#f3f4f6;
 
-      --seat-size:32px;
+      --seat-size:34px;
       --max:1380px;
     }
 
@@ -392,6 +392,7 @@
       font-size:12px;
       color:var(--muted);
       line-height:1.8;
+      white-space:pre-wrap;
     }
 
     .mode-row{
@@ -520,6 +521,7 @@
       font-size:10px;
       font-weight:800;
       user-select:none;
+      color:#111;
     }
 
     .seat:hover{
@@ -529,38 +531,38 @@
     }
 
     .seat.selected{
-      background:#111827;
-      color:#fff;
-      border-color:#111827;
+      background:#111827 !important;
+      color:#fff !important;
+      border-color:#111827 !important;
       box-shadow:0 0 0 3px rgba(17,24,39,.14);
       z-index:8;
     }
 
     .seat.disabled{
-      background:#d1d5db;
-      border-color:#9ca3af;
-      color:#6b7280;
+      background:#d1d5db !important;
+      border-color:#9ca3af !important;
+      color:#6b7280 !important;
       cursor:not-allowed;
     }
 
     .seat.sold{
-      background:#6b7280;
-      border-color:#6b7280;
-      color:#fff;
+      background:#6b7280 !important;
+      border-color:#6b7280 !important;
+      color:#fff !important;
       cursor:not-allowed;
     }
 
     .seat.hold-other{
-      background:#f59e0b;
-      border-color:#d97706;
-      color:#fff;
+      background:#f59e0b !important;
+      border-color:#d97706 !important;
+      color:#fff !important;
       cursor:not-allowed;
     }
 
     .seat.mine{
-      background:#2563eb;
-      border-color:#2563eb;
-      color:#fff;
+      background:#2563eb !important;
+      border-color:#2563eb !important;
+      color:#fff !important;
     }
 
     .seat.free{
@@ -598,6 +600,7 @@
       line-height:1.9;
       color:var(--muted);
       font-size:14px;
+      white-space:pre-wrap;
     }
 
     .side-card{
@@ -854,9 +857,6 @@
       getDoc,
       getDocs,
       collection,
-      query,
-      where,
-      orderBy,
       runTransaction,
       serverTimestamp,
       Timestamp
@@ -889,7 +889,9 @@
     let visibleTicketTypes = [];
     let allSeats = [];
     let selectedSeatIds = [];
-    let selectedSeatMode = "manual"; // manual / auto
+    let selectedSeatMode = "manual";
+    let quantityMap = {};
+
     let promoState = {
       code: "",
       applied: false,
@@ -897,8 +899,6 @@
       data: null,
       error: ""
     };
-
-    let quantityMap = {};
 
     const HOLD_MINUTES = 10;
 
@@ -918,6 +918,11 @@
 
     function lower(value){
       return norm(value).toLowerCase();
+    }
+
+    function getSafeNumber(value, fallback = 0){
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
     }
 
     function toDate(input){
@@ -946,9 +951,22 @@
       return `NT$ ${num.toLocaleString("zh-Hant")}`;
     }
 
-    function getSafeNumber(value, fallback = 0){
-      const n = Number(value);
-      return Number.isFinite(n) ? n : fallback;
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
+      } else {
+        const redirect = encodeURIComponent(location.pathname + location.search);
+        accountBtn.href = `login.html?redirect=${redirect}`;
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
+      }
+    }
+
+    function buildLoginRedirectUrl(){
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      return `login.html?redirect=${redirect}`;
     }
 
     function getEventStatus(event){
@@ -961,6 +979,10 @@
       if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming" };
       if (saleEnd && now > saleEnd) return { text:"已截止", key:"ended" };
       return { text:"受理中", key:"selling" };
+    }
+
+    function canCreateOrder(event){
+      return getEventStatus(event).key === "selling";
     }
 
     function getEventVenue(event){
@@ -983,62 +1005,79 @@
       );
     }
 
-    function updateAccountLinks(user){
-      if (user) {
-        accountBtn.href = "member.html";
-        accountBtn.title = user.email || "會員中心";
-        accountBtn.setAttribute("aria-label", "會員中心");
-      } else {
-        const redirect = encodeURIComponent(location.pathname + location.search);
-        accountBtn.href = `login.html?redirect=${redirect}`;
-        accountBtn.title = "登入 / 會員中心";
-        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
-      }
-    }
-
-    function buildLoginRedirectUrl(){
-      const redirect = encodeURIComponent(location.pathname + location.search);
-      return `login.html?redirect=${redirect}`;
-    }
-
-    function canCreateOrder(event){
-      return getEventStatus(event).key === "selling";
-    }
-
     function getSeatingEnabled(event){
-      return event.seatingEnabled === true;
+      return event?.seatingEnabled === true;
     }
 
     function getSeatMapEnabled(event){
-      if (event.seatMapEnabled === false) return false;
-      return true;
+      return event?.seatMapEnabled !== false;
     }
 
     function getSeatingMode(event){
-      return lower(event.seatingMode || "assigned"); // assigned / free
+      return lower(event?.seatingMode || "assigned");
     }
 
     function getMaxSeatsPerOrder(event){
-      const n = getSafeNumber(event.maxSeatsPerOrder, 6);
+      const n = getSafeNumber(event?.maxSeatsPerOrder, 6);
       return n > 0 ? n : 6;
     }
 
+    function getSectionLabel(sectionId){
+      const value = lower(sectionId);
+      if (!value) return "未分區";
+      if (value === "vip") return "VIP";
+      if (value === "a") return "A 區";
+      if (value === "b") return "B 區";
+      if (value === "c") return "C 區";
+      if (value === "d") return "D 區";
+      return sectionId || "未分區";
+    }
+
+    function getSectionColor(sectionId){
+      const s = lower(sectionId);
+      if (s === "vip") return "#ff375f";
+      if (s === "a") return "#0071e3";
+      if (s === "b") return "#34c759";
+      if (s === "c") return "#ff9f0a";
+      if (s === "d") return "#af52de";
+      return "";
+    }
+
+    function getPromoDocTicketTypeId(promo){
+      return norm(
+        promo?.ticketTypeId ||
+        promo?.bindTicketTypeId ||
+        promo?.targetTicketTypeId ||
+        ""
+      );
+    }
+
+    function getPromoDocTicketTypeName(promo){
+      return norm(
+        promo?.ticketTypeName ||
+        promo?.bindTicketTypeName ||
+        ""
+      );
+    }
+
     function normalizeTicketTypeItem(item, index){
+      const requiresSeat = item?.requiresSeat === true;
       return {
-        id: norm(item.id || `ticket_${index + 1}`),
-        name: norm(item.name || `票種 ${index + 1}`),
-        description: norm(item.description || ""),
-        price: getSafeNumber(item.price, 0),
-        enabled: item.enabled !== false,
-        visibility: lower(item.visibility || "public"), // public / promo
-        maxPerOrder: Math.max(1, getSafeNumber(item.maxPerOrder, getMaxSeatsPerOrder(currentEvent))),
-        requiresSeat: item.requiresSeat === true,
-        sectionIds: Array.isArray(item.sectionIds) ? item.sectionIds.map(v => norm(v)).filter(Boolean) : []
+        id: norm(item?.id || `ticket_${index + 1}`),
+        name: norm(item?.name || `票種 ${index + 1}`),
+        description: norm(item?.description || ""),
+        price: getSafeNumber(item?.price, 0),
+        enabled: item?.enabled !== false,
+        visibility: lower(item?.visibility || "public"),
+        maxPerOrder: Math.max(1, getSafeNumber(item?.maxPerOrder, getMaxSeatsPerOrder(currentEvent))),
+        requiresSeat,
+        promoCodeIds: Array.isArray(item?.promoCodeIds) ? item.promoCodeIds.map(v => norm(v)).filter(Boolean) : [],
+        sectionIds: Array.isArray(item?.sectionIds) ? item.sectionIds.map(v => norm(v)).filter(Boolean) : []
       };
     }
 
     function getRawTicketTypes(event){
-      const raw = Array.isArray(event.ticketTypes) ? event.ticketTypes : [];
+      const raw = Array.isArray(event?.ticketTypes) ? event.ticketTypes : [];
       if (!raw.length){
         return [{
           id:"general",
@@ -1049,47 +1088,46 @@
           visibility:"public",
           maxPerOrder:getMaxSeatsPerOrder(event),
           requiresSeat:getSeatingEnabled(event) && getSeatingMode(event) === "assigned",
+          promoCodeIds:[],
           sectionIds:[]
         }];
       }
       return raw.map(normalizeTicketTypeItem).filter(item => item.enabled);
     }
 
-    function getPromoDocTicketTypeId(promo){
-      return norm(
-        promo.ticketTypeId ||
-        promo.bindTicketTypeId ||
-        promo.targetTicketTypeId ||
-        ""
-      );
-    }
+    function findPromoBoundTicketType(promo){
+      const directId = getPromoDocTicketTypeId(promo);
+      if (directId) {
+        const hit = allTicketTypes.find(type => type.id === directId);
+        if (hit) return hit;
+      }
 
-    function getPromoDocTicketTypeName(promo){
-      return norm(
-        promo.ticketTypeName ||
-        promo.bindTicketTypeName ||
-        ""
-      );
+      const promoId = norm(promo?.id || "");
+      const promoCode = norm(promo?.code || "");
+
+      return allTicketTypes.find(type => {
+        const ids = Array.isArray(type.promoCodeIds) ? type.promoCodeIds : [];
+        return ids.includes(promoId) || ids.includes(promoCode);
+      }) || null;
     }
 
     function getVisibleTicketTypes(){
       if (!promoState.applied || !promoState.data) {
-        return [...allTicketTypes].filter(type => type.visibility !== "promo" || type.visibility === "public");
+        return allTicketTypes.filter(type => type.visibility !== "promo");
       }
 
-      const targetTypeId = getPromoDocTicketTypeId(promoState.data);
+      const boundType = findPromoBoundTicketType(promoState.data);
 
       return allTicketTypes.filter(type => {
-        if (type.visibility === "public") return true;
-        if (type.visibility === "promo" && targetTypeId && type.id === targetTypeId) return true;
-        return false;
+        if (type.visibility !== "promo") return true;
+        return !!boundType && type.id === boundType.id;
       });
     }
 
-    function initializeQuantityMap(){
+    function initializeQuantityMap(resetValues = false){
       const next = {};
       getVisibleTicketTypes().forEach(type => {
-        next[type.id] = Number(quantityMap[type.id] || 0);
+        next[type.id] = resetValues ? 0 : Number(quantityMap[type.id] || 0);
       });
       quantityMap = next;
     }
@@ -1108,10 +1146,8 @@
         const heldUntilDate = toDate(data.heldUntil);
         const heldUntilMs = heldUntilDate ? heldUntilDate.getTime() : 0;
 
-        const expiredHold = heldUntilMs && heldUntilMs < now;
         let computedStatus = norm(data.status || "available");
-
-        if (computedStatus === "held" && expiredHold) {
+        if (computedStatus === "held" && heldUntilMs && heldUntilMs < now) {
           computedStatus = "available";
         }
 
@@ -1134,27 +1170,6 @@
           heldUntilDate
         };
       });
-    }
-
-    function getSectionLabel(sectionId){
-      const value = lower(sectionId);
-      if (!value) return "未分區";
-      if (value === "vip") return "VIP";
-      if (value === "a") return "A 區";
-      if (value === "b") return "B 區";
-      if (value === "c") return "C 區";
-      if (value === "d") return "D 區";
-      return sectionId;
-    }
-
-    function getSectionColor(sectionId){
-      const s = lower(sectionId);
-      if (s === "vip") return "#ff375f";
-      if (s === "a") return "#0071e3";
-      if (s === "b") return "#34c759";
-      if (s === "c") return "#ff9f0a";
-      if (s === "d") return "#af52de";
-      return "";
     }
 
     function getSelectedItems(){
@@ -1187,21 +1202,10 @@
       if (!currentEvent) return 0;
       if (!getSeatingEnabled(currentEvent)) return 0;
       if (getSeatingMode(currentEvent) !== "assigned") return 0;
+
       return getSelectedItems().reduce((sum, item) => {
         return sum + (item.requiresSeat ? Number(item.quantity || 0) : 0);
       }, 0);
-    }
-
-    function getAllAllowedSeatSectionIds(){
-      const items = getSelectedItems().filter(item => item.requiresSeat);
-      const all = new Set();
-
-      items.forEach(item => {
-        if (!item.sectionIds || !item.sectionIds.length) return;
-        item.sectionIds.forEach(id => all.add(norm(id)));
-      });
-
-      return [...all];
     }
 
     function seatIsSelectable(seat){
@@ -1212,20 +1216,19 @@
 
       if (status === "sold") return false;
       if (status === "disabled") return false;
-
       if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return false;
 
       const requiredCount = getRequiredSeatCount();
       if (requiredCount <= 0) return false;
 
-      const items = getSelectedItems().filter(item => item.requiresSeat);
-      if (!items.length) return false;
+      const selectedSeatItemTypes = getSelectedItems().filter(item => item.requiresSeat);
+      if (!selectedSeatItemTypes.length) return false;
 
-      // 若有指定 sectionIds，座位需符合任一選中票種允許的 section
-      const hasRestricted = items.some(item => Array.isArray(item.sectionIds) && item.sectionIds.length > 0);
+      const hasRestricted = selectedSeatItemTypes.some(item => Array.isArray(item.sectionIds) && item.sectionIds.length > 0);
+
       if (hasRestricted) {
         const allowed = new Set();
-        items.forEach(item => {
+        selectedSeatItemTypes.forEach(item => {
           (item.sectionIds || []).forEach(id => allowed.add(norm(id)));
         });
 
@@ -1253,15 +1256,19 @@
       if (promoState.loading) {
         return { className:"info", text:"公關代碼驗證中…" };
       }
+
       if (promoState.applied && promoState.data) {
+        const boundType = findPromoBoundTicketType(promoState.data);
         return {
           className:"ok",
-          text:`已套用公關代碼：${promoState.data.code || promoState.data.id}\n對應票種：${getPromoDocTicketTypeName(promoState.data) || getPromoDocTicketTypeId(promoState.data) || "-"}`
+          text:`已套用公關代碼：${promoState.data.code || promoState.data.id}\n對應票種：${boundType?.name || getPromoDocTicketTypeName(promoState.data) || getPromoDocTicketTypeId(promoState.data) || "-"}`
         };
       }
+
       if (promoState.error) {
         return { className:"warn", text:promoState.error };
       }
+
       return {
         className:"info",
         text:"若你有公關代碼，可在此輸入。\n套用後會開放對應公關票種。"
@@ -1318,12 +1325,10 @@
 
       return selectedItems.map(item => `
         <div class="summary-item">
-          <div class="summary-item-title">
-            ${esc(item.ticketTypeName)} × ${esc(item.quantity)} 張
-          </div>
+          <div class="summary-item-title">${esc(item.ticketTypeName)} × ${esc(item.quantity)} 張</div>
           <div class="summary-item-sub">
-            單價：${esc(formatPrice(item.unitPrice))} ｜ 小計：${esc(formatPrice(item.subtotal))}
-            ${item.requiresSeat ? `\n需選位` : `\n不需選位`}
+單價：${esc(formatPrice(item.unitPrice))} ｜ 小計：${esc(formatPrice(item.subtotal))}
+${item.requiresSeat ? "需選位" : "不需選位"}
           </div>
         </div>
       `).join("");
@@ -1344,8 +1349,8 @@
         <div class="summary-item">
           <div class="summary-item-title">${esc(seat.label || seat.id)}</div>
           <div class="summary-item-sub">
-            區域：${esc(getSectionLabel(seat.sectionId || ""))}
-            ${seat.floor ? `\n樓層：${esc(seat.floor)}` : ``}
+區域：${esc(getSectionLabel(seat.sectionId || ""))}
+${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
           </div>
         </div>
       `).join("");
@@ -1365,9 +1370,7 @@
             <div class="ticket-price">${esc(formatPrice(type.price))}</div>
           </div>
 
-          <div class="ticket-desc">
-            ${esc(type.description || "請選擇此票種的購買張數。")}
-          </div>
+          <div class="ticket-desc">${esc(type.description || "請選擇此票種的購買張數。")}</div>
 
           <div class="meta-pills">
             <span class="meta-pill">票種代碼：${esc(type.id)}</span>
@@ -1419,8 +1422,8 @@
             </div>
 
             <div class="hint" style="margin-bottom:12px;">
-              手動選位：直接點選座位。  
-              電腦選位：系統會依目前票數，自動挑出可用座位。
+手動選位：直接點選座位。
+電腦選位：系統會依目前票數，自動挑出可用座位。
             </div>
 
             <div class="stage-wrap">
@@ -1428,36 +1431,33 @@
                 <div class="stage-sign">STAGE</div>
 
                 <div class="seat-stage" id="seatStage">
-                  ${
-                    showMap && bg
-                      ? `<img class="seatmap-image" src="${esc(bg)}" alt="seat map">`
-                      : ""
-                  }
+                  ${showMap && bg ? `<img class="seatmap-image" src="${esc(bg)}" alt="seat map">` : ""}
 
-                  ${
-                    allSeats.map(seat => {
-                      const visual = getSeatVisualState(seat);
-                      const selectable = seatIsSelectable(seat);
-                      const color = getSectionColor(seat.sectionId || "");
-                      const extraStyle = visual === "free" && color ? `background:${color};border-color:${color};color:#fff;` : "";
-                      return `
-                        <button
-                          class="seat ${esc(visual)}"
-                          data-seat-id="${esc(seat.id)}"
-                          style="
-                            left:${seat.x}px;
-                            top:${seat.y}px;
-                            transform:rotate(${getSafeNumber(seat.rotation,0)}deg);
-                            ${extraStyle}
-                          "
-                          ${selectable ? "" : "disabled"}
-                          title="${esc(seat.label || seat.id)}"
-                        >
-                          ${esc((seat.label || seat.id).slice(0,5))}
-                        </button>
-                      `;
-                    }).join("")
-                  }
+                  ${allSeats.map(seat => {
+                    const visual = getSeatVisualState(seat);
+                    const selectable = seatIsSelectable(seat);
+                    const color = getSectionColor(seat.sectionId || "");
+                    const extraStyle = visual === "free" && color
+                      ? `background:${color};border-color:${color};color:#fff;`
+                      : "";
+
+                    return `
+                      <button
+                        class="seat ${esc(visual)}"
+                        data-seat-id="${esc(seat.id)}"
+                        style="
+                          left:${seat.x}px;
+                          top:${seat.y}px;
+                          transform:rotate(${getSafeNumber(seat.rotation,0)}deg);
+                          ${extraStyle}
+                        "
+                        ${selectable ? "" : "disabled"}
+                        title="${esc(seat.label || seat.id)}"
+                      >
+                        ${esc((seat.label || seat.id).slice(0,5))}
+                      </button>
+                    `;
+                  }).join("")}
                 </div>
               </div>
             </div>
@@ -1484,9 +1484,9 @@
           </div>
           <div class="card-body">
             <div class="free-seat-box">
-              你目前選擇的是自由座活動。  
-              只要確認票種與張數即可建立訂單。  
-              若主辦單位後續有入場分流或現場安排，請依活動公告為準。
+你目前選擇的是自由座活動。
+只要確認票種與張數即可建立訂單。
+若主辦單位後續有入場分流或現場安排，請依活動公告為準。
             </div>
           </div>
         </div>
@@ -1556,8 +1556,8 @@ ${esc(desc)}
           <aside class="side-card">
             <h2 class="side-title">訂單摘要</h2>
             <div class="side-sub">
-              先選票種與張數，再視活動需求選位。  
-              確認後即可建立訂單。
+先選票種與張數，再視活動需求選位。
+確認後即可建立訂單。
             </div>
 
             <div class="field" style="margin-top:16px;">
@@ -1576,9 +1576,7 @@ ${esc(desc)}
               <button class="btn" id="clearPromoBtn" ${promoState.applied ? "" : "disabled"}>清除公關代碼</button>
             </div>
 
-            <div class="notice ${promoNotice.className}">
-              ${esc(promoNotice.text)}
-            </div>
+            <div class="notice ${promoNotice.className}">${esc(promoNotice.text)}</div>
 
             <div class="summary">
               <div class="summary-row">
@@ -1612,14 +1610,10 @@ ${esc(desc)}
               ${getSeatingEnabled(currentEvent) ? renderSeatSummary() : ""}
             </div>
 
-            <div class="notice ${notice.className}">
-              ${esc(notice.text)}
-            </div>
+            <div class="notice ${notice.className}">${esc(notice.text)}</div>
 
             <div class="action-stack">
-              <button class="btn btn-primary" id="createOrderBtn" ${canOrder ? "" : "disabled"}>
-                建立訂單
-              </button>
+              <button class="btn btn-primary" id="createOrderBtn" ${canOrder ? "" : "disabled"}>建立訂單</button>
               <a class="btn" href="ticket.html?id=${encodeURIComponent(currentEvent.id)}">返回活動資訊</a>
             </div>
           </aside>
@@ -1631,7 +1625,6 @@ ${esc(desc)}
           const ticketId = e.target.dataset.ticketId || "";
           quantityMap[ticketId] = Number(e.target.value || 0);
 
-          // 張數減少時，若已選座位超過需求，自動裁掉多餘座位
           const required = getRequiredSeatCount();
           if (selectedSeatIds.length > required) {
             selectedSeatIds = selectedSeatIds.slice(0, required);
@@ -1746,7 +1739,6 @@ ${esc(desc)}
         return;
       }
 
-      // 簡單策略：依樓層、y、x 排序，抓最前面連續可用座位
       selectable.sort((a, b) => {
         const fa = norm(a.floor || "");
         const fb = norm(b.floor || "");
@@ -1816,14 +1808,20 @@ ${esc(desc)}
 
       try {
         let promo = null;
+        let subcollectionError = null;
 
         try {
           promo = await getPromoCodeDataFromSubcollection(code);
         } catch (err) {
-          // 如果子集合讀到但報錯，就直接丟出
-          if (String(err?.message || "").includes("未啟用") || String(err?.message || "").includes("上限")) {
-            throw err;
-          }
+          subcollectionError = err;
+        }
+
+        if (!promo && !subcollectionError) {
+          promo = getPromoCodeDataFromEventArray(code);
+        }
+
+        if (!promo && subcollectionError) {
+          throw subcollectionError;
         }
 
         if (!promo) {
@@ -1834,34 +1832,28 @@ ${esc(desc)}
           throw new Error("查無此公關代碼");
         }
 
-        const targetTypeId = getPromoDocTicketTypeId(promo);
-        if (!targetTypeId) {
+        const boundType = findPromoBoundTicketType(promo);
+        if (!boundType) {
           throw new Error("此公關代碼尚未綁定票種");
         }
 
-        const ticketTypeExists = allTicketTypes.some(type => type.id === targetTypeId);
-        if (!ticketTypeExists) {
-          throw new Error("此公關代碼綁定的票種不存在");
-        }
-
         promoState.applied = true;
-        promoState.data = promo;
+        promoState.data = {
+          ...promo,
+          ticketTypeId: boundType.id,
+          ticketTypeName: boundType.name || ""
+        };
         promoState.error = "";
 
-        // 重新初始化可見票種後，清空張數與座位
         visibleTicketTypes = getVisibleTicketTypes();
-        initializeQuantityMap();
-        Object.keys(quantityMap).forEach(key => quantityMap[key] = 0);
+        initializeQuantityMap(true);
         selectedSeatIds = [];
         selectedSeatMode = "manual";
-
-        renderPage();
       } catch (err) {
         console.error(err);
         promoState.applied = false;
         promoState.data = null;
         promoState.error = err?.message || "公關代碼驗證失敗";
-        renderPage();
       } finally {
         promoState.loading = false;
         renderPage();
@@ -1878,8 +1870,7 @@ ${esc(desc)}
       };
 
       visibleTicketTypes = getVisibleTicketTypes();
-      initializeQuantityMap();
-      Object.keys(quantityMap).forEach(key => quantityMap[key] = 0);
+      initializeQuantityMap(true);
       selectedSeatIds = [];
       selectedSeatMode = "manual";
       renderPage();
@@ -1932,7 +1923,7 @@ ${esc(desc)}
 
       if (promoState.applied && promoState.data) {
         const allowedTypeId = getPromoDocTicketTypeId(promoState.data);
-        const wrongSelection = selectedItems.some(item => item.visibility === "promo" ? item.ticketTypeId !== allowedTypeId : false);
+        const wrongSelection = selectedItems.some(item => item.visibility === "promo" && item.ticketTypeId !== allowedTypeId);
         if (wrongSelection) {
           alert("目前公關代碼只允許購買指定公關票種。");
           return;
@@ -2007,7 +1998,6 @@ ${esc(desc)}
             }
           }
 
-          // hold seats
           seatPayloads.forEach(({ ref }) => {
             tx.update(ref, {
               status: "held",
@@ -2018,7 +2008,6 @@ ${esc(desc)}
             });
           });
 
-          // order
           tx.set(orderRef, {
             uid: currentUser.uid,
             buyerUid: currentUser.uid,
@@ -2096,7 +2085,7 @@ ${esc(desc)}
 
       allTicketTypes = getRawTicketTypes(currentEvent);
       visibleTicketTypes = getVisibleTicketTypes();
-      initializeQuantityMap();
+      initializeQuantityMap(true);
 
       if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned") {
         await loadSeats();
