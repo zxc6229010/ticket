@@ -1070,7 +1070,9 @@
         maxUses: Math.max(0, Number(x.maxUses || 0) || 0),
         usedCount: Math.max(0, Number(x.usedCount || 0) || 0),
         ticketTypeId: norm(x.ticketTypeId || ""),
-        ticketTypeName: norm(x.ticketTypeName || "")
+        ticketTypeName: norm(x.ticketTypeName || ""),
+        ticketTypeIds: Array.isArray(x.ticketTypeIds) ? x.ticketTypeIds.map(v => norm(v)).filter(Boolean) : [],
+        ticketTypeNames: Array.isArray(x.ticketTypeNames) ? x.ticketTypeNames.map(v => norm(v)).filter(Boolean) : []
       };
     }
 
@@ -1169,9 +1171,11 @@
             </div>
 
             ${
-              item.ticketTypeName
-                ? `<div class="small" style="margin-top:10px;">目前綁定票種：<span class="mono">${esc(item.ticketTypeName)}</span></div>`
-                : `<div class="small warn" style="margin-top:10px;">尚未綁定票種</div>`
+              Array.isArray(item.ticketTypeNames) && item.ticketTypeNames.length
+                ? `<div class="small" style="margin-top:10px;">目前綁定票種：<span class="mono">${esc(item.ticketTypeNames.join("、"))}</span></div>`
+                : item.ticketTypeName
+                  ? `<div class="small" style="margin-top:10px;">目前綁定票種：<span class="mono">${esc(item.ticketTypeName)}</span></div>`
+                  : `<div class="small warn" style="margin-top:10px;">尚未綁定票種</div>`
             }
 
             ${isRandom ? `
@@ -1397,7 +1401,10 @@
       ticketTypesPayload.forEach(ticket => {
         (ticket.promoCodeIds || []).forEach(codeId => {
           if (!codeUsageMap.has(codeId)) codeUsageMap.set(codeId, []);
-          codeUsageMap.get(codeId).push(ticket);
+          codeUsageMap.get(codeId).push({
+            ticketTypeId: ticket.id,
+            ticketTypeName: ticket.name
+          });
         });
       });
 
@@ -1405,20 +1412,16 @@
         const binds = codeUsageMap.get(item.id) || [];
 
         if (binds.length === 0) {
-          throw new Error(`公關代碼「${item.code}」尚未綁定票種`);
+          throw new Error(`公關代碼「${item.code}」尚未綁定任何票種`);
         }
-
-        if (binds.length > 1) {
-          throw new Error(`公關代碼「${item.code}」只能綁定 1 種票種`);
-        }
-
-        const targetTicket = binds[0];
 
         return {
           ...item,
           code: item.code.toUpperCase(),
-          ticketTypeId: targetTicket.id,
-          ticketTypeName: targetTicket.name
+          ticketTypeIds: binds.map(x => x.ticketTypeId),
+          ticketTypeNames: binds.map(x => x.ticketTypeName),
+          ticketTypeId: binds[0]?.ticketTypeId || "",
+          ticketTypeName: binds[0]?.ticketTypeName || ""
         };
       });
     }
@@ -1480,6 +1483,8 @@
         ticketTypesState[idx][key] = value === "true";
       } else if (key === "price" || key === "maxPerOrder") {
         ticketTypesState[idx][key] = Number(value || 0);
+      } else if (key === "id") {
+        ticketTypesState[idx][key] = String(value || "").trim().toLowerCase();
       } else {
         ticketTypesState[idx][key] = value;
       }
@@ -1488,7 +1493,9 @@
         ticketTypesState[idx].promoCodeIds = [];
       }
 
-      renderTicketTypes();
+      if (["visibility", "enabled", "requiresSeat"].includes(key)) {
+        renderTicketTypes();
+      }
     };
 
     window.removeTicketType = idx => {
@@ -1528,7 +1535,9 @@
         maxUses: 0,
         usedCount: 0,
         ticketTypeId: "",
-        ticketTypeName: ""
+        ticketTypeName: "",
+        ticketTypeIds: [],
+        ticketTypeNames: []
       });
       renderPromoCodes();
       renderTicketTypes();
