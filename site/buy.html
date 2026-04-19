@@ -888,9 +888,12 @@
   let allTicketTypes = [];
   let visibleTicketTypes = [];
   let allSeats = [];
+
   let selectedSeatIds = [];
-  let selectedSeatMode = "manual";
-  let quantityMap = {};
+  let selectedSeatMode = "";
+  let selectedTicketTypeId = "";
+  let selectedQuantity = 0;
+  let currentStep = 1;
 
   let promoState = {
     code: "",
@@ -1169,12 +1172,8 @@
     });
   }
 
-  function initializeQuantityMap(resetValues = false){
-    const next = {};
-    getVisibleTicketTypes().forEach(type => {
-      next[type.id] = resetValues ? 0 : Number(quantityMap[type.id] || 0);
-    });
-    quantityMap = next;
+  function getSelectedTicketType(){
+    return visibleTicketTypes.find(type => type.id === selectedTicketTypeId) || null;
   }
 
   async function getEventById(id){
@@ -1218,21 +1217,19 @@
   }
 
   function getSelectedItems(){
-    return visibleTicketTypes
-      .map(type => {
-        const quantity = getSafeNumber(quantityMap[type.id], 0);
-        return {
-          ticketTypeId: type.id,
-          ticketTypeName: type.name,
-          unitPrice: getSafeNumber(type.price, 0),
-          quantity,
-          subtotal: getSafeNumber(type.price, 0) * quantity,
-          requiresSeat: type.requiresSeat === true,
-          sectionIds: Array.isArray(type.sectionIds) ? [...type.sectionIds] : [],
-          visibility: type.visibility
-        };
-      })
-      .filter(item => item.quantity > 0);
+    const type = getSelectedTicketType();
+    if (!type || selectedQuantity <= 0) return [];
+
+    return [{
+      ticketTypeId: type.id,
+      ticketTypeName: type.name,
+      unitPrice: getSafeNumber(type.price, 0),
+      quantity: selectedQuantity,
+      subtotal: getSafeNumber(type.price, 0) * selectedQuantity,
+      requiresSeat: type.requiresSeat === true,
+      sectionIds: Array.isArray(type.sectionIds) ? [...type.sectionIds] : [],
+      visibility: type.visibility
+    }];
   }
 
   function getTotalQuantity(){
@@ -1331,14 +1328,28 @@
       };
     }
 
-    if (!totalQty) {
+    if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned" && !selectedSeatMode) {
       return {
         className: "warn",
-        text: "請先選擇至少 1 張票。"
+        text: "請先選擇電腦選位或手動選位。"
       };
     }
 
-    if (requiredSeats > 0 && selectedSeatIds.length !== requiredSeats) {
+    if (!selectedTicketTypeId) {
+      return {
+        className: "warn",
+        text: "請先選擇票種。"
+      };
+    }
+
+    if (!totalQty) {
+      return {
+        className: "warn",
+        text: "請先選擇數量。"
+      };
+    }
+
+    if (requiredSeats > 0 && selectedSeatMode === "manual" && selectedSeatIds.length !== requiredSeats) {
       return {
         className: "warn",
         text: `目前需選擇 ${requiredSeats} 個座位，你已選 ${selectedSeatIds.length} 個。`
@@ -1348,7 +1359,7 @@
     if (!currentUser) {
       return {
         className: "info",
-        text: "你已選好票種，但建立訂單前需要先登入。\n登入後系統會回到這一頁。"
+        text: "你已選好內容，但建立訂單前需要先登入。\n登入後系統會回到這一頁。"
       };
     }
 
@@ -1362,8 +1373,8 @@
     if (!selectedItems.length) {
       return `
         <div class="summary-item">
-          <div class="summary-item-title">尚未選擇票種</div>
-          <div class="summary-item-sub">請從左側選擇票種與張數。</div>
+          <div class="summary-item-title">尚未完成選擇</div>
+          <div class="summary-item-sub">請依序完成：選位方式 → 票種 → 數量。</div>
         </div>
       `;
     }
@@ -1380,11 +1391,20 @@ ${item.requiresSeat ? "需選位" : "不需選位"}
   }
 
   function renderSeatSummary(){
+    if (selectedSeatMode === "auto" && getRequiredSeatCount() > 0) {
+      return `
+        <div class="summary-item">
+          <div class="summary-item-title">電腦選位</div>
+          <div class="summary-item-sub">建立訂單時系統會自動幫你配位。</div>
+        </div>
+      `;
+    }
+
     if (!selectedSeatIds.length) {
       return `
         <div class="summary-item">
           <div class="summary-item-title">尚未選擇座位</div>
-          <div class="summary-item-sub">可手動點選，或使用電腦自動選位。</div>
+          <div class="summary-item-sub">若為手動選位，請在下一步選座位。</div>
         </div>
       `;
     }
@@ -1401,47 +1421,169 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     `).join("");
   }
 
-  function renderTicketCard(type){
+  function renderStepIndicator(){
+    const needManualSeatStep =
+      getSelectedTicketType() &&
+      getSelectedTicketType().requiresSeat &&
+      getSeatingEnabled(currentEvent) &&
+      getSeatingMode(currentEvent) === "assigned" &&
+      selectedSeatMode === "manual";
+
+    return `
+      <div class="mode-row" style="margin-bottom:18px;">
+        <button class="btn ${currentStep === 1 ? "active" : ""}" disabled>1. 選位方式</button>
+        <button class="btn ${currentStep === 2 ? "active" : ""}" disabled>2. 選票種</button>
+        <button class="btn ${currentStep === 3 ? "active" : ""}" disabled>3. 選數量</button>
+        ${needManualSeatStep ? `<button class="btn ${currentStep === 4 ? "active" : ""}" disabled>4. 選座位</button>` : ""}
+      </div>
+    `;
+  }
+
+  function renderSeatModeStep(){
+    if (!getSeatingEnabled(currentEvent) || getSeatingMode(currentEvent) !== "assigned") {
+      return `
+        <div class="card">
+          <div class="card-head">
+            <h2 class="card-title">第一步｜選位方式</h2>
+            <div class="card-sub">此活動不需要先選位方式，可直接進入下一步。</div>
+          </div>
+          <div class="card-body">
+            <div class="action-stack">
+              <button class="btn btn-primary" id="nextFromModeBtn">下一步：選擇票種</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">第一步｜選位方式</h2>
+          <div class="card-sub">請先選擇「電腦選位」或「手動選位」。</div>
+        </div>
+        <div class="card-body">
+          <div class="mode-row">
+            <button class="btn ${selectedSeatMode === "auto" ? "active" : ""}" id="chooseAutoModeBtn">電腦選位</button>
+            <button class="btn ${selectedSeatMode === "manual" ? "active" : ""}" id="chooseManualModeBtn">手動選位</button>
+          </div>
+
+          <div class="notice info">
+電腦選位：建立訂單時由系統自動配位。  
+手動選位：之後由你自己點選座位。
+          </div>
+
+          <div class="action-stack">
+            <button class="btn btn-primary" id="nextFromModeBtn" ${selectedSeatMode ? "" : "disabled"}>下一步：選擇票種</button>
+          </div>
+        </div>
+      `;
+  }
+
+  function renderTicketTypeStep(){
+    return `
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">第二步｜選擇票種</h2>
+          <div class="card-sub">先選擇你要購買的票種，下一步再選數量。</div>
+        </div>
+        <div class="card-body">
+          <div class="ticket-list">
+            ${
+              visibleTicketTypes.length
+                ? visibleTicketTypes.map(type => {
+                    const active = selectedTicketTypeId === type.id;
+                    return `
+                      <div class="ticket-card" style="${active ? "border-color:#111827; box-shadow:0 0 0 3px rgba(17,24,39,.08);" : ""}">
+                        <div class="ticket-top">
+                          <div>
+                            <h3 class="ticket-name">${esc(type.name)}</h3>
+                          </div>
+                          <div class="ticket-price">${esc(formatPrice(type.price))}</div>
+                        </div>
+
+                        <div class="ticket-desc">${esc(type.description || "請選擇此票種。")}</div>
+
+                        <div class="meta-pills">
+                          <span class="meta-pill">票種代碼：${esc(type.id)}</span>
+                          <span class="meta-pill">${esc(type.visibility === "promo" ? "公關票" : "一般票")}</span>
+                          <span class="meta-pill">${esc(type.requiresSeat ? "需選位" : "免選位")}</span>
+                        </div>
+
+                        <div class="action-stack" style="margin-top:14px;">
+                          <button class="btn ${active ? "btn-primary" : ""}" data-choose-ticket="${esc(type.id)}">
+                            ${active ? "已選擇此票種" : "選擇此票種"}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  }).join("")
+                : `<div class="empty">目前沒有可購買票種。若你持有公關代碼，請先在右側輸入並套用。</div>`
+            }
+          </div>
+
+          <div class="action-stack">
+            <button class="btn" id="backToModeBtn">上一步</button>
+            <button class="btn btn-primary" id="nextFromTicketBtn" ${selectedTicketTypeId ? "" : "disabled"}>下一步：選擇數量</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderQuantityStep(){
+    const type = getSelectedTicketType();
+    if (!type) return "";
+
     const maxAllowed = Math.min(type.maxPerOrder, getMaxSeatsPerOrder(currentEvent));
-    const currentQty = getSafeNumber(quantityMap[type.id], 0);
     const options = Array.from({ length:maxAllowed + 1 }, (_, i) => i);
 
     return `
-      <div class="ticket-card">
-        <div class="ticket-top">
-          <div>
-            <h3 class="ticket-name">${esc(type.name)}</h3>
-          </div>
-          <div class="ticket-price">${esc(formatPrice(type.price))}</div>
+      <div class="card">
+        <div class="card-head">
+          <h2 class="card-title">第三步｜選擇數量</h2>
+          <div class="card-sub">你目前選擇的是「${esc(type.name)}」，請選擇購買張數。</div>
         </div>
+        <div class="card-body">
+          <div class="ticket-card">
+            <div class="ticket-top">
+              <div>
+                <h3 class="ticket-name">${esc(type.name)}</h3>
+              </div>
+              <div class="ticket-price">${esc(formatPrice(type.price))}</div>
+            </div>
 
-        <div class="ticket-desc">${esc(type.description || "請選擇此票種的購買張數。")}</div>
+            <div class="ticket-desc">${esc(type.description || "")}</div>
 
-        <div class="meta-pills">
-          <span class="meta-pill">票種代碼：${esc(type.id)}</span>
-          <span class="meta-pill">單筆上限：${esc(maxAllowed)} 張</span>
-          <span class="meta-pill">${esc(type.visibility === "promo" ? "公關票" : "一般票")}</span>
-          <span class="meta-pill">${esc(type.requiresSeat ? "需選位" : "免選位")}</span>
-          ${
-            type.sectionIds && type.sectionIds.length
-              ? type.sectionIds.map(id => `<span class="meta-pill">可選 ${esc(getSectionLabel(id))}</span>`).join("")
-              : ""
-          }
-        </div>
+            <div class="ticket-grid">
+              <div>
+                <div class="hint">
+                  單筆上限：${maxAllowed} 張
+                  ${type.requiresSeat ? "\n此票種需要座位。" : "\n此票種不需選位。"}
+                </div>
+              </div>
 
-        <div class="ticket-grid">
-          <div>
-            <div class="hint">
-              你可以先選擇這個票種的購買張數。
-              若此票種需要座位，系統會要求你選擇相同數量的座位。
+              <div class="field">
+                <label class="label" for="singleQtySelect">購買張數</label>
+                <select class="select" id="singleQtySelect">
+                  ${options.map(n => `<option value="${n}" ${selectedQuantity === n ? "selected" : ""}>${n} 張</option>`).join("")}
+                </select>
+              </div>
             </div>
           </div>
 
-          <div class="field">
-            <label class="label" for="qty_${esc(type.id)}">購買張數</label>
-            <select class="select" id="qty_${esc(type.id)}" data-ticket-id="${esc(type.id)}">
-              ${options.map(n => `<option value="${n}" ${currentQty === n ? "selected" : ""}>${n} 張</option>`).join("")}
-            </select>
+          <div class="action-stack">
+            <button class="btn" id="backToTicketBtn">上一步</button>
+            <button class="btn btn-primary" id="nextFromQtyBtn" ${selectedQuantity > 0 ? "" : "disabled"}>
+              ${
+                type.requiresSeat &&
+                getSeatingEnabled(currentEvent) &&
+                getSeatingMode(currentEvent) === "assigned" &&
+                selectedSeatMode === "manual"
+                  ? "下一步：選擇座位"
+                  : "完成選擇"
+              }
+            </button>
           </div>
         </div>
       </div>
@@ -1456,19 +1598,20 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     return `
       <div class="card">
         <div class="card-head">
-          <h2 class="card-title">選擇座位</h2>
-          <div class="card-sub">你可以手動點選座位，或交給系統自動挑選。需選：${requiredSeatCount} 席</div>
+          <h2 class="card-title">第四步｜選擇座位</h2>
+          <div class="card-sub">你目前需要選擇 ${requiredSeatCount} 個座位。</div>
         </div>
         <div class="card-body">
           <div class="mode-row">
-            <button class="btn ${selectedSeatMode === "manual" ? "active" : ""}" id="manualSelectBtn">手動選位</button>
-            <button class="btn ${selectedSeatMode === "auto" ? "active" : ""}" id="autoSelectBtn">電腦選位</button>
+            <button class="btn" id="backToQtyBtn">上一步</button>
             <button class="btn" id="clearSeatBtn">清除已選</button>
           </div>
 
           <div class="hint" style="margin-bottom:12px;">
-手動選位：直接點選座位。
-電腦選位：系統會依目前票數，自動挑出可用座位。
+請直接點選座位。  
+黑色：已選  
+橘色：他人保留中  
+灰色：已售或停用
           </div>
 
           <div class="stage-wrap">
@@ -1525,25 +1668,49 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       <div class="card">
         <div class="card-head">
           <h2 class="card-title">入場方式</h2>
-          <div class="card-sub">此活動為自由座，不需要在這一頁挑選實際座位。</div>
+          <div class="card-sub">此活動為自由座，不需要挑選實際座位。</div>
         </div>
         <div class="card-body">
           <div class="free-seat-box">
 你目前選擇的是自由座活動。
 只要確認票種與張數即可建立訂單。
-若主辦單位後續有入場分流或現場安排，請依活動公告為準。
+若主辦單位後續有入場安排，請依活動公告為準。
           </div>
         </div>
       </div>
     `;
   }
 
+  function renderMainContent(){
+    const selectedType = getSelectedTicketType();
+    const needManualSeatStep =
+      selectedType &&
+      selectedType.requiresSeat &&
+      getSeatingEnabled(currentEvent) &&
+      getSeatingMode(currentEvent) === "assigned" &&
+      selectedSeatMode === "manual";
+
+    let html = renderStepIndicator();
+
+    if (currentStep === 1) html += renderSeatModeStep();
+    if (currentStep === 2) html += renderTicketTypeStep();
+    if (currentStep === 3) html += renderQuantityStep();
+    if (currentStep === 4 && needManualSeatStep) html += renderAssignedSeatArea();
+
+    if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) !== "assigned" && currentStep >= 3) {
+      html += renderFreeSeatArea();
+    }
+
+    return html;
+  }
+
   function renderPage(){
     const status = getEventStatus(currentEvent);
-    const desc = getEventDescription(currentEvent) || "請先選擇你要的票種與張數。";
+    const desc = getEventDescription(currentEvent) || "請依照步驟完成購票。";
     const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
     const saleStartText = formatDateTime(currentEvent.saleStartAt);
     const saleEndText = formatDateTime(currentEvent.saleEndAt);
+
     const selectedItems = getSelectedItems();
     const totalQty = getTotalQuantity();
     const totalAmount = getTotalAmount();
@@ -1551,14 +1718,9 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     const canOrder = canCreateOrder(currentEvent);
     const notice = getSummaryNotice();
     const promoNotice = getPromoNotice();
+    const selectedType = getSelectedTicketType();
 
     backLink.href = `ticket.html?id=${encodeURIComponent(currentEvent.id)}`;
-
-    const seatSectionHtml = !getSeatingEnabled(currentEvent)
-      ? ""
-      : getSeatingMode(currentEvent) === "assigned"
-        ? renderAssignedSeatArea()
-        : renderFreeSeatArea();
 
     app.className = "";
     app.innerHTML = `
@@ -1579,29 +1741,13 @@ ${esc(desc)}
 
       <div class="layout">
         <section class="left-stack">
-          <div class="card">
-            <div class="card-head">
-              <h2 class="card-title">票種選擇</h2>
-              <div class="card-sub">請先選擇每個票種要買幾張，系統會依你的選擇同步更新摘要。</div>
-            </div>
-            <div class="card-body">
-              <div class="ticket-list">
-                ${
-                  visibleTicketTypes.length
-                    ? visibleTicketTypes.map(type => renderTicketCard(type)).join("")
-                    : `<div class="empty">目前沒有可購買票種。若你持有公關代碼，請先在右側輸入並套用。</div>`
-                }
-              </div>
-            </div>
-          </div>
-
-          ${seatSectionHtml}
+          ${renderMainContent()}
         </section>
 
         <aside class="side-card">
           <h2 class="side-title">訂單摘要</h2>
           <div class="side-sub">
-先選票種與張數，再視活動需求選位。
+先選選位方式，再選票種，最後選數量。
 確認後即可建立訂單。
           </div>
 
@@ -1629,8 +1775,12 @@ ${esc(desc)}
               <strong>${esc(currentEvent.title || "-")}</strong>
             </div>
             <div class="summary-row">
-              <span>票種數量</span>
-              <strong>${esc(selectedItems.length)}</strong>
+              <span>選位方式</span>
+              <strong>${esc(selectedSeatMode === "auto" ? "電腦選位" : selectedSeatMode === "manual" ? "手動選位" : "未選擇")}</strong>
+            </div>
+            <div class="summary-row">
+              <span>票種</span>
+              <strong>${esc(selectedType?.name || "未選擇")}</strong>
             </div>
             <div class="summary-row">
               <span>總張數</span>
@@ -1646,7 +1796,7 @@ ${esc(desc)}
             </div>
             <div class="summary-row">
               <span>已選座位</span>
-              <strong>${esc(selectedSeatIds.length)}</strong>
+              <strong>${esc(selectedSeatMode === "auto" && requiredSeatCount > 0 ? "自動分配" : selectedSeatIds.length)}</strong>
             </div>
           </div>
 
@@ -1665,16 +1815,16 @@ ${esc(desc)}
       </div>
     `;
 
-    document.querySelectorAll("[data-ticket-id]").forEach(select => {
-      select.addEventListener("change", e => {
-        const ticketId = e.target.dataset.ticketId || "";
-        quantityMap[ticketId] = Number(e.target.value || 0);
+    bindPageEvents();
+  }
 
-        const required = getRequiredSeatCount();
-        if (selectedSeatIds.length > required) {
-          selectedSeatIds = selectedSeatIds.slice(0, required);
-        }
-
+  function bindPageEvents(){
+    document.querySelectorAll("[data-choose-ticket]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const ticketId = btn.dataset.chooseTicket || "";
+        selectedTicketTypeId = ticketId;
+        selectedQuantity = 0;
+        selectedSeatIds = [];
         renderPage();
       });
     });
@@ -1687,32 +1837,105 @@ ${esc(desc)}
       });
     });
 
-    const manualSelectBtn = document.getElementById("manualSelectBtn");
-    const autoSelectBtn = document.getElementById("autoSelectBtn");
+    const chooseAutoModeBtn = document.getElementById("chooseAutoModeBtn");
+    const chooseManualModeBtn = document.getElementById("chooseManualModeBtn");
+    const nextFromModeBtn = document.getElementById("nextFromModeBtn");
+    const backToModeBtn = document.getElementById("backToModeBtn");
+    const nextFromTicketBtn = document.getElementById("nextFromTicketBtn");
+    const backToTicketBtn = document.getElementById("backToTicketBtn");
+    const nextFromQtyBtn = document.getElementById("nextFromQtyBtn");
+    const backToQtyBtn = document.getElementById("backToQtyBtn");
+    const singleQtySelect = document.getElementById("singleQtySelect");
     const clearSeatBtn = document.getElementById("clearSeatBtn");
+
     const promoCodeInput = document.getElementById("promoCodeInput");
     const applyPromoBtn = document.getElementById("applyPromoBtn");
     const clearPromoBtn = document.getElementById("clearPromoBtn");
     const createOrderBtn = document.getElementById("createOrderBtn");
 
-    if (manualSelectBtn) {
-      manualSelectBtn.onclick = () => {
-        selectedSeatMode = "manual";
+    if (chooseAutoModeBtn) {
+      chooseAutoModeBtn.onclick = () => {
+        selectedSeatMode = "auto";
+        selectedSeatIds = [];
         renderPage();
       };
     }
 
-    if (autoSelectBtn) {
-      autoSelectBtn.onclick = () => {
-        selectedSeatMode = "auto";
-        autoPickSeats();
+    if (chooseManualModeBtn) {
+      chooseManualModeBtn.onclick = () => {
+        selectedSeatMode = "manual";
+        selectedSeatIds = [];
+        renderPage();
+      };
+    }
+
+    if (nextFromModeBtn) {
+      nextFromModeBtn.onclick = () => {
+        if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned" && !selectedSeatMode) return;
+        currentStep = 2;
+        renderPage();
+      };
+    }
+
+    if (backToModeBtn) {
+      backToModeBtn.onclick = () => {
+        currentStep = 1;
+        renderPage();
+      };
+    }
+
+    if (nextFromTicketBtn) {
+      nextFromTicketBtn.onclick = () => {
+        if (!selectedTicketTypeId) return;
+        currentStep = 3;
+        renderPage();
+      };
+    }
+
+    if (backToTicketBtn) {
+      backToTicketBtn.onclick = () => {
+        currentStep = 2;
+        renderPage();
+      };
+    }
+
+    if (singleQtySelect) {
+      singleQtySelect.onchange = (e) => {
+        selectedQuantity = Number(e.target.value || 0);
+        selectedSeatIds = [];
+        renderPage();
+      };
+    }
+
+    if (nextFromQtyBtn) {
+      nextFromQtyBtn.onclick = () => {
+        const type = getSelectedTicketType();
+        if (!type || selectedQuantity <= 0) return;
+
+        if (
+          type.requiresSeat &&
+          getSeatingEnabled(currentEvent) &&
+          getSeatingMode(currentEvent) === "assigned" &&
+          selectedSeatMode === "manual"
+        ) {
+          currentStep = 4;
+        } else {
+          currentStep = 3;
+        }
+        renderPage();
+      };
+    }
+
+    if (backToQtyBtn) {
+      backToQtyBtn.onclick = () => {
+        currentStep = 3;
+        renderPage();
       };
     }
 
     if (clearSeatBtn) {
       clearSeatBtn.onclick = () => {
         selectedSeatIds = [];
-        selectedSeatMode = "manual";
         renderPage();
       };
     }
@@ -1766,22 +1989,13 @@ ${esc(desc)}
     renderPage();
   }
 
-  function autoPickSeats(){
-    const need = getRequiredSeatCount();
-
-    if (need <= 0) {
-      selectedSeatIds = [];
-      renderPage();
-      return;
-    }
+  function autoPickSeatsForNeed(need){
+    if (need <= 0) return [];
 
     const selectable = allSeats.filter(seat => seatIsSelectable(seat));
 
     if (selectable.length < need) {
-      alert("可選座位不足。");
-      selectedSeatMode = "manual";
-      renderPage();
-      return;
+      throw new Error("可選座位不足。");
     }
 
     selectable.sort((a, b) => {
@@ -1792,8 +2006,7 @@ ${esc(desc)}
       return a.x - b.x;
     });
 
-    selectedSeatIds = selectable.slice(0, need).map(seat => seat.id);
-    renderPage();
+    return selectable.slice(0, need).map(seat => seat.id);
   }
 
   async function getPromoCodeDataFromSubcollection(cleanCode){
@@ -1877,9 +2090,6 @@ ${esc(desc)}
         throw new Error("查無此公關代碼");
       }
 
-      console.log("promo data =", promo);
-      console.log("allTicketTypes =", allTicketTypes);
-
       const boundType = findPromoBoundTicketType(promo);
       if (!boundType) {
         throw new Error("此公關代碼尚未綁定票種");
@@ -1894,9 +2104,10 @@ ${esc(desc)}
       promoState.error = "";
 
       visibleTicketTypes = getVisibleTicketTypes();
-      initializeQuantityMap(true);
+      selectedTicketTypeId = "";
+      selectedQuantity = 0;
       selectedSeatIds = [];
-      selectedSeatMode = "manual";
+      currentStep = 2;
     } catch (err) {
       console.error(err);
       promoState.applied = false;
@@ -1918,9 +2129,10 @@ ${esc(desc)}
     };
 
     visibleTicketTypes = getVisibleTicketTypes();
-    initializeQuantityMap(true);
+    selectedTicketTypeId = "";
+    selectedQuantity = 0;
     selectedSeatIds = [];
-    selectedSeatMode = "manual";
+    currentStep = 1;
     renderPage();
   }
 
@@ -1959,14 +2171,35 @@ ${esc(desc)}
     const totalAmount = getTotalAmount();
     const requiredSeats = getRequiredSeatCount();
 
+    if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned" && !selectedSeatMode) {
+      alert("請先選擇電腦選位或手動選位。");
+      return;
+    }
+
+    if (!selectedTicketTypeId) {
+      alert("請先選擇票種。");
+      return;
+    }
+
     if (!selectedItems.length || totalQty <= 0) {
       alert("請先選擇至少 1 張票。");
       return;
     }
 
-    if (requiredSeats > 0 && selectedSeatIds.length !== requiredSeats) {
+    let finalSeatIds = [...selectedSeatIds];
+
+    if (requiredSeats > 0 && selectedSeatMode === "manual" && finalSeatIds.length !== requiredSeats) {
       alert(`目前需要選擇 ${requiredSeats} 個座位。`);
       return;
+    }
+
+    if (requiredSeats > 0 && selectedSeatMode === "auto") {
+      try {
+        finalSeatIds = autoPickSeatsForNeed(requiredSeats);
+      } catch (err) {
+        alert(err?.message || "自動選位失敗");
+        return;
+      }
     }
 
     if (promoState.applied && promoState.data) {
@@ -1992,7 +2225,7 @@ ${esc(desc)}
         ? doc(db, "events", eventId, "promoCodes", promoState.data.code || promoState.data.id)
         : null;
 
-      const seatRefs = selectedSeatIds.map(id => doc(db, "events", eventId, "seats", id));
+      const seatRefs = finalSeatIds.map(id => doc(db, "events", eventId, "seats", id));
       const expiresAtDate = getExpiresAtDate();
       const expiresAt = Timestamp.fromDate(expiresAtDate);
 
@@ -2069,14 +2302,15 @@ ${esc(desc)}
 
           seatingEnabled: getSeatingEnabled(currentEvent),
           seatingMode: getSeatingMode(currentEvent),
+          seatSelectionMode: selectedSeatMode || "none",
 
           totalQuantity: totalQty,
           totalAmount,
 
           items: buildOrderItems(),
-          selectedSeatIds: [...selectedSeatIds],
+          selectedSeatIds: [...finalSeatIds],
           selectedSeats: allSeats
-            .filter(seat => selectedSeatIds.includes(seat.id))
+            .filter(seat => finalSeatIds.includes(seat.id))
             .map(seat => ({
               seatId: seat.id,
               label: norm(seat.label || seat.id),
@@ -2133,14 +2367,18 @@ ${esc(desc)}
 
     allTicketTypes = getRawTicketTypes(currentEvent);
     visibleTicketTypes = getVisibleTicketTypes();
-    initializeQuantityMap(true);
 
     if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned") {
       await loadSeats();
     } else {
       allSeats = [];
-      selectedSeatIds = [];
+      selectedSeatMode = "none";
     }
+
+    currentStep = 1;
+    selectedTicketTypeId = "";
+    selectedQuantity = 0;
+    selectedSeatIds = [];
 
     renderPage();
   }
@@ -2150,6 +2388,6 @@ ${esc(desc)}
     updateAccountLinks(currentUser);
     await initPage();
   });
-</script>
+  </script>
 </body>
 </html>
