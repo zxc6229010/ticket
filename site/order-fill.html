@@ -1095,41 +1095,41 @@
       const myUid = norm(currentUser?.uid || "");
       const myEmail = lower(currentUser?.email || "");
 
-      const tasks = assignments.map(async assignment => {
-        const ticketId = buildTicketId(order, assignment);
-        const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
-        const ticketSnap = await getDoc(ticketRef);
-        if (ticketSnap.exists()) return;
+      // 循序執行，避免 race condition；已存在的票靜默跳過
+      for (const assignment of assignments) {
+        try {
+          const ticketId = buildTicketId(order, assignment);
+          const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
+          const ticketSnap = await getDoc(ticketRef);
+          if (ticketSnap.exists()) continue; // 已存在，跳過
 
-        // Rules 的 ticket create 要求：
-        // request.resource.data.eventId == eventId  ✓
-        // 且 (buyerUid == request.auth.uid  OR  orderId 對應 order 的擁有者)
-        // 這裡直接用 buyerUid = myUid 確保符合第一條規則
-        await setDoc(ticketRef, {
-          eventId,
-          eventTitle: norm(order.eventTitle || ""),
-          orderId: order.id,
-          uid: norm(assignment.uid),
-          buyerUid: myUid,           // ← 修正：直接用當前登入者 uid，確保符合 Rules
-          buyerEmail: myEmail,        // ← 補上 buyerEmail，作為備援條件
-          email: lower(assignment.email),
-          holderEmail: lower(assignment.email),
-          holderName: norm(assignment.name),
-          isBuyerTicket: assignment.isBuyerTicket === true,
-          ticketTypeId: norm(assignment.ticketTypeId),
-          ticketTypeName: norm(assignment.ticketTypeName),
-          ticketPrice: Number(assignment.price || 0),
-          seatLabel: "",
-          sectionId: "",
-          qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
-          status: "valid",
-          checkedIn: false,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      });
-
-      await Promise.all(tasks);
+          await setDoc(ticketRef, {
+            eventId,
+            eventTitle: norm(order.eventTitle || ""),
+            orderId: order.id,
+            uid: norm(assignment.uid),
+            buyerUid: myUid,
+            buyerEmail: myEmail,
+            email: lower(assignment.email),
+            holderEmail: lower(assignment.email),
+            holderName: norm(assignment.name),
+            isBuyerTicket: assignment.isBuyerTicket === true,
+            ticketTypeId: norm(assignment.ticketTypeId),
+            ticketTypeName: norm(assignment.ticketTypeName),
+            ticketPrice: Number(assignment.price || 0),
+            seatLabel: "",
+            sectionId: "",
+            qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
+            status: "valid",
+            checkedIn: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          // 單張票失敗不中斷其他票，只記錄 log
+          console.warn("票券建立略過：", err?.message || err);
+        }
+      }
     }
 
     function stopExpireCountdown(){
