@@ -233,6 +233,32 @@
       box-shadow:var(--shadow-soft);
     }
 
+    .countdown{
+      font-weight:900;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:.05em;
+      margin-left:4px;
+    }
+
+    .countdown-normal{
+      color:#111;
+    }
+
+    .countdown-warn{
+      color:#c2410c;
+    }
+
+    .countdown-danger{
+      color:#b91c1c;
+      animation:pulse 1s infinite;
+    }
+
+    @keyframes pulse{
+      0%{ opacity:1; }
+      50%{ opacity:.5; }
+      100%{ opacity:1; }
+    }
+
     .layout{
       display:grid;
       grid-template-columns:minmax(0,1fr) 360px;
@@ -715,6 +741,7 @@
     let holderState = [];
     let checkingMap = {};
     let userDocCache = new Map();
+    let expireTimer = null;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -839,19 +866,14 @@
     }
 
     function getOrderItems(order){
-      if (Array.isArray(order?.items) && order.items.length) {
-        return order.items;
-      }
-      if (Array.isArray(order?.itemSummary) && order.itemSummary.length) {
-        return order.itemSummary;
-      }
+      if (Array.isArray(order?.items) && order.items.length) return order.items;
+      if (Array.isArray(order?.itemSummary) && order.itemSummary.length) return order.itemSummary;
       return [];
     }
 
     function getOrderTotalQuantity(order){
       const direct = Number(order?.totalQuantity || 0);
       if (direct > 0) return direct;
-
       const items = getOrderItems(order);
       return items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     }
@@ -925,6 +947,11 @@
       if (["paid","completed","cancelled","void","refunded"].includes(status)) return true;
       if (isOrderExpired(order)) return true;
       return false;
+    }
+
+    function isActiveOrderStatus(status){
+      const s = lower(status);
+      return ["pending_holder_info", "pending_payment", "processing", "ready_for_checkout"].includes(s);
     }
 
     function holderStatusMeta(item){
@@ -1115,6 +1142,108 @@
       await Promise.all(tasks);
     }
 
+    async function releaseOrderSeats(order){
+      const seatIds = Array.isArray(order?.selectedSeatIds) ? order.selectedSeatIds : [];
+      if (!seatIds.length) return;
+
+      await Promise.all(
+        seatIds.map(async seatId => {
+          const seatRef = doc(db, "events", eventId, "seats", seatId);
+          try {
+            const seatSnap = await getDoc(seatRef);
+            if (!seatSnap.exists()) return;
+
+            const seatData = seatSnap.data() || {};
+            const seatOrderId = norm(seatData.orderId || "");
+            if (seatOrderId && seatOrderId !== order.id) return;
+
+            await updateDoc(seatRef, {
+              status: "available",
+              heldBy: "",
+              heldUntil: null,
+              orderId: "",
+              updatedAt: serverTimestamp()
+            });
+          } catch (err) {
+            console.error("release seat failed:", seatId, err);
+          }
+        })
+      );
+    }
+
+    async function expireOrderIfNeeded(order){
+      if (!order?.ref) return order;
+      if (!isOrderExpired(order)) return order;
+      if (!isActiveOrderStatus(order.status)) return order;
+
+      try {
+        await updateDoc(order.ref, {
+          status: "expired",
+          fillStatus: "expired",
+          updatedAt: serverTimestamp()
+        });
+
+        await releaseOrderSeats(order);
+        return await getOrder();
+      } catch (err) {
+        console.error("expireOrderIfNeeded failed:", err);
+        return order;
+      }
+    }
+
+    function stopExpireCountdown(){
+      if (expireTimer) {
+        clearInterval(expireTimer);
+        expireTimer = null;
+      }
+    }
+
+    function startExpireCountdown(order){
+      stopExpireCountdown();
+
+      const expiresDate = toDate(order?.expiresAt);
+      const el = document.getElementById("countdownText");
+
+      if (!expiresDate || !el) {
+        if (el) el.textContent = "--:--";
+        return;
+      }
+
+      const updateCountdown = async () => {
+        const diff = expiresDate.getTime() - Date.now();
+
+        if (diff <= 0) {
+          el.textContent = "已逾時";
+          el.className = "countdown countdown-danger";
+          stopExpireCountdown();
+
+          if (currentOrder && isActiveOrderStatus(currentOrder.status)) {
+            currentOrder = await expireOrderIfNeeded(currentOrder);
+            holderState = flattenItems(currentOrder);
+            renderPage();
+          }
+          return;
+        }
+
+        const totalSec = Math.floor(diff / 1000);
+        const min = Math.floor(totalSec / 60);
+        const sec = totalSec % 60;
+
+        el.textContent = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+
+        if (totalSec <= 60) {
+          el.className = "countdown countdown-danger";
+        } else if (totalSec <= 300) {
+          el.className = "countdown countdown-warn";
+        } else {
+          el.className = "countdown countdown-normal";
+        }
+      };
+
+      updateCountdown();
+      expireTimer = setInterval(updateCountdown, 1000);
+    }
+
     async function saveAssignments(asFinalSubmit = false){
       if (!currentOrder?.ref) return;
 
@@ -1268,7 +1397,6 @@
       const buyerTicketCount = getBuyerTicketCount(currentOrder);
       const extraHolderCount = getExtraHolderCount(currentOrder);
       const checkedExtraCount = holderState.filter(item => !item.isBuyerTicket && item.status === "valid").length;
-
       const orderStatusText = getOrderStatusText(currentOrder.status);
 
       backLink.href = "my-orders.html";
@@ -1288,6 +1416,7 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
             <span class="pill">訂單 ID：${esc(currentOrder.id || "-")}</span>
             <span class="pill">訂單狀態：${esc(orderStatusText)}</span>
             <span class="pill">截止時間：${esc(formatDateTime(currentOrder.expiresAt))}</span>
+            <span class="pill">剩餘時間：<span id="countdownText" class="countdown countdown-normal">--:--</span></span>
             <span class="pill">完成進度：${esc(extraHolderCount > 0 ? `${checkedExtraCount} / ${extraHolderCount}` : "無需填寫")}</span>
             <span class="pill">主購人票：${esc(buyerTicketCount)}</span>
           </div>
@@ -1376,12 +1505,20 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
                 expired
                   ? "這筆訂單已超過填寫期限，不能再修改。"
                   : ready
-                  ? (extraHolderCount > 0
-                      ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
-                      : "這筆訂單無需填寫持票人資料，可以直接送出並正式成立訂單。")
-                  : "請先完成所有持票人資料填寫與資格檢查。"
+                    ? (extraHolderCount > 0
+                        ? "全部持票人資料已通過檢查，可以送出並正式成立訂單。"
+                        : "這筆訂單無需填寫持票人資料，可以直接送出並正式成立訂單。")
+                    : "請先完成所有持票人資料填寫與資格檢查。"
               }
             </div>
+
+            ${
+              expired ? "" : `
+                <div class="notice warn">
+                  請在時間內完成填寫，逾時訂單將自動取消。
+                </div>
+              `
+            }
 
             <div class="action-stack">
               <button class="btn" id="checkAllBtn" ${(locked || extraHolderCount <= 0) ? "disabled" : ""}>檢查全部持票人</button>
@@ -1469,6 +1606,8 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
           }
         });
       }
+
+      startExpireCountdown(currentOrder);
     }
 
     async function initPage(){
@@ -1485,6 +1624,8 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
         app.innerHTML = "找不到訂單。";
         return;
       }
+
+      currentOrder = await expireOrderIfNeeded(currentOrder);
 
       const buyerUid = norm(currentOrder.uid || currentOrder.buyerUid);
       if (!currentUser || currentUser.uid !== buyerUid) {
@@ -1513,6 +1654,10 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
         app.className = "empty";
         app.innerHTML = "頁面載入失敗，請稍後再試。";
       }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      stopExpireCountdown();
     });
   </script>
 </body>
