@@ -1111,6 +1111,11 @@
         const ticketId = buildTicketId(order, assignment);
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
 
+        const ticketSnap = await getDoc(ticketRef);
+        if (ticketSnap.exists()) {
+          return;
+        }
+
         await setDoc(ticketRef, {
           eventId,
           eventTitle: norm(order.eventTitle || ""),
@@ -1136,7 +1141,7 @@
           checkedIn: false,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        }, { merge: true });
+        });
       });
 
       await Promise.all(tasks);
