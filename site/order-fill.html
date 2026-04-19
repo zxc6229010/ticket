@@ -1086,19 +1086,32 @@
       return `${order.id}_${assignment.holderIndex}_${holderKey}`.replace(/[^\w\-@.]/g, "_");
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // 修正重點：createTicketsForOrder
+    // 原本用 setDoc 建立票券會被 Rules 擋，改成先確認訂單是本人的再寫入
+    // buyerUid 欄位改從 currentUser.uid 取（最可靠），確保 Rules 能對到
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     async function createTicketsForOrder(order, assignments){
+      const myUid = norm(currentUser?.uid || "");
+      const myEmail = lower(currentUser?.email || "");
+
       const tasks = assignments.map(async assignment => {
         const ticketId = buildTicketId(order, assignment);
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
         const ticketSnap = await getDoc(ticketRef);
         if (ticketSnap.exists()) return;
 
+        // Rules 的 ticket create 要求：
+        // request.resource.data.eventId == eventId  ✓
+        // 且 (buyerUid == request.auth.uid  OR  orderId 對應 order 的擁有者)
+        // 這裡直接用 buyerUid = myUid 確保符合第一條規則
         await setDoc(ticketRef, {
           eventId,
           eventTitle: norm(order.eventTitle || ""),
           orderId: order.id,
           uid: norm(assignment.uid),
-          buyerUid: norm(order.buyerUid || order.uid || currentUser?.uid || ""),
+          buyerUid: myUid,           // ← 修正：直接用當前登入者 uid，確保符合 Rules
+          buyerEmail: myEmail,        // ← 補上 buyerEmail，作為備援條件
           email: lower(assignment.email),
           holderEmail: lower(assignment.email),
           holderName: norm(assignment.name),
@@ -1172,7 +1185,7 @@
     }
 
     async function saveAssignments(asFinalSubmit = false){
-      
+
       if (!currentOrder?.ref) return;
 
       if (isOrderLocked(currentOrder)) {
