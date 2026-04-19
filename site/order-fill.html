@@ -240,14 +240,8 @@
       margin-left:4px;
     }
 
-    .countdown-normal{
-      color:#111;
-    }
-
-    .countdown-warn{
-      color:#c2410c;
-    }
-
+    .countdown-normal{ color:#111; }
+    .countdown-warn{ color:#c2410c; }
     .countdown-danger{
       color:#b91c1c;
       animation:pulse 1s infinite;
@@ -365,25 +359,10 @@
       border:1px solid transparent;
     }
 
-    .status-ok{
-      background:var(--green-bg);
-      color:var(--green);
-    }
-
-    .status-warn{
-      background:var(--red-bg);
-      color:var(--red);
-    }
-
-    .status-gray{
-      background:var(--gray-bg);
-      color:var(--gray);
-    }
-
-    .status-blue{
-      background:var(--blue-bg);
-      color:var(--blue);
-    }
+    .status-ok{ background:var(--green-bg); color:var(--green); }
+    .status-warn{ background:var(--red-bg); color:var(--red); }
+    .status-gray{ background:var(--gray-bg); color:var(--gray); }
+    .status-blue{ background:var(--blue-bg); color:var(--blue); }
 
     .holder-body{
       padding:18px;
@@ -711,7 +690,6 @@
       doc,
       getDoc,
       setDoc,
-      updateDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -886,15 +864,15 @@
 
     function flattenItems(order){
       const sourceItems = getOrderItems(order);
-      const existingAssignments = Array.isArray(order.holderAssignments) ? order.holderAssignments : [];
+      const existingAssignments = Array.isArray(order?.holderAssignments) ? order.holderAssignments : [];
       const flat = [];
 
       let pointer = 0;
-      const buyerEmail = lower(order.buyerEmail || currentUser?.email || "");
-      const buyerUid = norm(order.buyerUid || order.uid || currentUser?.uid || "");
+      const buyerEmail = lower(order?.buyerEmail || currentUser?.email || "");
+      const buyerUid = norm(order?.buyerUid || order?.uid || currentUser?.uid || "");
 
       sourceItems.forEach((item, groupIndex) => {
-        const qty = Number(item.quantity || 0);
+        const qty = Number(item?.quantity || 0);
         for (let i = 0; i < qty; i++) {
           const existing = existingAssignments[pointer] || {};
           const isBuyerTicket = pointer === 0 || existing.isBuyerTicket === true;
@@ -902,9 +880,9 @@
           flat.push({
             holderIndex: pointer,
             groupIndex,
-            ticketTypeId: norm(item.ticketTypeId || existing.ticketTypeId || ""),
-            ticketTypeName: norm(item.ticketTypeName || existing.ticketTypeName || `票種 ${groupIndex + 1}`),
-            price: Number(item.unitPrice || item.price || existing.price || 0),
+            ticketTypeId: norm(item?.ticketTypeId || existing.ticketTypeId || ""),
+            ticketTypeName: norm(item?.ticketTypeName || existing.ticketTypeName || `票種 ${groupIndex + 1}`),
+            price: Number(item?.unitPrice || item?.price || existing.price || 0),
 
             isBuyerTicket,
 
@@ -942,7 +920,9 @@
 
     function isOrderLocked(order){
       const status = lower(order?.status);
-      if (["paid","completed","cancelled","void","refunded","expired"].includes(status)) return true;
+      const fillStatus = lower(order?.fillStatus);
+      if (fillStatus === "completed") return true;
+      if (["paid","completed","cancelled","void","refunded","expired","ready_for_checkout"].includes(status)) return true;
       if (isOrderExpired(order)) return true;
       return false;
     }
@@ -1086,22 +1066,16 @@
       return `${order.id}_${assignment.holderIndex}_${holderKey}`.replace(/[^\w\-@.]/g, "_");
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // 修正重點：createTicketsForOrder
-    // 原本用 setDoc 建立票券會被 Rules 擋，改成先確認訂單是本人的再寫入
-    // buyerUid 欄位改從 currentUser.uid 取（最可靠），確保 Rules 能對到
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     async function createTicketsForOrder(order, assignments){
       const myUid = norm(currentUser?.uid || "");
       const myEmail = lower(currentUser?.email || "");
 
-      // 循序執行，避免 race condition；已存在的票靜默跳過
       for (const assignment of assignments) {
         try {
           const ticketId = buildTicketId(order, assignment);
           const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
           const ticketSnap = await getDoc(ticketRef);
-          if (ticketSnap.exists()) continue; // 已存在，跳過
+          if (ticketSnap.exists()) continue;
 
           await setDoc(ticketRef, {
             eventId,
@@ -1126,7 +1100,6 @@
             updatedAt: serverTimestamp()
           });
         } catch (err) {
-          // 單張票失敗不中斷其他票，只記錄 log
           console.warn("票券建立略過：", err?.message || err);
         }
       }
@@ -1185,7 +1158,6 @@
     }
 
     async function saveAssignments(asFinalSubmit = false){
-
       if (!currentOrder?.ref) return;
 
       if (isOrderLocked(currentOrder)) {
@@ -1207,13 +1179,7 @@
         const myUid = norm(currentUser?.uid || "");
         const myEmail = lower(currentUser?.email || "");
 
-        if (
-          !currentUser ||
-          (
-            buyerUid !== myUid &&
-            buyerEmail !== myEmail
-          )
-        ) {
+        if (!currentUser || (buyerUid !== myUid && buyerEmail !== myEmail)) {
           alert("只有主購者可以修改這筆訂單。");
           return;
         }
@@ -1240,32 +1206,26 @@
           updatedAt: serverTimestamp()
         };
 
-        if (extraHolderCount > 0) {
-          payload = {
-            ...payload,
-            holderAssignments: assignments,
-            participantEmails,
-            participantUids,
-            sharedOrderRefs
-          };
-        }
+        payload = {
+          ...payload,
+          holderAssignments: assignments,
+          participantEmails,
+          participantUids,
+          sharedOrderRefs
+        };
 
         if (asFinalSubmit) {
           payload.status = "ready_for_checkout";
           payload.fillStatus = "completed";
           payload.holderInfoCompletedAt = serverTimestamp();
+        } else {
+          payload.fillStatus = "draft";
         }
-
-        console.log(extraHolderCount <= 0 ? "免填資料模式：開始更新訂單" : "開始更新訂單");
 
         await setDoc(currentOrder.ref, payload, { merge:true });
 
-        console.log("訂單更新成功");
-
         if (asFinalSubmit) {
-          console.log("開始建立票券");
           await createTicketsForOrder(currentOrder, assignments);
-          console.log("票券建立成功");
         }
 
         currentOrder = await getOrder();
@@ -1362,7 +1322,7 @@
         return;
       }
 
-      const expired = isOrderLocked(currentOrder) && lower(currentOrder.status) === "expired" || isOrderExpired(currentOrder);
+      const expired = (isOrderLocked(currentOrder) && lower(currentOrder.status) === "expired") || isOrderExpired(currentOrder);
       const locked = isOrderLocked(currentOrder);
       const ready = allHoldersReady();
 
@@ -1579,13 +1539,7 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
       const myUid = norm(currentUser?.uid || "");
       const myEmail = lower(currentUser?.email || "");
 
-      if (
-        !currentUser ||
-        (
-          buyerUid !== myUid &&
-          buyerEmail !== myEmail
-        )
-      ) {
+      if (!currentUser || (buyerUid !== myUid && buyerEmail !== myEmail)) {
         app.className = "empty";
         app.innerHTML = "只有主購者可以填寫這筆訂單的持票人資料。";
         return;
