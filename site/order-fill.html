@@ -1083,9 +1083,6 @@
       const tasks = assignments.map(async assignment => {
         const ticketId = buildTicketId(order, assignment);
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
-        const ticketSnap = await getDoc(ticketRef);
-
-        if (ticketSnap.exists()) return;
 
         await setDoc(ticketRef, {
           eventId,
@@ -1093,6 +1090,7 @@
           orderId: order.id,
 
           uid: norm(assignment.uid),
+          buyerUid: norm(order.buyerUid || order.uid || currentUser?.uid || ""),
           email: lower(assignment.email),
           holderEmail: lower(assignment.email),
           holderName: norm(assignment.name),
@@ -1111,7 +1109,7 @@
           checkedIn: false,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
       });
 
       await Promise.all(tasks);
@@ -1125,42 +1123,51 @@
         return;
       }
 
-      const assignments = buildAssignmentsPayload();
-      const participantEmails = buildParticipantEmails();
-      const participantUids = buildParticipantUids();
-      const sharedOrderRefs = buildSharedOrderRefs();
-      const ready = allHoldersReady();
+      try {
+        const assignments = buildAssignmentsPayload();
+        const participantEmails = buildParticipantEmails();
+        const participantUids = buildParticipantUids();
+        const sharedOrderRefs = buildSharedOrderRefs();
+        const ready = allHoldersReady();
 
-      if (asFinalSubmit && !ready) {
-        alert("尚有持票人資料未完成或未通過驗證。");
-        return;
+        if (asFinalSubmit && !ready) {
+          alert("尚有持票人資料未完成或未通過驗證。");
+          return;
+        }
+
+        const payload = {
+          holderAssignments: assignments,
+          participantEmails,
+          participantUids,
+          sharedOrderRefs,
+          updatedAt: serverTimestamp()
+        };
+
+        if (asFinalSubmit) {
+          payload.status = "ready_for_checkout";
+          payload.fillStatus = "completed";
+          payload.holderInfoCompletedAt = serverTimestamp();
+        }
+
+        console.log("開始更新訂單");
+        await updateDoc(currentOrder.ref, payload);
+        console.log("訂單更新成功");
+
+        if (asFinalSubmit) {
+          console.log("開始建立票券");
+          await createTicketsForOrder(currentOrder, assignments);
+          console.log("票券建立成功");
+        }
+
+        currentOrder = await getOrder();
+        holderState = flattenItems(currentOrder);
+        renderPage();
+
+        alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
+      } catch (err) {
+        console.error("saveAssignments failed:", err);
+        alert(err?.message || "儲存失敗，請查看 Console");
       }
-
-      const payload = {
-        holderAssignments: assignments,
-        participantEmails,
-        participantUids,
-        sharedOrderRefs,
-        updatedAt: serverTimestamp()
-      };
-
-      if (asFinalSubmit) {
-        payload.status = "ready_for_checkout";
-        payload.fillStatus = "completed";
-        payload.holderInfoCompletedAt = serverTimestamp();
-      }
-
-      await updateDoc(currentOrder.ref, payload);
-
-      if (asFinalSubmit) {
-        await createTicketsForOrder(currentOrder, assignments);
-      }
-
-      currentOrder = await getOrder();
-      holderState = flattenItems(currentOrder);
-      renderPage();
-
-      alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
     }
 
     function renderHolderCard(item){
