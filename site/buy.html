@@ -1053,9 +1053,9 @@
 
   function getEventStatus(event){
     const now = new Date();
-    const saleStart = toDate(event.saleStartAt);
-    const saleEnd = toDate(event.saleEndAt);
-    const published = event.published === true;
+    const saleStart = toDate(event?.saleStartAt);
+    const saleEnd = toDate(event?.saleEndAt);
+    const published = event?.published === true;
 
     if (!published) return { text:"未公開", key:"hidden" };
     if (saleStart && now < saleStart) return { text:"即將開賣", key:"upcoming" };
@@ -1069,20 +1069,20 @@
 
   function getEventVenue(event){
     return norm(
-      event.venueName ||
-      event.location ||
-      event.place ||
-      event.eventLocation ||
+      event?.venueName ||
+      event?.location ||
+      event?.place ||
+      event?.eventLocation ||
       ""
     );
   }
 
   function getEventDescription(event){
     return norm(
-      event.summary ||
-      event.subtitle ||
-      event.description ||
-      event.shortDescription ||
+      event?.summary ||
+      event?.subtitle ||
+      event?.description ||
+      event?.shortDescription ||
       ""
     );
   }
@@ -1289,7 +1289,8 @@
         soldToUid: norm(data.soldToUid || ""),
         orderId: norm(data.orderId || ""),
         computedStatus,
-        heldUntilDate
+        heldUntilDate,
+        _detected: data._detected === true
       };
     });
   }
@@ -1331,9 +1332,7 @@
 
   function selectSeatMode(mode){
     selectedSeatMode = mode;
-    if (selectedStep < 2) {
-      selectedStep = 2;
-    }
+    if (selectedStep < 2) selectedStep = 2;
     renderPage();
   }
 
@@ -1355,32 +1354,32 @@
   }
 
   function seatIsSelectable(seat){
-  if (!seat) return false;
+    if (!seat) return false;
 
-  if (String(seat.id || "").startsWith("det_")) return false;
-  if (String(seat.label || "").startsWith("候選")) return false;
-  if (seat._detected === true) return false;
+    if (String(seat.id || "").startsWith("det_")) return false;
+    if (String(seat.label || "").startsWith("候選")) return false;
+    if (seat._detected === true) return false;
 
-  const myUid = currentUser?.uid || "";
-  const status = seat.computedStatus;
+    const myUid = currentUser?.uid || "";
+    const status = seat.computedStatus;
 
-  if (status === "sold") return false;
-  if (status === "disabled") return false;
-  if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return false;
+    if (status === "sold") return false;
+    if (status === "disabled") return false;
+    if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return false;
 
-  const need = getRequiredSeatCount();
-  if (need <= 0) return false;
+    const need = getRequiredSeatCount();
+    if (need <= 0) return false;
 
-  const type = getSelectedTicketType();
-  if (!type) return false;
+    const type = getSelectedTicketType();
+    if (!type) return false;
 
-  if (Array.isArray(type.sectionIds) && type.sectionIds.length) {
-    const allowed = type.sectionIds.map(v => norm(v));
-    if (!allowed.includes(norm(seat.sectionId || ""))) return false;
+    if (Array.isArray(type.sectionIds) && type.sectionIds.length) {
+      const allowed = type.sectionIds.map(v => norm(v));
+      if (!allowed.includes(norm(seat.sectionId || ""))) return false;
+    }
+
+    return true;
   }
-
-  return true;
-}
 
   function getSeatVisualState(seat){
     const myUid = currentUser?.uid || "";
@@ -1731,7 +1730,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
 
   function renderAssignedSeatArea(){
     const showMap = getSeatMapEnabled(currentEvent);
-    const bg = norm(currentEvent.seatMapImage || currentEvent.seatMapUrl || "");
+    const bg = norm(currentEvent?.seatMapImage || currentEvent?.seatMapUrl || "");
     const requiredSeatCount = getRequiredSeatCount();
     const type = getSelectedTicketType();
 
@@ -1741,10 +1740,8 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
           <h2 class="card-title">座位選擇</h2>
           <div class="card-sub">
             目前票種：${esc(type?.name || "-")}
-            ｜
-            選位方式：${esc(selectedSeatMode === "auto" ? "電腦選位" : "手動選位")}
-            ｜
-            需選 ${requiredSeatCount} 席
+            ｜ 選位方式：${esc(selectedSeatMode === "auto" ? "電腦選位" : "手動選位")}
+            ｜ 需選 ${requiredSeatCount} 席
           </div>
         </div>
         <div class="card-body">
@@ -1829,8 +1826,8 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     const status = getEventStatus(currentEvent);
     const desc = getEventDescription(currentEvent) || "請依序完成選位方式、票種與數量。";
     const venue = getEventVenue(currentEvent) || "活動地點將依主辦單位公告為準";
-    const saleStartText = formatDateTime(currentEvent.saleStartAt);
-    const saleEndText = formatDateTime(currentEvent.saleEndAt);
+    const saleStartText = formatDateTime(currentEvent?.saleStartAt);
+    const saleEndText = formatDateTime(currentEvent?.saleEndAt);
     const totalQty = getTotalQuantity();
     const totalAmount = getTotalAmount();
     const requiredSeatCount = getRequiredSeatCount();
@@ -1850,7 +1847,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       <section class="hero">
         <h1 class="hero-title">選擇票種與座位</h1>
         <div class="hero-sub">
-活動：${esc(currentEvent.title || "未命名活動")}
+活動：${esc(currentEvent?.title || "未命名活動")}
 ${esc(desc)}
         </div>
         <div class="hero-meta">
@@ -1907,34 +1904,13 @@ ${esc(desc)}
           <div class="notice ${promoNotice.className}">${esc(promoNotice.text)}</div>
 
           <div class="summary">
-            <div class="summary-row">
-              <span>活動</span>
-              <strong>${esc(currentEvent.title || "-")}</strong>
-            </div>
-            <div class="summary-row">
-              <span>選位方式</span>
-              <strong>${esc(selectedSeatMode ? (selectedSeatMode === "auto" ? "電腦選位" : "手動選位") : "-")}</strong>
-            </div>
-            <div class="summary-row">
-              <span>票種</span>
-              <strong>${esc(getSelectedTicketType()?.name || "-")}</strong>
-            </div>
-            <div class="summary-row">
-              <span>總張數</span>
-              <strong>${esc(totalQty)}</strong>
-            </div>
-            <div class="summary-row">
-              <span>總金額</span>
-              <strong>${esc(formatPrice(totalAmount))}</strong>
-            </div>
-            <div class="summary-row">
-              <span>需選座位</span>
-              <strong>${esc(requiredSeatCount)}</strong>
-            </div>
-            <div class="summary-row">
-              <span>已選座位</span>
-              <strong>${esc(selectedSeatIds.length)}</strong>
-            </div>
+            <div class="summary-row"><span>活動</span><strong>${esc(currentEvent?.title || "-")}</strong></div>
+            <div class="summary-row"><span>選位方式</span><strong>${esc(selectedSeatMode ? (selectedSeatMode === "auto" ? "電腦選位" : "手動選位") : "-")}</strong></div>
+            <div class="summary-row"><span>票種</span><strong>${esc(getSelectedTicketType()?.name || "-")}</strong></div>
+            <div class="summary-row"><span>總張數</span><strong>${esc(totalQty)}</strong></div>
+            <div class="summary-row"><span>總金額</span><strong>${esc(formatPrice(totalAmount))}</strong></div>
+            <div class="summary-row"><span>需選座位</span><strong>${esc(requiredSeatCount)}</strong></div>
+            <div class="summary-row"><span>已選座位</span><strong>${esc(selectedSeatIds.length)}</strong></div>
           </div>
 
           <div class="summary-detail">
@@ -2051,9 +2027,7 @@ ${esc(desc)}
     }
 
     if (clearSeatBtn) {
-      clearSeatBtn.onclick = () => {
-        clearSeats();
-      };
+      clearSeatBtn.onclick = () => clearSeats();
     }
 
     const promoCodeInput = document.getElementById("promoCodeInput");
@@ -2077,9 +2051,7 @@ ${esc(desc)}
     if (clearPromoBtn) clearPromoBtn.onclick = clearPromoCode;
 
     const createOrderBtn = document.getElementById("createOrderBtn");
-    if (createOrderBtn) {
-      createOrderBtn.onclick = createOrder;
-    }
+    if (createOrderBtn) createOrderBtn.onclick = createOrder;
   }
 
   async function getPromoCodeDataFromSubcollection(cleanCode){
@@ -2141,20 +2113,11 @@ ${esc(desc)}
 
     try {
       let promo = null;
-      let subcollectionError = null;
 
       try {
         promo = await getPromoCodeDataFromSubcollection(code);
       } catch (err) {
-        subcollectionError = err;
-      }
-
-      if (!promo && !subcollectionError) {
-        promo = getPromoCodeDataFromEventArray(code);
-      }
-
-      if (!promo && subcollectionError) {
-        throw subcollectionError;
+        promo = null;
       }
 
       if (!promo) {
@@ -2295,9 +2258,6 @@ ${esc(desc)}
 
       const promoCodeValue = promoState.applied ? norm(promoState.data?.code || promoState.data?.id || "") : "";
       const promoSource = promoState.applied ? norm(promoState.data?.source || "") : "";
-      const promoRef = (promoState.applied && promoSource === "subcollection" && promoCodeValue)
-        ? doc(db, "events", eventId, "promoCodes", promoCodeValue)
-        : null;
 
       await runTransaction(db, async (tx) => {
         const freshEventSnap = await tx.get(eventRef);
@@ -2327,19 +2287,17 @@ ${esc(desc)}
           seatPayloads.push({ ref, seat });
         }
 
-        let promoPayload = null;
-
         if (promoState.applied && promoState.data) {
-          if (promoSource === "subcollection" && promoRef) {
+          if (promoSource === "subcollection" && promoCodeValue) {
+            const promoRef = doc(db, "events", eventId, "promoCodes", promoCodeValue);
             const promoSnap = await tx.get(promoRef);
             if (!promoSnap.exists()) throw new Error("公關代碼不存在或已失效");
 
-            promoPayload = promoSnap.data() || {};
+            const promoPayload = promoSnap.data() || {};
             if (promoPayload.enabled !== true) throw new Error("此公關代碼未啟用");
 
             const maxUse = getSafeNumber(promoPayload.maxUse ?? promoPayload.maxUses ?? 0, 0);
             const usedCount = getSafeNumber(promoPayload.usedCount ?? 0, 0);
-
             if (maxUse > 0 && usedCount >= maxUse) {
               throw new Error("此公關代碼已達使用上限");
             }
@@ -2352,12 +2310,9 @@ ${esc(desc)}
 
             const maxUse = getSafeNumber(hit.maxUse ?? hit.maxUses ?? 0, 0);
             const usedCount = getSafeNumber(hit.usedCount ?? 0, 0);
-
             if (maxUse > 0 && usedCount >= maxUse) {
               throw new Error("此公關代碼已達使用上限");
             }
-
-            promoPayload = hit;
           }
         }
 
@@ -2406,30 +2361,6 @@ ${esc(desc)}
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-
-        if (promoState.applied && promoPayload) {
-          if (promoSource === "subcollection" && promoRef) {
-            tx.update(promoRef, {
-              usedCount: getSafeNumber(promoPayload.usedCount ?? 0, 0) + 1,
-              updatedAt: serverTimestamp()
-            });
-          } else if (promoSource === "event_array") {
-            const arr = Array.isArray(freshEvent.promoCodes) ? [...freshEvent.promoCodes] : [];
-            const idx = arr.findIndex(item => lower(item.code || item.id || "") === lower(promoCodeValue));
-
-            if (idx >= 0) {
-              arr[idx] = {
-                ...arr[idx],
-                usedCount: getSafeNumber(arr[idx].usedCount ?? 0, 0) + 1
-              };
-
-              tx.update(eventRef, {
-                promoCodes: arr,
-                updatedAt: serverTimestamp()
-              });
-            }
-          }
-        }
       });
 
       location.href = `order-fill.html?id=${encodeURIComponent(eventId)}&orderId=${encodeURIComponent(orderRef.id)}`;
