@@ -965,6 +965,7 @@
     const eventId = String(params.get("id") || "").trim();
 
     let currentUser = null;
+    let currentUserProfile = null;
     let currentEvent = null;
 
     let allTicketTypes = [];
@@ -985,11 +986,16 @@
       error: ""
     };
 
-    let signupEligibility = {
+    let eligibilityState = {
       loading: true,
-      restricted: false,
-      allowed: true,
-      reason: ""
+      checked: false,
+      eligible: false,
+      restrictedByList: false,
+      matchedWhitelist: false,
+      matchedSchool: false,
+      eventSchoolId: "",
+      eventSchoolName: "",
+      reason: "資格檢查中…"
     };
 
     const HOLD_MINUTES = 10;
@@ -1141,6 +1147,261 @@
       return "";
     }
 
+    function getEventSchoolId(event){
+      return norm(
+        event?.ownerSchoolId ||
+        event?.schoolId ||
+        event?.partnerSchoolId ||
+        event?.campusSchoolId ||
+        ""
+      );
+    }
+
+    function getEventSchoolName(event){
+      return norm(
+        event?.ownerSchoolName ||
+        event?.schoolName ||
+        event?.partnerSchoolName ||
+        event?.campusSchoolName ||
+        ""
+      );
+    }
+
+    function hasPromoOverride(){
+      return promoState.applied === true && !!promoState.data;
+    }
+
+    function canPassEligibility(){
+      return hasPromoOverride() || eligibilityState.eligible === true;
+    }
+
+    function buildEligibilityReason({
+      loggedIn,
+      eventSchoolName,
+      matchedSchool,
+      restrictedByList,
+      matchedWhitelist
+    }){
+      if (!loggedIn) {
+        return "請先登入後再報名，或輸入有效公關代碼。";
+      }
+
+      if (!matchedSchool) {
+        return `你尚未完成此活動所屬學校${eventSchoolName ? `「${eventSchoolName}」` : ""}的校園驗證，因此目前不能報名。若你有公關代碼，可輸入公關代碼略過限制。`;
+      }
+
+      if (restrictedByList && !matchedWhitelist) {
+        return "這場活動有匯入限制名單，你目前不在名單內，因此不能報名。若你有公關代碼，可輸入公關代碼略過限制。";
+      }
+
+      return "目前無法確認報名資格，請稍後再試。";
+    }
+
+    async function getEventById(id){
+      const snap = await getDoc(doc(db, "events", id));
+      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+    }
+
+    async function loadCurrentUserProfile(){
+      if (!currentUser) {
+        currentUserProfile = null;
+        return null;
+      }
+
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        currentUserProfile = snap.exists() ? (snap.data() || {}) : {};
+      } catch (err) {
+        console.error("loadCurrentUserProfile failed:", err);
+        currentUserProfile = {};
+      }
+
+      return currentUserProfile;
+    }
+
+    async function loadWhitelistInfo(){
+      try {
+        const metaRef = doc(db, "events", eventId, "allowedUsers", "meta");
+        const metaSnap = await getDoc(metaRef).catch(() => null);
+
+        const listQuery = query(collection(db, "events", eventId, "allowedUsers"), limit(10));
+        const listSnap = await getDocs(listQuery).catch(() => null);
+
+        const hasImportedDocs = !!(listSnap && listSnap.docs.some(d => d.id !== "meta"));
+        const metaEnabled = !!(metaSnap && metaSnap.exists() && metaSnap.data()?.enabled === true);
+
+        return {
+          restrictedByList: metaEnabled || hasImportedDocs
+        };
+      } catch (err) {
+        console.error("loadWhitelistInfo failed:", err);
+        return { restrictedByList:false };
+      }
+    }
+
+    async function checkWhitelistMatchForUser(){
+      if (!currentUser) return false;
+
+      const uidRef = doc(db, "events", eventId, "allowedUsers", currentUser.uid);
+      const emailKey = lower(currentUser.email || "");
+      const emailRef = emailKey
+        ? doc(db, "events", eventId, "allowedUsers", emailKey)
+        : null;
+
+      try {
+        const [uidSnap, emailSnap] = await Promise.all([
+          getDoc(uidRef).catch(() => null),
+          emailRef ? getDoc(emailRef).catch(() => null) : Promise.resolve(null)
+        ]);
+
+        return !!(
+          (uidSnap && uidSnap.exists()) ||
+          (emailSnap && emailSnap.exists())
+        );
+      } catch (err) {
+        console.error("checkWhitelistMatchForUser failed:", err);
+        return false;
+      }
+    }
+
+    async function loadSignupEligibility(){
+      eligibilityState = {
+        loading: true,
+        checked: false,
+        eligible: false,
+        restrictedByList: false,
+        matchedWhitelist: false,
+        matchedSchool: false,
+        eventSchoolId: "",
+        eventSchoolName: "",
+        reason: "資格檢查中…"
+      };
+
+      if (!currentEvent) {
+        eligibilityState.loading = false;
+        eligibilityState.checked = true;
+        eligibilityState.reason = "找不到活動資料。";
+        return eligibilityState;
+      }
+
+      const eventSchoolId = getEventSchoolId(currentEvent);
+      const eventSchoolName = getEventSchoolName(currentEvent);
+
+      if (hasPromoOverride()) {
+        eligibilityState = {
+          loading: false,
+          checked: true,
+          eligible: true,
+          restrictedByList: false,
+          matchedWhitelist: false,
+          matchedSchool: false,
+          eventSchoolId,
+          eventSchoolName,
+          reason: "已套用有效公關代碼，可略過名單與校園驗證限制。"
+        };
+        return eligibilityState;
+      }
+
+      const loggedIn = !!currentUser;
+
+      if (!loggedIn) {
+        eligibilityState = {
+          loading: false,
+          checked: true,
+          eligible: false,
+          restrictedByList: false,
+          matchedWhitelist: false,
+          matchedSchool: false,
+          eventSchoolId,
+          eventSchoolName,
+          reason: buildEligibilityReason({
+            loggedIn:false,
+            eventSchoolName,
+            matchedSchool:false,
+            restrictedByList:false,
+            matchedWhitelist:false
+          })
+        };
+        return eligibilityState;
+      }
+
+      if (!currentUserProfile) {
+        await loadCurrentUserProfile();
+      }
+
+      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+      const matchedSchool = !!eventSchoolId && verifiedSchoolId === eventSchoolId;
+
+      const whitelistInfo = await loadWhitelistInfo();
+      const restrictedByList = whitelistInfo.restrictedByList;
+      const matchedWhitelist = restrictedByList ? await checkWhitelistMatchForUser() : false;
+
+      const eligible = restrictedByList
+        ? (matchedSchool && matchedWhitelist)
+        : matchedSchool;
+
+      eligibilityState = {
+        loading:false,
+        checked:true,
+        eligible,
+        restrictedByList,
+        matchedWhitelist,
+        matchedSchool,
+        eventSchoolId,
+        eventSchoolName,
+        reason: eligible
+          ? (
+              restrictedByList
+                ? `你已完成${eventSchoolName ? `「${eventSchoolName}」` : "本活動學校"}校園驗證，且在允許名單內，可以報名。`
+                : `你已完成${eventSchoolName ? `「${eventSchoolName}」` : "本活動學校"}校園驗證，可以報名。`
+            )
+          : buildEligibilityReason({
+              loggedIn:true,
+              eventSchoolName,
+              matchedSchool,
+              restrictedByList,
+              matchedWhitelist
+            })
+      };
+
+      return eligibilityState;
+    }
+
+    async function loadSeats(){
+      const snap = await getDocs(collection(db, "events", eventId, "seats"));
+      const now = Date.now();
+
+      allSeats = snap.docs.map(d => {
+        const data = d.data() || {};
+        const heldUntilDate = toDate(data.heldUntil);
+        const heldUntilMs = heldUntilDate ? heldUntilDate.getTime() : 0;
+
+        let computedStatus = norm(data.status || "available");
+        if (computedStatus === "held" && heldUntilMs && heldUntilMs < now) {
+          computedStatus = "available";
+        }
+
+        return {
+          id: d.id,
+          ...data,
+          x: getSafeNumber(data.x, 0),
+          y: getSafeNumber(data.y, 0),
+          price: getSafeNumber(data.price, 0),
+          rotation: getSafeNumber(data.rotation, 0),
+          label: norm(data.label || d.id),
+          row: norm(data.row || ""),
+          seatNumber: norm(data.seatNumber || ""),
+          sectionId: norm(data.sectionId || ""),
+          floor: norm(data.floor || "1F"),
+          heldBy: norm(data.heldBy || ""),
+          soldToUid: norm(data.soldToUid || ""),
+          orderId: norm(data.orderId || ""),
+          computedStatus,
+          heldUntilDate
+        };
+      });
+    }
+
     function normalizeTicketTypeItem(item, index){
       const requiresSeat = item?.requiresSeat === true;
 
@@ -1150,7 +1411,7 @@
         ...(Array.isArray(item?.bindPromoCodeIds) ? item.bindPromoCodeIds : []),
         ...(Array.isArray(item?.bindCodes) ? item.bindCodes : []),
         ...(item?.promoCodeId ? [item.promoCodeId] : []),
-        ...(item?.promoCode ? [item?.promoCode] : []),
+        ...(item?.promoCode ? [item.promoCode] : []),
         ...(item?.bindPromoCodeId ? [item.bindPromoCodeId] : []),
         ...(item?.bindCode ? [item.bindCode] : [])
       ]
@@ -1242,16 +1503,20 @@
     }
 
     function getVisibleTicketTypes(){
-      if (!promoState.applied || !promoState.data) {
-        return allTicketTypes.filter(type => type.visibility !== "promo");
+      if (hasPromoOverride()) {
+        const boundType = findPromoBoundTicketType(promoState.data);
+
+        return allTicketTypes.filter(type => {
+          if (type.visibility !== "promo") return true;
+          return !!boundType && type.id === boundType.id;
+        });
       }
 
-      const boundType = findPromoBoundTicketType(promoState.data);
+      if (!canPassEligibility()) {
+        return [];
+      }
 
-      return allTicketTypes.filter(type => {
-        if (type.visibility !== "promo") return true;
-        return !!boundType && type.id === boundType.id;
-      });
+      return allTicketTypes.filter(type => type.visibility !== "promo");
     }
 
     function getSelectedTicketType(){
@@ -1261,149 +1526,6 @@
     function selectedTicketNeedsSeat(){
       const type = getSelectedTicketType();
       return !!type && type.requiresSeat === true;
-    }
-
-    async function getEventById(id){
-      const snap = await getDoc(doc(db, "events", id));
-      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
-    }
-
-    async function loadSeats(){
-      const snap = await getDocs(collection(db, "events", eventId, "seats"));
-      const now = Date.now();
-
-      allSeats = snap.docs.map(d => {
-        const data = d.data() || {};
-        const heldUntilDate = toDate(data.heldUntil);
-        const heldUntilMs = heldUntilDate ? heldUntilDate.getTime() : 0;
-
-        let computedStatus = norm(data.status || "available");
-        if (computedStatus === "held" && heldUntilMs && heldUntilMs < now) {
-          computedStatus = "available";
-        }
-
-        return {
-          id: d.id,
-          ...data,
-          x: getSafeNumber(data.x, 0),
-          y: getSafeNumber(data.y, 0),
-          price: getSafeNumber(data.price, 0),
-          rotation: getSafeNumber(data.rotation, 0),
-          label: norm(data.label || d.id),
-          row: norm(data.row || ""),
-          seatNumber: norm(data.seatNumber || ""),
-          sectionId: norm(data.sectionId || ""),
-          floor: norm(data.floor || "1F"),
-          heldBy: norm(data.heldBy || ""),
-          soldToUid: norm(data.soldToUid || ""),
-          orderId: norm(data.orderId || ""),
-          computedStatus,
-          heldUntilDate
-        };
-      });
-    }
-
-    async function loadSignupEligibility() {
-      signupEligibility = {
-        loading: true,
-        restricted: false,
-        allowed: true,
-        reason: ""
-      };
-
-      try {
-        const metaRef = doc(db, "events", eventId, "allowedUsers", "__meta__");
-        const metaSnap = await getDoc(metaRef);
-
-        let restricted = false;
-
-        if (metaSnap.exists()) {
-          restricted = true;
-        } else {
-          const probeSnap = await getDocs(
-            query(collection(db, "events", eventId, "allowedUsers"), limit(2))
-          );
-          const docs = probeSnap.docs.filter(d => d.id !== "__meta__");
-          restricted = docs.length > 0;
-        }
-
-        if (!restricted) {
-          signupEligibility = {
-            loading: false,
-            restricted: false,
-            allowed: true,
-            reason: ""
-          };
-          return;
-        }
-
-        if (!currentUser) {
-          signupEligibility = {
-            loading: false,
-            restricted: true,
-            allowed: false,
-            reason: "此活動限名單內人員報名，請先登入後確認資格。"
-          };
-          return;
-        }
-
-        const uidRef = doc(db, "events", eventId, "allowedUsers", currentUser.uid);
-        const uidSnap = await getDoc(uidRef);
-
-        const emailKey = lower(currentUser.email || "");
-        let emailAllowed = false;
-
-        if (emailKey) {
-          const emailRef = doc(db, "events", eventId, "allowedUsers", emailKey);
-          const emailSnap = await getDoc(emailRef);
-          emailAllowed = emailSnap.exists();
-        }
-
-        const allowed = uidSnap.exists() || emailAllowed;
-
-        signupEligibility = {
-          loading: false,
-          restricted: true,
-          allowed,
-          reason: allowed ? "" : "你不在這場活動的可報名名單內。"
-        };
-      } catch (err) {
-        console.error("loadSignupEligibility failed:", err);
-        signupEligibility = {
-          loading: false,
-          restricted: true,
-          allowed: false,
-          reason: "目前無法確認報名資格，請稍後再試。"
-        };
-      }
-    }
-
-    function getEligibilityNotice(){
-      if (signupEligibility.loading) {
-        return {
-          className: "info",
-          text: "系統正在確認你的報名資格…"
-        };
-      }
-
-      if (!signupEligibility.allowed) {
-        return {
-          className: "warn",
-          text: signupEligibility.reason || "你目前不具備這場活動的報名資格。"
-        };
-      }
-
-      if (signupEligibility.restricted) {
-        return {
-          className: "ok",
-          text: "你已通過這場活動的名單資格檢查，可以繼續報名。"
-        };
-      }
-
-      return {
-        className: "info",
-        text: "此活動目前未啟用名單限制。"
-      };
     }
 
     function getRequiredSeatCount(){
@@ -1437,11 +1559,13 @@
     }
 
     function goStep(step){
+      if (!canPassEligibility()) return;
       selectedStep = step;
       renderPage();
     }
 
     function selectSeatMode(mode){
+      if (!canPassEligibility()) return;
       selectedSeatMode = mode;
       if (selectedStep < 2) {
         selectedStep = 2;
@@ -1450,6 +1574,7 @@
     }
 
     function selectTicketType(typeId){
+      if (!canPassEligibility()) return;
       selectedTicketTypeId = typeId;
       selectedQty = 0;
       selectedSeatIds = [];
@@ -1458,6 +1583,7 @@
     }
 
     function setQuantity(qty){
+      if (!canPassEligibility()) return;
       selectedQty = Number(qty || 0);
       const need = getRequiredSeatCount();
       if (selectedSeatIds.length > need) {
@@ -1467,7 +1593,10 @@
     }
 
     function seatIsSelectable(seat){
+      if (!canPassEligibility()) return false;
+
       if (!seat) return false;
+
       if (String(seat.id || "").startsWith("det_")) return false;
       if (String(seat.label || "").startsWith("候選")) return false;
       if (seat._detected === true) return false;
@@ -1506,6 +1635,8 @@
     }
 
     function toggleSeatSelect(seatId){
+      if (!canPassEligibility()) return;
+
       const seat = allSeats.find(s => s.id === seatId);
       if (!seat) return;
       if (!seatIsSelectable(seat)) return;
@@ -1529,6 +1660,8 @@
     }
 
     function autoPickSeats(){
+      if (!canPassEligibility()) return;
+
       const need = getRequiredSeatCount();
       if (need <= 0) {
         selectedSeatIds = [];
@@ -1559,6 +1692,31 @@
       renderPage();
     }
 
+    function getEligibilityNotice(){
+      if (eligibilityState.loading) {
+        return { className:"info", text:"正在檢查你的報名資格…" };
+      }
+
+      if (hasPromoOverride()) {
+        return {
+          className:"ok",
+          text:`已套用公關代碼，可略過名單與校園驗證限制。\n公關代碼：${promoState.data?.code || promoState.data?.id || "-"}`
+        };
+      }
+
+      if (eligibilityState.eligible) {
+        return {
+          className:"ok",
+          text:eligibilityState.reason || "你目前可以報名這場活動。"
+        };
+      }
+
+      return {
+        className:"warn",
+        text:eligibilityState.reason || "目前無法確認報名資格，請稍後再試。"
+      };
+    }
+
     function getPromoNotice(){
       if (promoState.loading) {
         return { className:"info", text:"公關代碼驗證中…" };
@@ -1578,22 +1736,15 @@
 
       return {
         className:"info",
-        text:"若你有公關代碼，可在此輸入。\n套用後會開放對應公關票種。"
+        text:"若你有公關代碼，可在此輸入。\n套用後會開放對應公關票種，並略過名單與校園驗證限制。"
       };
     }
 
     function getSummaryNotice(){
-      if (signupEligibility.loading) {
-        return {
-          className:"info",
-          text:"系統正在確認你的報名資格…"
-        };
-      }
-
-      if (!signupEligibility.allowed) {
+      if (!canPassEligibility()) {
         return {
           className:"warn",
-          text:signupEligibility.reason || "你目前沒有這場活動的報名資格。"
+          text:eligibilityState.reason || "目前沒有報名資格。"
         };
       }
 
@@ -1707,6 +1858,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     function renderStep1(){
       const seatingEnabled = getSeatingEnabled(currentEvent);
       const seatingMode = getSeatingMode(currentEvent);
+      const disabledAttr = canPassEligibility() ? "" : "disabled";
 
       if (!seatingEnabled || seatingMode !== "assigned") {
         return `
@@ -1718,7 +1870,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
             <div class="card-body">
               <div class="notice info">此活動目前為免選位流程，或票種本身不需要座位。</div>
               <div class="action-row">
-                <button class="btn btn-primary" id="goStep2DirectBtn">前往選票種</button>
+                <button class="btn btn-primary" id="goStep2DirectBtn" ${disabledAttr}>前往選票種</button>
               </div>
             </div>
           </div>
@@ -1745,13 +1897,15 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
             </div>
 
             <div class="action-row">
-              <button class="btn btn-primary" id="goStep2Btn" ${selectedSeatMode ? "" : "disabled"}>下一步：選票種</button>
+              <button class="btn btn-primary" id="goStep2Btn" ${selectedSeatMode && canPassEligibility() ? "" : "disabled"}>下一步：選票種</button>
             </div>
           </div>
-        `;
+        </div>
+      `;
     }
 
     function renderTicketCard(type){
+      const disabled = !canPassEligibility();
       return `
         <div class="ticket-card ${selectedTicketTypeId === type.id ? "selected" : ""}">
           <div class="ticket-top">
@@ -1776,7 +1930,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
           </div>
 
           <div class="action-row">
-            <button class="btn ${selectedTicketTypeId === type.id ? "btn-primary" : ""}" data-select-ticket="${esc(type.id)}">
+            <button class="btn ${selectedTicketTypeId === type.id ? "btn-primary" : ""}" data-select-ticket="${esc(type.id)}" ${disabled ? "disabled" : ""}>
               ${selectedTicketTypeId === type.id ? "已選擇" : "選擇此票種"}
             </button>
           </div>
@@ -1785,6 +1939,10 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
     }
 
     function renderStep2(){
+      const noTicketMessage = canPassEligibility()
+        ? "目前沒有可購買票種。若你持有公關代碼，請先在右側輸入並套用。"
+        : "你目前沒有報名資格，因此暫時無法選擇票種。若你有公關代碼，請先在右側輸入。";
+
       return `
         <div class="card">
           <div class="card-head">
@@ -1796,13 +1954,13 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
               ${
                 visibleTicketTypes.length
                   ? visibleTicketTypes.map(type => renderTicketCard(type)).join("")
-                  : `<div class="empty">目前沒有可購買票種。若你持有公關代碼，請先在右側輸入並套用。</div>`
+                  : `<div class="empty">${esc(noTicketMessage)}</div>`
               }
             </div>
 
             <div class="action-row">
               <button class="btn" id="backToStep1Btn">上一步</button>
-              <button class="btn btn-primary" id="goStep3Btn" ${selectedTicketTypeId ? "" : "disabled"}>下一步：選數量</button>
+              <button class="btn btn-primary" id="goStep3Btn" ${selectedTicketTypeId && canPassEligibility() ? "" : "disabled"}>下一步：選數量</button>
             </div>
           </div>
         </div>
@@ -1838,7 +1996,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
 
               <div class="field" style="margin-top:16px;max-width:260px;">
                 <label class="label" for="qtySelect">購買張數</label>
-                <select class="select" id="qtySelect">
+                <select class="select" id="qtySelect" ${canPassEligibility() ? "" : "disabled"}>
                   ${options.map(n => `<option value="${n}" ${selectedQty === n ? "selected" : ""}>${n} 張</option>`).join("")}
                 </select>
               </div>
@@ -1846,7 +2004,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
 
             <div class="action-row">
               <button class="btn" id="backToStep2Btn">上一步</button>
-              <button class="btn btn-primary" id="completeStepBtn">完成選擇</button>
+              <button class="btn btn-primary" id="completeStepBtn" ${canPassEligibility() ? "" : "disabled"}>完成選擇</button>
             </div>
           </div>
         </div>
@@ -1871,9 +2029,9 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
           </div>
           <div class="card-body">
             <div class="action-row">
-              <button class="btn ${selectedSeatMode === "manual" ? "active" : ""}" id="manualSelectBtn">手動選位</button>
-              <button class="btn ${selectedSeatMode === "auto" ? "active" : ""}" id="autoSelectBtn">電腦選位</button>
-              <button class="btn" id="clearSeatBtn">清除已選</button>
+              <button class="btn ${selectedSeatMode === "manual" ? "active" : ""}" id="manualSelectBtn" ${canPassEligibility() ? "" : "disabled"}>手動選位</button>
+              <button class="btn ${selectedSeatMode === "auto" ? "active" : ""}" id="autoSelectBtn" ${canPassEligibility() ? "" : "disabled"}>電腦選位</button>
+              <button class="btn" id="clearSeatBtn" ${canPassEligibility() ? "" : "disabled"}>清除已選</button>
             </div>
 
             <div class="hint" style="margin-top:12px;">
@@ -1956,7 +2114,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       const totalQty = getTotalQuantity();
       const totalAmount = getTotalAmount();
       const requiredSeatCount = getRequiredSeatCount();
-      const canOrder = canCreateOrder(currentEvent);
+      const canOrder = canCreateOrder(currentEvent) && canPassEligibility();
       const notice = getSummaryNotice();
       const promoNotice = getPromoNotice();
       const eligibilityNotice = getEligibilityNotice();
@@ -1967,7 +2125,6 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       const showStep2 = selectedStep === 2;
       const showStep3 = selectedStep === 3;
       const showSeatSection = showStep3 && selectedQty > 0 && selectedTicketNeedsSeat();
-      const allowCreateOrder = canOrder && !signupEligibility.loading && signupEligibility.allowed;
 
       app.className = "";
       app.innerHTML = `
@@ -1983,13 +2140,20 @@ ${esc(desc)}
             <span class="pill">開賣：${esc(saleStartText)}</span>
             <span class="pill">截止：${esc(saleEndText)}</span>
             <span class="pill">${getSeatingEnabled(currentEvent) ? (getSeatingMode(currentEvent) === "assigned" ? "對號座活動" : "自由座活動") : "票種決定是否選位"}</span>
+            ${
+              getEventSchoolId(currentEvent)
+                ? `<span class="pill">活動學校：${esc(getEventSchoolName(currentEvent) || getEventSchoolId(currentEvent))}</span>`
+                : ""
+            }
           </div>
         </section>
 
+        <div class="notice ${eligibilityNotice.className}" style="margin-bottom:18px;">
+          ${esc(eligibilityNotice.text)}
+        </div>
+
         <div class="layout">
           <section class="left-stack">
-            <div class="notice ${eligibilityNotice.className}">${esc(eligibilityNotice.text)}</div>
-
             ${renderStepPills()}
 
             <div class="${showStep1 ? "" : "hidden"}">${renderStep1()}</div>
@@ -2071,7 +2235,7 @@ ${esc(desc)}
             <div class="notice ${notice.className}">${esc(notice.text)}</div>
 
             <div class="action-stack">
-              <button class="btn btn-primary" id="createOrderBtn" ${allowCreateOrder ? "" : "disabled"}>建立訂單</button>
+              <button class="btn btn-primary" id="createOrderBtn" ${canOrder ? "" : "disabled"}>建立訂單</button>
               <a class="btn" href="ticket.html?id=${encodeURIComponent(currentEvent.id)}">返回活動資訊</a>
             </div>
           </aside>
@@ -2097,12 +2261,14 @@ ${esc(desc)}
 
       document.querySelectorAll("[data-mode-card]").forEach(el => {
         el.addEventListener("click", () => {
+          if (!canPassEligibility()) return;
           selectSeatMode(el.dataset.modeCard || "");
         });
       });
 
       document.querySelectorAll("[data-select-ticket]").forEach(el => {
         el.addEventListener("click", () => {
+          if (!canPassEligibility()) return;
           selectTicketType(el.dataset.selectTicket || "");
         });
       });
@@ -2110,19 +2276,15 @@ ${esc(desc)}
       const qtySelect = document.getElementById("qtySelect");
       if (qtySelect) {
         qtySelect.addEventListener("change", e => {
+          if (!canPassEligibility()) return;
           setQuantity(e.target.value);
         });
       }
 
       if (completeStepBtn) {
         completeStepBtn.addEventListener("click", () => {
-          if (signupEligibility.loading) {
-            alert("報名資格檢查中，請稍候。");
-            return;
-          }
-
-          if (!signupEligibility.allowed) {
-            alert(signupEligibility.reason || "你目前沒有這場活動的報名資格。");
+          if (!canPassEligibility()) {
+            alert(eligibilityState.reason || "你目前沒有報名資格。");
             return;
           }
 
@@ -2162,6 +2324,7 @@ ${esc(desc)}
 
       document.querySelectorAll("[data-seat-id]").forEach(btn => {
         btn.addEventListener("click", () => {
+          if (!canPassEligibility()) return;
           if (selectedSeatMode !== "manual") return;
           const seatId = btn.dataset.seatId || "";
           toggleSeatSelect(seatId);
@@ -2174,6 +2337,7 @@ ${esc(desc)}
 
       if (manualSelectBtn) {
         manualSelectBtn.onclick = () => {
+          if (!canPassEligibility()) return;
           selectedSeatMode = "manual";
           renderPage();
         };
@@ -2181,6 +2345,7 @@ ${esc(desc)}
 
       if (autoSelectBtn) {
         autoSelectBtn.onclick = () => {
+          if (!canPassEligibility()) return;
           selectedSeatMode = "auto";
           autoPickSeats();
         };
@@ -2188,6 +2353,7 @@ ${esc(desc)}
 
       if (clearSeatBtn) {
         clearSeatBtn.onclick = () => {
+          if (!canPassEligibility()) return;
           clearSeats();
         };
       }
@@ -2267,6 +2433,7 @@ ${esc(desc)}
         promoState.error = "請輸入公關代碼";
         promoState.applied = false;
         promoState.data = null;
+        visibleTicketTypes = getVisibleTicketTypes();
         renderPage();
         return;
       }
@@ -2315,6 +2482,8 @@ ${esc(desc)}
         };
         promoState.error = "";
 
+        await loadSignupEligibility();
+
         visibleTicketTypes = getVisibleTicketTypes();
         selectedTicketTypeId = "";
         selectedQty = 0;
@@ -2325,13 +2494,14 @@ ${esc(desc)}
         promoState.applied = false;
         promoState.data = null;
         promoState.error = err?.message || "公關代碼驗證失敗";
+        await loadSignupEligibility();
       } finally {
         promoState.loading = false;
         renderPage();
       }
     }
 
-    function clearPromoCode(){
+    async function clearPromoCode(){
       promoState = {
         code: "",
         applied: false,
@@ -2339,6 +2509,8 @@ ${esc(desc)}
         data: null,
         error: ""
       };
+
+      await loadSignupEligibility();
 
       visibleTicketTypes = getVisibleTicketTypes();
       selectedTicketTypeId = "";
@@ -2374,13 +2546,11 @@ ${esc(desc)}
         return;
       }
 
-      if (signupEligibility.loading) {
-        alert("報名資格檢查中，請稍候。");
-        return;
-      }
+      await loadCurrentUserProfile();
+      await loadSignupEligibility();
 
-      if (!signupEligibility.allowed) {
-        alert(signupEligibility.reason || "你目前沒有這場活動的報名資格。");
+      if (!canPassEligibility()) {
+        alert(eligibilityState.reason || "你目前沒有報名資格。");
         return;
       }
 
@@ -2452,6 +2622,38 @@ ${esc(desc)}
           const freshEvent = freshEventSnap.data() || {};
           const freshStatus = getEventStatus(freshEvent);
           if (freshStatus.key !== "selling") throw new Error("目前不能建立訂單");
+
+          const eventSchoolId = getEventSchoolId(freshEvent);
+
+          if (!promoState.applied) {
+            const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+            if (!eventSchoolId || verifiedSchoolId !== eventSchoolId) {
+              throw new Error("你尚未完成此活動所屬學校的校園驗證。");
+            }
+
+            const metaRef = doc(db, "events", eventId, "allowedUsers", "meta");
+            const allowedUidRef = doc(db, "events", eventId, "allowedUsers", currentUser.uid);
+            const emailKey = lower(currentUser.email || "");
+            const allowedEmailRef = emailKey
+              ? doc(db, "events", eventId, "allowedUsers", emailKey)
+              : null;
+
+            const [metaSnap, uidSnap, emailSnap, listSnap] = await Promise.all([
+              tx.get(metaRef),
+              tx.get(allowedUidRef),
+              allowedEmailRef ? tx.get(allowedEmailRef) : Promise.resolve(null),
+              getDocs(query(collection(db, "events", eventId, "allowedUsers"), limit(10)))
+            ]);
+
+            const metaEnabled = metaSnap.exists() && metaSnap.data()?.enabled === true;
+            const hasImportedDocs = listSnap.docs.some(d => d.id !== "meta");
+            const restrictedByList = metaEnabled || hasImportedDocs;
+            const matchedWhitelist = uidSnap.exists() || !!(emailSnap && emailSnap.exists());
+
+            if (restrictedByList && !matchedWhitelist) {
+              throw new Error("你不在此活動允許的報名名單中。");
+            }
+          }
 
           const seatPayloads = [];
           for (const ref of seatRefs) {
@@ -2548,6 +2750,12 @@ ${esc(desc)}
             promoTicketTypeId: promoState.applied ? norm(promoState.data.ticketTypeId || getPromoDocTicketTypeId(promoState.data)) : "",
             promoTicketTypeName: promoState.applied ? norm(promoState.data.ticketTypeName || getPromoDocTicketTypeName(promoState.data)) : "",
             promoSource: promoState.applied ? promoSource : "",
+            signupEligibilityChecked: true,
+            signupEligibleBySchool: hasPromoOverride() ? false : eligibilityState.matchedSchool,
+            signupEligibleByWhitelist: hasPromoOverride() ? false : eligibilityState.matchedWhitelist,
+            signupEligibilityBypassPromo: hasPromoOverride(),
+            eventSchoolId: getEventSchoolId(currentEvent),
+            eventSchoolName: getEventSchoolName(currentEvent),
             expiresAt,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -2605,16 +2813,23 @@ ${esc(desc)}
         return;
       }
 
-      await loadSignupEligibility();
+      if (currentUser) {
+        await loadCurrentUserProfile();
+      } else {
+        currentUserProfile = null;
+      }
 
       allTicketTypes = getRawTicketTypes(currentEvent);
-      visibleTicketTypes = getVisibleTicketTypes();
 
       if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned") {
         await loadSeats();
       } else {
         allSeats = [];
       }
+
+      await loadSignupEligibility();
+
+      visibleTicketTypes = getVisibleTicketTypes();
 
       selectedStep = 1;
       selectedSeatMode = "";
@@ -2628,7 +2843,14 @@ ${esc(desc)}
     onAuthStateChanged(auth, async user => {
       currentUser = user || null;
       updateAccountLinks(currentUser);
-      await initPage();
+
+      try {
+        await initPage();
+      } catch (err) {
+        console.error(err);
+        app.className = "empty";
+        app.innerHTML = "頁面載入失敗，請稍後再試。";
+      }
     });
   </script>
 </body>
