@@ -686,12 +686,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  setDoc,
+  updateDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
@@ -815,31 +818,46 @@
     }
 
     async function getUserDocByEmail(email){
-      const key = lower(email);
-      if (!key) return null;
-      if (userDocCache.has(key)) return userDocCache.get(key);
+  const key = lower(email);
+  if (!key) return null;
+  if (userDocCache.has(key)) return userDocCache.get(key);
 
-      let userResult = null;
+  let userResult = null;
 
-      try {
-        const indexSnap = await getDoc(doc(db, "email_index", key));
-        if (indexSnap.exists()) {
-          const indexData = indexSnap.data() || {};
-          const uid = norm(indexData.uid || "");
-          if (uid) {
-            const userSnap = await getDoc(doc(db, "users", uid));
-            if (userSnap.exists()) {
-              userResult = { uid, ...(userSnap.data() || {}) };
-            }
-          }
+  try {
+    // 先查 email_index
+    const indexSnap = await getDoc(doc(db, "email_index", key));
+    if (indexSnap.exists()) {
+      const indexData = indexSnap.data() || {};
+      const uid = norm(indexData.uid || "");
+      if (uid) {
+        const userSnap = await getDoc(doc(db, "users", uid));
+        if (userSnap.exists()) {
+          const data = userSnap.data() || {};
+          userResult = { uid, ...data };
         }
-      } catch (err) {
-        console.error("email_index lookup failed", err);
       }
-
-      userDocCache.set(key, userResult);
-      return userResult;
     }
+
+    // 備援：如果 email_index 沒有，再直接掃 users
+    if (!userResult) {
+      const usersSnap = await getDocs(collection(db, "users"));
+      usersSnap.forEach(docSnap => {
+        if (userResult) return;
+        const data = docSnap.data() || {};
+        const userEmail = lower(data.email || "");
+        if (userEmail === key) {
+          userResult = { uid: docSnap.id, ...data };
+        }
+      });
+    }
+  } catch (err) {
+    console.error("getUserDocByEmail failed", err);
+  }
+
+  userDocCache.set(key, userResult);
+  return userResult;
+}
 
     function getOrderItems(order){
       if (Array.isArray(order?.items) && order.items.length) return order.items;
@@ -973,28 +991,28 @@
         const user = await getUserDocByEmail(email);
 
         if (!user) {
-          item.status = "invalid";
-          item.message = "查無此會員帳號，對方必須先完成註冊。";
-          return;
-        }
+  item.status = "invalid";
+  item.message = "查無對應會員資料，請確認對方是否已完成註冊，或是否使用正確 Email。";
+  return;
+}
 
         const verifiedSchoolId = norm(user.verifiedSchoolId || "");
         const verifiedSchoolName = norm(user.verifiedSchoolName || "");
         const verifyMethod = norm(user.verifyMethod || "");
 
         if (!verifiedSchoolId) {
-          item.uid = norm(user.uid || "");
-          item.status = "invalid";
-          item.message = "此會員尚未完成校園驗證。";
-          return;
-        }
+  item.uid = norm(user.uid || "");
+  item.status = "invalid";
+  item.message = "此會員尚未完成校園驗證。";
+  return;
+}
 
         item.uid = norm(user.uid || "");
         item.verifiedSchoolId = verifiedSchoolId;
         item.verifiedSchoolName = verifiedSchoolName;
         item.verifyMethod = verifyMethod;
         item.status = "valid";
-        item.message = name ? "資料檢查通過。" : "帳號與資格已通過，建議補上持票人姓名。";
+item.message = name ? "此持票人資格已通過。" : "資格已通過，建議補上持票人姓名。";
       } catch (err) {
         console.error(err);
         item.status = "invalid";
@@ -1284,24 +1302,13 @@
               </div>
             </div>
 
-            <div class="check-row">
-              <div class="check-line">
-                <span class="check-label">會員 UID</span>
-                <span class="check-value mono">${esc(item.uid || "-")}</span>
-              </div>
-              <div class="check-line">
-                <span class="check-label">驗證學校</span>
-                <span class="check-value">${esc(item.verifiedSchoolName || item.verifiedSchoolId || "-")}</span>
-              </div>
-              <div class="check-line">
-                <span class="check-label">驗證方式</span>
-                <span class="check-value">${esc(item.verifyMethod || "-")}</span>
-              </div>
-            </div>
-
             <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
-              ${esc(item.message || "尚未檢查。")}
-            </div>
+  ${
+    item.status === "valid"
+      ? "此持票人資格已通過。"
+      : esc(item.message || "尚未檢查。")
+  }
+</div>
 
             ${
               locked ? "" : `
