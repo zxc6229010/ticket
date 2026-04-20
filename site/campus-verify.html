@@ -699,548 +699,536 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
-      authDomain: "concert-1ff7e.firebaseapp.com",
-      projectId: "concert-1ff7e",
-      storageBucket: "concert-1ff7e.firebasestorage.app",
-      messagingSenderId: "704757384914",
-      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+    authDomain: "concert-1ff7e.firebaseapp.com",
+    projectId: "concert-1ff7e",
+    storageBucket: "concert-1ff7e.firebasestorage.app",
+    messagingSenderId: "704757384914",
+    appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+  };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const db = firebase.firestore();
+
+  const gate = document.getElementById("gate");
+  const app = document.getElementById("app");
+  const who = document.getElementById("who");
+  const heroVerifyPill = document.getElementById("heroVerifyPill");
+
+  const currentStatusBox = document.getElementById("currentStatusBox");
+
+  const schoolIdEl = document.getElementById("schoolId");
+  const schoolInfo = document.getElementById("schoolInfo");
+  const schoolDescription = document.getElementById("schoolDescription");
+
+  const modeText = document.getElementById("modeText");
+  const modeBadgeWrap = document.getElementById("modeBadgeWrap");
+  const lockedNotice = document.getElementById("lockedNotice");
+  const emailModeWrap = document.getElementById("emailModeWrap");
+  const googleModeWrap = document.getElementById("googleModeWrap");
+
+  const studentCodeEl = document.getElementById("studentCode");
+  const schoolEmailEl = document.getElementById("schoolEmail");
+  const emailHint = document.getElementById("emailHint");
+  const googleHint = document.getElementById("googleHint");
+
+  const emailVerifyBtn = document.getElementById("emailVerifyBtn");
+  const googleVerifyBtn = document.getElementById("googleVerifyBtn");
+  const msg = document.getElementById("msg");
+
+  let currentUser = null;
+  let currentUserProfile = null;
+  let schoolsCache = [];
+  let currentSchool = null;
+
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[m]));
+  }
+
+  function norm(v){
+    return String(v ?? "").trim();
+  }
+
+  function lower(v){
+    return norm(v).toLowerCase();
+  }
+
+  function showGate(title, text){
+    gate.classList.remove("hidden");
+    app.classList.add("hidden");
+    gate.innerHTML = `
+      <div class="card-head">
+        <h2 class="section-title">${esc(title)}</h2>
+        <div class="section-sub">${esc(text)}</div>
+      </div>
+    `;
+  }
+
+  function showApp(){
+    gate.classList.add("hidden");
+    app.classList.remove("hidden");
+  }
+
+  function getSchoolName(school){
+    return norm(
+      school?.name ||
+      school?.schoolName ||
+      school?.title ||
+      school?.id ||
+      ""
+    );
+  }
+
+  function getVerifyEnabled(school){
+    return (
+      school?.verificationEnabled === true ||
+      school?.verifyEnabled === true ||
+      school?.campusVerifyEnabled === true
+    );
+  }
+
+  function getVerifyDescription(school){
+    return norm(
+      school?.verifyDescription ||
+      school?.campusVerifyDescription ||
+      school?.studentVerifyDescription ||
+      school?.description ||
+      ""
+    );
+  }
+
+  function getAllowedEmailDomains(school){
+    if (Array.isArray(school?.allowedEmailDomains)) {
+      return school.allowedEmailDomains
+        .map(v => lower(v))
+        .filter(Boolean);
     }
 
-    const db = firebase.firestore();
+    const old1 = lower(school?.schoolEmailDomain || "");
+    const old2 = lower(school?.verifyEmailDomain || "");
+    return [...new Set([old1, old2].filter(Boolean))];
+  }
 
-    const gate = document.getElementById("gate");
-    const app = document.getElementById("app");
-    const who = document.getElementById("who");
-    const heroVerifyPill = document.getElementById("heroVerifyPill");
+  function getGoogleDomain(school){
+    return lower(
+      school?.googleHostedDomain ||
+      school?.verifyGoogleDomain ||
+      school?.schoolGoogleDomain ||
+      ""
+    );
+  }
 
-    const currentStatusBox = document.getElementById("currentStatusBox");
-
-    const schoolIdEl = document.getElementById("schoolId");
-    const schoolInfo = document.getElementById("schoolInfo");
-    const schoolDescription = document.getElementById("schoolDescription");
-
-    const modeText = document.getElementById("modeText");
-    const modeBadgeWrap = document.getElementById("modeBadgeWrap");
-    const lockedNotice = document.getElementById("lockedNotice");
-    const emailModeWrap = document.getElementById("emailModeWrap");
-    const googleModeWrap = document.getElementById("googleModeWrap");
-
-    const studentCodeEl = document.getElementById("studentCode");
-    const schoolEmailEl = document.getElementById("schoolEmail");
-    const emailHint = document.getElementById("emailHint");
-    const googleHint = document.getElementById("googleHint");
-
-    const emailVerifyBtn = document.getElementById("emailVerifyBtn");
-    const googleVerifyBtn = document.getElementById("googleVerifyBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const msg = document.getElementById("msg");
-
-    let currentUser = null;
-    let currentUserProfile = null;
-    let schoolsCache = [];
-    let currentSchool = null;
-
-    function esc(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-      }[m]));
+  function getAuthMethods(school){
+    if (Array.isArray(school?.authMethods) && school.authMethods.length) {
+      return school.authMethods.map(v => lower(v));
     }
 
-    function norm(v){
-      return String(v ?? "").trim();
-    }
+    const oldMode = lower(
+      school?.verifyMode ||
+      school?.campusVerifyMode ||
+      ""
+    );
 
-    function lower(v){
-      return norm(v).toLowerCase();
-    }
+    if (oldMode === "google") return ["google"];
+    if (oldMode === "email") return ["student_id"];
+    return [];
+  }
 
-    function showGate(title, text){
-      gate.classList.remove("hidden");
-      app.classList.add("hidden");
-      gate.innerHTML = `
-        <div class="card-head">
-          <h2 class="section-title">${esc(title)}</h2>
-          <div class="section-sub">${esc(text)}</div>
-        </div>
-      `;
-    }
+  function getVerifyMode(school){
+    const methods = getAuthMethods(school);
+    if (methods.includes("google")) return "google";
+    if (methods.includes("student_id")) return "email";
+    return "";
+  }
 
-    function showApp(){
-      gate.classList.add("hidden");
-      app.classList.remove("hidden");
-    }
+  function isAlreadyBoundToOtherSchool(targetSchoolId){
+    const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+    return !!verifiedSchoolId && verifiedSchoolId !== norm(targetSchoolId);
+  }
 
-    function getSchoolName(school){
-      return norm(
-        school?.name ||
-        school?.schoolName ||
-        school?.title ||
-        school?.id ||
-        ""
-      );
-    }
+  function updateHeroVerifyPill(){
+    const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+    const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || verifiedSchoolId || "");
+    heroVerifyPill.textContent = verifiedSchoolId
+      ? `驗證狀態：已完成（${verifiedSchoolName}）`
+      : `驗證狀態：尚未完成`;
+  }
 
-    function getVerifyEnabled(school){
-      return (
-        school?.verificationEnabled === true ||
-        school?.verifyEnabled === true ||
-        school?.campusVerifyEnabled === true
-      );
-    }
+  function renderCurrentStatus(){
+    const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+    const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || "");
+    const verifyMethod = norm(currentUserProfile?.verifyMethod || "-");
+    const schoolEmail = norm(currentUserProfile?.schoolEmail || "");
+    const verifiedAtRaw = currentUserProfile?.verifiedAt;
+    let verifiedAtText = "-";
 
-    function getVerifyDescription(school){
-      return norm(
-        school?.verifyDescription ||
-        school?.campusVerifyDescription ||
-        school?.studentVerifyDescription ||
-        school?.description ||
-        ""
-      );
-    }
-
-    function getAllowedEmailDomains(school){
-      if (Array.isArray(school?.allowedEmailDomains)) {
-        return school.allowedEmailDomains
-          .map(v => lower(v))
-          .filter(Boolean);
+    try {
+      if (verifiedAtRaw?.toDate) {
+        verifiedAtText = verifiedAtRaw.toDate().toLocaleString("zh-Hant", { hour12:false });
       }
+    } catch (_) {}
 
-      const old1 = lower(school?.schoolEmailDomain || "");
-      const old2 = lower(school?.verifyEmailDomain || "");
-      return [...new Set([old1, old2].filter(Boolean))];
-    }
+    updateHeroVerifyPill();
 
-    function getGoogleDomain(school){
-      return lower(
-        school?.googleHostedDomain ||
-        school?.verifyGoogleDomain ||
-        school?.schoolGoogleDomain ||
-        ""
-      );
-    }
-
-    function getAuthMethods(school){
-      if (Array.isArray(school?.authMethods) && school.authMethods.length) {
-        return school.authMethods.map(v => lower(v));
-      }
-
-      const oldMode = lower(
-        school?.verifyMode ||
-        school?.campusVerifyMode ||
-        ""
-      );
-
-      if (oldMode === "google") return ["google"];
-      if (oldMode === "email") return ["student_id"];
-      return [];
-    }
-
-    function getVerifyMode(school){
-      const methods = getAuthMethods(school);
-      if (methods.includes("google")) return "google";
-      if (methods.includes("student_id")) return "email";
-      return "";
-    }
-
-    function isAlreadyBoundToOtherSchool(targetSchoolId){
-      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
-      return !!verifiedSchoolId && verifiedSchoolId !== norm(targetSchoolId);
-    }
-
-    function updateHeroVerifyPill(){
-      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
-      const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || verifiedSchoolId || "");
-      heroVerifyPill.textContent = verifiedSchoolId
-        ? `驗證狀態：已完成（${verifiedSchoolName}）`
-        : `驗證狀態：尚未完成`;
-    }
-
-    function renderCurrentStatus(){
-      const verifiedSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
-      const verifiedSchoolName = norm(currentUserProfile?.verifiedSchoolName || "");
-      const verifyMethod = norm(currentUserProfile?.verifyMethod || "-");
-      const schoolEmail = norm(currentUserProfile?.schoolEmail || "");
-      const verifiedAtRaw = currentUserProfile?.verifiedAt;
-      let verifiedAtText = "-";
-
-      try {
-        if (verifiedAtRaw?.toDate) {
-          verifiedAtText = verifiedAtRaw.toDate().toLocaleString("zh-Hant", { hour12:false });
-        }
-      } catch (_) {}
-
-      updateHeroVerifyPill();
-
-      if (!verifiedSchoolId) {
-        currentStatusBox.innerHTML = `
-          <div class="notice warn" style="margin-top:0;">
-            <div class="warn">目前尚未完成校園驗證</div>
-            <div class="small" style="margin-top:6px;">
-              完成一次校園綁定後，系統之後就能用你的校園身分去判斷活動資格。
-            </div>
-          </div>
-        `;
-        return;
-      }
-
+    if (!verifiedSchoolId) {
       currentStatusBox.innerHTML = `
-        <div class="notice ok" style="margin-top:0;">
-          <div class="ok">你目前已完成校園驗證</div>
-        </div>
-        <div class="kv" style="margin-top:12px;">
-          <div class="k">學校</div>
-          <div class="v">${esc(verifiedSchoolName || "-")} <span class="mono">${esc(verifiedSchoolId)}</span></div>
-
-          <div class="k">驗證方式</div>
-          <div class="v">${esc(verifyMethod || "-")}</div>
-
-          <div class="k">學校信箱</div>
-          <div class="v mono">${esc(schoolEmail || "-")}</div>
-
-          <div class="k">驗證時間</div>
-          <div class="v">${esc(verifiedAtText)}</div>
+        <div class="notice warn" style="margin-top:0;">
+          <div class="warn">目前尚未完成校園驗證</div>
+          <div class="small" style="margin-top:6px;">
+            完成一次校園綁定後，系統之後就能用你的校園身分去判斷活動資格。
+          </div>
         </div>
       `;
+      return;
     }
 
-    async function doLogout(){
-      try {
-        await firebase.auth().signOut();
-      } catch (e) {
-        console.error(e);
-        alert("登出失敗");
-      }
+    currentStatusBox.innerHTML = `
+      <div class="notice ok" style="margin-top:0;">
+        <div class="ok">你目前已完成校園驗證</div>
+      </div>
+      <div class="kv" style="margin-top:12px;">
+        <div class="k">學校</div>
+        <div class="v">${esc(verifiedSchoolName || "-")} <span class="mono">${esc(verifiedSchoolId)}</span></div>
+
+        <div class="k">驗證方式</div>
+        <div class="v">${esc(verifyMethod || "-")}</div>
+
+        <div class="k">學校信箱</div>
+        <div class="v mono">${esc(schoolEmail || "-")}</div>
+
+        <div class="k">驗證時間</div>
+        <div class="v">${esc(verifiedAtText)}</div>
+      </div>
+    `;
+  }
+
+  async function loadCurrentUserProfile(){
+    if (!currentUser) {
+      currentUserProfile = null;
+      return;
     }
 
-    logoutBtn.onclick = doLogout;
-
-    async function loadCurrentUserProfile(){
-      if (!currentUser) {
-        currentUserProfile = null;
-        return;
-      }
-
-      try {
-        const snap = await db.collection("users").doc(currentUser.uid).get();
-        currentUserProfile = snap.exists ? (snap.data() || {}) : {};
-      } catch (e) {
-        console.error(e);
-        currentUserProfile = {};
-      }
-
-      renderCurrentStatus();
+    try {
+      const snap = await db.collection("users").doc(currentUser.uid).get();
+      currentUserProfile = snap.exists ? (snap.data() || {}) : {};
+    } catch (e) {
+      console.error(e);
+      currentUserProfile = {};
     }
 
-    async function loadSchools(){
-      schoolIdEl.innerHTML = `<option value="">載入中…</option>`;
+    renderCurrentStatus();
+  }
 
-      try {
-        const snap = await db.collection("partnerSchools").get();
-        const items = [];
+  async function loadSchools(){
+    schoolIdEl.innerHTML = `<option value="">載入中…</option>`;
 
-        snap.forEach(doc => {
-          const data = doc.data() || {};
-          if (data.enabled === false) return;
-          items.push({
-            id: doc.id,
-            ...data
-          });
+    try {
+      const snap = await db.collection("partnerSchools").get();
+      const items = [];
+
+      snap.forEach(doc => {
+        const data = doc.data() || {};
+        if (data.enabled === false) return;
+        items.push({
+          id: doc.id,
+          ...data
         });
+      });
 
-        items.sort((a, b) => getSchoolName(a).localeCompare(getSchoolName(b), "zh-Hant"));
-        schoolsCache = items;
+      items.sort((a, b) => getSchoolName(a).localeCompare(getSchoolName(b), "zh-Hant"));
+      schoolsCache = items;
 
-        if (!items.length) {
-          schoolIdEl.innerHTML = `<option value="">沒有可用校園</option>`;
-          renderSchoolMode();
-          return;
-        }
-
-        schoolIdEl.innerHTML = items.map(item => `
-          <option value="${esc(item.id)}">${esc(getSchoolName(item))}（${esc(item.id)}）</option>
-        `).join("");
-
-        const boundSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
-        const preferred = items.find(item => item.id === boundSchoolId) || items[0];
-
-        currentSchool = preferred;
-        schoolIdEl.value = preferred.id;
+      if (!items.length) {
+        schoolIdEl.innerHTML = `<option value="">沒有可用校園</option>`;
         renderSchoolMode();
-      } catch (e) {
-        console.error(e);
-        schoolIdEl.innerHTML = `<option value="">讀取校園失敗</option>`;
-        renderSchoolMode();
-      }
-    }
-
-    function buildSchoolEmail(studentCode, school){
-      const code = norm(studentCode);
-      if (!code) return "";
-
-      const domains = getAllowedEmailDomains(school);
-      if (!domains.length) return "";
-
-      return `${code}@${domains[0]}`;
-    }
-
-    function updateAutoSchoolEmail(){
-      if (!currentSchool) {
-        schoolEmailEl.value = "";
-        schoolEmailEl.placeholder = "請先選擇校園";
         return;
       }
 
-      const studentCode = norm(studentCodeEl.value);
-      if (!studentCode) {
-        schoolEmailEl.value = "";
-        schoolEmailEl.placeholder = "請先輸入學號";
-        return;
-      }
+      schoolIdEl.innerHTML = items.map(item => `
+        <option value="${esc(item.id)}">${esc(getSchoolName(item))}（${esc(item.id)}）</option>
+      `).join("");
 
-      const generated = buildSchoolEmail(studentCode, currentSchool);
-      schoolEmailEl.value = generated;
+      const boundSchoolId = norm(currentUserProfile?.verifiedSchoolId || "");
+      const preferred = items.find(item => item.id === boundSchoolId) || items[0];
+
+      currentSchool = preferred;
+      schoolIdEl.value = preferred.id;
+      renderSchoolMode();
+    } catch (e) {
+      console.error(e);
+      schoolIdEl.innerHTML = `<option value="">讀取校園失敗</option>`;
+      renderSchoolMode();
+    }
+  }
+
+  function buildSchoolEmail(studentCode, school){
+    const code = norm(studentCode);
+    if (!code) return "";
+
+    const domains = getAllowedEmailDomains(school);
+    if (!domains.length) return "";
+
+    return `${code}@${domains[0]}`;
+  }
+
+  function updateAutoSchoolEmail(){
+    if (!currentSchool) {
+      schoolEmailEl.value = "";
+      schoolEmailEl.placeholder = "請先選擇校園";
+      return;
     }
 
-    function renderSchoolMode(){
-      const schoolId = norm(schoolIdEl.value);
-      currentSchool = schoolsCache.find(item => item.id === schoolId) || null;
+    const studentCode = norm(studentCodeEl.value);
+    if (!studentCode) {
+      schoolEmailEl.value = "";
+      schoolEmailEl.placeholder = "請先輸入學號";
+      return;
+    }
 
+    const generated = buildSchoolEmail(studentCode, currentSchool);
+    schoolEmailEl.value = generated;
+  }
+
+  function renderSchoolMode(){
+    const schoolId = norm(schoolIdEl.value);
+    currentSchool = schoolsCache.find(item => item.id === schoolId) || null;
+
+    schoolDescription.classList.add("hidden");
+    emailModeWrap.classList.add("hidden");
+    googleModeWrap.classList.add("hidden");
+    lockedNotice.classList.add("hidden");
+    modeBadgeWrap.innerHTML = "";
+    emailVerifyBtn.disabled = false;
+    googleVerifyBtn.disabled = false;
+
+    updateAutoSchoolEmail();
+
+    if (!currentSchool) {
+      schoolInfo.innerHTML = `<span class="warn">請先選擇校園</span>`;
+      schoolDescription.innerHTML = "";
+      modeText.textContent = "請先選擇校園";
+      msg.innerHTML = "請先選擇校園。";
+      return;
+    }
+
+    const schoolName = getSchoolName(currentSchool);
+    const verifyEnabled = getVerifyEnabled(currentSchool);
+    const mode = getVerifyMode(currentSchool);
+    const desc = getVerifyDescription(currentSchool);
+    const emailDomains = getAllowedEmailDomains(currentSchool);
+    const googleDomain = getGoogleDomain(currentSchool);
+    const authMethods = getAuthMethods(currentSchool);
+    const alreadyBoundOther = isAlreadyBoundToOtherSchool(currentSchool.id);
+    const alreadyBoundThis = norm(currentUserProfile?.verifiedSchoolId || "") === norm(currentSchool.id);
+
+    schoolInfo.innerHTML = `
+      校園：<b>${esc(schoolName)}</b>｜
+      schoolId：<span class="mono">${esc(currentSchool.id)}</span>｜
+      verificationEnabled：<span class="mono">${verifyEnabled ? "true" : "false"}</span>
+    `;
+
+    if (desc) {
+      schoolDescription.classList.remove("hidden");
+      schoolDescription.innerHTML = `
+        <div style="font-weight:800;">校方說明</div>
+        <div class="small" style="margin-top:6px;">${esc(desc).replace(/\n/g, "<br>")}</div>
+      `;
+    } else {
       schoolDescription.classList.add("hidden");
-      emailModeWrap.classList.add("hidden");
-      googleModeWrap.classList.add("hidden");
-      lockedNotice.classList.add("hidden");
-      modeBadgeWrap.innerHTML = "";
-      emailVerifyBtn.disabled = false;
-      googleVerifyBtn.disabled = false;
+      schoolDescription.innerHTML = "";
+    }
 
-      updateAutoSchoolEmail();
+    if (!verifyEnabled) {
+      modeText.innerHTML = `<span class="warn">此校目前暫停驗證</span>`;
+      msg.innerHTML = `<span class="warn">此校目前已暫停校園驗證，請稍後再試或洽校方承辦單位。</span>`;
+      return;
+    }
 
-      if (!currentSchool) {
-        schoolInfo.innerHTML = `<span class="warn">請先選擇校園</span>`;
-        schoolDescription.innerHTML = "";
-        modeText.textContent = "請先選擇校園";
-        msg.innerHTML = "請先選擇校園。";
-        return;
-      }
+    if (!authMethods.length || !mode) {
+      modeText.innerHTML = `<span class="warn">此校尚未設定驗證方式</span>`;
+      msg.innerHTML = `<span class="warn">此校目前尚未完成驗證方式設定，請稍後再試或洽管理端。</span>`;
+      return;
+    }
 
-      const schoolName = getSchoolName(currentSchool);
-      const verifyEnabled = getVerifyEnabled(currentSchool);
-      const mode = getVerifyMode(currentSchool);
-      const desc = getVerifyDescription(currentSchool);
-      const emailDomains = getAllowedEmailDomains(currentSchool);
-      const googleDomain = getGoogleDomain(currentSchool);
-      const authMethods = getAuthMethods(currentSchool);
-      const alreadyBoundOther = isAlreadyBoundToOtherSchool(currentSchool.id);
-      const alreadyBoundThis = norm(currentUserProfile?.verifiedSchoolId || "") === norm(currentSchool.id);
-
-      schoolInfo.innerHTML = `
-        校園：<b>${esc(schoolName)}</b>｜
-        schoolId：<span class="mono">${esc(currentSchool.id)}</span>｜
-        verificationEnabled：<span class="mono">${verifyEnabled ? "true" : "false"}</span>
+    if (alreadyBoundOther) {
+      lockedNotice.classList.remove("hidden");
+      lockedNotice.className = "notice warn";
+      lockedNotice.innerHTML = `
+        <div class="warn">你的帳號目前已綁定其他學校</div>
+        <div class="small" style="margin-top:6px;">
+          目前系統預設一個帳號同時間只能綁定一間學校。若要更改，請先由管理端協助處理。
+        </div>
       `;
-
-      if (desc) {
-        schoolDescription.classList.remove("hidden");
-        schoolDescription.innerHTML = `
-          <div style="font-weight:800;">校方說明</div>
-          <div class="small" style="margin-top:6px;">${esc(desc).replace(/\n/g, "<br>")}</div>
-        `;
-      } else {
-        schoolDescription.classList.add("hidden");
-        schoolDescription.innerHTML = "";
-      }
-
-      if (!verifyEnabled) {
-        modeText.innerHTML = `<span class="warn">此校目前暫停驗證</span>`;
-        msg.innerHTML = `<span class="warn">此校目前已暫停校園驗證，請稍後再試或洽校方承辦單位。</span>`;
-        return;
-      }
-
-      if (!authMethods.length || !mode) {
-        modeText.innerHTML = `<span class="warn">此校尚未設定驗證方式</span>`;
-        msg.innerHTML = `<span class="warn">此校目前尚未完成驗證方式設定，請稍後再試或洽管理端。</span>`;
-        return;
-      }
-
-      if (alreadyBoundOther) {
-        lockedNotice.classList.remove("hidden");
-        lockedNotice.className = "notice warn";
-        lockedNotice.innerHTML = `
-          <div class="warn">你的帳號目前已綁定其他學校</div>
-          <div class="small" style="margin-top:6px;">
-            目前系統預設一個帳號同時間只能綁定一間學校。若要更改，請先由管理端協助處理。
-          </div>
-        `;
-        modeText.innerHTML = `<span class="warn">目前不可改綁到其他學校</span>`;
-        msg.innerHTML = `你的帳號已綁定：${esc(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "-")}`;
-        emailVerifyBtn.disabled = true;
-        googleVerifyBtn.disabled = true;
-        return;
-      }
-
-      if (alreadyBoundThis) {
-        lockedNotice.classList.remove("hidden");
-        lockedNotice.className = "notice ok";
-        lockedNotice.innerHTML = `
-          <div class="ok">你的帳號已完成這間學校的校園驗證</div>
-          <div class="small" style="margin-top:6px;">
-            不需要再次驗證。後續活動資格會在活動頁另外判斷。
-          </div>
-        `;
-      }
-
-      if (mode === "google") {
-        googleModeWrap.classList.remove("hidden");
-        modeText.textContent = "此校目前使用 Google 校園帳號驗證";
-        modeBadgeWrap.innerHTML = `<span class="pill">Google 驗證</span>`;
-        googleHint.innerHTML = `
-          系統會檢查你目前登入的 Google 帳號。
-          ${googleDomain ? `需符合網域：<span class="mono">${esc(googleDomain)}</span>` : `此校未設定網域限制時，會直接使用目前登入帳號綁定。`}
-        `;
-        msg.innerHTML = alreadyBoundThis
-          ? `你已完成此校驗證。`
-          : `請確認你目前登入的帳號就是學校 Google 帳號。`;
-      } else {
-        emailModeWrap.classList.remove("hidden");
-        modeText.textContent = "此校目前使用 Email 驗證";
-        modeBadgeWrap.innerHTML = `<span class="pill">Email 驗證</span>`;
-        emailHint.innerHTML = `
-          系統會依照你輸入的學號，自動組成學校信箱並寄出驗證信。
-          ${emailDomains.length ? `目前使用後綴：<span class="mono">${esc(emailDomains[0])}</span>` : `此校目前未設定信箱後綴。`}
-        `;
-        msg.innerHTML = alreadyBoundThis
-          ? `你已完成此校驗證。`
-          : `請輸入學號後寄送驗證信。`;
-      }
-    }
-
-    schoolIdEl.onchange = renderSchoolMode;
-    studentCodeEl.addEventListener("input", updateAutoSchoolEmail);
-
-    async function sendEmailVerification(){
-      const user = firebase.auth().currentUser;
-      if (!user) return alert("請先登入");
-
-      if (!currentSchool) return alert("請先選擇校園");
-      if (!getVerifyEnabled(currentSchool)) return alert("此校目前暫停驗證");
-      if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
-
-      const schoolId = norm(currentSchool.id);
-      const studentCode = norm(studentCodeEl.value);
-      const schoolEmail = lower(buildSchoolEmail(studentCode, currentSchool));
-
-      if (!studentCode) return alert("請輸入學號 / 身分代碼");
-      if (!schoolEmail) return alert("此校尚未設定可用信箱後綴");
-
+      modeText.innerHTML = `<span class="warn">目前不可改綁到其他學校</span>`;
+      msg.innerHTML = `你的帳號已綁定：${esc(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "-")}`;
       emailVerifyBtn.disabled = true;
-      const oldText = emailVerifyBtn.textContent;
-      emailVerifyBtn.textContent = "寄送中…";
-
-      try {
-        const idToken = await user.getIdToken();
-
-        const response = await fetch("/api/requestCampusVerification", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + idToken
-          },
-          body: JSON.stringify({
-            schoolId,
-            studentCode,
-            schoolEmail
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "寄送失敗");
-        }
-
-        msg.innerHTML = `<span class="ok">驗證信已寄出，請到學校信箱收信。</span>`;
-      } catch (e) {
-        console.error(e);
-        msg.innerHTML = `<span class="warn">${esc(e.message || "寄送失敗")}</span>`;
-      } finally {
-        emailVerifyBtn.disabled = false;
-        emailVerifyBtn.textContent = oldText;
-      }
-    }
-
-    async function verifyByGoogleAccount(){
-      const user = firebase.auth().currentUser;
-      if (!user) return alert("請先登入");
-      if (!currentSchool) return alert("請先選擇校園");
-      if (!getVerifyEnabled(currentSchool)) return alert("此校目前暫停驗證");
-      if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
-
-      const email = lower(user.email || "");
-      if (!email) {
-        msg.innerHTML = `<span class="warn">目前登入帳號沒有 email，無法完成 Google 驗證。</span>`;
-        return;
-      }
-
-      const googleDomain = getGoogleDomain(currentSchool);
-      if (googleDomain && !email.endsWith("@" + googleDomain) && email !== googleDomain) {
-        msg.innerHTML = `<span class="warn">目前登入帳號網域不符合此校規定，請改用學校 Google 帳號登入。</span>`;
-        return;
-      }
-
       googleVerifyBtn.disabled = true;
-      const oldText = googleVerifyBtn.textContent;
-      googleVerifyBtn.textContent = "驗證中…";
-
-      try {
-        await db.collection("users").doc(user.uid).set({
-          email: user.email || "",
-          verifiedSchoolId: currentSchool.id,
-          verifiedSchoolName: getSchoolName(currentSchool),
-          verifyMethod: "google",
-          verifiedAt: new Date(),
-          schoolEmail: user.email || "",
-          googleHostedDomain: googleDomain || ""
-        }, { merge: true });
-
-        await loadCurrentUserProfile();
-        renderSchoolMode();
-        msg.innerHTML = `<span class="ok">校園身分驗證成功，已完成綁定。</span>`;
-      } catch (e) {
-        console.error(e);
-        msg.innerHTML = `<span class="warn">${esc(e.message || "驗證失敗")}</span>`;
-      } finally {
-        googleVerifyBtn.disabled = false;
-        googleVerifyBtn.textContent = oldText;
-      }
+      return;
     }
 
-    emailVerifyBtn.onclick = sendEmailVerification;
-    googleVerifyBtn.onclick = verifyByGoogleAccount;
+    if (alreadyBoundThis) {
+      lockedNotice.classList.remove("hidden");
+      lockedNotice.className = "notice ok";
+      lockedNotice.innerHTML = `
+        <div class="ok">你的帳號已完成這間學校的校園驗證</div>
+        <div class="small" style="margin-top:6px;">
+          不需要再次驗證。後續活動資格會在活動頁另外判斷。
+        </div>
+      `;
+    }
 
-    firebase.auth().onAuthStateChanged(async (user) => {
-      currentUser = user || null;
+    if (mode === "google") {
+      googleModeWrap.classList.remove("hidden");
+      modeText.textContent = "此校目前使用 Google 校園帳號驗證";
+      modeBadgeWrap.innerHTML = `<span class="pill">Google 驗證</span>`;
+      googleHint.innerHTML = `
+        系統會檢查你目前登入的 Google 帳號。
+        ${googleDomain ? `需符合網域：<span class="mono">${esc(googleDomain)}</span>` : `此校未設定網域限制時，會直接使用目前登入帳號綁定。`}
+      `;
+      msg.innerHTML = alreadyBoundThis
+        ? `你已完成此校驗證。`
+        : `請確認你目前登入的帳號就是學校 Google 帳號。`;
+    } else {
+      emailModeWrap.classList.remove("hidden");
+      modeText.textContent = "此校目前使用 Email 驗證";
+      modeBadgeWrap.innerHTML = `<span class="pill">Email 驗證</span>`;
+      emailHint.innerHTML = `
+        系統會依照你輸入的學號，自動組成學校信箱並寄出驗證信。
+        ${emailDomains.length ? `目前使用後綴：<span class="mono">${esc(emailDomains[0])}</span>` : `此校目前未設定信箱後綴。`}
+      `;
+      msg.innerHTML = alreadyBoundThis
+        ? `你已完成此校驗證。`
+        : `請輸入學號後寄送驗證信。`;
+    }
+  }
 
-      if (!user) {
-        showGate("請先登入", "你需要先登入網站帳號，才能進行校園身分驗證。");
-        return;
+  schoolIdEl.onchange = renderSchoolMode;
+  studentCodeEl.addEventListener("input", updateAutoSchoolEmail);
+
+  async function sendEmailVerification(){
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("請先登入");
+
+    if (!currentSchool) return alert("請先選擇校園");
+    if (!getVerifyEnabled(currentSchool)) return alert("此校目前暫停驗證");
+    if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
+
+    const schoolId = norm(currentSchool.id);
+    const studentCode = norm(studentCodeEl.value);
+    const schoolEmail = lower(buildSchoolEmail(studentCode, currentSchool));
+
+    if (!studentCode) return alert("請輸入學號 / 身分代碼");
+    if (!schoolEmail) return alert("此校尚未設定可用信箱後綴");
+
+    emailVerifyBtn.disabled = true;
+    const oldText = emailVerifyBtn.textContent;
+    emailVerifyBtn.textContent = "寄送中…";
+
+    try {
+      const idToken = await user.getIdToken();
+
+      const response = await fetch("/api/requestCampusVerification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + idToken
+        },
+        body: JSON.stringify({
+          schoolId,
+          studentCode,
+          schoolEmail
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "寄送失敗");
       }
 
-      showApp();
-      who.textContent = user.email || user.uid || "-";
+      msg.innerHTML = `<span class="ok">驗證信已寄出，請到學校信箱收信。</span>`;
+    } catch (e) {
+      console.error(e);
+      msg.innerHTML = `<span class="warn">${esc(e.message || "寄送失敗")}</span>`;
+    } finally {
+      emailVerifyBtn.disabled = false;
+      emailVerifyBtn.textContent = oldText;
+    }
+  }
+
+  async function verifyByGoogleAccount(){
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("請先登入");
+    if (!currentSchool) return alert("請先選擇校園");
+    if (!getVerifyEnabled(currentSchool)) return alert("此校目前暫停驗證");
+    if (isAlreadyBoundToOtherSchool(currentSchool.id)) return alert("你的帳號已綁定其他學校");
+
+    const email = lower(user.email || "");
+    if (!email) {
+      msg.innerHTML = `<span class="warn">目前登入帳號沒有 email，無法完成 Google 驗證。</span>`;
+      return;
+    }
+
+    const googleDomain = getGoogleDomain(currentSchool);
+    if (googleDomain && !email.endsWith("@" + googleDomain) && email !== googleDomain) {
+      msg.innerHTML = `<span class="warn">目前登入帳號網域不符合此校規定，請改用學校 Google 帳號登入。</span>`;
+      return;
+    }
+
+    googleVerifyBtn.disabled = true;
+    const oldText = googleVerifyBtn.textContent;
+    googleVerifyBtn.textContent = "驗證中…";
+
+    try {
+      await db.collection("users").doc(user.uid).set({
+        email: user.email || "",
+        verifiedSchoolId: currentSchool.id,
+        verifiedSchoolName: getSchoolName(currentSchool),
+        verifyMethod: "google",
+        verifiedAt: new Date(),
+        schoolEmail: user.email || "",
+        googleHostedDomain: googleDomain || ""
+      }, { merge: true });
 
       await loadCurrentUserProfile();
-      await loadSchools();
-    });
-  </script>
+      renderSchoolMode();
+      msg.innerHTML = `<span class="ok">校園身分驗證成功，已完成綁定。</span>`;
+    } catch (e) {
+      console.error(e);
+      msg.innerHTML = `<span class="warn">${esc(e.message || "驗證失敗")}</span>`;
+    } finally {
+      googleVerifyBtn.disabled = false;
+      googleVerifyBtn.textContent = oldText;
+    }
+  }
+
+  emailVerifyBtn.onclick = sendEmailVerification;
+  googleVerifyBtn.onclick = verifyByGoogleAccount;
+
+  firebase.auth().onAuthStateChanged(async (user) => {
+    currentUser = user || null;
+
+    if (!user) {
+      showGate("請先登入", "你需要先登入網站帳號，才能進行校園身分驗證。");
+      return;
+    }
+
+    showApp();
+    who.textContent = user.email || user.uid || "-";
+
+    await loadCurrentUserProfile();
+    await loadSchools();
+  });
+</script>
 </body>
 </html>
