@@ -923,7 +923,7 @@
       </footer>
 
       <div class="bottom-note">
-        建立訂單後，系統會暫時保留座位與票券。若活動有限制資格名單，只有名單內會員可建立訂單。
+        建立訂單後，系統會暫時保留座位與票券。若未於期限內完成後續流程，系統可釋出保留。
       </div>
     </main>
   </div>
@@ -937,6 +937,8 @@
       getDoc,
       getDocs,
       collection,
+      query,
+      limit,
       runTransaction,
       Timestamp,
       serverTimestamp
@@ -983,8 +985,12 @@
       error: ""
     };
 
-    let allowedUsersCache = [];
-    let allowedUsersLoaded = false;
+    let signupEligibility = {
+      loading: true,
+      restricted: false,
+      allowed: true,
+      reason: ""
+    };
 
     const HOLD_MINUTES = 10;
 
@@ -1135,39 +1141,6 @@
       return "";
     }
 
-    async function loadAllowedUsers(){
-      const snap = await getDocs(collection(db, "events", eventId, "allowedUsers"));
-
-      allowedUsersCache = snap.docs.map(d => {
-        const data = d.data() || {};
-        return {
-          id: d.id,
-          enabled: data.enabled !== false,
-          uid: norm(data.uid || data.userUid || data.memberUid || ""),
-          email: lower(data.email || data.memberEmail || data.userEmail || ""),
-          studentCode: norm(data.studentCode || data.studentId || data.schoolStudentId || "")
-        };
-      }).filter(item => item.enabled);
-
-      allowedUsersLoaded = true;
-    }
-
-    function hasAllowedUserRestriction(){
-      return allowedUsersLoaded && Array.isArray(allowedUsersCache) && allowedUsersCache.length > 0;
-    }
-
-    function isCurrentUserAllowed(){
-      if (!currentUser) return false;
-      if (!hasAllowedUserRestriction()) return true;
-
-      const uid = norm(currentUser.uid || "");
-      const email = lower(currentUser.email || "");
-
-      return allowedUsersCache.some(item => {
-        return (uid && norm(item.uid) === uid) || (email && lower(item.email) === email);
-      });
-    }
-
     function normalizeTicketTypeItem(item, index){
       const requiresSeat = item?.requiresSeat === true;
 
@@ -1177,7 +1150,7 @@
         ...(Array.isArray(item?.bindPromoCodeIds) ? item.bindPromoCodeIds : []),
         ...(Array.isArray(item?.bindCodes) ? item.bindCodes : []),
         ...(item?.promoCodeId ? [item.promoCodeId] : []),
-        ...(item?.promoCode ? [item.promoCode] : []),
+        ...(item?.promoCode ? [item?.promoCode] : []),
         ...(item?.bindPromoCodeId ? [item.bindPromoCodeId] : []),
         ...(item?.bindCode ? [item.bindCode] : [])
       ]
@@ -1330,6 +1303,109 @@
       });
     }
 
+    async function loadSignupEligibility() {
+      signupEligibility = {
+        loading: true,
+        restricted: false,
+        allowed: true,
+        reason: ""
+      };
+
+      try {
+        const metaRef = doc(db, "events", eventId, "allowedUsers", "__meta__");
+        const metaSnap = await getDoc(metaRef);
+
+        let restricted = false;
+
+        if (metaSnap.exists()) {
+          restricted = true;
+        } else {
+          const probeSnap = await getDocs(
+            query(collection(db, "events", eventId, "allowedUsers"), limit(2))
+          );
+          const docs = probeSnap.docs.filter(d => d.id !== "__meta__");
+          restricted = docs.length > 0;
+        }
+
+        if (!restricted) {
+          signupEligibility = {
+            loading: false,
+            restricted: false,
+            allowed: true,
+            reason: ""
+          };
+          return;
+        }
+
+        if (!currentUser) {
+          signupEligibility = {
+            loading: false,
+            restricted: true,
+            allowed: false,
+            reason: "此活動限名單內人員報名，請先登入後確認資格。"
+          };
+          return;
+        }
+
+        const uidRef = doc(db, "events", eventId, "allowedUsers", currentUser.uid);
+        const uidSnap = await getDoc(uidRef);
+
+        const emailKey = lower(currentUser.email || "");
+        let emailAllowed = false;
+
+        if (emailKey) {
+          const emailRef = doc(db, "events", eventId, "allowedUsers", emailKey);
+          const emailSnap = await getDoc(emailRef);
+          emailAllowed = emailSnap.exists();
+        }
+
+        const allowed = uidSnap.exists() || emailAllowed;
+
+        signupEligibility = {
+          loading: false,
+          restricted: true,
+          allowed,
+          reason: allowed ? "" : "你不在這場活動的可報名名單內。"
+        };
+      } catch (err) {
+        console.error("loadSignupEligibility failed:", err);
+        signupEligibility = {
+          loading: false,
+          restricted: true,
+          allowed: false,
+          reason: "目前無法確認報名資格，請稍後再試。"
+        };
+      }
+    }
+
+    function getEligibilityNotice(){
+      if (signupEligibility.loading) {
+        return {
+          className: "info",
+          text: "系統正在確認你的報名資格…"
+        };
+      }
+
+      if (!signupEligibility.allowed) {
+        return {
+          className: "warn",
+          text: signupEligibility.reason || "你目前不具備這場活動的報名資格。"
+        };
+      }
+
+      if (signupEligibility.restricted) {
+        return {
+          className: "ok",
+          text: "你已通過這場活動的名單資格檢查，可以繼續報名。"
+        };
+      }
+
+      return {
+        className: "info",
+        text: "此活動目前未啟用名單限制。"
+      };
+    }
+
     function getRequiredSeatCount(){
       if (!selectedTicketNeedsSeat()) return 0;
       return Number(selectedQty || 0);
@@ -1392,7 +1468,6 @@
 
     function seatIsSelectable(seat){
       if (!seat) return false;
-
       if (String(seat.id || "").startsWith("det_")) return false;
       if (String(seat.label || "").startsWith("候選")) return false;
       if (seat._detected === true) return false;
@@ -1508,27 +1583,25 @@
     }
 
     function getSummaryNotice(){
+      if (signupEligibility.loading) {
+        return {
+          className:"info",
+          text:"系統正在確認你的報名資格…"
+        };
+      }
+
+      if (!signupEligibility.allowed) {
+        return {
+          className:"warn",
+          text:signupEligibility.reason || "你目前沒有這場活動的報名資格。"
+        };
+      }
+
       if (!canCreateOrder(currentEvent)) {
         return {
           className:"warn",
           text:"目前尚未開放建立訂單，請依活動開賣時間為準。"
         };
-      }
-
-      if (hasAllowedUserRestriction()) {
-        if (!currentUser) {
-          return {
-            className:"info",
-            text:"此活動有資格名單限制，請先登入系統後確認你是否在可參加名單內。"
-          };
-        }
-
-        if (!isCurrentUserAllowed()) {
-          return {
-            className:"warn",
-            text:"你目前不在這場活動的可參加名單內，因此不能建立訂單。"
-          };
-        }
       }
 
       if (!selectedSeatMode && selectedTicketNeedsSeat()) {
@@ -1675,8 +1748,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
               <button class="btn btn-primary" id="goStep2Btn" ${selectedSeatMode ? "" : "disabled"}>下一步：選票種</button>
             </div>
           </div>
-        </div>
-      `;
+        `;
     }
 
     function renderTicketCard(type){
@@ -1793,10 +1865,8 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
             <h2 class="card-title">座位選擇</h2>
             <div class="card-sub">
               目前票種：${esc(type?.name || "-")}
-              ｜
-              選位方式：${esc(selectedSeatMode === "auto" ? "電腦選位" : "手動選位")}
-              ｜
-              需選 ${requiredSeatCount} 席
+              ｜ 選位方式：${esc(selectedSeatMode === "auto" ? "電腦選位" : "手動選位")}
+              ｜ 需選 ${requiredSeatCount} 席
             </div>
           </div>
           <div class="card-body">
@@ -1889,6 +1959,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       const canOrder = canCreateOrder(currentEvent);
       const notice = getSummaryNotice();
       const promoNotice = getPromoNotice();
+      const eligibilityNotice = getEligibilityNotice();
 
       backLink.href = `ticket.html?id=${encodeURIComponent(currentEvent.id)}`;
 
@@ -1896,6 +1967,7 @@ ${seat.floor ? `樓層：${esc(seat.floor)}` : ""}
       const showStep2 = selectedStep === 2;
       const showStep3 = selectedStep === 3;
       const showSeatSection = showStep3 && selectedQty > 0 && selectedTicketNeedsSeat();
+      const allowCreateOrder = canOrder && !signupEligibility.loading && signupEligibility.allowed;
 
       app.className = "";
       app.innerHTML = `
@@ -1911,16 +1983,13 @@ ${esc(desc)}
             <span class="pill">開賣：${esc(saleStartText)}</span>
             <span class="pill">截止：${esc(saleEndText)}</span>
             <span class="pill">${getSeatingEnabled(currentEvent) ? (getSeatingMode(currentEvent) === "assigned" ? "對號座活動" : "自由座活動") : "票種決定是否選位"}</span>
-            ${
-              hasAllowedUserRestriction()
-                ? `<span class="pill">本活動限資格名單內會員購買</span>`
-                : ``
-            }
           </div>
         </section>
 
         <div class="layout">
           <section class="left-stack">
+            <div class="notice ${eligibilityNotice.className}">${esc(eligibilityNotice.text)}</div>
+
             ${renderStepPills()}
 
             <div class="${showStep1 ? "" : "hidden"}">${renderStep1()}</div>
@@ -2002,7 +2071,7 @@ ${esc(desc)}
             <div class="notice ${notice.className}">${esc(notice.text)}</div>
 
             <div class="action-stack">
-              <button class="btn btn-primary" id="createOrderBtn" ${canOrder ? "" : "disabled"}>建立訂單</button>
+              <button class="btn btn-primary" id="createOrderBtn" ${allowCreateOrder ? "" : "disabled"}>建立訂單</button>
               <a class="btn" href="ticket.html?id=${encodeURIComponent(currentEvent.id)}">返回活動資訊</a>
             </div>
           </aside>
@@ -2047,6 +2116,16 @@ ${esc(desc)}
 
       if (completeStepBtn) {
         completeStepBtn.addEventListener("click", () => {
+          if (signupEligibility.loading) {
+            alert("報名資格檢查中，請稍候。");
+            return;
+          }
+
+          if (!signupEligibility.allowed) {
+            alert(signupEligibility.reason || "你目前沒有這場活動的報名資格。");
+            return;
+          }
+
           const type = getSelectedTicketType();
 
           if (!type) {
@@ -2295,13 +2374,18 @@ ${esc(desc)}
         return;
       }
 
-      if (!canCreateOrder(currentEvent)) {
-        alert("目前尚未開放建立訂單。");
+      if (signupEligibility.loading) {
+        alert("報名資格檢查中，請稍候。");
         return;
       }
 
-      if (hasAllowedUserRestriction() && !isCurrentUserAllowed()) {
-        alert("你不在這場活動的可參加名單內，不能建立訂單。");
+      if (!signupEligibility.allowed) {
+        alert(signupEligibility.reason || "你目前沒有這場活動的報名資格。");
+        return;
+      }
+
+      if (!canCreateOrder(currentEvent)) {
+        alert("目前尚未開放建立訂單。");
         return;
       }
 
@@ -2368,10 +2452,6 @@ ${esc(desc)}
           const freshEvent = freshEventSnap.data() || {};
           const freshStatus = getEventStatus(freshEvent);
           if (freshStatus.key !== "selling") throw new Error("目前不能建立訂單");
-
-          if (hasAllowedUserRestriction() && !isCurrentUserAllowed()) {
-            throw new Error("你不在這場活動的可參加名單內");
-          }
 
           const seatPayloads = [];
           for (const ref of seatRefs) {
@@ -2525,7 +2605,7 @@ ${esc(desc)}
         return;
       }
 
-      await loadAllowedUsers();
+      await loadSignupEligibility();
 
       allTicketTypes = getRawTicketTypes(currentEvent);
       visibleTicketTypes = getVisibleTicketTypes();
