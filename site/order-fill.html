@@ -643,7 +643,7 @@
       </footer>
 
       <div class="bottom-note">
-        持票人資料需於期限內完成填寫。所有持票人皆需具備符合資格的會員帳號。
+        持票人資料需於期限內完成填寫。所有持票人皆需具備符合資格的會員帳號；若活動有匯入資格名單，亦必須在該名單內。
       </div>
     </main>
   </div>
@@ -655,6 +655,8 @@
       getFirestore,
       doc,
       getDoc,
+      getDocs,
+      collection,
       setDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -686,6 +688,9 @@
     let checkingMap = {};
     let userDocCache = new Map();
     let expireTimer = null;
+
+    let allowedUsersCache = [];
+    let allowedUsersLoaded = false;
 
     function esc(value){
       return String(value ?? "").replace(/[&<>"']/g, m => ({
@@ -780,6 +785,51 @@
       return snap.exists() ? { id: snap.id, ref, ...(snap.data() || {}) } : null;
     }
 
+    async function loadAllowedUsers(){
+      const snap = await getDocs(collection(db, "events", eventId, "allowedUsers"));
+
+      allowedUsersCache = snap.docs.map(d => {
+        const data = d.data() || {};
+        return {
+          id: d.id,
+          enabled: data.enabled !== false,
+          uid: norm(data.uid || data.userUid || data.memberUid || ""),
+          email: lower(data.email || data.memberEmail || data.userEmail || ""),
+          studentCode: norm(data.studentCode || data.schoolStudentId || data.studentId || ""),
+          name: norm(data.name || "")
+        };
+      }).filter(item => item.enabled);
+
+      allowedUsersLoaded = true;
+    }
+
+    function hasAllowedUserRestriction(){
+      return allowedUsersLoaded && Array.isArray(allowedUsersCache) && allowedUsersCache.length > 0;
+    }
+
+    function isAllowedHolderUser(user){
+      if (!hasAllowedUserRestriction()) return true;
+      if (!user) return false;
+
+      const uid = norm(user.uid || "");
+      const email = lower(user.email || "");
+
+      return allowedUsersCache.some(item => {
+        return (uid && norm(item.uid) === uid) || (email && lower(item.email) === email);
+      });
+    }
+
+    function isBuyerAllowedByOrder(order){
+      if (!hasAllowedUserRestriction()) return true;
+
+      const buyerUid = norm(order?.buyerUid || order?.uid || "");
+      const buyerEmail = lower(order?.buyerEmail || order?.email || "");
+
+      return allowedUsersCache.some(item => {
+        return (buyerUid && norm(item.uid) === buyerUid) || (buyerEmail && lower(item.email) === buyerEmail);
+      });
+    }
+
     async function getUserDocByEmail(email){
       const key = lower(email);
       if (!key) return null;
@@ -789,17 +839,16 @@
 
       try {
         const indexSnap = await getDoc(doc(db, "email_index", key));
-
         if (indexSnap.exists()) {
-          const data = indexSnap.data() || {};
-          userResult = {
-            uid: norm(data.uid || ""),
-            email: lower(data.email || key),
-            enabled: data.enabled === true,
-            verifiedSchoolId: norm(data.verifiedSchoolId || ""),
-            verifiedSchoolName: norm(data.verifiedSchoolName || ""),
-            verifyMethod: norm(data.verifyMethod || "")
-          };
+          const indexData = indexSnap.data() || {};
+          const uid = norm(indexData.uid || "");
+          if (uid) {
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if (userSnap.exists()) {
+              const data = userSnap.data() || {};
+              userResult = { uid, ...data };
+            }
+          }
         }
       } catch (err) {
         console.error("getUserDocByEmail failed", err);
@@ -873,8 +922,16 @@
         flat[0].isBuyerTicket = true;
         flat[0].email = buyerEmail;
         flat[0].uid = buyerUid;
-        flat[0].status = "valid";
-        flat[0].message = "主購人票已自動視為主購者本人使用，無需另外填寫。";
+
+        const buyerAllowed = !hasAllowedUserRestriction() || isBuyerAllowedByOrder(order);
+
+        if (buyerAllowed) {
+          flat[0].status = "valid";
+          flat[0].message = "主購人票已自動視為主購者本人使用，無需另外填寫。";
+        } else {
+          flat[0].status = "invalid";
+          flat[0].message = "主購者不在本活動允許參加名單內。";
+        }
       }
 
       return flat;
@@ -902,7 +959,7 @@
       if (item.status === "valid") {
         return { text: "已通過", className: "status-ok" };
       }
-      if (!item.email) {
+      if (!item.email && !item.isBuyerTicket) {
         return { text: "尚未填寫", className: "status-gray" };
       }
       return { text: "未通過", className: "status-warn" };
@@ -913,8 +970,11 @@
       if (!item) return;
 
       if (item.isBuyerTicket) {
-        item.status = "valid";
-        item.message = "主購人票已自動視為主購者本人使用，無需驗證。";
+        const buyerAllowed = !hasAllowedUserRestriction() || isBuyerAllowedByOrder(currentOrder);
+        item.status = buyerAllowed ? "valid" : "invalid";
+        item.message = buyerAllowed
+          ? "主購人票已自動視為主購者本人使用，無需驗證。"
+          : "主購者不在本活動允許參加名單內。";
         renderPage();
         return;
       }
@@ -946,25 +1006,27 @@
           return;
         }
 
-        if (user.enabled !== true) {
-          item.status = "invalid";
-          item.message = "此會員帳號目前未啟用。";
-          return;
-        }
-
         const verifiedSchoolId = norm(user.verifiedSchoolId || "");
+        const verifiedSchoolName = norm(user.verifiedSchoolName || "");
+        const verifyMethod = norm(user.verifyMethod || "");
+
+        item.uid = norm(user.uid || "");
+        item.verifiedSchoolId = verifiedSchoolId;
+        item.verifiedSchoolName = verifiedSchoolName;
+        item.verifyMethod = verifyMethod;
 
         if (!verifiedSchoolId) {
-          item.uid = norm(user.uid || "");
           item.status = "invalid";
           item.message = "此會員尚未完成校園驗證。";
           return;
         }
 
-        item.uid = norm(user.uid || "");
-        item.verifiedSchoolId = verifiedSchoolId;
-        item.verifiedSchoolName = norm(user.verifiedSchoolName || "");
-        item.verifyMethod = norm(user.verifyMethod || "");
+        if (hasAllowedUserRestriction() && !isAllowedHolderUser(user)) {
+          item.status = "invalid";
+          item.message = "此會員不在本活動允許參加名單內。";
+          return;
+        }
+
         item.status = "valid";
         item.message = name ? "資料檢查通過。" : "帳號與資格已通過，建議補上持票人姓名。";
       } catch (err) {
@@ -979,15 +1041,17 @@
 
     async function validateAllHolders(){
       for (let i = 0; i < holderState.length; i++) {
-        if (holderState[i]?.isBuyerTicket) continue;
         await validateOneHolder(i);
       }
     }
 
     function allHoldersReady(){
-      const extraHolders = holderState.filter(item => !item.isBuyerTicket);
-      if (extraHolders.length === 0) return true;
-      return extraHolders.every(item => lower(item.email) && item.status === "valid");
+      return holderState.every(item => {
+        if (item.isBuyerTicket) {
+          return item.status === "valid";
+        }
+        return lower(item.email) && item.status === "valid";
+      });
     }
 
     function buildAssignmentsPayload(){
@@ -1003,7 +1067,7 @@
         verifiedSchoolId: norm(item.verifiedSchoolId),
         verifiedSchoolName: norm(item.verifiedSchoolName),
         verifyMethod: norm(item.verifyMethod),
-        status: item.isBuyerTicket ? "valid" : (item.status === "valid" ? "valid" : "invalid"),
+        status: item.isBuyerTicket ? (item.status === "valid" ? "valid" : "invalid") : (item.status === "valid" ? "valid" : "invalid"),
         message: norm(item.message)
       }));
     }
@@ -1235,7 +1299,7 @@
                   placeholder="請輸入持票人會員 Email"
                   ${locked ? "disabled" : ""}
                 />
-                <div class="hint">此 Email 必須已註冊會員帳號，且已完成校園驗證。</div>
+                <div class="hint">此 Email 必須已註冊會員帳號，且已完成校園驗證。若活動有限制名單，也必須在名單內。</div>
               </div>
 
               <div class="field full">
@@ -1251,7 +1315,7 @@
               </div>
             </div>
 
-            <div class="notice ${item.status === "valid" ? "ok" : (item.email ? "warn" : "info")}">
+            <div class="notice ${item.status === "valid" ? "ok" : (item.email || item.isBuyerTicket ? "warn" : "info")}">
               ${
                 item.status === "valid"
                   ? "此持票人資格已通過。"
@@ -1316,7 +1380,7 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
             <div class="section-sub">
               ${
                 extraHolderCount > 0
-                  ? "第一張票固定為主購人票，會自動帶入主購者帳號。其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號，並且已完成校園驗證。"
+                  ? "第一張票固定為主購人票，會自動帶入主購者帳號。其餘票券請填寫對應持票人資料。每位持票人都必須有 Passium 會員帳號、已完成校園驗證，且若本活動有匯入資格名單，也必須在該名單內。"
                   : "此訂單僅購買 1 張票，系統會直接視為主購人本人使用，無需另外填寫持票人資料。"
               }
             </div>
@@ -1332,11 +1396,11 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
                           <h3 class="holder-title">主購人票</h3>
                           <div class="holder-sub">這張票將直接視為主購人本人使用。</div>
                         </div>
-                        <span class="status status-ok">無需填寫</span>
+                        <span class="status ${holderState[0]?.status === "valid" ? "status-ok" : "status-warn"}">${holderState[0]?.status === "valid" ? "無需填寫" : "未通過"}</span>
                       </div>
                       <div class="holder-body">
-                        <div class="notice ok">
-                          此訂單只有 1 張票，已自動綁定主購者帳號 ${esc(currentUser?.email || "-")}，不需要另外填寫持票人資料。
+                        <div class="notice ${holderState[0]?.status === "valid" ? "ok" : "warn"}">
+                          ${esc(holderState[0]?.message || `此訂單只有 1 張票，已自動綁定主購者帳號 ${currentUser?.email || "-"}`)}
                         </div>
                       </div>
                     </div>
@@ -1489,6 +1553,8 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
         app.innerHTML = "找不到訂單。";
         return;
       }
+
+      await loadAllowedUsers();
 
       const buyerUid = norm(currentOrder.buyerUid || currentOrder.uid || "");
       const buyerEmail = lower(currentOrder.buyerEmail || currentOrder.email || "");
