@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>校園驗證結果</title>
+
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --text:#1d1d1f;
+      --muted:#6e6e73;
+      --line:rgba(0,0,0,.08);
+      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+      --ok:#166534;
+      --ok-bg:#dcfce7;
+      --warn:#b91c1c;
+      --warn-bg:#fee2e2;
+      --blue:#1d4ed8;
+      --blue-bg:#dbeafe;
+      --max:960px;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+
+    .page{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 18px 72px;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
+        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:36px;
+      box-shadow:0 24px 60px rgba(0,0,0,.06);
+      padding:30px 24px;
+      margin-bottom:20px;
+    }
+
+    .hero-title{
+      margin:0;
+      font-size:clamp(32px,5vw,52px);
+      line-height:1.05;
+      letter-spacing:-.05em;
+      font-weight:800;
+    }
+
+    .hero-sub{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.9;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:20px 22px 14px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#fff 0%, #f9fafb 100%);
+    }
+
+    .card-body{
+      padding:20px 22px 22px;
+    }
+
+    .section-title{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.03em;
+    }
+
+    .section-sub{
+      margin-top:8px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:14px 15px;
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      line-height:1.9;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .notice.ok{
+      background:var(--ok-bg);
+      border-color:rgba(22,101,52,.12);
+      color:var(--ok);
+    }
+
+    .notice.warn{
+      background:var(--warn-bg);
+      border-color:rgba(185,28,28,.12);
+      color:var(--warn);
+    }
+
+    .notice.info{
+      background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
+      color:var(--blue);
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:120px 1fr;
+      gap:8px 12px;
+      margin-top:14px;
+    }
+
+    .k{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .v{
+      font-size:13px;
+      font-weight:800;
+      line-height:1.9;
+      word-break:break-word;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    }
+
+    @media (max-width:640px){
+      .kv{
+        grid-template-columns:90px 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1 class="hero-title">校園驗證結果</h1>
+      <div class="hero-sub">
+        系統正在確認你的校園驗證連結。若驗證成功，這個帳號之後就會使用綁定後的校園資料判斷活動資格。
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 class="section-title">處理結果</h2>
+        <div class="section-sub">請不要重複點擊同一封驗證信中的舊連結。</div>
+      </div>
+      <div class="card-body">
+        <div id="resultBox" class="notice info">驗證中，請稍候…</div>
+        <div id="detailBox"></div>
+
+        <div class="row">
+          <a class="btn btn-primary" href="member.html">回會員中心</a>
+          <a class="btn" href="campus-verify.html">回校園驗證頁</a>
+          <a class="btn" href="my-tickets.html">我的票券</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const db = firebase.firestore();
+    const resultBox = document.getElementById("resultBox");
+    const detailBox = document.getElementById("detailBox");
+
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#39;"
+      }[m]));
+    }
+
+    function norm(v){
+      return String(v ?? "").trim();
+    }
+
+    function getToken(){
+      const sp = new URLSearchParams(location.search);
+      return norm(sp.get("token"));
+    }
+
+    async function loadLatestProfile(){
+      const user = firebase.auth().currentUser;
+      if (!user) return null;
+      const snap = await db.collection("users").doc(user.uid).get();
+      return snap.exists ? (snap.data() || {}) : null;
+    }
+
+    async function confirmToken(){
+      const token = getToken();
+
+      if (!token) {
+        resultBox.className = "notice warn";
+        resultBox.textContent = "缺少驗證 token，無法完成驗證。";
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/confirmCampusVerification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "驗證失敗");
+        }
+
+        resultBox.className = "notice ok";
+        resultBox.textContent = "校園驗證成功，帳號已完成綁定。";
+
+        let profile = null;
+        try {
+          profile = await loadLatestProfile();
+        } catch (e) {
+          console.warn(e);
+        }
+
+        const schoolName = profile?.verifiedSchoolName || data?.verifiedSchoolName || "-";
+        const schoolId = profile?.verifiedSchoolId || data?.verifiedSchoolId || "-";
+        const verifyMethod = profile?.verifyMethod || data?.verifyMethod || "-";
+        const schoolEmail = profile?.schoolEmail || data?.schoolEmail || "-";
+
+        detailBox.innerHTML = `
+          <div class="kv">
+            <div class="k">學校</div>
+            <div class="v">${esc(schoolName)}</div>
+
+            <div class="k">學校 ID</div>
+            <div class="v mono">${esc(schoolId)}</div>
+
+            <div class="k">驗證方式</div>
+            <div class="v">${esc(verifyMethod)}</div>
+
+            <div class="k">學校信箱</div>
+            <div class="v mono">${esc(schoolEmail)}</div>
+          </div>
+        `;
+      } catch (e) {
+        console.error(e);
+        resultBox.className = "notice warn";
+        resultBox.textContent = e.message || "驗證失敗";
+        detailBox.innerHTML = "";
+      }
+    }
+
+    firebase.auth().onAuthStateChanged(async () => {
+      await confirmToken();
+    });
+  </script>
+</body>
+</html>
