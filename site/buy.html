@@ -1355,26 +1355,32 @@
   }
 
   function seatIsSelectable(seat){
-    const myUid = currentUser?.uid || "";
-    const status = seat.computedStatus;
+  if (!seat) return false;
 
-    if (status === "sold") return false;
-    if (status === "disabled") return false;
-    if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return false;
+  if (String(seat.id || "").startsWith("det_")) return false;
+  if (String(seat.label || "").startsWith("候選")) return false;
+  if (seat._detected === true) return false;
 
-    const need = getRequiredSeatCount();
-    if (need <= 0) return false;
+  const myUid = currentUser?.uid || "";
+  const status = seat.computedStatus;
 
-    const type = getSelectedTicketType();
-    if (!type) return false;
+  if (status === "sold") return false;
+  if (status === "disabled") return false;
+  if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return false;
 
-    if (Array.isArray(type.sectionIds) && type.sectionIds.length) {
-      const allowed = type.sectionIds.map(v => norm(v));
-      if (!allowed.includes(norm(seat.sectionId || ""))) return false;
-    }
+  const need = getRequiredSeatCount();
+  if (need <= 0) return false;
 
-    return true;
+  const type = getSelectedTicketType();
+  if (!type) return false;
+
+  if (Array.isArray(type.sectionIds) && type.sectionIds.length) {
+    const allowed = type.sectionIds.map(v => norm(v));
+    if (!allowed.includes(norm(seat.sectionId || ""))) return false;
   }
+
+  return true;
+}
 
   function getSeatVisualState(seat){
     const myUid = currentUser?.uid || "";
