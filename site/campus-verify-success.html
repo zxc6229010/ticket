@@ -12,15 +12,17 @@
       --text:#1d1d1f;
       --muted:#6e6e73;
       --line:rgba(0,0,0,.08);
-      --shadow:0 16px 40px rgba(0,0,0,.06);
+      --shadow:0 20px 48px rgba(0,0,0,.08);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
+
       --ok:#166534;
       --ok-bg:#dcfce7;
       --warn:#b91c1c;
       --warn-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
-      --max:960px;
+
+      --max:760px;
     }
 
     *{ box-sizing:border-box; }
@@ -33,140 +35,112 @@
       font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
-    a{ color:inherit; text-decoration:none; }
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
 
-    .page{
+    .card{
+      width:100%;
       max-width:var(--max);
-      margin:0 auto;
-      padding:28px 18px 72px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:34px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
 
-    .hero{
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
-        linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
-      border:1px solid rgba(0,0,0,.05);
-      border-radius:36px;
-      box-shadow:0 24px 60px rgba(0,0,0,.06);
-      padding:30px 24px;
-      margin-bottom:20px;
+    .head{
+      padding:28px 28px 18px;
+      background:linear-gradient(180deg,#fff 0%, #f8f8fa 100%);
+      border-bottom:1px solid var(--line);
+      text-align:center;
     }
 
-    .hero-title{
+    .brand{
+      display:inline-flex;
+      width:44px;
+      height:44px;
+      border-radius:12px;
+      align-items:center;
+      justify-content:center;
+      background:#111;
+      color:#fff;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+
+    h1{
       margin:0;
-      font-size:clamp(32px,5vw,52px);
-      line-height:1.05;
-      letter-spacing:-.05em;
+      font-size:32px;
+      line-height:1.1;
+      letter-spacing:-.04em;
       font-weight:800;
     }
 
-    .hero-sub{
-      margin-top:14px;
+    .sub{
+      margin-top:10px;
       color:var(--muted);
       font-size:15px;
       line-height:1.9;
     }
 
-    .card{
-      background:#fff;
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .card-head{
-      padding:20px 22px 14px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(180deg,#fff 0%, #f9fafb 100%);
-    }
-
-    .card-body{
-      padding:20px 22px 22px;
-    }
-
-    .section-title{
-      margin:0;
-      font-size:24px;
-      font-weight:800;
-      letter-spacing:-.03em;
-    }
-
-    .section-sub{
-      margin-top:8px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.9;
+    .body{
+      padding:24px 28px 28px;
     }
 
     .notice{
-      margin-top:14px;
-      padding:14px 15px;
-      border-radius:18px;
-      border:1px solid rgba(0,0,0,.06);
+      border-radius:22px;
+      padding:18px 18px;
       line-height:1.9;
-      white-space:pre-wrap;
-      word-break:break-word;
+      font-size:14px;
+      border:1px solid rgba(0,0,0,.06);
+      background:#fff;
+      box-shadow:var(--shadow-soft);
     }
 
     .notice.ok{
       background:var(--ok-bg);
-      border-color:rgba(22,101,52,.12);
       color:var(--ok);
+      border-color:rgba(22,101,52,.12);
     }
 
     .notice.warn{
       background:var(--warn-bg);
-      border-color:rgba(185,28,28,.12);
       color:var(--warn);
+      border-color:rgba(185,28,28,.12);
     }
 
     .notice.info{
       background:var(--blue-bg);
-      border-color:rgba(29,78,216,.12);
       color:var(--blue);
+      border-color:rgba(29,78,216,.12);
     }
 
-    .kv{
-      display:grid;
-      grid-template-columns:120px 1fr;
-      gap:8px 12px;
-      margin-top:14px;
-    }
-
-    .k{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.8;
-    }
-
-    .v{
-      font-size:13px;
-      font-weight:800;
-      line-height:1.9;
-      word-break:break-word;
-    }
-
-    .row{
+    .actions{
+      margin-top:20px;
       display:flex;
       gap:10px;
       flex-wrap:wrap;
-      align-items:center;
-      margin-top:18px;
+      justify-content:center;
     }
 
     .btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:44px;
+      min-height:46px;
       padding:10px 18px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      color:var(--text);
+      color:#111;
       font-size:14px;
       font-weight:700;
+      text-decoration:none;
       cursor:pointer;
       box-shadow:var(--shadow-soft);
     }
@@ -176,44 +150,29 @@
       color:#fff;
       border-color:#111;
     }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-    }
-
-    @media (max-width:640px){
-      .kv{
-        grid-template-columns:90px 1fr;
-      }
-    }
   </style>
 </head>
 <body>
-  <main class="page">
-    <section class="hero">
-      <h1 class="hero-title">校園驗證結果</h1>
-      <div class="hero-sub">
-        系統正在確認你的校園驗證連結。若驗證成功，這個帳號之後就會使用綁定後的校園資料判斷活動資格。
+  <div class="wrap">
+    <div class="card">
+      <div class="head">
+        <div class="brand">T</div>
+        <h1>校園驗證結果</h1>
+        <div class="sub">系統正在處理你的校園身分驗證。</div>
       </div>
-    </section>
 
-    <section class="card">
-      <div class="card-head">
-        <h2 class="section-title">處理結果</h2>
-        <div class="section-sub">請不要重複點擊同一封驗證信中的舊連結。</div>
-      </div>
-      <div class="card-body">
-        <div id="resultBox" class="notice info">驗證中，請稍候…</div>
-        <div id="detailBox"></div>
+      <div class="body">
+        <div id="resultBox" class="notice info">
+          驗證中，請稍候…
+        </div>
 
-        <div class="row">
-          <a class="btn btn-primary" href="member.html">回會員中心</a>
-          <a class="btn" href="campus-verify.html">回校園驗證頁</a>
-          <a class="btn" href="my-tickets.html">我的票券</a>
+        <div class="actions">
+          <a class="btn" href="index.html">回首頁</a>
+          <a class="btn btn-primary" href="member.html">前往會員中心</a>
         </div>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -233,9 +192,7 @@
       firebase.initializeApp(firebaseConfig);
     }
 
-    const db = firebase.firestore();
     const resultBox = document.getElementById("resultBox");
-    const detailBox = document.getElementById("detailBox");
 
     function esc(s){
       return String(s ?? "").replace(/[&<>"']/g, m => ({
@@ -247,28 +204,17 @@
       }[m]));
     }
 
-    function norm(v){
-      return String(v ?? "").trim();
-    }
-
-    function getToken(){
+    function getQueryToken(){
       const sp = new URLSearchParams(location.search);
-      return norm(sp.get("token"));
+      return String(sp.get("token") || "").trim();
     }
 
-    async function loadLatestProfile(){
-      const user = firebase.auth().currentUser;
-      if (!user) return null;
-      const snap = await db.collection("users").doc(user.uid).get();
-      return snap.exists ? (snap.data() || {}) : null;
-    }
-
-    async function confirmToken(){
-      const token = getToken();
+    async function runConfirm(){
+      const token = getQueryToken();
 
       if (!token) {
         resultBox.className = "notice warn";
-        resultBox.textContent = "缺少驗證 token，無法完成驗證。";
+        resultBox.innerHTML = "缺少驗證 token，無法完成驗證。";
         return;
       }
 
@@ -288,46 +234,25 @@
         }
 
         resultBox.className = "notice ok";
-        resultBox.textContent = "校園驗證成功，帳號已完成綁定。";
-
-        let profile = null;
-        try {
-          profile = await loadLatestProfile();
-        } catch (e) {
-          console.warn(e);
-        }
-
-        const schoolName = profile?.verifiedSchoolName || data?.verifiedSchoolName || "-";
-        const schoolId = profile?.verifiedSchoolId || data?.verifiedSchoolId || "-";
-        const verifyMethod = profile?.verifyMethod || data?.verifyMethod || "-";
-        const schoolEmail = profile?.schoolEmail || data?.schoolEmail || "-";
-
-        detailBox.innerHTML = `
-          <div class="kv">
-            <div class="k">學校</div>
-            <div class="v">${esc(schoolName)}</div>
-
-            <div class="k">學校 ID</div>
-            <div class="v mono">${esc(schoolId)}</div>
-
-            <div class="k">驗證方式</div>
-            <div class="v">${esc(verifyMethod)}</div>
-
-            <div class="k">學校信箱</div>
-            <div class="v mono">${esc(schoolEmail)}</div>
+        resultBox.innerHTML = `
+          <div style="font-weight:800;">校園身分綁定成功</div>
+          <div style="margin-top:6px;">
+            你的帳號已完成校園驗證，之後系統會依照此綁定資料判斷活動資格。
           </div>
         `;
       } catch (e) {
         console.error(e);
         resultBox.className = "notice warn";
-        resultBox.textContent = e.message || "驗證失敗";
-        detailBox.innerHTML = "";
+        resultBox.innerHTML = `
+          <div style="font-weight:800;">驗證失敗</div>
+          <div style="margin-top:6px;">
+            ${esc(e.message || "發生錯誤，請稍後再試。")}
+          </div>
+        `;
       }
     }
 
-    firebase.auth().onAuthStateChanged(async () => {
-      await confirmToken();
-    });
+    runConfirm();
   </script>
 </body>
 </html>

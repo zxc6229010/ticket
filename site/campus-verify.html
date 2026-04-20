@@ -357,6 +357,11 @@
       box-shadow:0 0 0 4px rgba(0,0,0,.04);
     }
 
+    input[readonly]{
+      background:#f9fafb;
+      color:#6b7280;
+    }
+
     .row{
       display:flex;
       gap:10px;
@@ -622,11 +627,11 @@
                   <label>學號 / 身分代碼</label>
                   <input id="studentCode" type="text" placeholder="請輸入學號或校方指定代碼" />
 
-                  <label>學校信箱</label>
-                  <input id="schoolEmail" type="text" placeholder="系統將依學號與學校後綴自動產生" readonly />
+                  <label>系統將寄送到的學校信箱</label>
+                  <input id="schoolEmail" type="text" readonly placeholder="請先輸入學號" />
 
                   <div class="small" id="emailHint" style="margin-top:10px;">
-                    系統會把驗證信寄到你輸入的學校信箱。
+                    系統會依照你輸入的學號，自動組成學校信箱並寄出驗證信。
                   </div>
 
                   <div class="row" style="margin-top:18px;">
@@ -650,19 +655,6 @@
                 <div id="msg" class="sub" style="margin-top:16px;">
                   請先選擇校園。
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-head">
-              <h2 class="section-title">操作</h2>
-              <div class="section-sub">完成後可返回會員中心查看最新綁定狀態。</div>
-            </div>
-            <div class="card-body">
-              <div class="row" style="justify-content:flex-end;">
-                <a class="btn btn-secondary" href="member.html">回會員中心</a>
-                <button class="btn btn-secondary" id="logoutBtn">登出</button>
               </div>
             </div>
           </div>
@@ -819,12 +811,12 @@
     function getAllowedEmailDomains(school){
       if (Array.isArray(school?.allowedEmailDomains)) {
         return school.allowedEmailDomains
-          .map(v => lower(v).replace(/^@/, ""))
+          .map(v => lower(v))
           .filter(Boolean);
       }
 
-      const old1 = lower(school?.schoolEmailDomain || "").replace(/^@/, "");
-      const old2 = lower(school?.verifyEmailDomain || "").replace(/^@/, "");
+      const old1 = lower(school?.schoolEmailDomain || "");
+      const old2 = lower(school?.verifyEmailDomain || "");
       return [...new Set([old1, old2].filter(Boolean))];
     }
 
@@ -991,27 +983,32 @@
       }
     }
 
-    function buildSchoolEmailFromStudentCode(studentCode, school){
+    function buildSchoolEmail(studentCode, school){
       const code = norm(studentCode);
+      if (!code) return "";
+
       const domains = getAllowedEmailDomains(school);
-      if (!code || !domains.length) return "";
+      if (!domains.length) return "";
+
       return `${code}@${domains[0]}`;
     }
 
-    function refreshAutoEmail(){
+    function updateAutoSchoolEmail(){
       if (!currentSchool) {
         schoolEmailEl.value = "";
+        schoolEmailEl.placeholder = "請先選擇校園";
         return;
       }
 
-      const mode = getVerifyMode(currentSchool);
-      if (mode !== "email") {
+      const studentCode = norm(studentCodeEl.value);
+      if (!studentCode) {
         schoolEmailEl.value = "";
+        schoolEmailEl.placeholder = "請先輸入學號";
         return;
       }
 
-      const built = buildSchoolEmailFromStudentCode(studentCodeEl.value, currentSchool);
-      schoolEmailEl.value = built;
+      const generated = buildSchoolEmail(studentCode, currentSchool);
+      schoolEmailEl.value = generated;
     }
 
     function renderSchoolMode(){
@@ -1026,12 +1023,13 @@
       emailVerifyBtn.disabled = false;
       googleVerifyBtn.disabled = false;
 
+      updateAutoSchoolEmail();
+
       if (!currentSchool) {
         schoolInfo.innerHTML = `<span class="warn">請先選擇校園</span>`;
         schoolDescription.innerHTML = "";
         modeText.textContent = "請先選擇校園";
         msg.innerHTML = "請先選擇校園。";
-        schoolEmailEl.value = "";
         return;
       }
 
@@ -1065,14 +1063,12 @@
       if (!verifyEnabled) {
         modeText.innerHTML = `<span class="warn">此校目前暫停驗證</span>`;
         msg.innerHTML = `<span class="warn">此校目前已暫停校園驗證，請稍後再試或洽校方承辦單位。</span>`;
-        schoolEmailEl.value = "";
         return;
       }
 
       if (!authMethods.length || !mode) {
         modeText.innerHTML = `<span class="warn">此校尚未設定驗證方式</span>`;
         msg.innerHTML = `<span class="warn">此校目前尚未完成驗證方式設定，請稍後再試或洽管理端。</span>`;
-        schoolEmailEl.value = "";
         return;
       }
 
@@ -1089,7 +1085,6 @@
         msg.innerHTML = `你的帳號已綁定：${esc(currentUserProfile?.verifiedSchoolName || currentUserProfile?.verifiedSchoolId || "-")}`;
         emailVerifyBtn.disabled = true;
         googleVerifyBtn.disabled = true;
-        schoolEmailEl.value = "";
         return;
       }
 
@@ -1115,28 +1110,22 @@
         msg.innerHTML = alreadyBoundThis
           ? `你已完成此校驗證。`
           : `請確認你目前登入的帳號就是學校 Google 帳號。`;
-        schoolEmailEl.value = "";
       } else {
         emailModeWrap.classList.remove("hidden");
         modeText.textContent = "此校目前使用 Email 驗證";
         modeBadgeWrap.innerHTML = `<span class="pill">Email 驗證</span>`;
         emailHint.innerHTML = `
-          系統會依你輸入的學號，自動補上學校信箱後綴。
-          ${emailDomains.length ? `目前使用後綴：<span class="mono">@${esc(emailDomains[0])}</span>` : `此校目前未設定信箱後綴，無法寄送驗證信。`}
+          系統會依照你輸入的學號，自動組成學校信箱並寄出驗證信。
+          ${emailDomains.length ? `目前使用後綴：<span class="mono">${esc(emailDomains[0])}</span>` : `此校目前未設定信箱後綴。`}
         `;
         msg.innerHTML = alreadyBoundThis
           ? `你已完成此校驗證。`
           : `請輸入學號後寄送驗證信。`;
-        refreshAutoEmail();
       }
     }
 
-    schoolIdEl.onchange = () => {
-      renderSchoolMode();
-      refreshAutoEmail();
-    };
-
-    studentCodeEl.addEventListener("input", refreshAutoEmail);
+    schoolIdEl.onchange = renderSchoolMode;
+    studentCodeEl.addEventListener("input", updateAutoSchoolEmail);
 
     async function sendEmailVerification(){
       const user = firebase.auth().currentUser;
@@ -1148,14 +1137,10 @@
 
       const schoolId = norm(currentSchool.id);
       const studentCode = norm(studentCodeEl.value);
-      const schoolEmail = lower(buildSchoolEmailFromStudentCode(studentCode, currentSchool));
-      const emailDomains = getAllowedEmailDomains(currentSchool);
+      const schoolEmail = lower(buildSchoolEmail(studentCode, currentSchool));
 
       if (!studentCode) return alert("請輸入學號 / 身分代碼");
-      if (!emailDomains.length) return alert("此校尚未設定信箱後綴，無法寄送驗證信");
-      if (!schoolEmail) return alert("無法組成學校信箱");
-
-      schoolEmailEl.value = schoolEmail;
+      if (!schoolEmail) return alert("此校尚未設定可用信箱後綴");
 
       emailVerifyBtn.disabled = true;
       const oldText = emailVerifyBtn.textContent;
