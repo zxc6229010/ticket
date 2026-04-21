@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>校園驗證完成｜Tickets</title>
+  <title>Passium｜校園驗證完成</title>
 
   <style>
     :root{
@@ -14,15 +14,13 @@
       --line:rgba(0,0,0,.08);
       --shadow:0 16px 40px rgba(0,0,0,.06);
       --shadow-soft:0 10px 24px rgba(0,0,0,.04);
-
       --ok:#166534;
       --ok-bg:#dcfce7;
       --warn:#b91c1c;
       --warn-bg:#fee2e2;
       --blue:#1d4ed8;
       --blue-bg:#dbeafe;
-
-      --max:980px;
+      --max:1280px;
     }
 
     *{ box-sizing:border-box; }
@@ -32,7 +30,7 @@
       padding:0;
       background:var(--bg);
       color:var(--text);
-      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Noto Sans TC",sans-serif;
     }
 
     a{
@@ -42,8 +40,6 @@
 
     .shell{
       min-height:100vh;
-      display:flex;
-      flex-direction:column;
     }
 
     .nav-wrap{
@@ -89,71 +85,75 @@
       box-shadow:var(--shadow-soft);
     }
 
+    .nav-links{
+      display:flex;
+      align-items:center;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .nav-link{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:600;
+      transition:color .15s ease;
+    }
+
+    .nav-link:hover{
+      color:var(--text);
+    }
+
     .nav-actions{
       display:flex;
       align-items:center;
       gap:10px;
-      flex-wrap:wrap;
     }
 
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:44px;
-      padding:10px 18px;
+    .account-icon-btn{
+      width:38px;
+      height:38px;
       border-radius:999px;
       border:1px solid var(--line);
       background:#fff;
-      color:var(--text);
-      font-size:14px;
-      font-weight:700;
-      cursor:pointer;
-      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease, background .12s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       box-shadow:var(--shadow-soft);
+      transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+      cursor:pointer;
     }
 
-    .btn:hover{
+    .account-icon-btn:hover{
       transform:translateY(-1px);
       box-shadow:0 10px 24px rgba(0,0,0,.06);
     }
 
-    .btn:active{
-      transform:translateY(0) scale(.98);
-      box-shadow:none;
-    }
-
-    .btn-primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
+    .account-icon-btn svg{
+      width:18px;
+      height:18px;
+      color:#111;
     }
 
     .page{
       max-width:var(--max);
       margin:0 auto;
-      width:100%;
-      padding:34px 22px 88px;
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      padding:28px 22px 80px;
     }
 
-    .result-card{
-      width:100%;
+    .hero{
       background:
         radial-gradient(circle at top left, rgba(255,255,255,.96), rgba(255,255,255,.90) 42%, rgba(255,255,255,.84) 100%),
         linear-gradient(180deg,#ffffff 0%, #f7f7f8 100%);
       border:1px solid rgba(0,0,0,.05);
       border-radius:40px;
       box-shadow:0 24px 60px rgba(0,0,0,.06);
-      padding:42px 32px;
+      padding:34px 30px;
+      margin-bottom:20px;
       position:relative;
       overflow:hidden;
     }
 
-    .result-card::after{
+    .hero::after{
       content:"";
       position:absolute;
       right:-70px;
@@ -165,151 +165,243 @@
       pointer-events:none;
     }
 
-    .icon{
-      width:72px;
-      height:72px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:32px;
-      font-weight:800;
-      margin-bottom:18px;
-      box-shadow:var(--shadow-soft);
-    }
-
-    .icon.ok{
-      background:var(--ok-bg);
-      color:var(--ok);
-    }
-
-    .icon.warn{
-      background:var(--warn-bg);
-      color:var(--warn);
-    }
-
-    .icon.info{
-      background:var(--blue-bg);
-      color:var(--blue);
-    }
-
-    .title{
+    .hero-title{
       margin:0;
-      font-size:clamp(32px, 5vw, 54px);
+      font-size:clamp(32px, 5vw, 52px);
       line-height:1.05;
       letter-spacing:-.05em;
       font-weight:800;
     }
 
-    .sub{
-      margin-top:16px;
-      max-width:760px;
+    .hero-sub{
+      margin-top:14px;
+      max-width:860px;
       color:var(--muted);
       font-size:16px;
       line-height:1.9;
       white-space:pre-wrap;
     }
 
-    .notice{
-      margin-top:22px;
-      padding:16px 18px;
-      border-radius:22px;
-      border:1px solid rgba(0,0,0,.06);
+    .layout{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+    }
+
+    .card{
       background:#fff;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:32px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:20px 22px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,251,1) 100%);
+    }
+
+    .card-body{
+      padding:22px;
+    }
+
+    .section-title{
+      margin:0;
+      font-size:24px;
+      font-weight:800;
+      letter-spacing:-.03em;
+      line-height:1.2;
+    }
+
+    .section-sub{
+      margin-top:8px;
+      color:var(--muted);
       font-size:14px;
       line-height:1.9;
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:16px 16px;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:20px;
+      background:#fff;
       box-shadow:var(--shadow-soft);
-      white-space:pre-wrap;
-      word-break:break-word;
+      font-size:14px;
+      line-height:1.9;
     }
 
     .notice.ok{
       background:var(--ok-bg);
+      border-color:rgba(22,101,52,.12);
       color:var(--ok);
-      border-color:rgba(22,101,52,.10);
     }
 
     .notice.warn{
       background:var(--warn-bg);
+      border-color:rgba(185,28,28,.12);
       color:var(--warn);
-      border-color:rgba(185,28,28,.10);
     }
 
     .notice.info{
       background:var(--blue-bg);
+      border-color:rgba(29,78,216,.12);
       color:var(--blue);
-      border-color:rgba(29,78,216,.10);
     }
 
-    .meta{
-      margin-top:20px;
+    .kv{
       display:grid;
-      gap:10px;
+      grid-template-columns:120px 1fr;
+      gap:8px 12px;
+      padding:10px 0;
+      border-top:1px dashed var(--line);
     }
 
-    .meta-row{
-      display:flex;
-      justify-content:space-between;
-      gap:14px;
-      padding:12px 0;
-      border-top:1px dashed rgba(0,0,0,.08);
-      font-size:14px;
-      line-height:1.8;
-    }
-
-    .meta-row:first-child{
+    .kv:first-child{
       border-top:none;
       padding-top:0;
     }
 
-    .meta-label{
+    .k{
       color:var(--muted);
-      font-weight:700;
-      flex:0 0 110px;
+      font-size:13px;
+      line-height:1.8;
     }
 
-    .meta-value{
-      text-align:right;
+    .v{
+      font-size:13px;
       font-weight:800;
+      line-height:1.9;
       word-break:break-word;
-      flex:1;
+    }
+
+    .mono{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
     }
 
     .actions{
-      margin-top:28px;
       display:flex;
-      gap:12px;
+      gap:10px;
       flex-wrap:wrap;
+      margin-top:18px;
     }
 
-    .footer-note{
-      margin-top:26px;
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:11px 18px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .btn-primary{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .btn[disabled]{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .loading{
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.9;
+    }
+
+    .footer{
+      margin-top:78px;
+      padding-top:26px;
+      border-top:1px solid rgba(0,0,0,.07);
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:20px;
+    }
+
+    @media (max-width:560px){
+      .footer{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .footer-title{
+      font-size:13px;
+      font-weight:800;
+      color:#111;
+      margin-bottom:12px;
+    }
+
+    .footer-link{
+      display:block;
+      font-size:13px;
+      color:var(--muted);
+      line-height:2;
+    }
+
+    .footer-link:hover{
+      color:var(--text);
+    }
+
+    .copyright{
+      margin-top:30px;
       color:var(--muted);
       font-size:12px;
       line-height:1.8;
     }
 
-    .hidden{
-      display:none !important;
-    }
-
     @media (max-width:860px){
+      .nav{
+        min-height:auto;
+        padding-top:12px;
+        padding-bottom:12px;
+        align-items:flex-start;
+      }
+
+      .nav-links{
+        display:none;
+      }
+
       .page{
         padding:22px 16px 72px;
       }
 
-      .result-card{
+      .hero{
         border-radius:28px;
         padding:28px 20px;
       }
 
-      .meta-row{
-        flex-direction:column;
-        gap:4px;
+      .card{
+        border-radius:26px;
       }
 
-      .meta-value{
-        text-align:left;
+      .card-head{
+        padding:18px 18px 14px;
+      }
+
+      .card-body{
+        padding:18px;
+      }
+
+      .kv{
+        grid-template-columns:98px 1fr;
       }
     }
   </style>
@@ -319,72 +411,96 @@
     <div class="nav-wrap">
       <div class="nav">
         <a class="brand" href="index.html">
-          <span class="brand-mark">T</span>
-          <span>Tickets</span>
+          <span class="brand-mark">P</span>
+          <span>Passium</span>
         </a>
 
+        <div class="nav-links">
+          <a class="nav-link" href="index.html#featured">精選活動</a>
+          <a class="nav-link" href="index.html#upcoming">即將開始</a>
+          <a class="nav-link" href="member.html">會員中心</a>
+          <a class="nav-link" href="my-tickets.html">我的票券</a>
+        </div>
+
         <div class="nav-actions">
-          <a class="btn" href="member.html">會員中心</a>
+          <a class="account-icon-btn" id="accountBtn" href="login.html" aria-label="登入 / 會員中心" title="登入 / 會員中心">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2.25c-4.486 0-8.25 2.3-8.25 5.25a.75.75 0 0 0 .75.75h15a.75.75 0 0 0 .75-.75c0-2.95-3.764-5.25-8.25-5.25Z" fill="currentColor"/>
+            </svg>
+          </a>
         </div>
       </div>
     </div>
 
     <main class="page">
-      <section class="result-card">
-        <div id="loadingState">
-          <div class="icon info">…</div>
-          <h1 class="title">正在確認驗證結果</h1>
-          <div class="sub">系統正在處理這次校園驗證，請稍候一下。</div>
-          <div class="notice info">正在驗證連結有效性與綁定資料…</div>
-        </div>
+      <div class="hero">
+        <h1 class="hero-title">校園驗證完成</h1>
+        <div class="hero-sub">系統正在確認你的驗證狀態。
+若驗證成功，這個帳號之後就能用綁定的校園身分判斷活動資格。</div>
+      </div>
 
-        <div id="successState" class="hidden">
-          <div class="icon ok">✓</div>
-          <h1 class="title">校園驗證完成</h1>
-          <div class="sub">你的帳號已成功完成校園身分綁定。
-之後系統會依照這份綁定資料，判斷你是否符合特定活動的報名資格。</div>
-
-          <div class="notice ok" id="successNotice">
-            驗證成功。
+      <div class="layout">
+        <div class="card">
+          <div class="card-head">
+            <h2 class="section-title">驗證結果</h2>
+            <div class="section-sub">以下是本次校園驗證處理結果。</div>
           </div>
+          <div class="card-body">
+            <div id="resultBox" class="loading">處理中…</div>
 
-          <div class="meta" id="successMeta"></div>
-
-          <div class="actions">
-            <a class="btn btn-primary" href="member.html">前往會員中心</a>
-            <a class="btn" href="campus-verify.html">返回校園驗證</a>
-          </div>
-
-          <div class="footer-note">
-            若畫面資料未立即更新，可回到會員中心重新整理頁面。
+            <div class="actions">
+              <a class="btn btn-primary" href="member.html">回會員中心</a>
+              <a class="btn" href="campus-verify.html">返回校園驗證</a>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div id="errorState" class="hidden">
-          <div class="icon warn">!</div>
-          <h1 class="title">驗證失敗</h1>
-          <div class="sub">這次驗證沒有成功完成，可能是連結已失效、已使用，或資料不符合規則。</div>
-
-          <div class="notice warn" id="errorNotice">
-            驗證失敗。
-          </div>
-
-          <div class="actions">
-            <a class="btn btn-primary" href="campus-verify.html">返回重新驗證</a>
-            <a class="btn" href="member.html">回會員中心</a>
-          </div>
+      <footer class="footer">
+        <div>
+          <div class="footer-title">Events</div>
+          <a class="footer-link" href="index.html#featured">精選活動</a>
+          <a class="footer-link" href="index.html#upcoming">即將開始</a>
         </div>
-      </section>
+
+        <div>
+          <div class="footer-title">Account</div>
+          <a class="footer-link" href="member.html">會員中心</a>
+          <a class="footer-link" href="my-tickets.html">我的票券</a>
+          <a class="footer-link" href="my-orders.html">我的訂單</a>
+        </div>
+      </footer>
+
+      <div class="copyright">
+        © 2026 Passium. All rights reserved.
+      </div>
     </main>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
   <script>
-    function norm(v){
-      return String(v ?? "").trim();
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app",
+      messagingSenderId: "704757384914",
+      appId: "1:704757384914:web:9f58e4085dd71180c5cf0b"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
 
-    function esc(s){
-      return String(s ?? "").replace(/[&<>"']/g, m => ({
+    const db = firebase.firestore();
+    const resultBox = document.getElementById("resultBox");
+    const accountBtn = document.getElementById("accountBtn");
+
+    function esc(value){
+      return String(value ?? "").replace(/[&<>"']/g, m => ({
         "&":"&amp;",
         "<":"&lt;",
         ">":"&gt;",
@@ -393,108 +509,125 @@
       }[m]));
     }
 
-    function getToken(){
-      const sp = new URLSearchParams(location.search);
-      return norm(sp.get("token"));
+    function norm(value){
+      return String(value ?? "").trim();
     }
 
-    function showState(type){
-      document.getElementById("loadingState").classList.add("hidden");
-      document.getElementById("successState").classList.add("hidden");
-      document.getElementById("errorState").classList.add("hidden");
+    function lower(value){
+      return norm(value).toLowerCase();
+    }
 
-      if (type === "success") {
-        document.getElementById("successState").classList.remove("hidden");
-      } else if (type === "error") {
-        document.getElementById("errorState").classList.remove("hidden");
+    function updateAccountLinks(user){
+      if (user) {
+        accountBtn.href = "member.html";
+        accountBtn.title = user.email || "會員中心";
+        accountBtn.setAttribute("aria-label", "會員中心");
       } else {
-        document.getElementById("loadingState").classList.remove("hidden");
+        accountBtn.href = "login.html";
+        accountBtn.title = "登入 / 會員中心";
+        accountBtn.setAttribute("aria-label", "登入 / 會員中心");
       }
     }
 
-    function renderSuccess(data){
-      const notice = document.getElementById("successNotice");
-      const meta = document.getElementById("successMeta");
-
-      const schoolName = norm(data?.schoolName || data?.verifiedSchoolName || "");
-      const schoolId = norm(data?.schoolId || data?.verifiedSchoolId || "");
-      const schoolEmail = norm(data?.schoolEmail || "");
-      const verifyMethod = norm(data?.verifyMethod || "email");
-
-      notice.innerHTML = `
-        驗證成功，校園身分已綁定到你的帳號。
-      `;
-
-      const rows = [
-        schoolName ? `
-          <div class="meta-row">
-            <div class="meta-label">學校</div>
-            <div class="meta-value">${esc(schoolName)}</div>
-          </div>
-        ` : "",
-        schoolId ? `
-          <div class="meta-row">
-            <div class="meta-label">schoolId</div>
-            <div class="meta-value">${esc(schoolId)}</div>
-          </div>
-        ` : "",
-        schoolEmail ? `
-          <div class="meta-row">
-            <div class="meta-label">學校信箱</div>
-            <div class="meta-value">${esc(schoolEmail)}</div>
-          </div>
-        ` : "",
-        `
-          <div class="meta-row">
-            <div class="meta-label">驗證方式</div>
-            <div class="meta-value">${esc(verifyMethod)}</div>
-          </div>
-        `
-      ].filter(Boolean).join("");
-
-      meta.innerHTML = rows;
-      showState("success");
+    function getQueryToken(){
+      const params = new URLSearchParams(location.search);
+      return norm(params.get("token") || "");
     }
 
-    function renderError(message){
-      const notice = document.getElementById("errorNotice");
-      notice.textContent = message || "驗證失敗，請重新操作。";
-      showState("error");
-    }
-
-    async function confirmToken(){
-      const token = getToken();
+    async function processVerification(user){
+      const token = getQueryToken();
 
       if (!token) {
-        renderError("缺少驗證 token，請重新從信件中的連結開啟。");
+        resultBox.innerHTML = `
+          <div class="notice warn" style="margin-top:0;">
+            缺少驗證 token，無法完成校園驗證。
+          </div>
+        `;
         return;
       }
 
-      showState("loading");
+      if (!user) {
+        resultBox.innerHTML = `
+          <div class="notice warn" style="margin-top:0;">
+            你目前尚未登入。
+            <br><br>
+            請先登入原本寄送驗證信時使用的帳號，再重新開啟這封驗證信中的連結。
+          </div>
+        `;
+        return;
+      }
 
       try {
+        const idToken = await user.getIdToken();
+
         const response = await fetch("/api/confirmCampusVerification", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + idToken
           },
           body: JSON.stringify({ token })
         });
 
-        const data = await response.json().catch(() => ({}));
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data?.error || "驗證失敗");
+          throw new Error(data.error || "驗證失敗");
         }
 
-        renderSuccess(data || {});
+        const verifiedSchoolName = norm(data.verifiedSchoolName || data.schoolName || "");
+        const verifiedSchoolId = norm(data.verifiedSchoolId || data.schoolId || "");
+        const schoolEmail = norm(data.schoolEmail || "");
+
+        resultBox.innerHTML = `
+          <div class="notice ok" style="margin-top:0;">
+            <strong>校園驗證成功</strong>
+            <br>
+            你的帳號已完成校園身分綁定。
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="kv">
+              <div class="k">綁定學校</div>
+              <div class="v">${esc(verifiedSchoolName || "-")} ${verifiedSchoolId ? `<span class="mono">${esc(verifiedSchoolId)}</span>` : ""}</div>
+            </div>
+            <div class="kv">
+              <div class="k">學校信箱</div>
+              <div class="v mono">${esc(schoolEmail || "-")}</div>
+            </div>
+            <div class="kv">
+              <div class="k">驗證帳號</div>
+              <div class="v mono">${esc(user.email || "-")}</div>
+            </div>
+          </div>
+
+          <div class="notice info">
+            你現在可以返回會員中心或活動頁面，系統會依照這個帳號的校園綁定狀態判斷活動資格。
+          </div>
+        `;
       } catch (err) {
         console.error(err);
-        renderError(err?.message || "驗證失敗，請稍後再試。");
+        resultBox.innerHTML = `
+          <div class="notice warn" style="margin-top:0;">
+            <strong>驗證失敗</strong>
+            <br>
+            ${esc(err.message || "處理失敗")}
+          </div>
+
+          <div class="notice info">
+            可能原因包含：
+            <br>1. 驗證連結已過期
+            <br>2. token 已使用
+            <br>3. 目前登入的不是原本送出驗證的帳號
+          </div>
+        `;
       }
     }
 
-    confirmToken();
+    firebase.auth().onAuthStateChanged(async (user) => {
+      updateAccountLinks(user || null);
+      await processVerification(user || null);
+    });
   </script>
 </body>
 </html>
