@@ -962,17 +962,15 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
         const meta = getTicketStatusMeta(ticket);
         const qrCanvasId = `qr_${index}_${ticket.id}`;
 
+        const seatDisplay = getSeatDisplay(ticket);
+
         return `
           <div class="ticket-card">
             <div class="ticket-head">
               <div class="ticket-head-top">
                 <div>
                   <h2 class="ticket-title">${esc(ticket.eventTitle || "未命名活動")}</h2>
-                  <div class="ticket-sub">
-票種：${esc(ticket.ticketTypeName || "-")}
-來源：${esc(getAccessSourceText(ticket))}
-身份：${esc(getOwnershipText(ticket))}
-                  </div>
+                  <div class="ticket-sub">${esc(ticket.ticketTypeName || "-")}｜${esc(getOwnershipText(ticket))}</div>
                 </div>
                 <span class="status ${meta.className}">${esc(meta.text)}</span>
               </div>
@@ -982,37 +980,10 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
               <div class="ticket-layout">
                 <div class="info-box">
                   <div class="kv">
-                    <div class="k">票券 ID</div>
-                    <div class="v mono">${esc(ticket.id)}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">訂單 ID</div>
-                    <div class="v mono">${esc(ticket.orderId || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">訂單位置</div>
-                    <div class="v">${esc(getTicketIndexText(ticket))}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">持票者</div>
-                    <div class="v">${esc(ticket.holderName || ticket.name || "-")}\n${esc(ticket.email || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">主購者</div>
-                    <div class="v">${esc(ticket.buyerEmail || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">票價</div>
-                    <div class="v">${esc(formatPrice(ticket.ticketPrice || 0))}</div>
-                  </div>
-                  <div class="kv">
                     <div class="k">座位</div>
-                    <div class="v">${esc(getSeatDisplay(ticket))}</div>
+                    <div class="v">${esc(seatDisplay !== "-" ? seatDisplay : "未分配座位")}</div>
                   </div>
-                  <div class="kv">
-                    <div class="k">建立時間</div>
-                    <div class="v">${esc(formatDateTime(ticket.createdAt))}</div>
-                  </div>
+                  ${ticket.checkedIn === true ? `
                   <div class="kv">
                     <div class="k">核銷時間</div>
                     <div class="v">${esc(formatDateTime(ticket.checkedInAt))}</div>
@@ -1020,11 +991,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
                   <div class="kv">
                     <div class="k">核銷入口</div>
                     <div class="v">${esc(ticket.checkedInGate || "-")}</div>
-                  </div>
-                  <div class="kv">
-                    <div class="k">核銷人員</div>
-                    <div class="v">${esc(ticket.checkedInByEmail || "-")}</div>
-                  </div>
+                  </div>` : ""}
                 </div>
 
                 <div class="qr-box">
