@@ -42,7 +42,9 @@ export async function onRequestPost(context) {
       return badRequest("此校尚未設定可用的學校信箱後綴");
     }
 
-    const emailDomainOk = allowedDomains.some((domain) => schoolEmail.endsWith(`@${domain}`));
+    const emailDomainOk = allowedDomains.some((domain) =>
+      schoolEmail.endsWith(`@${domain}`)
+    );
     if (!emailDomainOk) {
       return badRequest("學校信箱後綴不符合此校設定");
     }
@@ -265,24 +267,41 @@ async function verifyBearerUser(request, env) {
 }
 
 async function sendMail(env, { to, subject, html }) {
-  const fromEmail = norm(env.MAIL_FROM || "noreply@kmshteam.org");
-  const fromName = norm(env.MAIL_FROM_NAME || "Passium");
+  const apiKey = norm(env.RESEND_API_KEY);
+  const fromEmail = norm(env.RESEND_FROM_EMAIL);
+  const fromName = norm(env.RESEND_FROM_NAME || "Passium");
 
-  const resp = await fetch("https://api.mailchannels.net/tx/v1/send", {
+  if (!apiKey) {
+    throw new Error("缺少 RESEND_API_KEY");
+  }
+
+  if (!fromEmail) {
+    throw new Error("缺少 RESEND_FROM_EMAIL");
+  }
+
+  const from = `${fromName} <${fromEmail}>`;
+
+  const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: fromEmail, name: fromName },
+      from,
+      to: [to],
       subject,
-      content: [{ type: "text/html", value: html }]
+      html
     })
   });
 
+  const data = await resp.json().catch(() => ({}));
+
   if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(`寄信失敗：${text || resp.status}`);
+    throw new Error(`Resend 寄信失敗：${data?.message || data?.error || resp.status}`);
   }
+
+  return data;
 }
 
 /* ---------------- Firestore REST ---------------- */
