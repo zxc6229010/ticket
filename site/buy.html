@@ -1597,10 +1597,6 @@
 
       if (!seat) return false;
 
-      if (String(seat.id || "").startsWith("det_")) return false;
-      if (String(seat.label || "").startsWith("候選")) return false;
-      if (seat._detected === true) return false;
-
       const myUid = currentUser?.uid || "";
       const status = seat.computedStatus;
 
