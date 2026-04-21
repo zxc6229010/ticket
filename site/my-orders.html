@@ -744,13 +744,14 @@
     const status = lower(order.status);
     if (status === "expired") return true;
 
+    // 已完成的訂單不算逾期
+    if (["paid","completed","registered","ready_for_checkout"].includes(status)) return false;
+    if (lower(order.fillStatus || "") === "completed") return false;
+
     const expiresAt = toDate(order.expiresAt);
     if (!expiresAt) return false;
 
-    return (
-      Date.now() > expiresAt.getTime() &&
-      !["paid","completed","registered"].includes(status)
-    );
+    return Date.now() > expiresAt.getTime();
   }
 
   function getRealStatus(order){
@@ -762,7 +763,8 @@
 
     const map = {
       pending_holder_info: "待填持票人資料",
-      ready_for_checkout: "可進入下一步",
+      pending_payment: "待付款",
+      ready_for_checkout: "票券已建立",
       registered: "已建立",
       paid: "已付款",
       completed: "已完成",
@@ -841,6 +843,12 @@
   }
 
   function getCreatedTicketCount(order){
+    // 如果 fillStatus 是 completed，用 holderAssignments 數量
+    if (lower(order.fillStatus || "") === "completed") {
+      const assignments = getHolderAssignments(order);
+      if (assignments.length) return assignments.length;
+      return Number(order.totalQuantity || 0);
+    }
     return Number(order.ticketCount || order.createdTicketCount || 0);
   }
 
@@ -952,7 +960,9 @@
 
   function renderOrderList(orders){
     const listHtml = orders.map(o => {
-      const seatLabels = Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
+      const seatLabels = Array.isArray(o.selectedSeats) && o.selectedSeats.length
+        ? o.selectedSeats.map(s => norm(s.label || s.seatId || "")).filter(Boolean)
+        : Array.isArray(o.seatLabels) ? o.seatLabels.filter(Boolean) : [];
       const sectionIds = Array.isArray(o.sectionIds) ? o.sectionIds.filter(Boolean) : [];
       const participantEmails = Array.isArray(o.participantEmails) ? o.participantEmails.filter(Boolean) : [];
       const participantUids = Array.isArray(o.participantUids) ? o.participantUids.filter(Boolean) : [];
@@ -970,7 +980,7 @@
 
       const canFillNow =
         realStatus !== "expired" &&
-        ["pending_holder_info","ready_for_checkout"].includes(realStatus);
+        realStatus === "pending_holder_info";
 
       const itemSummaryText =
         Array.isArray(o.itemSummary) && o.itemSummary.length
@@ -1146,7 +1156,7 @@
           <select id="statusFilter" class="select">
             <option value="all">全部狀態</option>
             <option value="pending_holder_info">待填資料</option>
-            <option value="ready_for_checkout">可進下一步</option>
+            <option value="ready_for_checkout">票券已建立</option>
             <option value="registered">已建立</option>
             <option value="paid">已付款</option>
             <option value="completed">已完成</option>
