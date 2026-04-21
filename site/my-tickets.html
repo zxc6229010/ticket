@@ -1042,7 +1042,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
               <div class="ticket-head-top">
                 <div>
                   <h2 class="ticket-title">${esc(ticket.eventTitle || "未命名活動")}</h2>
-                  <div class="ticket-sub">${esc(ticket.ticketTypeName || "-")}</div>
+                  <div class="ticket-sub">${esc(ticket.ticketTypeName || "-")}｜${esc(getOwnershipText(ticket))}</div>
                 </div>
                 <span class="status ${meta.className}">${esc(meta.text)}</span>
               </div>
@@ -1079,6 +1079,12 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
                 <a class="btn" href="my-orders.html">查看訂單</a>
               </div>
 
+              <div style="margin-top:14px;">
+                <button class="wallet-btn" data-add-wallet="${esc(ticket.id)}" title="加入 Apple Wallet">
+                  <img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/downloads/Add_to_Apple_Wallet_rgb_US-UK.svg" alt="Add to Apple Wallet" style="height:44px;display:block;" />
+                </button>
+              </div>
+
               <div class="notice">
                 ${
                   meta.className === "status-valid"
@@ -1087,12 +1093,6 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
                     ? `此票券已完成入場核銷${ticket.checkedInGate ? `（入口：${ticket.checkedInGate}）` : ""}。`
                     : "此票券目前不可入場，若有問題請洽主辦單位或服務台。"
                 }
-              </div>
-
-              <div style="margin-top:14px;">
-                <button class="wallet-btn" data-add-wallet="${esc(ticket.id)}" title="加入 Apple Wallet">
-                  <img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/downloads/Add_to_Apple_Wallet_rgb_US-UK.svg" alt="Add to Apple Wallet" style="height:44px;display:block;" />
-                </button>
               </div>
             </div>
           </div>
