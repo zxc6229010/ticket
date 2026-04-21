@@ -1,82 +1,116 @@
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+
+function getFirebaseAdmin() {
+  if (!getApps().length) {
+    initializeApp({
+      credential: cert({
+        projectId: "concert-1ff7e",
+        clientEmail: "firebase-adminsdk-xxxxx@concert-1ff7e.iam.gserviceaccount.com",
+        privateKey: (globalThis.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n")
+      })
+    });
+  }
+
+  return {
+    auth: getAuth(),
+    db: getFirestore()
+  };
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8"
+    }
+  });
+}
+
 export async function onRequestPost(context) {
   try {
-    const { token } = await context.request.json();
+    globalThis.FIREBASE_PRIVATE_KEY = context.env.FIREBASE_PRIVATE_KEY;
+
+    const { db } = getFirebaseAdmin();
+    const body = await context.request.json();
+    const token = String(body.token || "").trim();
 
     if (!token) {
       return json({ error: "缺少 token" }, 400);
     }
 
-    // 讀 token
-    const res = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${context.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/campusVerificationTokens/${token}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${context.env.FIREBASE_SERVICE_TOKEN}`
-        }
-      }
-    );
+    const tokenRef = db.collection("campusVerificationTokens").doc(token);
+    const tokenSnap = await tokenRef.get();
 
-    if (!res.ok) {
-      return json({ error: "驗證連結無效" }, 400);
+    if (!tokenSnap.exists) {
+      return json({ error: "驗證連結不存在或已失效" }, 404);
     }
 
-    const data = await res.json();
-    const f = data.fields;
+    const tokenData = tokenSnap.data() || {};
+    const used = tokenData.used === true;
+    const uid = String(tokenData.uid || "").trim();
+    const schoolId = String(tokenData.schoolId || "").trim();
+    const schoolName = String(tokenData.schoolName || "").trim();
+    const schoolEmail = String(tokenData.schoolEmail || "").trim().toLowerCase();
+    const verifyMethod = String(tokenData.verifyMethod || "email").trim();
 
-    const schoolId = f.schoolId.stringValue;
-    const schoolEmail = f.schoolEmail.stringValue;
-    const studentCode = f.studentCode.stringValue;
-    const expiresAt = Number(f.expiresAt.integerValue);
-
-    if (Date.now() > expiresAt) {
-      return json({ error: "驗證連結已過期" }, 400);
+    if (!uid || !schoolId) {
+      return json({ error: "驗證資料不完整" }, 400);
     }
 
-    // 🔥 寫入 users（⚠️ 你這裡要用登入使用者 UID）
-    // 👉 這裡簡化：用 email_index 找 uid（你原本就有）
-
-    const emailKey = schoolEmail.toLowerCase();
-
-    const indexRes = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${context.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/email_index/${emailKey}`,
-      {
-        headers: {
-          "Authorization": `Bearer ${context.env.FIREBASE_SERVICE_TOKEN}`
-        }
-      }
-    );
-
-    if (!indexRes.ok) {
-      return json({ error: "找不到使用者" }, 400);
+    if (used) {
+      return json({ error: "此驗證連結已使用過" }, 400);
     }
 
-    const indexData = await indexRes.json();
-    const uid = indexData.fields.uid.stringValue;
-
-    // 寫 users
-    await fetch(
-      `https://firestore.googleapis.com/v1/projects/${context.env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${context.env.FIREBASE_SERVICE_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          fields: {
-            verifiedSchoolId: { stringValue: schoolId },
-            verifyMethod: { stringValue: "student_id" },
-            schoolEmail: { stringValue: schoolEmail },
-            studentCode: { stringValue: studentCode },
-            verifiedAt: { integerValue: Date.now() }
-          }
-        })
+    let expiresAtMs = 0;
+    try {
+      if (tokenData.expiresAt?.toDate) {
+        expiresAtMs = tokenData.expiresAt.toDate().getTime();
+      } else if (tokenData.expiresAt) {
+        expiresAtMs = new Date(tokenData.expiresAt).getTime();
       }
-    );
+    } catch (_) {}
 
-    return json({ ok: true });
+    if (!expiresAtMs || Date.now() > expiresAtMs) {
+      return json({ error: "此驗證連結已過期" }, 400);
+    }
 
+    const userRef = db.collection("users").doc(uid);
+
+    await db.runTransaction(async (tx) => {
+      const freshTokenSnap = await tx.get(tokenRef);
+      if (!freshTokenSnap.exists) {
+        throw new Error("驗證連結不存在");
+      }
+
+      const freshToken = freshTokenSnap.data() || {};
+      if (freshToken.used === true) {
+        throw new Error("此驗證連結已使用過");
+      }
+
+      tx.set(userRef, {
+        verifiedSchoolId: schoolId,
+        verifiedSchoolName: schoolName,
+        verifyMethod,
+        schoolEmail,
+        verifiedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      tx.update(tokenRef, {
+        used: true,
+        status: "verified",
+        verifiedAt: FieldValue.serverTimestamp()
+      });
+    });
+
+    return json({
+      ok: true,
+      schoolId,
+      schoolName,
+      schoolEmail
+    });
   } catch (err) {
-    return json({ error: err.message }, 500);
+    return json({ error: err.message || "驗證失敗" }, 500);
   }
 }
