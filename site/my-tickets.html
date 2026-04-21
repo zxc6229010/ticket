@@ -1074,12 +1074,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
                 </div>
               </div>
 
-              <div class="ticket-actions">
-                <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
-                <a class="btn" href="my-orders.html">查看訂單</a>
-              </div>
-
-              <div style="margin-top:14px;text-align:center;">
+              <div style="margin-top:16px;text-align:center;">
                 <button class="wallet-btn" data-add-wallet="${esc(ticket.id)}" title="加入 Apple Wallet" style="display:inline-flex;">
                   <img src="US-UK_Add_to_Apple_Wallet_RGB_101421.svg" alt="Add to Apple Wallet" style="height:44px;display:block;" />
                 </button>
