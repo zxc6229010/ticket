@@ -412,16 +412,9 @@
     }
 
     .ticket-layout{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 240px;
+      display:flex;
+      flex-direction:column;
       gap:16px;
-      align-items:start;
-    }
-
-    @media (max-width:680px){
-      .ticket-layout{
-        grid-template-columns:1fr;
-      }
     }
 
     .info-box{
@@ -959,13 +952,16 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
       if (!ticket) return;
 
       const btn = document.querySelector(`[data-add-wallet="${ticketId}"]`);
-      const oldSrc = btn ? btn.querySelector("img")?.src : null;
-      if (btn) { btn.disabled = true; btn.querySelector("img").style.opacity = "0.4"; }
+      const oldText = btn ? btn.textContent : "";
+      if (btn) { btn.disabled = true; btn.textContent = "處理中…"; }
 
       try {
-        const response = await fetch("/api/createWalletPass", {
+        const response = await fetch("https://api.pass2u.net/v2/models/374679/passes", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "9f907c6b29d59059f53019f425f48655"
+          },
           body: JSON.stringify({
             barcode: { message: ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}` },
             fields: [
@@ -992,7 +988,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
         console.error(e);
         alert("加入 Wallet 失敗：" + (e.message || "請稍後再試"));
       } finally {
-        if (btn) { btn.disabled = false; btn.querySelector("img").style.opacity = "1"; }
+        if (btn) { btn.disabled = false; btn.textContent = oldText; }
       }
     }
 
