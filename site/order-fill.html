@@ -843,11 +843,14 @@
           const indexData = indexSnap.data() || {};
           const uid = norm(indexData.uid || "");
           if (uid) {
-            const userSnap = await getDoc(doc(db, "users", uid));
-            if (userSnap.exists()) {
-              const data = userSnap.data() || {};
-              userResult = { uid, ...data };
-            }
+            // 直接從 email_index 取得所需欄位，不再讀 users（避免 permission-denied）
+            userResult = {
+              uid,
+              email: key,
+              verifiedSchoolId: norm(indexData.verifiedSchoolId || ""),
+              verifiedSchoolName: norm(indexData.verifiedSchoolName || ""),
+              verifyMethod: norm(indexData.verifyMethod || "")
+            };
           }
         }
       } catch (err) {

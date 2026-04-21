@@ -87,6 +87,21 @@ export async function onRequestPost(context) {
       true
     );
 
+    // 同步更新 email_index，讓前端查持票人資料時不需要讀 users
+    if (user.email) {
+      await firestoreSetDoc(
+        env,
+        `email_index/${user.email.toLowerCase()}`,
+        {
+          verifiedSchoolId: schoolId,
+          verifiedSchoolName: schoolName,
+          verifyMethod: "email",
+          updatedAt: now
+        },
+        true
+      );
+    }
+
     return json({
       ok: true,
       message: "校園驗證成功",
