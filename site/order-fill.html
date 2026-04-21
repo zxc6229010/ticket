@@ -1152,7 +1152,7 @@
           row: seatRow,
           seatNumber,
           floor: seatFloor,
-          qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${holderUid || lower(assignment.email)}`,
+          qrCodeValue: `${eventId}::${ticketId}`,
           status: "valid",
           checkedIn: false,
           createdAt: serverTimestamp(),

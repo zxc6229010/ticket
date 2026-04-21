@@ -788,10 +788,13 @@
       if (!code) return { eventId: "", ticketId: "" };
 
       if (code.includes("::")) {
-        const [eventId, ticketId] = code.split("::");
+        const parts = code.split("::");
+        // 新格式：eventId::ticketId（2段）
+        // 舊格式：eventId::orderId::holderIndex::uid（4段）
+        // 兩種格式都取 parts[0] 為 eventId，parts[1] 為 ticketId
         return {
-          eventId: norm(eventId),
-          ticketId: norm(ticketId)
+          eventId: norm(parts[0]),
+          ticketId: norm(parts[1])
         };
       }
 
