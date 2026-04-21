@@ -843,14 +843,11 @@
           const indexData = indexSnap.data() || {};
           const uid = norm(indexData.uid || "");
           if (uid) {
-            // 直接從 email_index 取得所需欄位，不再讀 users（避免 permission-denied）
-            userResult = {
-              uid,
-              email: key,
-              verifiedSchoolId: norm(indexData.verifiedSchoolId || ""),
-              verifiedSchoolName: norm(indexData.verifiedSchoolName || ""),
-              verifyMethod: norm(indexData.verifyMethod || "")
-            };
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if (userSnap.exists()) {
+              const data = userSnap.data() || {};
+              userResult = { uid, ...data };
+            }
           }
         }
       } catch (err) {
@@ -1110,37 +1107,37 @@
       const myEmail = lower(currentUser?.email || "");
 
       for (const assignment of assignments) {
-        try {
-          const ticketId = buildTicketId(order, assignment);
-          const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
-          const ticketSnap = await getDoc(ticketRef);
-          if (ticketSnap.exists()) continue;
+        const ticketId = buildTicketId(order, assignment);
+        const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
+        const ticketSnap = await getDoc(ticketRef);
+        if (ticketSnap.exists()) continue;
 
-          await setDoc(ticketRef, {
-            eventId,
-            eventTitle: norm(order.eventTitle || ""),
-            orderId: order.id,
-            uid: norm(assignment.uid),
-            buyerUid: myUid,
-            buyerEmail: myEmail,
-            email: lower(assignment.email),
-            holderEmail: lower(assignment.email),
-            holderName: norm(assignment.name),
-            isBuyerTicket: assignment.isBuyerTicket === true,
-            ticketTypeId: norm(assignment.ticketTypeId),
-            ticketTypeName: norm(assignment.ticketTypeName),
-            ticketPrice: Number(assignment.price || 0),
-            seatLabel: "",
-            sectionId: "",
-            qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${norm(assignment.uid || lower(assignment.email))}`,
-            status: "valid",
-            checkedIn: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-        } catch (err) {
-          console.warn("票券建立略過：", err?.message || err);
-        }
+        // uid 欄位存持票人 uid，若沒有則用主購者 uid（確保 my-tickets 能查到）
+        const holderUid = norm(assignment.uid) || myUid;
+
+        await setDoc(ticketRef, {
+          eventId,
+          eventTitle: norm(order.eventTitle || ""),
+          orderId: order.id,
+          uid: holderUid,
+          buyerUid: myUid,
+          buyerEmail: myEmail,
+          email: lower(assignment.email),
+          holderEmail: lower(assignment.email),
+          holderName: norm(assignment.name),
+          isBuyerTicket: assignment.isBuyerTicket === true,
+          ticketTypeId: norm(assignment.ticketTypeId),
+          ticketTypeName: norm(assignment.ticketTypeName),
+          ticketPrice: Number(assignment.price || 0),
+          orderTicketIndex: assignment.holderIndex,
+          seatLabel: "",
+          sectionId: "",
+          qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${holderUid || lower(assignment.email)}`,
+          status: "valid",
+          checkedIn: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
       }
     }
 
@@ -1266,11 +1263,7 @@
         holderState = flattenItems(currentOrder);
         renderPage();
 
-        if (asFinalSubmit) {
-          location.href = `my-tickets.html?success=1&orderId=${encodeURIComponent(orderId)}`;
-        } else {
-          alert("已儲存目前資料。");
-        }
+        alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
       } catch (err) {
         console.error("saveAssignments failed:", err);
         alert(err?.message || "儲存失敗，請查看 Console");
