@@ -497,6 +497,33 @@
       gap:10px;
       flex-wrap:wrap;
       margin-top:16px;
+      align-items:center;
+    }
+
+    .wallet-btn{
+      display:inline-flex;
+      align-items:center;
+      background:none;
+      border:none;
+      padding:0;
+      cursor:pointer;
+      transition:opacity .12s ease, transform .12s ease;
+    }
+
+    .wallet-btn:hover{
+      opacity:.85;
+      transform:translateY(-1px);
+    }
+
+    .wallet-btn:active{
+      opacity:.7;
+      transform:translateY(0);
+    }
+
+    .wallet-btn:disabled{
+      opacity:.4;
+      cursor:not-allowed;
+      transform:none;
     }
 
     .notice{
@@ -1049,7 +1076,9 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
 
               <div class="ticket-actions">
                 <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
-                <button class="btn" data-add-wallet="${esc(ticket.id)}">加入 Wallet</button>
+                <button class="wallet-btn" data-add-wallet="${esc(ticket.id)}" title="加入 Apple Wallet">
+                  <img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/downloads/Add_to_Apple_Wallet_rgb_US-UK.svg" alt="Add to Apple Wallet" style="height:42px;display:block;" />
+                </button>
                 <a class="btn" href="my-orders.html">查看訂單</a>
               </div>
 
