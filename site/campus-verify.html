@@ -48,6 +48,11 @@
       text-decoration:none;
     }
 
+    img{
+      display:block;
+      max-width:100%;
+    }
+
     .shell{
       min-height:100vh;
     }
@@ -147,7 +152,15 @@
     .page{
       max-width:var(--max);
       margin:0 auto;
-      padding:28px 22px 80px;
+      padding:38px 22px 80px;
+    }
+
+    .section{
+      margin-top:20px;
+    }
+
+    .section + .section{
+      margin-top:24px;
     }
 
     .back-row{
@@ -261,17 +274,30 @@
 
     .section-title{
       margin:0;
-      font-size:24px;
+      font-size:clamp(30px, 4vw, 48px);
+      line-height:1.04;
+      letter-spacing:-.04em;
       font-weight:800;
-      letter-spacing:-.03em;
+    }
+
+    .card .section-title{
+      font-size:24px;
       line-height:1.2;
+      letter-spacing:-.03em;
     }
 
     .section-sub{
-      margin-top:8px;
+      margin-top:10px;
+      max-width:760px;
       color:var(--muted);
-      font-size:14px;
+      font-size:15px;
       line-height:1.9;
+      white-space:pre-wrap;
+    }
+
+    .card .section-sub{
+      margin-top:8px;
+      font-size:14px;
     }
 
     .sub{
@@ -464,6 +490,15 @@
       overflow:hidden;
     }
 
+    .loading,
+    .empty{
+      padding:42px 0;
+      text-align:center;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.9;
+    }
+
     .footer{
       margin-top:78px;
       padding-top:26px;
@@ -517,7 +552,7 @@
       }
 
       .page{
-        padding:22px 16px 72px;
+        padding:28px 16px 72px;
       }
 
       .hero{
@@ -556,8 +591,6 @@
         <div class="nav-links">
           <a class="nav-link" href="index.html#featured">精選活動</a>
           <a class="nav-link" href="index.html#upcoming">即將開始</a>
-          <a class="nav-link" href="member.html">會員中心</a>
-          <a class="nav-link" href="my-tickets.html">我的票券</a>
         </div>
 
         <div class="nav-actions">
