@@ -1108,14 +1108,27 @@
       const myUid = norm(currentUser?.uid || "");
       const myEmail = lower(currentUser?.email || "");
 
+      const selectedSeats = Array.isArray(order.selectedSeats) ? order.selectedSeats : [];
+      const selectedSeatIds = Array.isArray(order.selectedSeatIds) ? order.selectedSeatIds : [];
+
       for (const assignment of assignments) {
         const ticketId = buildTicketId(order, assignment);
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
         const ticketSnap = await getDoc(ticketRef);
         if (ticketSnap.exists()) continue;
 
-        // uid 欄位存持票人 uid，若沒有則用主購者 uid（確保 my-tickets 能查到）
         const holderUid = norm(assignment.uid) || myUid;
+
+        // 依 holderIndex 對應座位
+        const seatIndex = assignment.holderIndex;
+        const seat = selectedSeats[seatIndex] || null;
+        const seatId = selectedSeatIds[seatIndex] || "";
+        const seatLabel = norm(seat?.label || seat?.seatLabel || "");
+        const seatSectionId = norm(seat?.sectionId || "");
+        const seatSectionName = norm(seat?.sectionName || "");
+        const seatRow = norm(seat?.row || "");
+        const seatNumber = norm(seat?.seatNumber || "");
+        const seatFloor = norm(seat?.floor || "");
 
         await setDoc(ticketRef, {
           eventId,
@@ -1132,8 +1145,13 @@
           ticketTypeName: norm(assignment.ticketTypeName),
           ticketPrice: Number(assignment.price || 0),
           orderTicketIndex: assignment.holderIndex,
-          seatLabel: "",
-          sectionId: "",
+          seatId,
+          seatLabel,
+          sectionId: seatSectionId,
+          sectionName: seatSectionName,
+          row: seatRow,
+          seatNumber,
+          floor: seatFloor,
           qrCodeValue: `${eventId}::${order.id}::${assignment.holderIndex}::${holderUid || lower(assignment.email)}`,
           status: "valid",
           checkedIn: false,
