@@ -1568,6 +1568,28 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
       }
 
       holderState = flattenItems(currentOrder);
+
+      // 若訂單已完成但票券尚未建立，自動補建
+      if (
+        lower(currentOrder.fillStatus) === "completed" &&
+        Array.isArray(currentOrder.holderAssignments) &&
+        currentOrder.holderAssignments.length > 0
+      ) {
+        try {
+          const ticketsSnap = await getDocs(collection(db, "events", eventId, "tickets"));
+          const existingOrderTickets = ticketsSnap.docs.filter(d => {
+            const data = d.data() || {};
+            return norm(data.orderId) === orderId;
+          });
+
+          if (existingOrderTickets.length === 0) {
+            await createTicketsForOrder(currentOrder, currentOrder.holderAssignments);
+          }
+        } catch (e) {
+          console.error("自動補建票券失敗：", e);
+        }
+      }
+
       renderPage();
     }
 
