@@ -412,9 +412,16 @@
     }
 
     .ticket-layout{
-      display:flex;
-      flex-direction:column;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 240px;
       gap:16px;
+      align-items:start;
+    }
+
+    @media (max-width:680px){
+      .ticket-layout{
+        grid-template-columns:1fr;
+      }
     }
 
     .info-box{
@@ -474,14 +481,14 @@
       display:flex;
       justify-content:center;
       align-items:center;
-      min-height:180px;
+      min-height:220px;
     }
 
     canvas.qr{
       background:#fff;
       border-radius:14px;
       padding:10px;
-      max-width:200px;
+      max-width:100%;
       height:auto;
     }
 
@@ -491,6 +498,7 @@
       flex-wrap:wrap;
       margin-top:16px;
       align-items:center;
+      justify-content:center;
     }
 
     .wallet-btn{
