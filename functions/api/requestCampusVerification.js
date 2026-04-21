@@ -75,7 +75,7 @@ async function sendVerificationEmail(env, { to, schoolName, studentCode, verifyU
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      from: "campus-verify@ticket.kmshteam.org",
+      from: "Passium <campus-verify@ticket.kmshteam.org>",
       to: [to],
       subject: `【${schoolName}】校園身分驗證信`,
       html: `
