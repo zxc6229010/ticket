@@ -927,6 +927,51 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
       canvas.classList.add("qr");
     }
 
+    async function addToWallet(ticketId){
+      const ticket = ticketCache.find(item => item.id === ticketId);
+      if (!ticket) return;
+
+      const btn = document.querySelector(`[data-add-wallet="${ticketId}"]`);
+      const oldText = btn ? btn.textContent : "";
+      if (btn) { btn.disabled = true; btn.textContent = "處理中…"; }
+
+      try {
+        const response = await fetch("https://api.pass2u.net/v2/models/374679/passes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "9f907c6b29d59059f53019f425f48655"
+          },
+          body: JSON.stringify({
+            barcode: { message: ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}` },
+            fields: [
+              { key: "ID",   value: norm(ticket.email || ticket.id) },
+              { key: "Name", value: norm(ticket.holderName || ticket.email || "-") },
+              { key: "Type", value: norm(ticket.ticketTypeName || "-") }
+            ]
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "建立票卡失敗");
+        }
+
+        const passUrl = data.passUrl || data.url || data.downloadUrl || data.link;
+        if (passUrl) {
+          window.open(passUrl, "_blank");
+        } else {
+          alert("票卡已建立，但無法取得下載連結，請稍後再試。");
+        }
+      } catch (e) {
+        console.error(e);
+        alert("加入 Wallet 失敗：" + (e.message || "請稍後再試"));
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = oldText; }
+      }
+    }
+
     async function drawQrToCanvas(canvasId, value){
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
@@ -1004,6 +1049,7 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
 
               <div class="ticket-actions">
                 <button class="btn btn-primary" data-view-ticket="${esc(ticket.id)}">放大 QR Code</button>
+                <button class="btn" data-add-wallet="${esc(ticket.id)}">加入 Wallet</button>
                 <a class="btn" href="my-orders.html">查看訂單</a>
               </div>
 
@@ -1028,6 +1074,10 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
 
       document.querySelectorAll("[data-view-ticket]").forEach(btn => {
         btn.onclick = () => showTicketModal(btn.dataset.viewTicket);
+      });
+
+      document.querySelectorAll("[data-add-wallet]").forEach(btn => {
+        btn.onclick = () => addToWallet(btn.dataset.addWallet);
       });
     }
 
