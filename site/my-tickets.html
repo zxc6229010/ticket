@@ -412,15 +412,14 @@
     }
 
     .ticket-layout{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 240px;
+      display:flex;
+      flex-direction:column;
       gap:16px;
-      align-items:start;
     }
 
     @media (max-width:680px){
       .ticket-layout{
-        grid-template-columns:1fr;
+        flex-direction:column;
       }
     }
 
@@ -498,6 +497,7 @@
       flex-wrap:wrap;
       margin-top:16px;
       align-items:center;
+      justify-content:center;
     }
 
     .wallet-btn{
