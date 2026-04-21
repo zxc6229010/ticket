@@ -23,8 +23,22 @@ export async function onRequestPost(context) {
     if (!verificationEnabled) return badRequest("此校目前未開放校園驗證");
 
     const schoolName = norm(schoolDoc.name || schoolDoc.schoolName || schoolId);
-    const emailSuffix = norm(schoolDoc.emailSuffix || schoolDoc.emailDomain || "gmail.com");
+
+    // 讀取信箱後綴，對應前端的 allowedEmailDomains
+    const allowedDomains = Array.isArray(schoolDoc.allowedEmailDomains)
+      ? schoolDoc.allowedEmailDomains.map(v => norm(v).toLowerCase()).filter(Boolean)
+      : [];
+    const emailSuffix = allowedDomains[0] ||
+      norm(schoolDoc.emailSuffix || schoolDoc.emailDomain || schoolDoc.schoolEmailDomain || schoolDoc.verifyEmailDomain || "");
+
+    if (!emailSuffix) return badRequest("此校尚未設定信箱後綴");
+
     const schoolEmail = `${studentCode}@${emailSuffix}`.toLowerCase();
+
+    // 檢查此學校信箱是否已被其他帳號驗證使用
+    const existingUsers = await firestoreQueryWhere(env, "users", "schoolEmail", "==", schoolEmail);
+    const takenByOther = existingUsers.find(u => u.uid !== user.uid && norm(u.verifiedSchoolId) === schoolId);
+    if (takenByOther) return badRequest("此學號信箱已被其他帳號驗證使用");
 
     // 產生驗證 token
     const token = generateToken();
@@ -226,6 +240,41 @@ async function verifyBearerUser(request, env) {
 }
 
 /* ---------------- Firestore REST ---------------- */
+
+async function firestoreQueryWhere(env, collection, field, op, value) {
+  const projectId = getProjectId(env);
+  const accessToken = await getGoogleAccessToken(env);
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: collection }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: field },
+            op: op === "==" ? "EQUAL" : op,
+            value: encodeValue(value)
+          }
+        },
+        limit: 5
+      }
+    })
+  });
+
+  const results = await resp.json().catch(() => []);
+  if (!resp.ok) return [];
+
+  return (Array.isArray(results) ? results : [])
+    .filter(r => r.document)
+    .map(r => decodeFirestoreDoc(r.document));
+}
 
 async function firestoreGetDoc(env, path) {
   const projectId = getProjectId(env);
