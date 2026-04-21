@@ -1266,7 +1266,11 @@
         holderState = flattenItems(currentOrder);
         renderPage();
 
-        alert(asFinalSubmit ? "持票人資料已完成，訂單已正式成立。" : "已儲存目前資料。");
+        if (asFinalSubmit) {
+          location.href = `my-tickets.html?success=1&orderId=${encodeURIComponent(orderId)}`;
+        } else {
+          alert("已儲存目前資料。");
+        }
       } catch (err) {
         console.error("saveAssignments failed:", err);
         alert(err?.message || "儲存失敗，請查看 Console");
