@@ -562,6 +562,9 @@
 
               <label>驗證提示連結（可空）</label>
               <input id="verifyHintUrl" type="text" placeholder="例如：https://webmail.xxx.edu.tw" />
+
+              <label>名單限制提示文字（可空）</label>
+              <textarea id="restrictedListHint" placeholder="例如：本活動僅開放校內同學報名，如有疑問請洽…"></textarea>
             </div>
 
             <div>
@@ -881,6 +884,9 @@
 
                     <label>驗證提示連結（可空）</label>
                     <input type="text" id="editVerifyHintUrl-${escAttr(id)}" value="${escAttr(school.verifyHintUrl || "")}" placeholder="例如：https://webmail.xxx.edu.tw" />
+
+                    <label>名單限制提示文字（可空）</label>
+                    <textarea id="editRestrictedListHint-${escAttr(id)}" placeholder="例如：本活動僅開放校內同學報名，如有疑問請洽…">${esc(school.restrictedListHint || "")}</textarea>
                   </div>
 
                   <div>
@@ -934,6 +940,7 @@
       const verificationEnabled = !!verificationEnabledEl.checked;
       const verifyHint = (document.getElementById("verifyHint")?.value || "").trim();
       const verifyHintUrl = (document.getElementById("verifyHintUrl")?.value || "").trim();
+      const restrictedListHint = (document.getElementById("restrictedListHint")?.value || "").trim();
 
       if (!name) {
         alert("請輸入學校名稱");
@@ -964,6 +971,7 @@
           allowedEmailDomains,
           verifyHint,
           verifyHintUrl,
+          restrictedListHint,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser ? currentUser.uid : "",
@@ -1028,6 +1036,7 @@
       const useGoogle = !!document.getElementById(`editMGoogle-${id}`)?.checked;
       const verifyHint = (document.getElementById(`editVerifyHint-${id}`)?.value || "").trim();
       const verifyHintUrl = (document.getElementById(`editVerifyHintUrl-${id}`)?.value || "").trim();
+      const restrictedListHint = (document.getElementById(`editRestrictedListHint-${id}`)?.value || "").trim();
 
       if (!name) {
         alert("學校名稱不能為空");
@@ -1052,6 +1061,7 @@
           allowedEmailDomains,
           verifyHint,
           verifyHintUrl,
+          restrictedListHint,
           updatedAt: serverTimestamp(),
           updatedBy: currentUser ? currentUser.uid : ""
         });

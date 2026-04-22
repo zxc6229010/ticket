@@ -1180,7 +1180,8 @@
       eventSchoolName,
       matchedSchool,
       restrictedByList,
-      matchedWhitelist
+      matchedWhitelist,
+      restrictedListHint
     }){
       if (!loggedIn) {
         return "請先登入後再報名，或輸入有效公關代碼。";
@@ -1191,7 +1192,7 @@
       }
 
       if (restrictedByList && !matchedWhitelist) {
-        return "這場活動有匯入限制名單，你目前不在名單內，因此不能報名。若你有公關代碼，可輸入公關代碼略過限制。";
+        return restrictedListHint || "這場活動有匯入限制名單，你目前不在名單內，因此不能報名。若你有公關代碼，可輸入公關代碼略過限制。";
       }
 
       return "目前無法確認報名資格，請稍後再試。";
@@ -1199,7 +1200,22 @@
 
     async function getEventById(id){
       const snap = await getDoc(doc(db, "events", id));
-      return snap.exists() ? { id: snap.id, ...(snap.data() || {}) } : null;
+      if (!snap.exists()) return null;
+      const event = { id: snap.id, ...(snap.data() || {}) };
+
+      // 如果活動沒有 ownerSchoolName，從 partnerSchools 查
+      if (!event.ownerSchoolName && event.ownerSchoolId) {
+        try {
+          const schoolSnap = await getDoc(doc(db, "partnerSchools", event.ownerSchoolId));
+          if (schoolSnap.exists()) {
+            const schoolData = schoolSnap.data() || {};
+            event.ownerSchoolName = norm(schoolData.name || "");
+            event.ownerSchoolRestrictedHint = norm(schoolData.restrictedListHint || "");
+          }
+        } catch (_) {}
+      }
+
+      return event;
     }
 
     async function loadCurrentUserProfile(){
@@ -1319,7 +1335,8 @@
             eventSchoolName,
             matchedSchool:false,
             restrictedByList:false,
-            matchedWhitelist:false
+            matchedWhitelist:false,
+            restrictedListHint: norm(currentEvent?.ownerSchoolRestrictedHint || "")
           })
         };
         return eligibilityState;
@@ -1360,7 +1377,8 @@
               eventSchoolName,
               matchedSchool,
               restrictedByList,
-              matchedWhitelist
+              matchedWhitelist,
+              restrictedListHint: norm(currentEvent?.ownerSchoolRestrictedHint || "")
             })
       };
 
