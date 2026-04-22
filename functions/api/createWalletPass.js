@@ -19,6 +19,7 @@ export async function onRequestPost(context) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "x-api-key": apiKey
       },
       body: JSON.stringify({ barcode, fields })
