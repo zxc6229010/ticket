@@ -1182,6 +1182,7 @@
       allowedList.innerHTML = rows.map(item => {
         const titleText = getRecordTitle(item);
         const displayFields = getDisplayFields(item);
+        const canReg = item.canRegister;
 
         return `
           <div class="item">
@@ -1190,9 +1191,9 @@
                 <div class="itemTitle">
                   ${esc(titleText)}
                   ${
-                    item.canRegister === true
+                    canReg === true
                       ? `<span class="pill ok">可報名</span>`
-                      : item.canRegister === false
+                      : canReg === false
                         ? `<span class="pill warn">不可報名</span>`
                         : ``
                   }
@@ -1210,13 +1211,37 @@
                 </div>
               </div>
 
-              <div class="row">
+              <div class="row" style="flex-direction:column; align-items:flex-end; gap:8px;">
+                ${
+                  canReg === false
+                    ? `<button class="btn btn-sm ok" data-toggle-register="${esc(item.id)}" data-toggle-val="true">設為可報名</button>`
+                    : `<button class="btn btn-sm warn" data-toggle-register="${esc(item.id)}" data-toggle-val="false">設為不可報名</button>`
+                }
                 <button class="btn btn-sm btn-danger" data-del-record="${esc(item.id)}">刪除</button>
               </div>
             </div>
           </div>
         `;
       }).join("");
+
+      allowedList.querySelectorAll("[data-toggle-register]").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.toggleRegister;
+          const newVal = btn.dataset.toggleVal === "true";
+          try {
+            await db.collection("events").doc(eventId).collection("allowedUsers").doc(id).update({
+              canRegister: newVal,
+              updatedAt: new Date()
+            });
+            const idx = allowedCache.findIndex(i => i.id === id);
+            if (idx >= 0) allowedCache[idx].canRegister = newVal;
+            renderAllowedList();
+          } catch (e) {
+            console.error(e);
+            alert("更新失敗：" + (e.message || e));
+          }
+        };
+      });
 
       allowedList.querySelectorAll("[data-del-record]").forEach(btn => {
         btn.onclick = () => deleteAllowedRecord(btn.dataset.delRecord);
