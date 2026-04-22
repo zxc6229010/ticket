@@ -64,6 +64,7 @@ export async function onRequestPost(context) {
         verifyMethod: "email",
         schoolEmail,
         studentCode,
+        studentId: studentCode,
         verifiedAt: now,
         pendingVerifySchoolId: "",
         pendingVerifySchoolName: "",

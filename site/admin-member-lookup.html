@@ -517,7 +517,7 @@
       const role = norm(u.role || "-");
       const enabled = u.enabled === true;
       const orgId = norm(u.orgId || "-");
-      const studentId = norm(u.studentId || "-");
+      const studentId = norm(u.studentId || u.studentCode || "-");
       const name = norm(u.name || u.displayName || "-");
 
       return `
