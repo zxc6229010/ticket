@@ -36,7 +36,10 @@ export async function onRequestPost(context) {
       });
     }
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify({
+      ...data,
+      passUrl: `https://www.pass2u.net/d/${data.passId}`
+    }), {
       status: 200,
       headers: { "content-type": "application/json" }
     });
