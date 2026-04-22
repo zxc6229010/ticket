@@ -656,10 +656,10 @@
     function renderEventNotice(){
       if (isPlatformRole(currentRole)) {
         eventNotice.style.display = "block";
-        eventNotice.innerHTML = `<div class="ok">你可管理所有活動名單</div>`;
+        eventNotice.innerHTML = `<div class="ok">你可管理所有活動名單，包含初始匯入設定。</div>`;
       } else {
         eventNotice.style.display = "block";
-        eventNotice.innerHTML = `<div class="ok">你可管理自己範圍內的活動名單</div>`;
+        eventNotice.innerHTML = `<div class="ok">你可為自己範圍內的活動補充匯入名單。<br><span class="small">欄位結構需與第一次匯入（由平台管理員設定）一致，且不能修改欄位設定。</span></div>`;
       }
     }
 
@@ -906,6 +906,36 @@
         buildChecks(matchFieldsBox, data.headers, currentMatchFields);
         buildChecks(titleFieldsBox, data.headers, currentTitleFields);
 
+        // 非平台角色：檢查欄位是否與第一次匯入一致，且鎖定勾選
+        const existingColumns = Array.isArray(eventDoc.allowedUserImportColumns) ? eventDoc.allowedUserImportColumns : [];
+        if (!isPlatformRole(currentRole)) {
+          if (!existingColumns.length) {
+            fileInfo.innerHTML = `<span class="warn">此活動尚未完成第一次匯入設定，請聯絡平台管理員先進行初始匯入。</span>`;
+            parsed = null;
+            importBtn.disabled = true;
+            matchFieldsBox.innerHTML = `<span class="small warn">需平台管理員先完成初始匯入</span>`;
+            titleFieldsBox.innerHTML = `<span class="small warn">需平台管理員先完成初始匯入</span>`;
+            return;
+          }
+
+          // 檢查欄位是否完全一致
+          const uploadedHeaders = new Set(data.headers.map(h => norm(h)));
+          const expectedHeaders = new Set(existingColumns.map(h => norm(h)));
+          const mismatched = [...uploadedHeaders].filter(h => !expectedHeaders.has(h))
+            .concat([...expectedHeaders].filter(h => !uploadedHeaders.has(h)));
+
+          if (mismatched.length) {
+            fileInfo.innerHTML = `<span class="warn">欄位不符合第一次匯入的結構，無法匯入。<br>預期欄位：${existingColumns.map(h => `<span class="pill">${esc(h)}</span>`).join(" ")}<br>不符合的欄位：${mismatched.map(h => `<span class="pill warn">${esc(h)}</span>`).join(" ")}</span>`;
+            parsed = null;
+            importBtn.disabled = true;
+            return;
+          }
+
+          // 鎖定欄位勾選（非平台角色不能改欄位設定）
+          matchFieldsBox.querySelectorAll("input[type=checkbox]").forEach(cb => { cb.disabled = true; });
+          titleFieldsBox.querySelectorAll("input[type=checkbox]").forEach(cb => { cb.disabled = true; });
+        }
+
         matchFieldsBox.onchange = updateImportBtn;
         titleFieldsBox.onchange = updateImportBtn;
 
@@ -925,6 +955,15 @@
 
     async function importRecords(){
       if (!eventId || !parsed) return;
+
+      // 非平台角色：確保已有初始匯入結構
+      if (!isPlatformRole(currentRole)) {
+        const existingColumns = Array.isArray(eventDoc.allowedUserImportColumns) ? eventDoc.allowedUserImportColumns : [];
+        if (!existingColumns.length) {
+          alert("此活動尚未完成第一次匯入設定，請聯絡平台管理員先進行初始匯入。");
+          return;
+        }
+      }
 
       const rows = parsed.rows;
       const headers = parsed.headers;
