@@ -13,7 +13,7 @@ export async function onRequestPost(context) {
     }
 
     const apiKey = env.PASS2U_API_KEY || "9f907c6b29d59059f53019f425f48655";
-    const modelId = "374679";
+    const modelId = "376973";
 
     const resp = await fetch(`https://api.pass2u.net/v2/models/${modelId}/passes`, {
       method: "POST",
