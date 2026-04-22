@@ -596,7 +596,13 @@
       setResult(`<div class="small">查詢中…</div>`);
 
       try {
-        const snap = await db.collection("users").limit(3000).get();
+        let snap;
+        if (["org_super","org_admin","org_staff"].includes(currentRole) && mySchoolId) {
+          // 組織角色：只查自己學校的
+          snap = await db.collection("users").where("schoolId","==",mySchoolId).limit(3000).get();
+        } else {
+          snap = await db.collection("users").limit(3000).get();
+        }
 
         const rows = [];
         snap.forEach(doc => {

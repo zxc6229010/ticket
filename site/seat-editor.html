@@ -1673,10 +1673,18 @@
       setLoadMsg("載入活動清單中…", "info");
       try {
         const snap = await db.collection("events").get();
-        const rows = [];
+        let rows = [];
         snap.forEach(docSnap => {
           rows.push({ id: docSnap.id, ...(docSnap.data() || {}) });
         });
+
+        // 非平台角色只顯示自己學校的活動
+        if (!["platform_super","platform_admin"].includes(currentRole)) {
+          const mySchoolId = norm(currentUserDoc?.schoolId || currentUserDoc?.orgSchoolId || "");
+          if (mySchoolId) {
+            rows = rows.filter(e => norm(e.ownerSchoolId || "") === mySchoolId);
+          }
+        }
 
         rows.sort((a, b) => {
           const ta = toDate(a.updatedAt)?.getTime() || toDate(a.createdAt)?.getTime() || 0;
