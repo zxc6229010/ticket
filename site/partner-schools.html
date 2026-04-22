@@ -556,6 +556,12 @@
 
               <label>允許信箱後綴</label>
               <textarea id="allowedEmailDomains" placeholder="每行一個"></textarea>
+
+              <label>驗證提示文字（可空）</label>
+              <input id="verifyHint" type="text" placeholder="例如：請使用學校 Webmail 收信" />
+
+              <label>驗證提示連結（可空）</label>
+              <input id="verifyHintUrl" type="text" placeholder="例如：https://webmail.xxx.edu.tw" />
             </div>
 
             <div>
@@ -869,6 +875,12 @@
 
                     <label>允許信箱後綴</label>
                     <textarea id="editDomains-${escAttr(id)}" placeholder="每行一個">${esc(domainsToText(allowedEmailDomains))}</textarea>
+
+                    <label>驗證提示文字（可空）</label>
+                    <input type="text" id="editVerifyHint-${escAttr(id)}" value="${escAttr(school.verifyHint || "")}" placeholder="例如：請使用學校 Webmail 收信" />
+
+                    <label>驗證提示連結（可空）</label>
+                    <input type="text" id="editVerifyHintUrl-${escAttr(id)}" value="${escAttr(school.verifyHintUrl || "")}" placeholder="例如：https://webmail.xxx.edu.tw" />
                   </div>
 
                   <div>
@@ -920,6 +932,8 @@
       const logoUrl = (logoEl.value || "").trim();
       const allowedEmailDomains = parseDomains(allowedEmailDomainsEl.value);
       const verificationEnabled = !!verificationEnabledEl.checked;
+      const verifyHint = (document.getElementById("verifyHint")?.value || "").trim();
+      const verifyHintUrl = (document.getElementById("verifyHintUrl")?.value || "").trim();
 
       if (!name) {
         alert("請輸入學校名稱");
@@ -948,6 +962,8 @@
           authMethods: methods,
           verificationEnabled,
           allowedEmailDomains,
+          verifyHint,
+          verifyHintUrl,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: currentUser ? currentUser.uid : "",
@@ -1010,6 +1026,8 @@
       const verificationEnabled = !!document.getElementById(`editVerification-${id}`)?.checked;
       const useStudent = !!document.getElementById(`editMStudent-${id}`)?.checked;
       const useGoogle = !!document.getElementById(`editMGoogle-${id}`)?.checked;
+      const verifyHint = (document.getElementById(`editVerifyHint-${id}`)?.value || "").trim();
+      const verifyHintUrl = (document.getElementById(`editVerifyHintUrl-${id}`)?.value || "").trim();
 
       if (!name) {
         alert("學校名稱不能為空");
@@ -1032,6 +1050,8 @@
           authMethods: methods,
           verificationEnabled,
           allowedEmailDomains,
+          verifyHint,
+          verifyHintUrl,
           updatedAt: serverTimestamp(),
           updatedBy: currentUser ? currentUser.uid : ""
         });

@@ -1196,6 +1196,16 @@
         }
 
         msg.innerHTML = `<span class="ok">驗證信已寄出，請到學校信箱收信。</span>`;
+
+        // 顯示學校自訂提示
+        const hint = (currentSchool?.verifyHint || "").trim();
+        const hintUrl = (currentSchool?.verifyHintUrl || "").trim();
+        if (hint || hintUrl) {
+          const hintHtml = hint
+            ? `<div style="margin-top:10px;font-size:14px;color:#374151;line-height:1.7;">${esc(hint)}${hintUrl ? ` <a href="${esc(hintUrl)}" target="_blank" rel="noopener" style="color:#1d4ed8;font-weight:700;">→ 前往收信</a>` : ""}</div>`
+            : `<div style="margin-top:10px;font-size:14px;"><a href="${esc(hintUrl)}" target="_blank" rel="noopener" style="color:#1d4ed8;font-weight:700;">→ 前往學校信箱</a></div>`;
+          msg.innerHTML += hintHtml;
+        }
       } catch (e) {
         console.error(e);
         msg.innerHTML = `<span class="warn">${esc(e.message || "寄送失敗")}</span>`;
