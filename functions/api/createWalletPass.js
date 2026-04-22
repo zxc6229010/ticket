@@ -27,7 +27,9 @@ export async function onRequestPost(context) {
     const data = await resp.json().catch(() => ({}));
 
     if (!resp.ok) {
-      return new Response(JSON.stringify({ error: data.message || "建立票卡失敗" }), {
+      const errMsg = data.message || data.error || JSON.stringify(data);
+      console.error("Pass2U error:", resp.status, errMsg);
+      return new Response(JSON.stringify({ error: errMsg, raw: data }), {
         status: resp.status,
         headers: { "content-type": "application/json" }
       });
