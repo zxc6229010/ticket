@@ -955,6 +955,9 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
       const img = btn ? btn.querySelector("img") : null;
       if (btn) { btn.disabled = true; if (img) img.style.opacity = "0.4"; }
 
+      // iOS Safari 只允許在使用者手勢內開新視窗，先開一個空白視窗佔位
+      const newWin = window.open("", "_blank");
+
       try {
         const response = await fetch("/api/createWalletPass", {
           method: "POST",
@@ -977,12 +980,18 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
 
         const passUrl = data.passUrl || data.url || data.downloadUrl || data.link;
         if (passUrl) {
-          window.open(passUrl, "_blank");
+          if (newWin) {
+            newWin.location.href = passUrl;
+          } else {
+            location.href = passUrl;
+          }
         } else {
+          if (newWin) newWin.close();
           alert("票卡已建立，但無法取得下載連結，請稍後再試。");
         }
       } catch (e) {
         console.error(e);
+        if (newWin) newWin.close();
         alert("加入 Wallet 失敗：" + (e.message || "請稍後再試"));
       } finally {
         if (btn) { btn.disabled = false; if (img) img.style.opacity = "1"; }
