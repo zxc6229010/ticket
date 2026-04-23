@@ -1277,18 +1277,14 @@
         ? currentEvent.allowedUserMatchFields
         : [];
 
-      // 取得學號（從 email_index 查）
-      let studentId = "";
-      try {
-        const eiSnap = await getDoc(doc(db, "email_index", emailKey)).catch(() => null);
-        if (eiSnap && eiSnap.exists()) {
-          studentId = norm(eiSnap.data()?.verifiedSchoolId || "");
-        }
-      } catch (_) {}
+      // 取得學號與學校信箱（從已載入的 currentUserProfile 取，不需要額外查詢）
+      const studentId = norm(currentUserProfile?.studentId || currentUserProfile?.studentCode || "");
+      const schoolEmail = lower(currentUserProfile?.schoolEmail || "");
 
       // 欄位對應值
       const fieldValueMap = {
         email: emailKey,
+        schoolEmail: schoolEmail,
         std_id: studentId,
         studentId: studentId,
         uid: currentUser.uid
@@ -1299,6 +1295,7 @@
       // 單欄位 fallback
       keysToCheck.add(currentUser.uid);
       if (emailKey) keysToCheck.add(emailKey);
+      if (schoolEmail && schoolEmail !== emailKey) keysToCheck.add(schoolEmail);
       if (studentId) keysToCheck.add(studentId);
 
       // 依照活動 matchFields 組合 key（例如 std_id｜email）
