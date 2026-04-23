@@ -1568,13 +1568,22 @@
       return null;
     }
 
+    function getPromoAllowsPublic(){
+      // 後台設定：公關代碼持有者是否也可以買一般票
+      return currentEvent?.promoAllowsPublic === true;
+    }
+
     function getVisibleTicketTypes(){
       if (hasPromoOverride()) {
         const boundType = findPromoBoundTicketType(promoState.data);
+        const allowPublic = getPromoAllowsPublic();
 
         return allTicketTypes.filter(type => {
-          if (type.visibility !== "promo") return true;
-          return !!boundType && type.id === boundType.id;
+          if (type.visibility === "promo") {
+            return !!boundType && type.id === boundType.id;
+          }
+          // 一般票：只有後台開啟「公關代碼可買一般票」才顯示
+          return allowPublic;
         });
       }
 
@@ -2693,24 +2702,35 @@ ${esc(desc)}
               throw new Error("你尚未完成此活動所屬學校的校園驗證。");
             }
 
-            const metaRef = doc(db, "events", eventId, "allowedUsers", "meta");
-            const allowedUidRef = doc(db, "events", eventId, "allowedUsers", currentUser.uid);
             const emailKey = lower(currentUser.email || "");
-            const allowedEmailRef = emailKey
-              ? doc(db, "events", eventId, "allowedUsers", emailKey)
-              : null;
+            const studentId = norm(currentUserProfile?.studentId || currentUserProfile?.studentCode || "");
+            const schoolEmail = lower(currentUserProfile?.schoolEmail || "");
 
-            const [metaSnap, uidSnap, emailSnap, listSnap] = await Promise.all([
+            const keysToCheck = new Set([currentUser.uid]);
+            if (emailKey) keysToCheck.add(emailKey);
+            if (schoolEmail && schoolEmail !== emailKey) keysToCheck.add(schoolEmail);
+            if (studentId) keysToCheck.add(studentId);
+
+            const metaRef = doc(db, "events", eventId, "allowedUsers", "meta");
+            const allowedRefs = [...keysToCheck].map(key =>
+              doc(db, "events", eventId, "allowedUsers", key)
+            );
+
+            const [metaSnap, listSnap, ...allowedSnaps] = await Promise.all([
               tx.get(metaRef),
-              tx.get(allowedUidRef),
-              allowedEmailRef ? tx.get(allowedEmailRef) : Promise.resolve(null),
-              getDocs(query(collection(db, "events", eventId, "allowedUsers"), limit(10)))
+              getDocs(query(collection(db, "events", eventId, "allowedUsers"), limit(10))),
+              ...allowedRefs.map(ref => tx.get(ref))
             ]);
 
             const metaEnabled = metaSnap.exists() && metaSnap.data()?.enabled === true;
             const hasImportedDocs = listSnap.docs.some(d => d.id !== "meta");
             const restrictedByList = metaEnabled || hasImportedDocs;
-            const matchedWhitelist = uidSnap.exists() || !!(emailSnap && emailSnap.exists());
+
+            const matchedDoc = allowedSnaps.find(s => s.exists());
+            const matchedWhitelist = !!matchedDoc && (
+              !("canRegister" in (matchedDoc.data() || {})) ||
+              matchedDoc.data().canRegister !== false
+            );
 
             if (restrictedByList && !matchedWhitelist) {
               throw new Error("你不在此活動允許的報名名單中。");

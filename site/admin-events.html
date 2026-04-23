@@ -632,6 +632,13 @@
               <option value="true">開啟</option>
             </select>
           </div>
+          <div class="switchRow" style="margin-top:10px;">
+            <span class="pill">公關代碼可否購買一般票</span>
+            <select id="promoAllowsPublic" style="max-width:220px;">
+              <option value="false">否（只能買公關票）</option>
+              <option value="true">是（可買一般票與公關票）</option>
+            </select>
+          </div>
         </div>
 
         <div style="margin-top:12px;">
@@ -765,6 +772,7 @@
     const eventEndAtEl = document.getElementById("eventEndAt");
 
     const promoCodeEnabledEl = document.getElementById("promoCodeEnabled");
+    const promoAllowsPublicEl = document.getElementById("promoAllowsPublic");
     const addPromoBtn = document.getElementById("addPromoBtn");
     const promoList = document.getElementById("promoList");
 
@@ -1661,6 +1669,7 @@
       eventEndAtEl.value = "";
 
       promoCodeEnabledEl.value = "false";
+        promoAllowsPublicEl.value = "false";
       promoCodesState = [];
       ticketTypesState = [];
       gateAssignmentsState = [];
@@ -1828,6 +1837,7 @@
         eventEndAtEl.value = toInputDateTime(e.eventEndAt);
 
         promoCodeEnabledEl.value = e.promoCodeEnabled === true ? "true" : "false";
+        promoAllowsPublicEl.value = e.promoAllowsPublic === true ? "true" : "false";
         promoCodesState = Array.isArray(e.promoCodes)
           ? e.promoCodes.map(item => normalizePromoItem(item))
           : [];
@@ -1953,6 +1963,7 @@
           eventEndAt: parseInputDateTime(eventEndAtEl.value),
 
           promoCodeEnabled: promoCodeEnabledEl.value === "true",
+          promoAllowsPublic: promoAllowsPublicEl.value === "true",
           promoCodes,
           ticketTypes,
           gates,
