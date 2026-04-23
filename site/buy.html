@@ -1227,6 +1227,20 @@
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
         currentUserProfile = snap.exists() ? (snap.data() || {}) : {};
+
+        // 若 users 裡沒有 verifiedSchoolId，從 email_index 補
+        if (!currentUserProfile.verifiedSchoolId && currentUser.email) {
+          try {
+            const eiSnap = await getDoc(doc(db, "email_index", lower(currentUser.email)));
+            if (eiSnap.exists()) {
+              const eiData = eiSnap.data() || {};
+              if (eiData.verifiedSchoolId) {
+                currentUserProfile.verifiedSchoolId = eiData.verifiedSchoolId;
+                currentUserProfile.verifiedSchoolName = eiData.verifiedSchoolName || "";
+              }
+            }
+          } catch (_) {}
+        }
       } catch (err) {
         console.error("loadCurrentUserProfile failed:", err);
         currentUserProfile = {};
