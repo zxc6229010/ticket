@@ -1143,6 +1143,17 @@
         const seatNumber = norm(seat?.seatNumber || "");
         const seatFloor = norm(seat?.floor || "");
 
+        const holderStudentId = norm(
+          assignment.isBuyerTicket
+            ? (buyerProfile?.studentId || buyerProfile?.studentCode || "")
+            : (assignment.studentId || assignment.studentCode || "")
+        );
+        const holderSchoolEmail = lower(
+          assignment.isBuyerTicket
+            ? (buyerProfile?.schoolEmail || "")
+            : (assignment.schoolEmail || "")
+        );
+
         await setDoc(ticketRef, {
           eventId,
           eventTitle: norm(order.eventTitle || ""),
@@ -1153,6 +1164,10 @@
           email: lower(assignment.email),
           holderEmail: lower(assignment.email),
           holderName: norm(assignment.name),
+          studentId: holderStudentId,
+          studentCode: holderStudentId,
+          schoolEmail: holderSchoolEmail,
+          promoCode: norm(order.promoCode || ""),
           isBuyerTicket: assignment.isBuyerTicket === true,
           ticketTypeId: norm(assignment.ticketTypeId),
           ticketTypeName: norm(assignment.ticketTypeName),

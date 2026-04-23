@@ -962,8 +962,8 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
           body: JSON.stringify({
             barcode: { message: ticket.qrCodeValue || `${ticket.eventId}::${ticket.id}` },
             fields: [
-              { key: "ID",   value: norm(ticket.email || ticket.id) },
-              { key: "Name", value: norm(ticket.holderName || ticket.email || "-") },
+              { key: "ID",   value: norm(ticket.studentId || ticket.studentCode || ticket.promoCode || ticket.email || ticket.id) },
+              { key: "Name", value: norm(ticket.holderName || ticket.name || ticket.email || "-") },
               { key: "Type", value: norm(ticket.ticketTypeName || "-") }
             ]
           })
