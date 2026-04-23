@@ -684,6 +684,7 @@
 
     let currentUser = null;
     let currentOrder = null;
+    let buyerProfile = null;
     let holderState = [];
     let checkingMap = {};
     let userDocCache = new Map();
@@ -813,9 +814,15 @@
 
       const uid = norm(user.uid || "");
       const email = lower(user.email || "");
+      const studentId = norm(buyerProfile?.studentId || buyerProfile?.studentCode || "");
+      const schoolEmail = lower(buyerProfile?.schoolEmail || "");
 
       return allowedUsersCache.some(item => {
-        return (uid && norm(item.uid) === uid) || (email && lower(item.email) === email);
+        if (uid && norm(item.uid) === uid) return true;
+        if (email && lower(item.email) === email) return true;
+        if (schoolEmail && schoolEmail !== email && lower(item.email) === schoolEmail) return true;
+        if (studentId && (norm(item.studentCode) === studentId || item.id === studentId)) return true;
+        return false;
       });
     }
 
@@ -824,9 +831,15 @@
 
       const buyerUid = norm(order?.buyerUid || order?.uid || "");
       const buyerEmail = lower(order?.buyerEmail || order?.email || "");
+      const studentId = norm(buyerProfile?.studentId || buyerProfile?.studentCode || "");
+      const schoolEmail = lower(buyerProfile?.schoolEmail || "");
 
       return allowedUsersCache.some(item => {
-        return (buyerUid && norm(item.uid) === buyerUid) || (buyerEmail && lower(item.email) === buyerEmail);
+        if (buyerUid && norm(item.uid) === buyerUid) return true;
+        if (buyerEmail && lower(item.email) === buyerEmail) return true;
+        if (schoolEmail && schoolEmail !== buyerEmail && lower(item.email) === schoolEmail) return true;
+        if (studentId && (norm(item.studentCode) === studentId || item.id === studentId)) return true;
+        return false;
       });
     }
 
@@ -1579,6 +1592,14 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
       }
 
       await loadAllowedUsers();
+
+      // 載入買家 users doc，取得學號與學校信箱供白名單比對
+      if (currentUser) {
+        try {
+          const buyerSnap = await getDoc(doc(db, "users", currentUser.uid));
+          buyerProfile = buyerSnap.exists() ? (buyerSnap.data() || {}) : null;
+        } catch (_) {}
+      }
 
       const buyerUid = norm(currentOrder.buyerUid || currentOrder.uid || "");
       const buyerEmail = lower(currentOrder.buyerEmail || currentOrder.email || "");
