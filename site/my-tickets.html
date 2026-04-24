@@ -1050,6 +1050,16 @@ QR 內容：<span class="mono">${esc(ticket.qrCodeValue || `${ticket.eventId}::$
             <div class="ticket-body">
               <div class="ticket-layout">
                 <div class="info-box">
+                  ${(ticket.studentId || ticket.studentCode) ? `
+                  <div class="kv">
+                    <div class="k">學號</div>
+                    <div class="v">${esc(ticket.studentId || ticket.studentCode)}</div>
+                  </div>` : ""}
+                  ${ticket.holderName ? `
+                  <div class="kv">
+                    <div class="k">姓名</div>
+                    <div class="v">${esc(ticket.holderName)}</div>
+                  </div>` : ""}
                   <div class="kv">
                     <div class="k">座位</div>
                     <div class="v">${esc(seatDisplay !== "-" ? seatDisplay : "未分配座位")}</div>
