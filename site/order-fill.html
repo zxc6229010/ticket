@@ -657,6 +657,8 @@
       getDoc,
       getDocs,
       collection,
+      query,
+      where,
       setDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -919,7 +921,7 @@
             isBuyerTicket,
 
             email: isBuyerTicket ? buyerEmail : lower(existing.email || ""),
-            name: norm(existing.name || ""),
+            name: norm(existing.name || (isBuyerTicket ? (buyerProfile?.name || "") : "")),
             uid: isBuyerTicket ? buyerUid : norm(existing.uid || ""),
 
             verifiedSchoolId: norm(existing.verifiedSchoolId || ""),
@@ -1005,6 +1007,21 @@
       if (!email) {
         item.status = "";
         item.message = "請先填寫持票人 Email。";
+        renderPage();
+        return;
+      }
+
+      // 檢查是否與其他持票人（含主購者）重複
+      const buyerEmail = lower(currentUser?.email || "");
+      const duplicateWithBuyer = email === buyerEmail;
+      const duplicateWithOther = holderState.some((other, otherIdx) =>
+        otherIdx !== index && !other.isBuyerTicket && lower(other.email || "") === email
+      );
+      if (duplicateWithBuyer || duplicateWithOther) {
+        item.status = "invalid";
+        item.message = duplicateWithBuyer
+          ? "此 Email 為主購者本人，不可重複填寫。"
+          : "此 Email 已被其他持票人使用，每人只能持有一張票。";
         renderPage();
         return;
       }
@@ -1124,6 +1141,29 @@
       const selectedSeats = Array.isArray(order.selectedSeats) ? order.selectedSeats : [];
       const selectedSeatIds = Array.isArray(order.selectedSeatIds) ? order.selectedSeatIds : [];
 
+      // 預先批次查詢所有持票人的 users doc（用 email 查），統一從系統帳號取姓名
+      const holderEmails = [...new Set(
+        assignments.map(a => lower(a.email || "")).filter(Boolean)
+      )];
+      const emailToUserData = {};
+      if (holderEmails.length > 0) {
+        try {
+          // Firestore `in` 每次最多 30 個
+          for (let i = 0; i < holderEmails.length; i += 30) {
+            const chunk = holderEmails.slice(i, i + 30);
+            const snap = await getDocs(query(
+              collection(db, "users"),
+              where("email", "in", chunk)
+            ));
+            snap.docs.forEach(d => {
+              const data = d.data();
+              const e = lower(data.email || "");
+              if (e) emailToUserData[e] = data;
+            });
+          }
+        } catch (_) {}
+      }
+
       for (const assignment of assignments) {
         const ticketId = buildTicketId(order, assignment);
         const ticketRef = doc(db, "events", eventId, "tickets", ticketId);
@@ -1143,15 +1183,16 @@
         const seatNumber = norm(seat?.seatNumber || "");
         const seatFloor = norm(seat?.floor || "");
 
+        const holderUserData = emailToUserData[lower(assignment.email || "")] || null;
         const holderStudentId = norm(
           assignment.isBuyerTicket
             ? (buyerProfile?.studentId || buyerProfile?.studentCode || "")
-            : (assignment.studentId || assignment.studentCode || "")
+            : (holderUserData?.studentId || holderUserData?.studentCode || assignment.studentId || assignment.studentCode || "")
         );
         const holderSchoolEmail = lower(
           assignment.isBuyerTicket
             ? (buyerProfile?.schoolEmail || "")
-            : (assignment.schoolEmail || "")
+            : (holderUserData?.schoolEmail || assignment.schoolEmail || "")
         );
 
         await setDoc(ticketRef, {
@@ -1163,7 +1204,7 @@
           buyerEmail: myEmail,
           email: lower(assignment.email),
           holderEmail: lower(assignment.email),
-          holderName: norm(assignment.name),
+          holderName: norm(emailToUserData[lower(assignment.email || "")]?.name || assignment.name || ""),
           studentId: holderStudentId,
           studentCode: holderStudentId,
           schoolEmail: holderSchoolEmail,
