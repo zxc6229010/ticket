@@ -1053,6 +1053,14 @@
           return;
         }
 
+        // 檢查校園驗證是否與活動所屬學校相符
+        const eventSchoolId = norm(eventData?.schoolId || eventData?.ownerSchoolId || "");
+        if (eventSchoolId && verifiedSchoolId !== eventSchoolId) {
+          item.status = "invalid";
+          item.message = "此會員的校園驗證學校與本活動不符。";
+          return;
+        }
+
         if (hasAllowedUserRestriction() && !isAllowedHolderUser(user)) {
           item.status = "invalid";
           item.message = "此會員不在本活動允許參加名單內。";
@@ -1640,6 +1648,12 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
       }
 
       currentOrder = await getOrder();
+
+      // 載入活動資料，取得 schoolId 供校園驗證比對
+      try {
+        const eventSnap = await getDoc(doc(db, "events", eventId));
+        eventData = eventSnap.exists() ? (eventSnap.data() || {}) : null;
+      } catch (_) {}
 
       if (!currentOrder) {
         app.className = "empty";
