@@ -853,19 +853,24 @@
       let userResult = null;
 
       try {
-        const indexSnap = await getDoc(doc(db, "email_index", key));
-        if (indexSnap.exists()) {
-          const indexData = indexSnap.data() || {};
-          const uid = norm(indexData.uid || "");
-          if (uid) {
-            userResult = {
-              uid,
-              email: key,
-              verifiedSchoolId: norm(indexData.verifiedSchoolId || ""),
-              verifiedSchoolName: norm(indexData.verifiedSchoolName || ""),
-              verifyMethod: norm(indexData.verifyMethod || "")
-            };
-          }
+        // 先從 users collection 用 email 欄位查（登入 email）
+        const usersSnap = await getDocs(query(
+          collection(db, "users"),
+          where("email", "==", key)
+        ));
+
+        if (!usersSnap.empty) {
+          const data = usersSnap.docs[0].data() || {};
+          userResult = {
+            uid: norm(data.uid || usersSnap.docs[0].id || ""),
+            email: key,
+            verifiedSchoolId: norm(data.verifiedSchoolId || ""),
+            verifiedSchoolName: norm(data.verifiedSchoolName || ""),
+            verifyMethod: norm(data.verifyMethod || ""),
+            name: norm(data.name || ""),
+            studentId: norm(data.studentId || data.studentCode || ""),
+            schoolEmail: lower(data.schoolEmail || "")
+          };
         }
       } catch (err) {
         console.error("getUserDocByEmail failed", err);
@@ -1573,7 +1578,7 @@ ${expired ? "此訂單已超過填寫期限。" : ""}
             holderState[idx].verifiedSchoolId = "";
             holderState[idx].verifiedSchoolName = "";
             holderState[idx].verifyMethod = "";
-            renderPage();
+            // 不呼叫 renderPage()，避免重繪 DOM 導致 input 失焦
           });
         }
 
