@@ -640,6 +640,13 @@
             </select>
           </div>
         </div>
+        <div class="box" style="margin-top:12px;">
+          <div class="switchRow">
+            <span class="pill">每人最多訂單數</span>
+            <input type="number" id="maxOrdersPerUser" min="0" max="99" placeholder="0 = 不限制" style="max-width:220px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px;" />
+          </div>
+          <div style="font-size:12px; color:#888; margin-top:6px;">設為 0 或留空表示不限制。</div>
+        </div>
 
         <div style="margin-top:12px;">
           <div class="row" style="justify-content:space-between;">
@@ -773,6 +780,7 @@
 
     const promoCodeEnabledEl = document.getElementById("promoCodeEnabled");
     const promoAllowsPublicEl = document.getElementById("promoAllowsPublic");
+    const maxOrdersPerUserEl = document.getElementById("maxOrdersPerUser");
     const addPromoBtn = document.getElementById("addPromoBtn");
     const promoList = document.getElementById("promoList");
 
@@ -1670,6 +1678,7 @@
 
       promoCodeEnabledEl.value = "false";
         promoAllowsPublicEl.value = "false";
+        maxOrdersPerUserEl.value = "";
       promoCodesState = [];
       ticketTypesState = [];
       gateAssignmentsState = [];
@@ -1838,6 +1847,7 @@
 
         promoCodeEnabledEl.value = e.promoCodeEnabled === true ? "true" : "false";
         promoAllowsPublicEl.value = e.promoAllowsPublic === true ? "true" : "false";
+        maxOrdersPerUserEl.value = e.maxOrdersPerUser ? String(e.maxOrdersPerUser) : "";
         promoCodesState = Array.isArray(e.promoCodes)
           ? e.promoCodes.map(item => normalizePromoItem(item))
           : [];
@@ -1964,6 +1974,7 @@
 
           promoCodeEnabled: promoCodeEnabledEl.value === "true",
           promoAllowsPublic: promoAllowsPublicEl.value === "true",
+          maxOrdersPerUser: parseInt(maxOrdersPerUserEl.value || "0", 10) || 0,
           promoCodes,
           ticketTypes,
           gates,

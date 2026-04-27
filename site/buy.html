@@ -938,6 +938,7 @@
       getDocs,
       collection,
       query,
+      where,
       limit,
       onSnapshot,
       runTransaction,
@@ -2708,6 +2709,22 @@ ${esc(desc)}
           const freshEvent = freshEventSnap.data() || {};
           const freshStatus = getEventStatus(freshEvent);
           if (freshStatus.key !== "selling") throw new Error("目前不能建立訂單");
+
+          // 每人訂單數限制
+          const maxOrdersPerUser = parseInt(freshEvent.maxOrdersPerUser || "0", 10) || 0;
+          if (maxOrdersPerUser > 0) {
+            const existingOrdersSnap = await getDocs(query(
+              collection(db, "events", eventId, "orders"),
+              where("buyerUid", "==", currentUser.uid)
+            ));
+            const validOrders = existingOrdersSnap.docs.filter(d => {
+              const s = norm(d.data().status || "");
+              return !["cancelled", "expired", "failed", "void"].includes(s);
+            });
+            if (validOrders.length >= maxOrdersPerUser) {
+              throw new Error(`每人最多只能建立 ${maxOrdersPerUser} 筆訂單，你已達上限。`);
+            }
+          }
 
           const eventSchoolId = getEventSchoolId(freshEvent);
 
