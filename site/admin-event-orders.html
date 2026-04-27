@@ -394,7 +394,7 @@
             <label style="margin-top:0;">操作</label>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
               <button class="btn" id="reloadBtn">重新載入</button>
-            <button class="btn" id="exportCsvBtn">匯出 Excel</button>
+            <button class="btn" id="exportCsvBtn">匯出 CSV</button>
             </div>
           </div>
         </div>
@@ -406,7 +406,6 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -720,6 +719,11 @@
       btn.disabled = true;
       btn.textContent = "匯出中…";
 
+      function csvCell(v){
+        const s = String(v ?? "").replace(/"/g, '""');
+        return `"${s}"`;
+      }
+
       function tsToLocal(ts){
         if (!ts) return "";
         const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -727,7 +731,6 @@
       }
 
       try {
-        // 批次查詢主購者 users doc 取得姓名與手機
         const uidToUser = {};
         const uids = [...new Set(filtered.map(o => norm(o.buyerUid || o.uid || "")).filter(Boolean))];
         for (let i = 0; i < uids.length; i += 30) {
@@ -737,11 +740,11 @@
         }
 
         const headers = [
-          "訂單ID", "活動", "主購Email", "主購UID",
-          "主購姓名", "主購手機",
-          "票種", "張數", "金額", "訂單狀態", "付款狀態",
-          "座位", "區域", "學號", "學校",
-          "公關代碼", "建立時間", "備註"
+          "訂單ID","活動","主購Email","主購UID",
+          "主購姓名","主購手機",
+          "票種","張數","金額","訂單狀態","付款狀態",
+          "座位","區域","學號","學校",
+          "公關代碼","建立時間","備註"
         ];
 
         const rows = filtered.map(order => {
@@ -768,102 +771,6 @@
             norm(order.promoCode || order.inviteCode || ""),
             tsToLocal(order.createdAt),
             norm(order.adminNote || order.note || "")
-          ];
-        });
-
-        const wsData = [headers, ...rows];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // 自動欄寬
-        const colWidths = headers.map((h, i) => {
-          const maxLen = Math.max(h.length, ...rows.map(r => String(r[i] || "").length));
-          return { wch: Math.min(maxLen + 2, 40) };
-        });
-        ws["!cols"] = colWidths;
-
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "訂單");
-
-        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        const blob = new Blob([wbout], { type: "application/octet-stream" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `orders_${new Date().toISOString().slice(0,10)}.xlsx`;
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
-
-      } catch(e) {
-        console.error(e);
-        alert("匯出失敗：" + (e.message || "請稍後再試"));
-      } finally {
-        btn.disabled = false;
-        btn.textContent = oldTxt;
-      }
-    }  async function exportCsv(){
-      const filtered = getFilteredOrders();
-      if (!filtered.length) { alert("沒有可匯出的資料"); return; }
-
-      const btn = document.getElementById("exportCsvBtn");
-      const oldTxt = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = "匯出中…";
-
-      function csvCell(v){
-        const s = String(v ?? "").replace(/"/g, '""');
-        return `"${s}"`;
-      }
-
-      function tsToLocal(ts){
-        if (!ts) return "";
-        const d = ts.toDate ? ts.toDate() : new Date(ts);
-        return isNaN(d) ? "" : d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
-      }
-
-      try {
-        // 批次查詢主購者 users doc 取得姓名與手機
-        const uidToUser = {};
-        const uids = [...new Set(filtered.map(o => norm(o.buyerUid || o.uid || "")).filter(Boolean))];
-        for (let i = 0; i < uids.length; i += 30) {
-          const chunk = uids.slice(i, i + 30);
-          const snap = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "in", chunk).get();
-          snap.docs.forEach(d => { uidToUser[d.id] = d.data() || {}; });
-        }
-
-        const headers = [
-          "訂單ID", "活動", "主購Email", "主購UID",
-          "主購姓名", "主購手機",
-          "票種", "張數", "金額", "訂單狀態", "付款狀態",
-          "座位", "區域", "學號", "學校",
-          "公關代碼", "建立時間", "備註"
-        ];
-
-        const rows = filtered.map(order => {
-          const uid = norm(order.buyerUid || order.uid || "");
-          const userDoc = uidToUser[uid] || {};
-          const seatLabels = Array.isArray(order.seatLabels) ? order.seatLabels.join("、") : "";
-          const sectionIds = Array.isArray(order.sectionIds) ? order.sectionIds.join("、") : "";
-          return [
-            order.id,
-            norm(order.eventTitle || order.eventId || ""),
-            norm(order.buyerEmail || order.email || ""),
-            uid,
-            norm(userDoc.name || order.holderName || ""),
-            norm(userDoc.phone || ""),
-            norm(order.ticketTypeName || ""),
-            norm(order.totalQuantity || order.quantity || ""),
-            norm(order.totalAmount ?? ""),
-            norm(order.status || ""),
-            norm(order.paymentStatus || ""),
-            seatLabels,
-            sectionIds,
-            norm(order.studentId || order.studentCode || userDoc.studentId || userDoc.studentCode || ""),
-            norm(order.verifiedSchoolName || userDoc.verifiedSchoolName || ""),
-            norm(order.promoCode || order.inviteCode || ""),
-            tsToLocal(order.createdAt),
-            norm(order.adminNote || order.note || "")
           ].map(csvCell).join(",");
         });
 
@@ -874,9 +781,10 @@
         const a = document.createElement("a");
         a.href = url;
         a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`;
+        a.style.display = "none";
         document.body.appendChild(a);
         a.click();
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
       } catch(e) {
         console.error(e);
         alert("匯出失敗：" + (e.message || "請稍後再試"));
