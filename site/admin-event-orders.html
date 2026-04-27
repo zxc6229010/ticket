@@ -783,7 +783,17 @@
 
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "訂單");
-        XLSX.writeFile(wb, `orders_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([wbout], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `orders_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
 
       } catch(e) {
         console.error(e);
