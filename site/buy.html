@@ -939,6 +939,7 @@
       collection,
       query,
       limit,
+      onSnapshot,
       runTransaction,
       Timestamp,
       serverTimestamp
@@ -977,6 +978,7 @@
     let selectedTicketTypeId = "";
     let selectedQty = 0;
     let selectedSeatIds = [];
+    let seatUnsubscribe = null;
 
     let promoState = {
       code: "",
@@ -1433,39 +1435,52 @@
       return eligibilityState;
     }
 
+    function parseSeatDoc(d){
+      const now = Date.now();
+      const data = d.data() || {};
+      const heldUntilDate = toDate(data.heldUntil);
+      const heldUntilMs = heldUntilDate ? heldUntilDate.getTime() : 0;
+
+      let computedStatus = norm(data.status || "available");
+      if (computedStatus === "held" && heldUntilMs && heldUntilMs < now) {
+        computedStatus = "available";
+      }
+
+      return {
+        id: d.id,
+        ...data,
+        x: getSafeNumber(data.x, 0),
+        y: getSafeNumber(data.y, 0),
+        price: getSafeNumber(data.price, 0),
+        rotation: getSafeNumber(data.rotation, 0),
+        label: norm(data.label || d.id),
+        row: norm(data.row || ""),
+        seatNumber: norm(data.seatNumber || ""),
+        sectionId: norm(data.sectionId || ""),
+        floor: norm(data.floor || "1F"),
+        heldBy: norm(data.heldBy || ""),
+        soldToUid: norm(data.soldToUid || ""),
+        orderId: norm(data.orderId || ""),
+        computedStatus,
+        heldUntilDate
+      };
+    }
+
     async function loadSeats(){
       const snap = await getDocs(collection(db, "events", eventId, "seats"));
-      const now = Date.now();
+      allSeats = snap.docs.map(parseSeatDoc);
+    }
 
-      allSeats = snap.docs.map(d => {
-        const data = d.data() || {};
-        const heldUntilDate = toDate(data.heldUntil);
-        const heldUntilMs = heldUntilDate ? heldUntilDate.getTime() : 0;
-
-        let computedStatus = norm(data.status || "available");
-        if (computedStatus === "held" && heldUntilMs && heldUntilMs < now) {
-          computedStatus = "available";
-        }
-
-        return {
-          id: d.id,
-          ...data,
-          x: getSafeNumber(data.x, 0),
-          y: getSafeNumber(data.y, 0),
-          price: getSafeNumber(data.price, 0),
-          rotation: getSafeNumber(data.rotation, 0),
-          label: norm(data.label || d.id),
-          row: norm(data.row || ""),
-          seatNumber: norm(data.seatNumber || ""),
-          sectionId: norm(data.sectionId || ""),
-          floor: norm(data.floor || "1F"),
-          heldBy: norm(data.heldBy || ""),
-          soldToUid: norm(data.soldToUid || ""),
-          orderId: norm(data.orderId || ""),
-          computedStatus,
-          heldUntilDate
-        };
-      });
+    function startSeatListener(){
+      if (seatUnsubscribe) seatUnsubscribe();
+      seatUnsubscribe = onSnapshot(
+        collection(db, "events", eventId, "seats"),
+        (snap) => {
+          allSeats = snap.docs.map(parseSeatDoc);
+          renderPage();
+        },
+        (err) => console.warn("seat listener error:", err)
+      );
     }
 
     function normalizeTicketTypeItem(item, index){
@@ -2922,6 +2937,7 @@ ${esc(desc)}
 
       if (getSeatingEnabled(currentEvent) && getSeatingMode(currentEvent) === "assigned") {
         await loadSeats();
+        startSeatListener();
       } else {
         allSeats = [];
       }
