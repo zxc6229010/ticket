@@ -2808,9 +2808,11 @@ ${esc(desc)}
 
           seatPayloads.forEach(({ ref }) => {
             tx.update(ref, {
-              status: "held",
-              heldBy: currentUser.uid,
-              heldUntil: expiresAt,
+              status: "sold",
+              soldToUid: currentUser.uid,
+              soldAt: serverTimestamp(),
+              heldBy: "",
+              heldUntil: null,
               orderId: orderRef.id,
               updatedAt: serverTimestamp()
             });
