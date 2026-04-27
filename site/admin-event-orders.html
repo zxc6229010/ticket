@@ -1019,6 +1019,29 @@
           }
         }
 
+        // 對 seatLabels 空的訂單，從票券補座位資料
+        const ordersNeedingSeatFix = allRows.filter(order =>
+          (!Array.isArray(order.seatLabels) || order.seatLabels.length === 0) &&
+          order.eventId && order.id
+        );
+
+        for (const order of ordersNeedingSeatFix) {
+          try {
+            const ticketSnap = await db.collection("events").doc(order.eventId)
+              .collection("tickets").where("orderId", "==", order.id).get();
+            if (!ticketSnap.empty) {
+              const seatLabels = ticketSnap.docs
+                .map(d => norm(d.data().seatLabel || d.data().seat || ""))
+                .filter(Boolean);
+              const sectionNames = [...new Set(ticketSnap.docs
+                .map(d => norm(d.data().sectionName || d.data().sectionId || ""))
+                .filter(Boolean))];
+              if (seatLabels.length) order.seatLabels = seatLabels;
+              if (sectionNames.length) order.sectionIds = sectionNames;
+            }
+          } catch(e) { /* 查不到票券就略過 */ }
+        }
+
         orderCache = allRows.sort((a, b) => {
           const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
