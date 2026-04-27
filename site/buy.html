@@ -2750,8 +2750,23 @@ ${esc(desc)}
 
             if (status === "sold") throw new Error("部分座位已售出，請重新選位");
             if (status === "disabled") throw new Error("部分座位不可使用，請重新選位");
-            if (status === "held" && heldBy && heldBy !== currentUser.uid && !holdExpired) {
+            // 座位被他人 hold 且未過期 → 擋住
+            if (heldBy && heldBy !== currentUser.uid && !holdExpired) {
               throw new Error("部分座位已被其他人保留，請重新選位");
+            }
+            // 座位已有其他訂單綁定 → 擋住
+            const seatOrderId = norm(seat.orderId || "");
+            if (seatOrderId && seatOrderId !== orderRef.id) {
+              // 確認那筆訂單是否還有效
+              const existingOrderRef = doc(db, "events", eventId, "orders", seatOrderId);
+              const existingOrderSnap = await tx.get(existingOrderRef);
+              if (existingOrderSnap.exists()) {
+                const existingOrder = existingOrderSnap.data() || {};
+                const existingStatus = norm(existingOrder.status || "");
+                if (!["cancelled", "expired", "failed"].includes(existingStatus)) {
+                  throw new Error("部分座位已被其他訂單佔用，請重新選位");
+                }
+              }
             }
 
             seatPayloads.push({ ref, seat });

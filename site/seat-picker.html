@@ -851,7 +851,7 @@
       doc, getDoc,
       collection, getDocs, addDoc,
       query, where,
-      serverTimestamp, writeBatch, updateDoc, runTransaction,
+      serverTimestamp, writeBatch, updateDoc,
       Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -1050,19 +1050,17 @@
     // ============================================================
     async function holdSeat(seatId){
       const ref = doc(db, "events", currentEvent.id, "seats", seatId);
-      await runTransaction(db, async (tx) => {
-        const snap = await tx.get(ref);
-        if (!snap.exists()) throw new Error("座位不存在");
-        const seat = { seatId, ...(snap.data() || {}) };
-        const check = canSeatBeChosen(seat);
-        if (!check.ok) throw new Error(getSeatReasonText(seat));
-        const vs = getSeatVisualState(seat);
-        if (!["available","mine"].includes(vs)) throw new Error("此座位已被鎖定或售出");
-        tx.update(ref, {
-          heldBy: currentUser.uid,
-          heldUntil: new Date(Date.now() + HOLD_MINUTES * 60000),
-          updatedAt: serverTimestamp()
-        });
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error("座位不存在");
+      const seat = { seatId, ...(snap.data() || {}) };
+      const check = canSeatBeChosen(seat);
+      if (!check.ok) throw new Error(getSeatReasonText(seat));
+      const vs = getSeatVisualState(seat);
+      if (!["available","mine"].includes(vs)) throw new Error("此座位已被鎖定或售出");
+      await updateDoc(ref, {
+        heldBy: currentUser.uid,
+        heldUntil: new Date(Date.now() + HOLD_MINUTES * 60000),
+        updatedAt: serverTimestamp()
       });
     }
 
