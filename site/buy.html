@@ -2758,16 +2758,11 @@ ${esc(desc)}
           ? doc(db, "events", eventId, "promoCodes", promoCodeValue)
           : null;
 
-        await runTransaction(db, async (tx) => {
-          const freshEventSnap = await tx.get(eventRef);
-          if (!freshEventSnap.exists()) throw new Error("活動不存在");
-
-          const freshEvent = freshEventSnap.data() || {};
-          const freshStatus = getEventStatus(freshEvent);
-          if (freshStatus.key !== "selling") throw new Error("目前不能建立訂單");
-
-          // 每人訂單數限制
-          const maxOrdersPerUser = parseInt(freshEvent.maxOrdersPerUser || "0", 10) || 0;
+        // 每人訂單數限制（在 transaction 外查詢，避免 batchGet 錯誤）
+        const preCheckEventSnap = await getDoc(eventRef);
+        if (preCheckEventSnap.exists()) {
+          const preCheckEvent = preCheckEventSnap.data() || {};
+          const maxOrdersPerUser = parseInt(preCheckEvent.maxOrdersPerUser || "0", 10) || 0;
           if (maxOrdersPerUser > 0) {
             const existingOrdersSnap = await getDocs(query(
               collection(db, "events", eventId, "orders"),
@@ -2781,6 +2776,21 @@ ${esc(desc)}
               throw new Error(`每人最多只能建立 ${maxOrdersPerUser} 筆訂單，你已達上限。`);
             }
           }
+        }
+
+        // 預先查詢白名單（不能在 transaction 裡用 getDocs）
+        let preListSnap = null;
+        try {
+          preListSnap = await getDocs(query(collection(db, "events", eventId, "allowedUsers"), limit(10)));
+        } catch(_) {}
+
+        await runTransaction(db, async (tx) => {
+          const freshEventSnap = await tx.get(eventRef);
+          if (!freshEventSnap.exists()) throw new Error("活動不存在");
+
+          const freshEvent = freshEventSnap.data() || {};
+          const freshStatus = getEventStatus(freshEvent);
+          if (freshStatus.key !== "selling") throw new Error("目前不能建立訂單");
 
           const eventSchoolId = getEventSchoolId(freshEvent);
 
@@ -2804,14 +2814,13 @@ ${esc(desc)}
               doc(db, "events", eventId, "allowedUsers", key)
             );
 
-            const [metaSnap, listSnap, ...allowedSnaps] = await Promise.all([
+            const [metaSnap, ...allowedSnaps] = await Promise.all([
               tx.get(metaRef),
-              getDocs(query(collection(db, "events", eventId, "allowedUsers"), limit(10))),
               ...allowedRefs.map(ref => tx.get(ref))
             ]);
 
             const metaEnabled = metaSnap.exists() && metaSnap.data()?.enabled === true;
-            const hasImportedDocs = listSnap.docs.some(d => d.id !== "meta");
+            const hasImportedDocs = preListSnap ? preListSnap.docs.some(d => d.id !== "meta") : false;
             const restrictedByList = metaEnabled || hasImportedDocs;
 
             const matchedDoc = allowedSnaps.find(s => s.exists());
@@ -3046,4 +3055,3 @@ ${esc(desc)}
   </script>
 </body>
 </html>
-嘻呱
