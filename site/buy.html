@@ -1772,6 +1772,7 @@
         if (heldBy && heldBy !== currentUser.uid && !holdExpired) throw new Error("此座位已被他人保留");
 
         tx.update(ref, {
+          status: "held",
           heldBy: currentUser.uid,
           heldUntil: Timestamp.fromDate(new Date(Date.now() + HOLD_MINUTES * 60000)),
           updatedAt: serverTimestamp()
@@ -1789,6 +1790,7 @@
         if (norm(data.heldBy || "") !== currentUser.uid) return;
         if (norm(data.status || "") === "sold") return;
         tx.update(ref, {
+          status: "available",
           heldBy: "",
           heldUntil: null,
           updatedAt: serverTimestamp()
