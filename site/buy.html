@@ -1706,6 +1706,11 @@
         if (!allowed.includes(norm(seat.sectionId || ""))) return false;
       }
 
+      // 檢查座位是否限制特定票種
+      if (Array.isArray(seat.allowedTicketTypes) && seat.allowedTicketTypes.length > 0) {
+        if (!seat.allowedTicketTypes.includes(type.id)) return false;
+      }
+
       return true;
     }
 
@@ -1718,6 +1723,13 @@
       if (status === "disabled") return "disabled";
       if (status === "held" && seat.heldBy && seat.heldBy === myUid) return "mine";
       if (status === "held" && seat.heldBy && seat.heldBy !== myUid) return "hold-other";
+
+      // 座位限制票種，且當前選的票種不符合 → 顯示為 disabled
+      const type = getSelectedTicketType();
+      if (type && Array.isArray(seat.allowedTicketTypes) && seat.allowedTicketTypes.length > 0) {
+        if (!seat.allowedTicketTypes.includes(type.id)) return "disabled";
+      }
+
       return "free";
     }
 
@@ -2854,6 +2866,11 @@ ${esc(desc)}
             // 座位必須是本人 hold 或未被 hold
             if (heldBy && heldBy !== currentUser.uid) {
               throw new Error("部分座位保留已過期或已被他人取得，請重新選位");
+            }
+            // 檢查座位是否限制特定票種
+            const seatAllowedTypes = Array.isArray(seat.allowedTicketTypes) ? seat.allowedTicketTypes : [];
+            if (seatAllowedTypes.length > 0 && !seatAllowedTypes.includes(selectedTicketTypeId)) {
+              throw new Error(`此座位僅限特定票種使用，請重新選位`);
             }
 
 
