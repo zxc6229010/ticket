@@ -2896,13 +2896,12 @@ ${esc(desc)}
             }
           }
 
+          // 座位維持 held 狀態，等 order-fill.html 確認完成後才改成 sold
+          // heldUntil 延長到訂單過期時間，確保填寫期間座位不會被釋放
           seatPayloads.forEach(({ ref }) => {
             tx.update(ref, {
-              status: "sold",
-              soldToUid: currentUser.uid,
-              soldAt: serverTimestamp(),
-              heldBy: "",
-              heldUntil: null,
+              heldBy: currentUser.uid,
+              heldUntil: expiresAt,
               orderId: orderRef.id,
               updatedAt: serverTimestamp()
             });

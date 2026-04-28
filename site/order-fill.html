@@ -660,6 +660,7 @@
       query,
       where,
       setDoc,
+      writeBatch,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -1360,6 +1361,28 @@
 
         if (asFinalSubmit) {
           await createTicketsForOrder(currentOrder, assignments);
+
+          // 把座位從 held 改成 sold
+          const seatIds = Array.isArray(currentOrder.selectedSeatIds) ? currentOrder.selectedSeatIds : [];
+          if (seatIds.length > 0) {
+            try {
+              const batch = writeBatch(db);
+              seatIds.forEach(seatId => {
+                const seatRef = doc(db, "events", eventId, "seats", seatId);
+                batch.update(seatRef, {
+                  status: "sold",
+                  soldToUid: currentUser.uid,
+                  soldAt: serverTimestamp(),
+                  heldBy: "",
+                  heldUntil: null,
+                  updatedAt: serverTimestamp()
+                });
+              });
+              await batch.commit();
+            } catch(e) {
+              console.warn("座位狀態更新失敗", e);
+            }
+          }
         }
 
         currentOrder = await getOrder();
