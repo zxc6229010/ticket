@@ -1733,6 +1733,8 @@
 
       if (selectedSeatIds.includes(seatId)) {
         selectedSeatIds = selectedSeatIds.filter(id => id !== seatId);
+        // 釋放 hold
+        releaseSeat(seatId).catch(e => console.warn("releaseSeat error", e));
         renderPage();
         return;
       }
@@ -1744,6 +1746,54 @@
 
       selectedSeatIds = [...selectedSeatIds, seatId];
       renderPage();
+      // 寫入 hold
+      holdSeat(seatId).catch(e => {
+        console.warn("holdSeat error", e);
+        selectedSeatIds = selectedSeatIds.filter(id => id !== seatId);
+        renderPage();
+        alert("座位暫時無法保留，請重新選擇。");
+      });
+    }
+
+    async function holdSeat(seatId){
+      if (!currentUser) return;
+      const ref = doc(db, "events", eventId, "seats", seatId);
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) throw new Error("座位不存在");
+        const data = snap.data() || {};
+        const status = norm(data.status || "available");
+        const heldBy = norm(data.heldBy || "");
+        const heldUntilMs = data.heldUntil?.toMillis ? data.heldUntil.toMillis() : 0;
+        const holdExpired = heldUntilMs && heldUntilMs < Date.now();
+
+        if (status === "sold") throw new Error("此座位已售出");
+        if (status === "disabled") throw new Error("此座位不可使用");
+        if (heldBy && heldBy !== currentUser.uid && !holdExpired) throw new Error("此座位已被他人保留");
+
+        tx.update(ref, {
+          heldBy: currentUser.uid,
+          heldUntil: Timestamp.fromDate(new Date(Date.now() + HOLD_MINUTES * 60000)),
+          updatedAt: serverTimestamp()
+        });
+      });
+    }
+
+    async function releaseSeat(seatId){
+      if (!currentUser) return;
+      const ref = doc(db, "events", eventId, "seats", seatId);
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) return;
+        const data = snap.data() || {};
+        if (norm(data.heldBy || "") !== currentUser.uid) return;
+        if (norm(data.status || "") === "sold") return;
+        tx.update(ref, {
+          heldBy: "",
+          heldUntil: null,
+          updatedAt: serverTimestamp()
+        });
+      });
     }
 
     function autoPickSeats(){
@@ -1775,8 +1825,12 @@
     }
 
     function clearSeats(){
+      const toRelease = [...selectedSeatIds];
       selectedSeatIds = [];
       renderPage();
+      toRelease.forEach(seatId => {
+        releaseSeat(seatId).catch(e => console.warn("releaseSeat error", e));
+      });
     }
 
     function getEligibilityNotice(){
@@ -2785,6 +2839,10 @@ ${esc(desc)}
             // 座位被他人 hold 且未過期 → 擋住
             if (heldBy && heldBy !== currentUser.uid && !holdExpired) {
               throw new Error("部分座位已被其他人保留，請重新選位");
+            }
+            // 座位必須是本人 hold 或未被 hold
+            if (heldBy && heldBy !== currentUser.uid) {
+              throw new Error("部分座位保留已過期或已被他人取得，請重新選位");
             }
             // 座位已有其他訂單綁定 → 擋住
             const seatOrderId = norm(seat.orderId || "");
