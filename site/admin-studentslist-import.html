@@ -433,6 +433,7 @@
           </div>
           <div class="row">
             <button class="btn btn-sm" id="reloadAllowedBtn">重新載入</button>
+            <button class="btn btn-sm" id="exportAllowedBtn">匯出名單 CSV</button>
             <button class="btn btn-sm btn-danger" id="clearAllowedBtn">清空全部名單</button>
           </div>
         </div>
@@ -511,6 +512,7 @@
     const resultSummary = document.getElementById("resultSummary");
 
     const reloadAllowedBtn = document.getElementById("reloadAllowedBtn");
+    const exportAllowedBtn = document.getElementById("exportAllowedBtn");
     const clearAllowedBtn = document.getElementById("clearAllowedBtn");
     const allowedSearch = document.getElementById("allowedSearch");
     const registerFilter = document.getElementById("registerFilter");
@@ -1170,6 +1172,55 @@
       return item.name || item.email || item.studentId || "(未命名)";
     }
 
+    function exportAllowedCsv(){
+      if (!allowedCache.length) { alert("目前沒有名單資料可匯出"); return; }
+
+      function csvCell(v){
+        const s = String(v ?? "").replace(/"/g, '""');
+        return `"${s}"`;
+      }
+
+      function tsToLocal(ts){
+        if (!ts) return "";
+        const d = ts.toDate ? ts.toDate() : new Date(ts);
+        return isNaN(d) ? "" : d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+      }
+
+      // 從所有資料收集欄位（排除系統欄位）
+      const systemKeys = new Set(["id", "updatedAt", "canRegister", "importedAt"]);
+      const dataKeys = new Set();
+      allowedCache.forEach(row => {
+        Object.keys(row).forEach(k => {
+          if (!systemKeys.has(k)) dataKeys.add(k);
+        });
+      });
+      const keys = [...dataKeys];
+
+      const headers = ["doc_id", ...keys, "canRegister", "updatedAt"];
+
+      const rows = allowedCache.map(row => {
+        return [
+          row.id,
+          ...keys.map(k => row[k] ?? ""),
+          row.canRegister !== false ? "是" : "否",
+          tsToLocal(row.updatedAt)
+        ].map(csvCell).join(",");
+      });
+
+      const bom = "﻿";
+      const csv = bom + [headers.map(csvCell).join(","), ...rows].join("
+");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `allowedUsers_${new Date().toISOString().slice(0,10)}.csv`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+    }
+
     function renderAllowedList(){
       const rows = allowedCache.filter(recordMatches);
       allowedCount.textContent = rows.length;
@@ -1346,6 +1397,7 @@
     }
 
     reloadAllowedBtn.onclick = loadAllowedUsers;
+    exportAllowedBtn.onclick = exportAllowedCsv;
     clearAllowedBtn.onclick = clearAllAllowedRecords;
     allowedSearch.oninput = renderAllowedList;
     registerFilter.onchange = renderAllowedList;
