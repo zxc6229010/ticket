@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>後台｜公關代碼管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#fff;
+      --text:#111;
+      --muted:rgba(17,17,17,.65);
+      --line:rgba(17,17,17,.10);
+      --shadow:0 14px 40px rgba(0,0,0,.08);
+      --r:18px;
+      --green:#16a34a;
+      --red:#dc2626;
+      --yellow:#d97706;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:40px 16px; }
+    .header{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+    h1{ margin:0; font-size:22px; font-weight:900; }
+    h2{ margin:0 0 12px; font-size:16px; font-weight:900; }
+    .section{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow); padding:20px; margin-bottom:16px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    label{ font-weight:900; display:block; margin:10px 0 5px; font-size:14px; }
+    input[type="text"], input[type="number"], select, textarea{
+      width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--line); font-size:14px; background:#fff; outline:none;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus{ border-color:#111; }
+    .btn{
+      display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:12px; border:1.5px solid transparent;
+      font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; background:#111; color:#fff;
+    }
+    .btn:hover{ opacity:.85; }
+    .btn:disabled{ opacity:.4; cursor:not-allowed; }
+    .btn-sm{ padding:6px 14px; font-size:13px; border-radius:10px; }
+    .btn-outline{ background:#fff; color:#111; border-color:var(--line); }
+    .btn-outline:hover{ border-color:#111; }
+    .btn-danger{ background:var(--red); color:#fff; }
+    .btn-green{ background:var(--green); color:#fff; }
+    .btn-yellow{ background:var(--yellow); color:#fff; }
+
+    /* stat badges */
+    .stat-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .stat{ background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:10px 16px; min-width:100px; }
+    .stat-val{ font-size:22px; font-weight:900; }
+    .stat-lbl{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+    /* search/filter bar */
+    .filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+    .filter-bar input, .filter-bar select{ width:auto; flex:1; min-width:140px; }
+
+    /* table */
+    .tbl-wrap{ overflow-x:auto; }
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
+    thead th{ text-align:left; padding:8px 10px; border-bottom:2px solid var(--line); font-weight:900; white-space:nowrap; }
+    tbody tr{ border-bottom:1px solid var(--line); transition:background .1s; }
+    tbody tr:hover{ background:#f9fafc; }
+    tbody td{ padding:9px 10px; vertical-align:middle; }
+    .code-cell{ font-family:monospace; font-size:13px; background:#f3f4f6; padding:3px 8px; border-radius:6px; display:inline-block; }
+    .badge{ display:inline-block; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+    .badge-on{ background:#dcfce7; color:#16a34a; }
+    .badge-off{ background:#fee2e2; color:#dc2626; }
+    .badge-used{ background:#fef3c7; color:#d97706; }
+    .badge-full{ background:#fee2e2; color:#dc2626; }
+
+    /* bulk add */
+    .bulk-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:600px){ .bulk-grid{ grid-template-columns:1fr; } }
+    .checkbox-cell{ width:36px; }
+    input[type="checkbox"]{ width:16px; height:16px; cursor:pointer; }
+
+    /* usage panel */
+    .usage-panel{ background:#f9fafc; border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:8px; }
+    .usage-row{ display:flex; gap:12px; padding:6px 0; border-bottom:1px solid var(--line); font-size:12px; }
+    .usage-row:last-child{ border-bottom:none; }
+    .usage-email{ flex:1; color:var(--text); font-weight:600; }
+    .usage-name{ color:var(--muted); }
+    .usage-time{ color:var(--muted); white-space:nowrap; }
+
+    .empty{ text-align:center; padding:40px; color:var(--muted); font-size:14px; }
+    .warn{ background:#fef3c7; color:#92400e; padding:10px 14px; border-radius:10px; font-size:13px; }
+    .ok{ background:#dcfce7; color:#166534; padding:10px 14px; border-radius:10px; font-size:13px; }
+    .gate{ display:flex; align-items:center; justify-content:center; min-height:60vh; }
+    .spin{ display:inline-block; width:32px; height:32px; border:3px solid var(--line); border-top-color:#111; border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+    .progress-bar{ height:4px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:8px; }
+    .progress-fill{ height:100%; background:#111; border-radius:4px; transition:width .2s; }
+    select[multiple]{ height:auto; min-height:80px; }
+    .pill{ display:inline-block; padding:2px 10px; border-radius:20px; background:var(--bg); border:1px solid var(--line); font-size:12px; font-weight:700; }
+    .tab-bar{ display:flex; gap:4px; margin-bottom:16px; border-bottom:2px solid var(--line); padding-bottom:0; }
+    .tab{ padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; border-radius:10px 10px 0 0; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; }
+    .tab.active{ color:var(--text); border-bottom-color:#111; }
+    .tab:hover:not(.active){ color:var(--text); }
+  </style>
+</head>
+<body>
+
+<div id="gate" class="gate"><div class="spin"></div></div>
+
+<div id="app" style="display:none;">
+  <div class="wrap">
+
+    <div class="header">
+      <div>
+        <h1>公關代碼管理</h1>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px;">批量管理、查看使用紀錄與匯出</div>
+      </div>
+      <div class="row">
+        <span id="userInfo" style="font-size:13px;color:var(--muted);"></span>
+        <a class="btn btn-outline btn-sm" href="dashboard.html">回主選單</a>
+        <button class="btn btn-sm" id="logoutBtn">登出</button>
+      </div>
+    </div>
+
+    <!-- 活動選擇 -->
+    <div class="section">
+      <h2>選擇活動</h2>
+      <select id="eventSelect">
+        <option value="">── 選擇活動 ──</option>
+      </select>
+      <div id="eventMeta" style="margin-top:10px;font-size:13px;color:var(--muted);"></div>
+    </div>
+
+    <!-- 主內容 -->
+    <div id="mainContent" style="display:none;">
+
+      <!-- 統計 -->
+      <div class="section">
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val" id="statTotal">0</div><div class="stat-lbl">總代碼數</div></div>
+          <div class="stat"><div class="stat-val" id="statEnabled">0</div><div class="stat-lbl">啟用中</div></div>
+          <div class="stat"><div class="stat-val" id="statUsed">0</div><div class="stat-lbl">已使用次數</div></div>
+          <div class="stat"><div class="stat-val" id="statFull">0</div><div class="stat-lbl">已達上限</div></div>
+        </div>
+        <div class="row">
+          <button class="btn btn-sm btn-outline" id="reloadBtn">🔄 重新載入</button>
+          <button class="btn btn-sm btn-outline" id="exportBtn">📥 匯出 CSV</button>
+          <button class="btn btn-sm btn-outline" id="exportUsageBtn">📥 匯出使用紀錄</button>
+        </div>
+      </div>
+
+      <!-- Tab -->
+      <div class="tab-bar">
+        <div class="tab active" data-tab="list">代碼列表</div>
+        <div class="tab" data-tab="add">批量新增</div>
+        <div class="tab" data-tab="usage">使用紀錄</div>
+      </div>
+
+      <!-- Tab: 代碼列表 -->
+      <div id="tabList">
+        <div class="section">
+          <div class="filter-bar">
+            <input type="text" id="searchInput" placeholder="搜尋代碼 / 備註…" />
+            <select id="filterStatus">
+              <option value="">全部狀態</option>
+              <option value="enabled">啟用中</option>
+              <option value="disabled">已停用</option>
+              <option value="full">已達上限</option>
+            </select>
+            <button class="btn btn-sm btn-danger" id="bulkDeleteBtn" style="display:none;">刪除已選 (<span id="selectedCount">0</span>)</button>
+            <button class="btn btn-sm btn-outline" id="bulkToggleBtn" style="display:none;">切換啟停</button>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="checkbox-cell"><input type="checkbox" id="selectAll" /></th>
+                  <th>代碼</th>
+                  <th>備註</th>
+                  <th>狀態</th>
+                  <th>使用次數</th>
+                  <th>上限</th>
+                  <th>票種</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="promoTableBody"></tbody>
+            </table>
+          </div>
+          <div id="listEmpty" class="empty" style="display:none;">目前沒有公關代碼</div>
+        </div>
+      </div>
+
+      <!-- Tab: 批量新增 -->
+      <div id="tabAdd" style="display:none;">
+        <div class="section">
+          <h2>批量新增公關代碼</h2>
+          <div class="bulk-grid">
+            <div>
+              <label>代碼來源</label>
+              <select id="bulkMode">
+                <option value="manual">手動輸入（每行一個）</option>
+                <option value="random">隨機產生</option>
+              </select>
+            </div>
+            <div id="bulkRandomCount" style="display:none;">
+              <label>產生數量</label>
+              <input type="number" id="bulkCount" value="10" min="1" max="500" />
+            </div>
+            <div id="bulkRandomLen">
+              <label>代碼長度（隨機）</label>
+              <input type="number" id="bulkLen" value="8" min="4" max="20" />
+            </div>
+          </div>
+          <div id="bulkManualArea">
+            <label>代碼列表（每行一個）</label>
+            <textarea id="bulkCodes" placeholder="ABC123&#10;DEF456&#10;GHI789" style="min-height:120px;font-family:monospace;font-size:13px;"></textarea>
+          </div>
+          <div class="bulk-grid" style="margin-top:12px;">
+            <div>
+              <label>票種綁定（可複選）</label>
+              <select id="bulkTicketTypes" multiple></select>
+              <div class="small" style="margin-top:4px;">不選則不限票種</div>
+            </div>
+            <div>
+              <label>最大使用次數</label>
+              <input type="number" id="bulkMaxUses" value="1" min="0" />
+              <div class="small" style="margin-top:4px;">0 = 不限</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <label>備註（套用至所有新增代碼）</label>
+            <input type="text" id="bulkNote" placeholder="例：公關票、贊助商…" />
+          </div>
+          <div style="margin-top:16px;" class="row">
+            <button class="btn btn-green" id="bulkAddBtn">＋ 新增</button>
+            <div id="bulkStatus" style="font-size:13px;color:var(--muted);"></div>
+          </div>
+          <div class="progress-bar" style="display:none;" id="bulkProgress"><div class="progress-fill" id="bulkProgressFill" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Tab: 使用紀錄 -->
+      <div id="tabUsage" style="display:none;">
+        <div class="section">
+          <h2>使用紀錄</h2>
+          <div class="filter-bar">
+            <input type="text" id="usageSearch" placeholder="搜尋代碼 / Email / 姓名…" />
+            <button class="btn btn-sm btn-outline" id="loadUsageBtn">載入紀錄</button>
+          </div>
+          <div id="usageLoading" style="display:none;text-align:center;padding:20px;color:var(--muted);font-size:13px;">載入中…</div>
+          <div class="tbl-wrap">
+            <table id="usageTable" style="display:none;">
+              <thead>
+                <tr>
+                  <th>代碼</th>
+                  <th>姓名</th>
+                  <th>Email</th>
+                  <th>訂單 ID</th>
+                  <th>時間</th>
+                  <th>訂單狀態</th>
+                </tr>
+              </thead>
+              <tbody id="usageTableBody"></tbody>
+            </table>
+          </div>
+          <div id="usageEmpty" class="empty" style="display:none;">目前沒有使用紀錄</div>
+        </div>
+      </div>
+
+    </div><!-- /mainContent -->
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyDtF2pHo84vy2n_dJAkCisopllaLAWjaj0",
+      authDomain: "concert-1ff7e.firebaseapp.com",
+      projectId: "concert-1ff7e",
+      storageBucket: "concert-1ff7e.firebasestorage.app"
+    });
+  }
+  const db = firebase.firestore();
+
+  const gate = document.getElementById("gate");
+  const app = document.getElementById("app");
+  const userInfo = document.getElementById("userInfo");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const eventSelect = document.getElementById("eventSelect");
+  const eventMeta = document.getElementById("eventMeta");
+  const mainContent = document.getElementById("mainContent");
+
+  let currentUser = null;
+  let currentRole = "";
+  let mySchoolId = "";
+  let eventOptions = [];
+  let currentEventId = "";
+  let promoCodes = []; // array of promo objects
+  let ticketTypes = [];
+  let usageCache = []; // orders with promoCode
+  let selectedIds = new Set();
+
+  function norm(v){ return String(v ?? "").trim(); }
+  function lower(v){ return norm(v).toLowerCase(); }
+  function esc(v){ return String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+  function tsToLocal(ts){
+    if (!ts) return "";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return isNaN(d) ? "" : d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+  }
+
+  function randomCode(len){
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    return Array.from({length: len}, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  }
+
+  logoutBtn.onclick = () => firebase.auth().signOut();
+
+  // Tabs
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.onclick = () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("tabList").style.display = "none";
+      document.getElementById("tabAdd").style.display = "none";
+      document.getElementById("tabUsage").style.display = "none";
+      document.getElementById("tab" + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1)).style.display = "";
+    };
+  });
+
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) { location.href = "login.html"; return; }
+    currentUser = user;
+
+    try {
+      const usnap = await db.collection("users").doc(user.uid).get();
+      const udata = usnap.data() || {};
+      currentRole = norm(udata.role || "");
+      mySchoolId = norm(udata.schoolId || "");
+
+      const allowed = ["platform_super","platform_admin","org_super","org_admin"];
+      if (!allowed.includes(currentRole)) {
+        gate.innerHTML = `<div style="text-align:center;"><div style="font-size:18px;font-weight:900;margin-bottom:8px;">權限不足</div><div style="color:var(--muted);font-size:14px;">你沒有管理公關代碼的權限</div></div>`;
+        return;
+      }
+
+      userInfo.textContent = `${user.email} | ${currentRole}`;
+      gate.style.display = "none";
+      app.style.display = "";
+
+      await loadEvents();
+    } catch(e) {
+      gate.innerHTML = `<div style="color:var(--red);">載入失敗：${e.message}</div>`;
+    }
+  });
+
+  async function loadEvents(){
+    try {
+      let query = db.collection("events").orderBy("createdAt", "desc");
+      const snap = await query.get();
+      eventOptions = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+
+      // filter by schoolId for org roles
+      const isPlatform = ["platform_super","platform_admin"].includes(currentRole);
+      const filtered = isPlatform ? eventOptions : eventOptions.filter(e => norm(e.ownerSchoolId || "") === mySchoolId || norm(e.creatorSchoolId || "") === mySchoolId);
+
+      eventSelect.innerHTML = `<option value="">── 選擇活動 ──</option>` + filtered.map(e =>
+        `<option value="${esc(e.id)}">${esc(e.title || e.id)}</option>`
+      ).join("");
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  eventSelect.onchange = () => {
+    currentEventId = eventSelect.value;
+    if (!currentEventId) {
+      mainContent.style.display = "none";
+      eventMeta.textContent = "";
+      return;
+    }
+    const ev = eventOptions.find(e => e.id === currentEventId);
+    if (ev) {
+      eventMeta.textContent = `活動：${norm(ev.title || "")}　代碼功能：${ev.promoCodeEnabled ? "啟用" : "停用"}`;
+    }
+    loadPromoData();
+  };
+
+  async function loadPromoData(){
+    try {
+      const snap = await db.collection("events").doc(currentEventId).get();
+      const data = snap.data() || {};
+      promoCodes = Array.isArray(data.promoCodes) ? data.promoCodes : [];
+      ticketTypes = Array.isArray(data.ticketTypes) ? data.ticketTypes : [];
+      selectedIds.clear();
+      renderStats();
+      renderPromoTable();
+      renderBulkTicketSelect();
+      mainContent.style.display = "";
+    } catch(e) {
+      console.error(e);
+      alert("載入失敗：" + e.message);
+    }
+  }
+
+  function renderStats(){
+    document.getElementById("statTotal").textContent = promoCodes.length;
+    document.getElementById("statEnabled").textContent = promoCodes.filter(c => c.enabled === true).length;
+    const totalUsed = promoCodes.reduce((s, c) => s + (Number(c.usedCount) || 0), 0);
+    document.getElementById("statUsed").textContent = totalUsed;
+    const full = promoCodes.filter(c => Number(c.maxUses) > 0 && Number(c.usedCount) >= Number(c.maxUses)).length;
+    document.getElementById("statFull").textContent = full;
+  }
+
+  function getFilteredCodes(){
+    const q = lower(document.getElementById("searchInput").value);
+    const status = document.getElementById("filterStatus").value;
+    return promoCodes.filter(c => {
+      if (q && !lower(c.code).includes(q) && !lower(c.note).includes(q)) return false;
+      if (status === "enabled" && c.enabled !== true) return false;
+      if (status === "disabled" && c.enabled === true) return false;
+      if (status === "full") {
+        const max = Number(c.maxUses) || 0;
+        if (max === 0 || Number(c.usedCount) < max) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderPromoTable(){
+    const rows = getFilteredCodes();
+    const tbody = document.getElementById("promoTableBody");
+    const empty = document.getElementById("listEmpty");
+
+    if (!rows.length) {
+      tbody.innerHTML = "";
+      empty.style.display = "";
+      return;
+    }
+    empty.style.display = "none";
+
+    const isFull = c => Number(c.maxUses) > 0 && Number(c.usedCount) >= Number(c.maxUses);
+
+    tbody.innerHTML = rows.map(c => {
+      const ttNames = Array.isArray(c.ticketTypeNames) && c.ticketTypeNames.length
+        ? c.ticketTypeNames.join("、")
+        : (norm(c.ticketTypeName) || "全票種");
+      const checked = selectedIds.has(c.id) ? "checked" : "";
+      const badgeHtml = isFull(c)
+        ? `<span class="badge badge-full">已滿</span>`
+        : c.enabled
+          ? `<span class="badge badge-on">啟用</span>`
+          : `<span class="badge badge-off">停用</span>`;
+      const usedBadge = Number(c.usedCount) > 0
+        ? `<span class="badge badge-used">${c.usedCount}</span>`
+        : `<span style="color:var(--muted)">0</span>`;
+      return `<tr>
+        <td class="checkbox-cell"><input type="checkbox" class="row-check" data-id="${esc(c.id)}" ${checked} onchange="onRowCheck(this)" /></td>
+        <td><span class="code-cell">${esc(c.code)}</span></td>
+        <td style="color:var(--muted);font-size:12px;">${esc(c.note || "–")}</td>
+        <td>${badgeHtml}</td>
+        <td>${usedBadge}</td>
+        <td style="color:var(--muted);">${Number(c.maxUses) > 0 ? c.maxUses : "不限"}</td>
+        <td style="font-size:12px;color:var(--muted);">${esc(ttNames)}</td>
+        <td>
+          <div class="row">
+            <button class="btn btn-sm btn-outline" onclick="toggleOne('${esc(c.id)}')">${c.enabled ? "停用" : "啟用"}</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteOne('${esc(c.id)}')">刪除</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  function onRowCheck(el){
+    const id = el.dataset.id;
+    if (el.checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+    updateBulkBtns();
+  }
+
+  document.getElementById("selectAll").onchange = function(){
+    const rows = getFilteredCodes();
+    rows.forEach(c => {
+      if (this.checked) selectedIds.add(c.id);
+      else selectedIds.delete(c.id);
+    });
+    renderPromoTable();
+    updateBulkBtns();
+  };
+
+  function updateBulkBtns(){
+    const n = selectedIds.size;
+    document.getElementById("selectedCount").textContent = n;
+    document.getElementById("bulkDeleteBtn").style.display = n > 0 ? "" : "none";
+    document.getElementById("bulkToggleBtn").style.display = n > 0 ? "" : "none";
+  }
+
+  document.getElementById("searchInput").oninput = renderPromoTable;
+  document.getElementById("filterStatus").onchange = renderPromoTable;
+
+  document.getElementById("reloadBtn").onclick = loadPromoData;
+
+  // ── Single operations ──
+  async function savePromoCodes(newCodes){
+    await db.collection("events").doc(currentEventId).update({ promoCodes: newCodes, updatedAt: new Date() });
+    promoCodes = newCodes;
+    selectedIds.clear();
+    renderStats();
+    renderPromoTable();
+    updateBulkBtns();
+  }
+
+  window.toggleOne = async function(id){
+    const idx = promoCodes.findIndex(c => c.id === id);
+    if (idx < 0) return;
+    const updated = [...promoCodes];
+    updated[idx] = { ...updated[idx], enabled: !updated[idx].enabled };
+    await savePromoCodes(updated);
+  };
+
+  window.deleteOne = async function(id){
+    if (!confirm("確定刪除這個代碼？")) return;
+    await savePromoCodes(promoCodes.filter(c => c.id !== id));
+  };
+
+  // ── Bulk operations ──
+  document.getElementById("bulkDeleteBtn").onclick = async () => {
+    if (!selectedIds.size || !confirm(`確定刪除已選的 ${selectedIds.size} 個代碼？`)) return;
+    await savePromoCodes(promoCodes.filter(c => !selectedIds.has(c.id)));
+  };
+
+  document.getElementById("bulkToggleBtn").onclick = async () => {
+    const updated = promoCodes.map(c => selectedIds.has(c.id) ? { ...c, enabled: !c.enabled } : c);
+    await savePromoCodes(updated);
+  };
+
+  // ── Bulk Add ──
+  document.getElementById("bulkMode").onchange = function(){
+    const isRandom = this.value === "random";
+    document.getElementById("bulkManualArea").style.display = isRandom ? "none" : "";
+    document.getElementById("bulkRandomCount").style.display = isRandom ? "" : "none";
+  };
+
+  function renderBulkTicketSelect(){
+    const sel = document.getElementById("bulkTicketTypes");
+    sel.innerHTML = ticketTypes.map(t =>
+      `<option value="${esc(t.id)}">${esc(t.name || t.id)}</option>`
+    ).join("");
+  }
+
+  document.getElementById("bulkAddBtn").onclick = async () => {
+    const mode = document.getElementById("bulkMode").value;
+    const maxUses = Math.max(0, Number(document.getElementById("bulkMaxUses").value) || 0);
+    const note = norm(document.getElementById("bulkNote").value);
+    const sel = document.getElementById("bulkTicketTypes");
+    const selectedTTs = [...sel.selectedOptions].map(o => o.value);
+    const ttNames = [...sel.selectedOptions].map(o => o.textContent);
+
+    let codesToAdd = [];
+    if (mode === "manual") {
+      const raw = document.getElementById("bulkCodes").value;
+      codesToAdd = raw.split(/[\n,]/).map(s => norm(s)).filter(Boolean);
+    } else {
+      const count = Math.min(500, Math.max(1, Number(document.getElementById("bulkCount").value) || 10));
+      const len = Math.min(20, Math.max(4, Number(document.getElementById("bulkLen").value) || 8));
+      const existing = new Set(promoCodes.map(c => c.code.toUpperCase()));
+      while (codesToAdd.length < count) {
+        const c = randomCode(len);
+        if (!existing.has(c)) { codesToAdd.push(c); existing.add(c); }
+      }
+    }
+
+    if (!codesToAdd.length) { alert("沒有有效的代碼"); return; }
+
+    // deduplicate against existing
+    const existingCodes = new Set(promoCodes.map(c => c.code.toUpperCase()));
+    const unique = codesToAdd.filter(c => !existingCodes.has(c.toUpperCase()));
+    const dupes = codesToAdd.length - unique.length;
+
+    const btn = document.getElementById("bulkAddBtn");
+    const status = document.getElementById("bulkStatus");
+    const progress = document.getElementById("bulkProgress");
+    const fill = document.getElementById("bulkProgressFill");
+    btn.disabled = true;
+    progress.style.display = "";
+    status.textContent = `新增中…`;
+
+    const newEntries = unique.map((code, i) => {
+      fill.style.width = `${Math.round((i + 1) / unique.length * 100)}%`;
+      return {
+        id: `promo_${Date.now()}_${Math.random().toString(36).slice(2,7)}_${i}`,
+        code: code.toUpperCase(),
+        note,
+        enabled: true,
+        mode: "manual",
+        randomLength: 8,
+        maxUses,
+        usedCount: 0,
+        ticketTypeIds: selectedTTs,
+        ticketTypeNames: ttNames,
+        ticketTypeId: selectedTTs[0] || "",
+        ticketTypeName: ttNames[0] || ""
+      };
+    });
+
+    try {
+      await savePromoCodes([...promoCodes, ...newEntries]);
+      fill.style.width = "100%";
+      status.textContent = `✅ 新增 ${newEntries.length} 個代碼${dupes > 0 ? `（跳過 ${dupes} 個重複）` : ""}`;
+      document.getElementById("bulkCodes").value = "";
+    } catch(e) {
+      status.textContent = `❌ 失敗：${e.message}`;
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => { progress.style.display = "none"; fill.style.width = "0%"; }, 2000);
+    }
+  };
+
+  // ── Usage records ──
+  document.getElementById("loadUsageBtn").onclick = loadUsage;
+
+  async function loadUsage(){
+    if (!currentEventId) return;
+    const loading = document.getElementById("usageLoading");
+    const table = document.getElementById("usageTable");
+    const empty = document.getElementById("usageEmpty");
+
+    loading.style.display = "";
+    table.style.display = "none";
+    empty.style.display = "none";
+
+    try {
+      const snap = await db.collection("events").doc(currentEventId).collection("orders")
+        .where("promoCode", "!=", "")
+        .orderBy("promoCode")
+        .orderBy("createdAt", "desc")
+        .get();
+
+      usageCache = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+
+      // Also fetch user names in batch
+      const uids = [...new Set(usageCache.map(o => norm(o.buyerUid || o.uid || "")).filter(Boolean))];
+      const uidToName = {};
+      for (let i = 0; i < uids.length; i += 30) {
+        const chunk = uids.slice(i, i + 30);
+        const usnap = await db.collection("users").where(firebase.firestore.FieldPath.documentId(), "in", chunk).get();
+        usnap.docs.forEach(d => { uidToName[d.id] = norm(d.data().name || ""); });
+      }
+      usageCache.forEach(o => { o._userName = uidToName[norm(o.buyerUid || o.uid || "")] || ""; });
+
+      renderUsageTable();
+    } catch(e) {
+      console.error(e);
+      empty.style.display = "";
+      empty.textContent = "載入失敗：" + e.message;
+    } finally {
+      loading.style.display = "none";
+    }
+  }
+
+  function renderUsageTable(){
+    const q = lower(document.getElementById("usageSearch").value);
+    const filtered = usageCache.filter(o => {
+      if (!q) return true;
+      return lower(o.promoCode).includes(q) || lower(o.buyerEmail || o.email).includes(q) || lower(o._userName).includes(q);
+    });
+
+    const tbody = document.getElementById("usageTableBody");
+    const table = document.getElementById("usageTable");
+    const empty = document.getElementById("usageEmpty");
+
+    if (!filtered.length) {
+      table.style.display = "none";
+      empty.style.display = "";
+      empty.textContent = usageCache.length ? "沒有符合搜尋的紀錄" : "目前沒有使用紀錄";
+      return;
+    }
+    empty.style.display = "none";
+    table.style.display = "";
+
+    tbody.innerHTML = filtered.map(o => {
+      const email = esc(norm(o.buyerEmail || o.email || ""));
+      const name = esc(o._userName || "–");
+      const status = norm(o.status || "");
+      const badgeClass = ["paid","completed","registered","ready_for_checkout"].includes(status) ? "badge-on" : "badge-off";
+      return `<tr>
+        <td><span class="code-cell">${esc(norm(o.promoCode))}</span></td>
+        <td>${name}</td>
+        <td style="font-size:12px;">${email}</td>
+        <td style="font-size:11px;color:var(--muted);">${esc(o.id)}</td>
+        <td style="font-size:12px;white-space:nowrap;">${tsToLocal(o.createdAt)}</td>
+        <td><span class="badge ${badgeClass}">${esc(status)}</span></td>
+      </tr>`;
+    }).join("");
+  }
+
+  document.getElementById("usageSearch").oninput = renderUsageTable;
+
+  // ── Export ──
+  function csvCell(v){ return `"${String(v ?? "").replace(/"/g, '""')}"`; }
+
+  document.getElementById("exportBtn").onclick = () => {
+    if (!promoCodes.length) { alert("沒有資料"); return; }
+    const headers = ["代碼","備註","狀態","使用次數","上限","票種","代碼ID"];
+    const rows = promoCodes.map(c => [
+      c.code,
+      c.note || "",
+      c.enabled ? "啟用" : "停用",
+      c.usedCount || 0,
+      Number(c.maxUses) > 0 ? c.maxUses : "不限",
+      Array.isArray(c.ticketTypeNames) && c.ticketTypeNames.length ? c.ticketTypeNames.join("、") : (c.ticketTypeName || "全票種"),
+      c.id
+    ].map(csvCell).join(","));
+    const csv = "\uFEFF" + [headers.map(csvCell).join(","), ...rows].join("\r\n");
+    download(csv, `promo_codes_${new Date().toISOString().slice(0,10)}.csv`);
+  };
+
+  document.getElementById("exportUsageBtn").onclick = async () => {
+    if (!usageCache.length) {
+      alert("請先在「使用紀錄」頁籤載入紀錄");
+      return;
+    }
+    const headers = ["代碼","姓名","Email","訂單ID","時間","訂單狀態"];
+    const rows = usageCache.map(o => [
+      o.promoCode,
+      o._userName || "",
+      o.buyerEmail || o.email || "",
+      o.id,
+      tsToLocal(o.createdAt),
+      o.status || ""
+    ].map(csvCell).join(","));
+    const csv = "\uFEFF" + [headers.map(csvCell).join(","), ...rows].join("\r\n");
+    download(csv, `promo_usage_${new Date().toISOString().slice(0,10)}.csv`);
+  };
+
+  function download(csv, filename){
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.style.display = "none";
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+  }
+</script>
+</body>
+</html>
