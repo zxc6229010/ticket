@@ -812,14 +812,20 @@
       return allowedUsersLoaded && Array.isArray(allowedUsersCache) && allowedUsersCache.length > 0;
     }
 
-    function isAllowedHolderUser(user){
+    function isAllowedHolderUser(user, holderUserDoc){
       if (!hasAllowedUserRestriction()) return true;
+      // 使用公關代碼下單，跳過白名單檢查
+      if (norm(currentOrder?.promoCode || currentOrder?.inviteCode || "")) return true;
       if (!user) return false;
+
+      // holderUserDoc 是持票人的 users doc（從 getUserDocByEmail 查到的）
+      // 如果沒有傳入，fallback 到 buyerProfile（主購者）
+      const profile = holderUserDoc || buyerProfile || {};
 
       const uid = norm(user.uid || "");
       const email = lower(user.email || "");
-      const studentId = norm(buyerProfile?.studentId || buyerProfile?.studentCode || "");
-      const schoolEmail = lower(buyerProfile?.schoolEmail || "");
+      const studentId = norm(profile.studentId || profile.studentCode || "");
+      const schoolEmail = lower(profile.schoolEmail || "");
 
       return allowedUsersCache.some(item => {
         if (uid && norm(item.uid) === uid) return true;
@@ -832,6 +838,8 @@
 
     function isBuyerAllowedByOrder(order){
       if (!hasAllowedUserRestriction()) return true;
+      // 使用公關代碼下單，跳過白名單檢查
+      if (norm(order?.promoCode || order?.inviteCode || "")) return true;
 
       const buyerUid = norm(order?.buyerUid || order?.uid || "");
       const buyerEmail = lower(order?.buyerEmail || order?.email || "");
@@ -855,7 +863,7 @@
       let userResult = null;
 
       try {
-        // 先從 users collection 用 email 欄位查（登入 email）
+        // 用登入 email 查
         const usersSnap = await getDocs(query(
           collection(db, "users"),
           where("email", "==", key)
@@ -1068,7 +1076,7 @@
           return;
         }
 
-        if (hasAllowedUserRestriction() && !isAllowedHolderUser(user)) {
+        if (hasAllowedUserRestriction() && !isAllowedHolderUser(user, user)) {
           item.status = "invalid";
           item.message = "此會員不在本活動允許參加名單內。";
           return;
