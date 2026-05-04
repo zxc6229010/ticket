@@ -230,6 +230,7 @@
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start;">
             <button class="btn" id="reloadBtn">重新載入</button>
+            <button class="btn btn-sm" id="loadMoreBtn" style="display:none;">載入更多</button>
             <button class="btn btn-sm" id="exportBtn">匯出 CSV</button>
           </div>
         </div>
@@ -296,6 +297,7 @@
     const logoutBtn = document.getElementById("logoutBtn");
 
     const reloadBtn = document.getElementById("reloadBtn");
+    const loadMoreBtn = document.getElementById("loadMoreBtn");
     const exportBtn = document.getElementById("exportBtn");
     const searchBox = document.getElementById("searchBox");
     const schoolFilter = document.getElementById("schoolFilter");
@@ -446,6 +448,8 @@
       };
     }
 
+    let lastDoc = null;
+
     async function loadAll(){
       list.innerHTML = "";
       empty.style.display = "none";
@@ -453,35 +457,16 @@
       countTag.textContent = "0";
       sourceCol.textContent = "-";
       exportBtn.disabled = true;
+      loadMoreBtn.style.display = "none";
+      RAW = [];
+      lastDoc = null;
 
       try{
         if (!ACTIVE_COL){
           ACTIVE_COL = await detectCollection();
         }
         sourceCol.textContent = ACTIVE_COL;
-
-        const snap = await db.collection(ACTIVE_COL).orderBy("createdAt","desc").limit(300).get().catch(async () => {
-          return await db.collection(ACTIVE_COL).limit(300).get();
-        });
-
-        RAW = [];
-        snap.forEach(doc => RAW.push(normalizeMember(doc)));
-
-        const schools = Array.from(new Set(RAW.map(x => norm(x.schoolId)).filter(Boolean))).sort();
-        const current = schoolFilter.value;
-        schoolFilter.innerHTML = `
-          <option value="">全部（含未歸屬學校）</option>
-          <option value="__NONE__">只看：未歸屬學校</option>
-          ${schools.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}
-        `;
-        if (schools.includes(current) || current === "" || current === "__NONE__") {
-          schoolFilter.value = current;
-        }
-
-        applyFilter();
-        hint.innerHTML = `已載入 <span class="mono">${RAW.length}</span> 筆（最多 300）。`;
-        exportBtn.disabled = RAW.length === 0;
-
+        await fetchPage();
       }catch(e){
         console.error(e);
         hint.innerHTML = `<span class="warn">讀取失敗：</span><span class="mono">${esc(e.message || e)}</span>`;
@@ -492,6 +477,39 @@
           </div>
         `;
       }
+    }
+
+    async function fetchPage(){
+      const LIMIT = 300;
+      let query = db.collection(ACTIVE_COL).orderBy("createdAt","desc").limit(LIMIT);
+      if (lastDoc) query = query.startAfter(lastDoc);
+
+      const snap = await query.get().catch(async () => {
+        let q2 = db.collection(ACTIVE_COL).limit(LIMIT);
+        if (lastDoc) q2 = q2.startAfter(lastDoc);
+        return await q2.get();
+      });
+
+      snap.forEach(doc => RAW.push(normalizeMember(doc)));
+      if (!snap.empty) lastDoc = snap.docs[snap.docs.length - 1];
+
+      const schools = Array.from(new Set(RAW.map(x => norm(x.schoolId)).filter(Boolean))).sort();
+      const current = schoolFilter.value;
+      schoolFilter.innerHTML = `
+        <option value="">全部（含未歸屬學校）</option>
+        <option value="__NONE__">只看：未歸屬學校</option>
+        ${schools.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}
+      `;
+      if (schools.includes(current) || current === "" || current === "__NONE__") {
+        schoolFilter.value = current;
+      }
+
+      applyFilter();
+
+      const hasMore = snap.size === LIMIT;
+      hint.innerHTML = `已載入 <span class="mono">${RAW.length}</span> 筆${hasMore ? "，還有更多資料" : "（全部）"}。`;
+      exportBtn.disabled = RAW.length === 0;
+      loadMoreBtn.style.display = hasMore ? "" : "none";
     }
 
     function matches(m, q){
@@ -737,6 +755,7 @@
     }
 
     reloadBtn.onclick = () => loadAll();
+    loadMoreBtn.onclick = async () => { loadMoreBtn.disabled = true; loadMoreBtn.textContent = "載入中…"; await fetchPage(); loadMoreBtn.disabled = false; loadMoreBtn.textContent = "載入更多"; };
     exportBtn.onclick = exportCSV;
     searchBox.addEventListener("input", applyFilter);
     schoolFilter.addEventListener("change", applyFilter);
